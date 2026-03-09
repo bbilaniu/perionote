@@ -18,6 +18,6 @@ test("template preview page renders summary panel", async ({ page }) => {
 test("imported webform preview renders summary panel", async ({ page }) => {
   await page.goto("/templates/gingival-description-webform");
 
-  await expect(page.getByRole("heading", { name: "Gingival Description Webform (Imported)" })).toBeVisible();
-  await expect(page.getByText("Summary Preview")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Dental Hygiene Note Webform Template" })).toBeVisible();
+  await expect(page.getByText("Structured Summary")).toBeVisible();
 });

@@ -11,7 +11,7 @@
 ## PR checklist
 
 - template renders
-- summary output is readable and segmented
+- wrapper UI works for imported legacy templates
 - fixtures updated when output changes
 - tests added/updated for behavior changes
 - migration notes included when importing legacy JSX

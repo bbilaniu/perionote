@@ -86,13 +86,16 @@ Imported templates should follow the quick-import strategy.
 ### Required steps
 
 1. archive the original JSX in `legacy/imported-jsx/...`
-2. create a TSX wrapper in `components/templates/imported/...`
-3. add a preview route in `app/templates/...`
-4. make it render
-5. extract summary generation into `lib/templates/summary/...`
-6. add fixture-based Vitest coverage
-7. add a Playwright smoke test
-8. document known limitations
+2. create a wrapper component in `components/templates/imported/...` (`.jsx` or `.tsx`)
+3. register the template in `components/templates/registry.ts`
+4. make it render at `/templates/<slug>`
+5. add a Playwright smoke test
+6. document known limitations
+
+### Optional follow-up steps
+
+- extract summary generation into `lib/templates/summary/...`
+- add fixture-based Vitest coverage
 
 ### Do not do this on first import unless necessary
 
@@ -120,8 +123,7 @@ For new templates built directly in PerioNote:
 ### Minimum expected for a template PR
 
 - preview route renders
-- one fixture-based summary test exists
-- summary output remains readable and segmented
+- one smoke test exists for visible route behavior
 
 ### Preferred for stable templates
 
@@ -191,9 +193,7 @@ Examples:
 
 - original JSX is archived
 - wrapper renders successfully
-- preview page exists
-- summary output works
-- one fixture test exists
+- template is registered in `components/templates/registry.ts`
 - one smoke test exists
 - known limitations are documented
 

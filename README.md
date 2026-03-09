@@ -94,37 +94,36 @@ These are templates migrated from older standalone JSX files. The import strateg
 
 ## Expected Template Shape
 
-A mature template should eventually have:
+### Legacy wrapper-first (default)
 
-- a TSX component
-- a preview page
-- a summary builder
-- a sample fixture
-- a Vitest test
-- a Playwright smoke test
+For legacy imports, the first usable milestone is:
 
-Example:
+- archive original JSX in `legacy/imported-jsx/<slug>/original.jsx`
+- create a direct wrapper component in `components/templates/imported/` (`.jsx` or `.tsx`)
+- register the template in `components/templates/registry.ts`
+- verify it renders from `/templates/<slug>`
+- add one Playwright smoke test
 
-```text
-components/templates/native/GingivalDescriptionForm.tsx
-lib/templates/summary/buildGingivalDescriptionSummary.ts
-lib/templates/fixtures/gingivalDescription.fixture.ts
-app/templates/gingival-description/page.tsx
-tests/vitest/gingivalDescriptionSummary.test.ts
-tests/playwright/gingival-description.spec.ts
-```
+Summary builders and fixtures are optional on day one for legacy wrappers.
+
+### Mature template (later)
+
+When ready, evolve the wrapper into:
+
+- extracted summary builder
+- fixture-based Vitest coverage
+- cleaner shared UI structure
 
 ## Legacy Import Strategy
 
 Imported ChatGPT-generated JSX files should follow this order:
 
 1. archive the original file in `legacy/imported-jsx/`
-2. create a wrapper TSX component in `components/templates/imported/`
-3. make it render in the preview app
-4. extract summary generation into `lib/templates/summary/`
-5. add fixture-based tests
-6. add preview smoke tests
-7. clean up structure gradually
+2. create a wrapper component in `components/templates/imported/` (`.jsx` or `.tsx`)
+3. register it in `components/templates/registry.ts`
+4. make it render in the preview app
+5. add a smoke test for the route
+6. clean up and extract summary logic later when needed
 
 Do not block imports on perfect typing or architecture.
 
@@ -162,7 +161,7 @@ Every preview page should have a smoke test that confirms:
 
 - the route loads
 - the template title appears
-- the summary panel appears
+- the primary wrapped UI appears (for wrapper-first imports)
 
 ### Playwright E2E
 Use full E2E only for important or stable templates.
@@ -221,7 +220,7 @@ Codex should be used for small, scoped tasks.
 
 Good Codex tasks:
 
-- import one legacy template
+- import one legacy wrapper template
 - extract one summary builder
 - add one fixture test
 - add one preview smoke test
@@ -235,7 +234,7 @@ See [`docs/codex-workflow.md`](./codex-workflow.md) for the workflow.
 Before opening a PR, make sure:
 
 - the template renders
-- summary output still works
+- wrapper UI still works
 - no obvious TSX parse issues were introduced
 - fixtures are updated if output changed
 - screenshots are included for visible UI changes
