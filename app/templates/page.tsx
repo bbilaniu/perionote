@@ -21,7 +21,7 @@ export default function TemplatesIndexPage() {
             <p className="text-xs uppercase tracking-wide text-slate-500">{template.kind}</p>
             <h2 className="mt-1 text-lg font-semibold">{template.title}</h2>
             <p className="mt-2 text-sm text-slate-700">{template.description}</p>
-            <p className="mt-3 text-sm font-medium text-chart-accent">Open preview</p>
+            <p className="mt-3 text-sm font-medium text-chart-accent">Open template</p>
           </Link>
         ))}
       </div>

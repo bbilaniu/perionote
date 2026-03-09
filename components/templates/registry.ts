@@ -1,11 +1,8 @@
 import { GingivalDescriptionTemplate } from "@/components/templates/native/GingivalDescriptionTemplate";
-import { HygieneNoteImportedTemplate } from "@/components/templates/imported/HygieneNoteImportedTemplate";
 import { GingivalDescriptionWebformImportedTemplate } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
 import { gingivalDescriptionFixture } from "@/lib/templates/fixtures/gingivalDescription.fixture";
-import { hygieneNoteFixture } from "@/lib/templates/fixtures/hygieneNote.fixture";
 import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
 import { buildGingivalDescriptionSummary } from "@/lib/templates/summary/buildGingivalDescriptionSummary";
-import { buildHygieneNoteSummary } from "@/lib/templates/summary/buildHygieneNoteSummary";
 import { buildGingivalDescriptionWebformSummary } from "@/lib/templates/summary/buildGingivalDescriptionWebformSummary";
 import type { TemplateDefinition } from "@/lib/templates/types";
 
@@ -25,19 +22,9 @@ export const templateRegistry = [
     component: GingivalDescriptionTemplate
   }),
   defineTemplate({
-    slug: "hygiene-note",
-    title: "Hygiene Note",
-    description: "Imported template wrapper from legacy JSX with extracted summary builder.",
-    kind: "imported",
-    fixture: hygieneNoteFixture,
-    summary: buildHygieneNoteSummary(hygieneNoteFixture),
-    buildSummary: buildHygieneNoteSummary,
-    component: HygieneNoteImportedTemplate
-  }),
-  defineTemplate({
-    slug: "gingival-description-webform",
-    title: "Gingival Description Webform",
-    description: "Imported wrapper for legacy webform-style gingival charting template.",
+    slug: "dental-hygiene-note-webform",
+    title: "Dental Hygiene Note Webform Template",
+    description: "Imported wrapper for a legacy dental hygiene webform template.",
     kind: "imported",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(gingivalDescriptionWebformFixture),
