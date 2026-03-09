@@ -12,16 +12,6 @@ function defineTemplate<TFixture>(template: TemplateDefinition<TFixture>): Templ
 
 export const templateRegistry = [
   defineTemplate({
-    slug: "gingival-description",
-    title: "Gingival Description",
-    description: "Native template for documenting gingival findings and follow-up planning.",
-    kind: "native",
-    fixture: gingivalDescriptionFixture,
-    summary: buildGingivalDescriptionSummary(gingivalDescriptionFixture),
-    buildSummary: buildGingivalDescriptionSummary,
-    component: GingivalDescriptionTemplate
-  }),
-  defineTemplate({
     slug: "dental-hygiene-note-webform",
     title: "Dental Hygiene Note Webform Template",
     description: "Imported wrapper for a legacy dental hygiene webform template.",
@@ -30,6 +20,16 @@ export const templateRegistry = [
     summary: buildGingivalDescriptionWebformSummary(gingivalDescriptionWebformFixture),
     buildSummary: buildGingivalDescriptionWebformSummary,
     component: GingivalDescriptionWebformImportedTemplate
+  }),
+    defineTemplate({
+    slug: "gingival-description",
+    title: "Gingival Description",
+    description: "Native template for documenting gingival findings and follow-up planning.",
+    kind: "native",
+    fixture: gingivalDescriptionFixture,
+    summary: buildGingivalDescriptionSummary(gingivalDescriptionFixture),
+    buildSummary: buildGingivalDescriptionSummary,
+    component: GingivalDescriptionTemplate
   })
 ] as const;
 

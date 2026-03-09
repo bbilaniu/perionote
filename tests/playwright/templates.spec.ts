@@ -12,7 +12,7 @@ test("template preview page renders summary panel", async ({ page }) => {
   await page.goto("/templates/gingival-description");
 
   await expect(page.getByRole("heading", { name: "Gingival Description" })).toBeVisible();
-  await expect(page.getByText("Summary Preview")).toBeVisible();
+  await expect(page.getByText("Structured Summary")).toBeVisible();
 });
 
 test("imported webform preview renders summary panel", async ({ page }) => {
