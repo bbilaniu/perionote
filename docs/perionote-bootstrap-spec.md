@@ -47,8 +47,8 @@ This dual structure allows:
 
 ### AI workflow
 - **Codex**
-- ChatGPT-generated legacy JSX imports
-- optional manual editing in VS Code / iPad workflows
+- wrapping imported templates in `.jsx` or `.tsx` components
+      gingival-description-webform/
 
 ---
 
