@@ -241,7 +241,7 @@ Good Codex tasks:
 
 Avoid mixing import, redesign, refactor, and full testing in one Codex task.
 
-See [`docs/codex-workflow.md`](./codex-workflow.md) for the workflow.
+See [`docs/codex-workflow.md`](./docs/codex-workflow.md) for the workflow.
 
 ## Contribution Guidelines
 
@@ -253,7 +253,7 @@ Before opening a PR, make sure:
 - fixtures are updated if output changed
 - screenshots are included for visible UI changes
 
-See [`CONTRIBUTING.md`](../CONTRIBUTING.md) for the full contributor workflow.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full contributor workflow.
 
 ## Current Priority
 
