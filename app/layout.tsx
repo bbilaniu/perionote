@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -9,12 +10,25 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
+  try {
+    var storedTheme = localStorage.getItem("perionote-theme");
+    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var useDark = storedTheme === "dark" || (storedTheme !== "light" && prefersDark);
+    document.documentElement.classList.toggle("dark", useDark);
+  } catch (e) {}
+})();`
+          }}
+        />
         <div className="min-h-screen">
-          <header className="border-b border-slate-200 bg-white/90">
-            <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
+            <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
               <span className="text-lg font-semibold tracking-tight">PerioNote</span>
+              <ThemeToggle />
               <Link className="text-sm font-medium text-chart-accent hover:underline" href="/templates">
                 Browse Templates
               </Link>
