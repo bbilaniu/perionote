@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { getTodayDateString } from "@/lib/templates/date";
 
 function cx(...parts) {
   return parts.filter(Boolean).join(" ");
@@ -282,7 +283,7 @@ function prettyLabel(key) {
 
 function buildInitialForm(fixture) {
   const form = {
-    date: "",
+    date: getTodayDateString(),
     patientConcerns: "",
     medicalHistory: "Patient reports no changes",
     eoe: "",
@@ -326,7 +327,7 @@ function buildInitialForm(fixture) {
   };
 
   if (fixture) {
-    form.date = fixture.date || "";
+    form.date = fixture.date || getTodayDateString();
     form.dentalHygieneDiagnosis = fixture.dentalHygieneDiagnosis || "";
 
     (fixture.findings || []).forEach((item) => {
