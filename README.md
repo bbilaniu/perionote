@@ -214,6 +214,20 @@ PerioNote should support both:
 - local preview during development
 - automatic preview deploys for branch review on iPad, MacBook, or desktop
 
+## GitHub Pages Deployment
+
+This project is now configured for static export deployment to GitHub Pages.
+
+- `next.config.ts` uses `output: "export"` and enables a repository-aware `basePath`/`assetPrefix` when running in GitHub Actions.
+- `.github/workflows/deploy-pages.yml` builds the app and publishes `out/` to GitHub Pages.
+
+One-time repository settings in GitHub:
+
+1. Open **Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+
+After that, pushing to `main` will deploy the static site automatically.
+
 ## Codex
 
 Codex should be used for small, scoped tasks.
