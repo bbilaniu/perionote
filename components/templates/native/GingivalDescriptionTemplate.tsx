@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { GingivalDescriptionFixture } from "@/lib/templates/fixtures/gingivalDescription.fixture";
 import { buildGingivalDescriptionSummary } from "@/lib/templates/summary/buildGingivalDescriptionSummary";
+import { getTodayDateString } from "@/lib/templates/date";
 
 interface GingivalDescriptionFormState {
   visitDate: string;
@@ -19,7 +20,7 @@ interface GingivalDescriptionFormState {
 function buildInitialForm(fixture?: GingivalDescriptionFixture): GingivalDescriptionFormState {
   if (!fixture) {
     return {
-      visitDate: "",
+      visitDate: getTodayDateString(),
       patientConcerns: "",
       color: "",
       distribution: "",
@@ -32,7 +33,7 @@ function buildInitialForm(fixture?: GingivalDescriptionFixture): GingivalDescrip
   }
 
   return {
-    visitDate: fixture.visitDate,
+    visitDate: fixture.visitDate || getTodayDateString(),
     patientConcerns: fixture.patientConcerns,
     color: fixture.color,
     distribution: fixture.distribution,

@@ -21,3 +21,13 @@ test("imported webform preview renders summary panel", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Dental Hygiene Note Webform Template" })).toBeVisible();
   await expect(page.getByText("Structured Summary")).toBeVisible();
 });
+
+test("template date inputs default to today's date", async ({ page }) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  await page.goto("/templates/gingival-description");
+  await expect(page.locator("#visit-date")).toHaveValue(today);
+
+  await page.goto("/templates/dental-hygiene-note-webform");
+  await expect(page.locator("#exam-date")).toHaveValue(today);
+});
