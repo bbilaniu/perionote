@@ -202,6 +202,12 @@ npm run test:e2e
 npm run lint
 ```
 
+First-time E2E setup:
+
+```bash
+npx playwright install chromium
+```
+
 ## Preview Deploys
 
 PerioNote should support both:
@@ -259,4 +265,3 @@ The priority is to make templates:
 - reviewable
 
 Start by making templates work. Improve structure incrementally.
-
