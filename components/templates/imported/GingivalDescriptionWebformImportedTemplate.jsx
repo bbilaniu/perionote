@@ -232,6 +232,8 @@ const SECTION_KEY_BY_LABEL = {
 
 const AMOUNT_OPTIONS = ["None", "Light", "Moderate", "Heavy"];
 const EXTENT_OPTIONS = ["Generalized", "Localized"];
+const PERIODONTAL_STAGE_OPTIONS = ["I", "II", "III", "IV"];
+const PERIODONTAL_GRADE_OPTIONS = ["A", "B", "C"];
 const DEPOSIT_LOCATION_OPTIONS = [
   "Supragingival",
   "Subgingival",
@@ -371,6 +373,23 @@ export function buildSummaryText(form, selectedFindings) {
 
   const clean = (value) => String(value ?? "").trim().replace(/[\s\n]+/g, " ");
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
+  const formatDepositLine = (label, entry, includeLocations = false) => {
+    const amount = entry.amount.toLowerCase();
+    const base = [amount];
+
+    if (entry.amount !== "None") {
+      base.push(entry.extent.toLowerCase());
+      if (includeLocations && entry.locations.length) {
+        base.push(entry.locations.join(", "));
+      }
+    }
+
+    if (entry.details.trim()) {
+      base.push(cleanSentence(entry.details));
+    }
+
+    return `${label}: ${base.join(" / ")}.`;
+  };
   const addHeadingBlock = (heading, items) => {
     const cleanedItems = items.filter(Boolean);
     if (!cleanedItems.length) return;
@@ -400,18 +419,10 @@ export function buildSummaryText(form, selectedFindings) {
   );
 
   addHeadingBlock("Deposits and Inflammation", [
-    `Plaque: ${form.plaque.amount.toLowerCase()} / ${form.plaque.extent.toLowerCase()}${
-      form.plaque.locations.length ? ` / ${form.plaque.locations.join(", ")}` : ""
-    }${form.plaque.details.trim() ? ` / ${cleanSentence(form.plaque.details)}` : ""}.`,
-    `Calculus: ${form.calculus.amount.toLowerCase()} / ${form.calculus.extent.toLowerCase()}${
-      form.calculus.locations.length ? ` / ${form.calculus.locations.join(", ")}` : ""
-    }${form.calculus.details.trim() ? ` / ${cleanSentence(form.calculus.details)}` : ""}.`,
-    `Extrinsic stain: ${form.extrinsicStain.amount.toLowerCase()} / ${form.extrinsicStain.extent.toLowerCase()}${
-      form.extrinsicStain.details.trim() ? ` / ${cleanSentence(form.extrinsicStain.details)}` : ""
-    }.`,
-    `Bleeding and inflammation: ${form.bleedingInflammation.amount.toLowerCase()} / ${form.bleedingInflammation.extent.toLowerCase()}${
-      form.bleedingInflammation.details.trim() ? ` / ${cleanSentence(form.bleedingInflammation.details)}` : ""
-    }.`,
+    formatDepositLine("Plaque", form.plaque, true),
+    formatDepositLine("Calculus", form.calculus, true),
+    formatDepositLine("Extrinsic stain", form.extrinsicStain),
+    formatDepositLine("Bleeding and inflammation", form.bleedingInflammation),
   ]);
 
   addHeadingBlock(
@@ -522,6 +533,19 @@ export const SUMMARY_TEST_CASES = [
     })(),
     expectedIncludes: [
       "Deposits and Inflammation:\n  Plaque: light / localized / Facial.",
+    ],
+  },
+  {
+    name: "omits extent/location when amount is none",
+    input: (() => {
+      const form = buildInitialForm();
+      return { form, selectedFindings: [] };
+    })(),
+    expectedIncludes: [
+      "Deposits and Inflammation:\n  Plaque: none.",
+      "  Calculus: none.",
+      "  Extrinsic stain: none.",
+      "  Bleeding and inflammation: none.",
     ],
   },
 ];
@@ -668,6 +692,7 @@ function SectionTextarea({ id, label, placeholder, value, onChange }) {
 
 function DepositsCard({ title, value, onChange, showTypeLocation = false, placeholder }) {
   const update = (patch) => onChange({ ...value, ...patch });
+  const showExtent = value.amount !== "None";
 
   return (
     <Card className="rounded-3xl border-dashed border-slate-200 dark:border-slate-700">
@@ -692,24 +717,26 @@ function DepositsCard({ title, value, onChange, showTypeLocation = false, placeh
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label>Extent</Label>
-            <Select value={value.extent} onValueChange={(extent) => update({ extent })}>
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select extent" />
-              </SelectTrigger>
-              <SelectContent>
-                {EXTENT_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {showExtent ? (
+            <div className="space-y-2">
+              <Label>Extent</Label>
+              <Select value={value.extent} onValueChange={(extent) => update({ extent })}>
+                <SelectTrigger className="rounded-xl">
+                  <SelectValue placeholder="Select extent" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EXTENT_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {option}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
         </div>
 
-        {showTypeLocation ? (
+        {showTypeLocation && showExtent ? (
           <MultiToggle
             label="Location / Type"
             options={DEPOSIT_LOCATION_OPTIONS}
@@ -919,21 +946,45 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Stage</Label>
-                    <Input
-                      className="rounded-xl"
-                      placeholder="e.g. I, II, III, IV"
+                    <Select
                       value={form.periodontalStatusStage}
-                      onChange={(e) => setForm((current) => ({ ...current, periodontalStatusStage: e.target.value }))}
-                    />
+                      onValueChange={(periodontalStatusStage) =>
+                        setForm((current) => ({ ...current, periodontalStatusStage }))
+                      }
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue placeholder="Select stage" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None selected</SelectItem>
+                        {PERIODONTAL_STAGE_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label>Grade</Label>
-                    <Input
-                      className="rounded-xl"
-                      placeholder="e.g. A, B, C"
+                    <Select
                       value={form.periodontalStatusGrade}
-                      onChange={(e) => setForm((current) => ({ ...current, periodontalStatusGrade: e.target.value }))}
-                    />
+                      onValueChange={(periodontalStatusGrade) =>
+                        setForm((current) => ({ ...current, periodontalStatusGrade }))
+                      }
+                    >
+                      <SelectTrigger className="rounded-xl">
+                        <SelectValue placeholder="Select grade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None selected</SelectItem>
+                        {PERIODONTAL_GRADE_OPTIONS.map((option) => (
+                          <SelectItem key={option} value={option}>
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-6">
