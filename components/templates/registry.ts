@@ -1,8 +1,5 @@
-import { GingivalDescriptionTemplate } from "@/components/templates/native/GingivalDescriptionTemplate";
 import { GingivalDescriptionWebformImportedTemplate } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
-import { gingivalDescriptionFixture } from "@/lib/templates/fixtures/gingivalDescription.fixture";
 import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
-import { buildGingivalDescriptionSummary } from "@/lib/templates/summary/buildGingivalDescriptionSummary";
 import { buildGingivalDescriptionWebformSummary } from "@/lib/templates/summary/buildGingivalDescriptionWebformSummary";
 import type { TemplateDefinition } from "@/lib/templates/types";
 
@@ -20,16 +17,6 @@ export const templateRegistry = [
     summary: buildGingivalDescriptionWebformSummary(gingivalDescriptionWebformFixture),
     buildSummary: buildGingivalDescriptionWebformSummary,
     component: GingivalDescriptionWebformImportedTemplate
-  }),
-    defineTemplate({
-    slug: "gingival-description",
-    title: "Gingival Description",
-    description: "Native template for documenting gingival findings and follow-up planning.",
-    kind: "native",
-    fixture: gingivalDescriptionFixture,
-    summary: buildGingivalDescriptionSummary(gingivalDescriptionFixture),
-    buildSummary: buildGingivalDescriptionSummary,
-    component: GingivalDescriptionTemplate
   })
 ] as const;
 
