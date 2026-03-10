@@ -734,6 +734,7 @@ function DepositsCard({ title, value, onChange, showTypeLocation = false, placeh
 
 export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
   const [form, setForm] = useState(() => buildInitialForm());
+  const [isCopied, setIsCopied] = useState(false);
 
   const setFinding = (sectionKey, option, nextValue) => {
     setForm((current) => ({
@@ -757,6 +758,12 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
 
   const loadDemo = () => {
     setForm(buildInitialForm(fixture));
+  };
+
+  const copySummary = () => {
+    navigator.clipboard.writeText(summaryText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   return (
@@ -1047,7 +1054,15 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
             </Card>
 
             <div className="flex flex-wrap gap-3">
-              <Button type="button" className="rounded-2xl" onClick={loadDemo}>
+              <Button 
+                type="button" 
+                className="rounded-2xl transition-all" 
+                onClick={copySummary}
+                disabled={isCopied}
+              >
+                {isCopied ? "✓ Copied!" : "Copy summary"}
+              </Button>
+              <Button type="button" className="rounded-2xl" onClick={loadDemo} variant="outline">
                 Load demo
               </Button>
               <Button type="button" className="rounded-2xl" onClick={resetForm} variant="outline">
