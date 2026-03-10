@@ -7,15 +7,15 @@ function cx(...parts) {
 }
 
 function Card({ className, ...props }) {
-  return <div className={cx("rounded-2xl border bg-white", className)} {...props} />;
+  return <div className={cx("rounded-2xl border bg-white dark:bg-slate-800 dark:border-slate-700", className)} {...props} />;
 }
 
 function CardHeader({ className, ...props }) {
-  return <div className={cx("space-y-1.5 p-6", className)} {...props} />;
+  return <div className={cx("space-y-1.5 p-6 dark:border-b dark:border-slate-700", className)} {...props} />;
 }
 
 function CardTitle({ className, ...props }) {
-  return <h3 className={cx("font-semibold leading-none tracking-tight", className)} {...props} />;
+  return <h3 className={cx("font-semibold leading-none tracking-tight dark:text-white", className)} {...props} />;
 }
 
 function CardContent({ className, ...props }) {
@@ -25,8 +25,8 @@ function CardContent({ className, ...props }) {
 function Button({ className, variant = "default", type = "button", ...props }) {
   const variantClass =
     variant === "outline"
-      ? "border border-slate-300 bg-transparent text-slate-900 hover:bg-slate-100"
-      : "border border-slate-900 bg-slate-900 text-white hover:bg-slate-800";
+      ? "border border-slate-300 dark:border-slate-600 bg-transparent text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700"
+      : "border border-slate-900 dark:border-slate-600 bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600";
 
   return (
     <button
@@ -45,7 +45,7 @@ function Checkbox({ className, checked, onCheckedChange, ...props }) {
   return (
     <input
       type="checkbox"
-      className={cx("h-4 w-4 rounded border border-slate-300 accent-slate-900", className)}
+      className={cx("h-4 w-4 rounded border border-slate-300 dark:border-slate-600 accent-slate-900 dark:accent-slate-400", className)}
       checked={Boolean(checked)}
       onChange={(event) => onCheckedChange?.(event.target.checked)}
       {...props}
@@ -57,7 +57,7 @@ function Input({ className, ...props }) {
   return (
     <input
       className={cx(
-        "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300",
+        "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
         className
       )}
       {...props}
@@ -66,14 +66,14 @@ function Input({ className, ...props }) {
 }
 
 function Label({ className, ...props }) {
-  return <label className={cx("text-sm font-medium leading-none", className)} {...props} />;
+  return <label className={cx("text-sm font-medium leading-none text-slate-900 dark:text-slate-100", className)} {...props} />;
 }
 
 function Textarea({ className, ...props }) {
   return (
     <textarea
       className={cx(
-        "flex min-h-[80px] w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300",
+        "flex min-h-[80px] w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
         className
       )}
       {...props}
@@ -84,8 +84,8 @@ function Textarea({ className, ...props }) {
 function Badge({ className, variant = "default", ...props }) {
   const variantClass =
     variant === "outline"
-      ? "border border-slate-300 bg-transparent text-slate-700"
-      : "border border-transparent bg-slate-900 text-white";
+      ? "border border-slate-300 dark:border-slate-600 bg-transparent text-slate-700 dark:text-slate-300"
+      : "border border-transparent bg-slate-900 dark:bg-slate-700 text-white";
   return (
     <span
       className={cx(
@@ -99,7 +99,7 @@ function Badge({ className, variant = "default", ...props }) {
 }
 
 function Separator({ className, ...props }) {
-  return <div role="separator" className={cx("h-px w-full bg-slate-200", className)} {...props} />;
+  return <div role="separator" className={cx("h-px w-full bg-slate-200 dark:bg-slate-700", className)} {...props} />;
 }
 
 function SelectTrigger() {
@@ -162,7 +162,7 @@ function Select({ value, onValueChange, children }) {
   return (
     <select
       className={cx(
-        "flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300",
+        "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
         triggerClassName
       )}
       value={normalizedValue}
@@ -566,7 +566,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border p-4 shadow-sm">
+    <div className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <Checkbox
@@ -670,7 +670,7 @@ function DepositsCard({ title, value, onChange, showTypeLocation = false, placeh
   const update = (patch) => onChange({ ...value, ...patch });
 
   return (
-    <Card className="rounded-3xl border-dashed">
+    <Card className="rounded-3xl border-dashed border-slate-200 dark:border-slate-700">
       <CardHeader>
         <CardTitle className="text-xl">{title}</CardTitle>
       </CardHeader>
@@ -734,6 +734,7 @@ function DepositsCard({ title, value, onChange, showTypeLocation = false, placeh
 
 export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
   const [form, setForm] = useState(() => buildInitialForm());
+  const [isCopied, setIsCopied] = useState(false);
 
   const setFinding = (sectionKey, option, nextValue) => {
     setForm((current) => ({
@@ -759,13 +760,19 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
     setForm(buildInitialForm(fixture));
   };
 
+  const copySummary = () => {
+    navigator.clipboard.writeText(summaryText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <Card className="rounded-3xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl md:text-3xl">Dental Hygiene Note Webform Template</CardTitle>
-            <p className="text-sm leading-6 text-muted-foreground">
+            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
               Expanded from the original gingival description form into a fuller hygiene-note template with chart-ready structured output.
             </p>
           </CardHeader>
@@ -1047,7 +1054,15 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
             </Card>
 
             <div className="flex flex-wrap gap-3">
-              <Button type="button" className="rounded-2xl" onClick={loadDemo}>
+              <Button 
+                type="button" 
+                className="rounded-2xl transition-all" 
+                onClick={copySummary}
+                disabled={isCopied}
+              >
+                {isCopied ? "✓ Copied!" : "Copy summary"}
+              </Button>
+              <Button type="button" className="rounded-2xl" onClick={loadDemo} variant="outline">
                 Load demo
               </Button>
               <Button type="button" className="rounded-2xl" onClick={resetForm} variant="outline">
@@ -1060,7 +1075,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
         <Card className="rounded-3xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl">Structured Summary</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               This preview helps copy the visit into a chart note or EHR later.
             </p>
           </CardHeader>
@@ -1070,7 +1085,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                 selectedFindings.map((item, index) => (
                   <div
                     key={`${item.section}-${item.finding}-${index}`}
-                    className="space-y-2 rounded-2xl border bg-white p-4 shadow-sm"
+                    className="space-y-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <Badge variant="outline" className="rounded-xl">
@@ -1078,8 +1093,8 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       </Badge>
                       <Badge className="rounded-xl">{item.extent === "generalized" ? "GEN" : "LOC"}</Badge>
                     </div>
-                    <div className="font-semibold">{item.finding}</div>
-                    <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="font-semibold text-slate-900 dark:text-white">{item.finding}</div>
+                    <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                       <p>Teeth: {item.toothNumbers || "—"}</p>
                       <p>Location: {item.locations.length ? item.locations.join(", ") : "—"}</p>
                       <p>Distribution: {item.distributions.length ? item.distributions.join(", ") : "—"}</p>
@@ -1088,13 +1103,13 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-muted-foreground">No gingival findings selected yet.</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">No gingival findings selected yet.</div>
               )}
             </div>
 
             <div className="space-y-2">
               <Label>Plain-text output</Label>
-              <Textarea readOnly className="min-h-[300px] rounded-2xl font-mono text-sm" value={summaryText} />
+              <Textarea readOnly className="min-h-[300px] rounded-2xl font-mono text-sm dark:bg-slate-900" value={summaryText} />
             </div>
           </CardContent>
         </Card>
