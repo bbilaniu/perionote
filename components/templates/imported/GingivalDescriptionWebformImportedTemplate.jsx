@@ -516,9 +516,8 @@ function buildDemoForm(fixture) {
     "Scalloped tongue",
     "Bilateral linea alba",
   ];
-  form.eoe =
-    "Within normal limits overall; observations documented for baseline monitoring.";
-  form.ioe = "Within normal limits overall; mild soft tissue variations noted.";
+  form.eoe = "Baseline monitoring only.";
+  form.ioe = "Mild soft tissue variations noted.";
 
   form.periodontalStatusActivity = "Active";
   form.periodontalStatusDiseaseType = "Periodontitis";
@@ -636,6 +635,9 @@ export function buildSummaryText(form, selectedFindings) {
       .trim()
       .replace(/[\s\n]+/g, " ");
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
+  const capitalizeSentence = (value) =>
+    value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
+  const indent = (level, value) => `${"  ".repeat(level)}${value}`;
   const formatDepositLine = (label, entry, includeLocations = false) => {
     const amount = entry.amount.toLowerCase();
     const base = [amount];
@@ -653,37 +655,69 @@ export function buildSummaryText(form, selectedFindings) {
 
     return `${label}: ${base.join(" / ")}.`;
   };
-  const addHeadingBlock = (heading, items) => {
-    const cleanedItems = items.filter(Boolean);
-    if (!cleanedItems.length) return;
-    lines.push(`${heading}:`);
-    cleanedItems.forEach((item) => lines.push(`  ${item}`));
+  const addSection = (heading, sectionLines) => {
+    const normalizedSectionLines = [...sectionLines];
+    while (normalizedSectionLines[0] === "") normalizedSectionLines.shift();
+    while (normalizedSectionLines[normalizedSectionLines.length - 1] === "") {
+      normalizedSectionLines.pop();
+    }
+    if (!normalizedSectionLines.some(Boolean)) return;
+    lines.push(`${heading}:`, ...normalizedSectionLines, "");
+  };
+  const pushNestedValue = (target, label, value, level = 1) => {
+    const cleanedValue = cleanSentence(value);
+    if (!cleanedValue) return;
+    target.push(indent(level, `${label}:`));
+    target.push(indent(level + 1, `${capitalizeSentence(cleanedValue)}.`));
+  };
+  const pushList = (target, label, items, level = 1) => {
+    if (!items.length) return;
+    target.push(indent(level, `${label}:`));
+    items.forEach((item) => {
+      target.push(indent(level + 1, `- ${item}`));
+    });
+  };
+  const normalizeObservation = (value, withinNormalLimits) => {
+    let normalized = cleanSentence(value);
+    if (!normalized) return "";
+    if (withinNormalLimits) {
+      normalized = normalized.replace(
+        /^within normal limits overall[;,]?\s*/i,
+        "",
+      );
+      normalized = normalized.replace(/^within normal limits[;,]?\s*/i, "");
+    }
+    normalized = normalized.replace(/^observations documented for\s+/i, "");
+    normalized = cleanSentence(normalized);
+    return normalized ? `${capitalizeSentence(normalized)}.` : "";
   };
 
-  addHeadingBlock("Visit Details", form.date ? [`Date: ${form.date}`] : []);
+  addSection(
+    "Visit Details",
+    form.date ? [indent(1, `Date: ${form.date}`)] : [],
+  );
 
-  addHeadingBlock("History and Exam", [
-    form.patientPresentsForHygieneNoOtherConcerns
-      ? "Patient presents for hygiene, no other concerns."
-      : "",
-    form.patientConcerns.trim()
-      ? `Patient concerns: ${cleanSentence(form.patientConcerns)}.`
-      : "",
-    form.medicalHistory.trim()
-      ? `Medical history: ${cleanSentence(form.medicalHistory)}.`
-      : "",
-    form.bloodPressure || form.heartRate || form.bloodPressureTakenTime
-      ? `Vitals: ${[
-          form.bloodPressure ? `BP ${clean(form.bloodPressure)}` : "",
-          form.heartRate ? `HR ${clean(form.heartRate)}` : "",
-          form.bloodPressureTakenTime
-            ? `BP taken at ${clean(form.bloodPressureTakenTime)}`
-            : "",
-        ]
-          .filter(Boolean)
-          .join(", ")}.`
-      : "",
-  ]);
+  const historyLines = [];
+  if (form.patientPresentsForHygieneNoOtherConcerns) {
+    historyLines.push(
+      indent(1, "Patient presents for hygiene, no other concerns."),
+    );
+  }
+  pushNestedValue(historyLines, "Patient concerns", form.patientConcerns);
+  pushNestedValue(historyLines, "Medical history", form.medicalHistory);
+  if (form.bloodPressure || form.heartRate || form.bloodPressureTakenTime) {
+    historyLines.push(indent(1, "Vitals:"));
+    if (form.bloodPressure)
+      historyLines.push(indent(2, `BP ${clean(form.bloodPressure)}`));
+    if (form.heartRate)
+      historyLines.push(indent(2, `HR ${clean(form.heartRate)}`));
+    if (form.bloodPressureTakenTime) {
+      historyLines.push(
+        indent(2, `BP taken at ${clean(form.bloodPressureTakenTime)}`),
+      );
+    }
+  }
+  addSection("History and Exam", historyLines);
 
   const eoeFindings = [];
   if (form.asymptomaticClickOnOpeningClosing) {
@@ -722,37 +756,78 @@ export function buildSummaryText(form, selectedFindings) {
     );
   }
 
-  addHeadingBlock("EOE/IOE", [
-    form.eoeWithinNormalLimits ? "EOE: Within Normal Limits." : "",
-    eoeFindings.length ? `EOE findings: ${eoeFindings.join(", ")}.` : "",
-    form.eoe.trim() ? `EOE observations: ${cleanSentence(form.eoe)}.` : "",
-    form.ioeWithinNormalLimits ? "IOE: Within Normal Limits." : "",
-    ioeFindings.length ? `IOE findings: ${ioeFindings.join(", ")}.` : "",
-    form.ioe.trim() ? `IOE observations: ${cleanSentence(form.ioe)}.` : "",
-  ]);
-
-  addHeadingBlock(
-    "Gingival Description",
-    selectedFindings.map((item) => {
-      const detailParts = [
-        item.extent === "generalized" ? "generalized" : "localized",
-      ];
-      if (item.toothNumbers.trim())
-        detailParts.push(`teeth ${clean(item.toothNumbers)}`);
-      if (item.locations.length)
-        detailParts.push(`location ${item.locations.join(", ")}`);
-      if (item.distributions.length)
-        detailParts.push(`distribution ${item.distributions.join(", ")}`);
-      if (item.notes.trim()) detailParts.push(cleanSentence(item.notes));
-      return `${item.section}: ${item.finding} (${detailParts.join("; ")}).`;
-    }),
+  const eoeIoeLines = [];
+  const eoeObservation = normalizeObservation(
+    form.eoe,
+    form.eoeWithinNormalLimits,
   );
+  const ioeObservation = normalizeObservation(
+    form.ioe,
+    form.ioeWithinNormalLimits,
+  );
+  if (form.eoeWithinNormalLimits || eoeFindings.length || eoeObservation) {
+    eoeIoeLines.push(indent(1, "EOE:"));
+    if (form.eoeWithinNormalLimits) eoeIoeLines.push(indent(2, "WNL"));
+    pushList(eoeIoeLines, "Findings", eoeFindings, 2);
+    if (eoeObservation) {
+      eoeIoeLines.push(indent(2, "Observations:"));
+      eoeIoeLines.push(indent(3, `- ${eoeObservation.replace(/[.]+$/g, "")}`));
+    }
+  }
+  if (form.ioeWithinNormalLimits || ioeFindings.length || ioeObservation) {
+    if (eoeIoeLines.length) eoeIoeLines.push("");
+    eoeIoeLines.push(indent(1, "IOE:"));
+    if (form.ioeWithinNormalLimits) eoeIoeLines.push(indent(2, "WNL"));
+    pushList(eoeIoeLines, "Findings", ioeFindings, 2);
+    if (ioeObservation) {
+      eoeIoeLines.push(indent(2, "Observations:"));
+      eoeIoeLines.push(indent(3, `- ${ioeObservation.replace(/[.]+$/g, "")}`));
+    }
+  }
+  addSection("EOE/IOE", eoeIoeLines);
 
-  addHeadingBlock("Deposits and Inflammation", [
-    formatDepositLine("Plaque", form.plaque, true),
-    formatDepositLine("Calculus", form.calculus, true),
-    formatDepositLine("Extrinsic stain", form.extrinsicStain),
-    formatDepositLine("Bleeding and inflammation", form.bleedingInflammation),
+  const gingivalDescriptionLines = [];
+  selectedFindings.forEach((item) => {
+    gingivalDescriptionLines.push(
+      indent(1, `${item.section}: ${item.finding}`),
+    );
+    gingivalDescriptionLines.push(
+      indent(
+        2,
+        `Extent: ${item.extent === "generalized" ? "generalized" : "localized"}`,
+      ),
+    );
+    if (item.toothNumbers.trim()) {
+      gingivalDescriptionLines.push(
+        indent(2, `Teeth: ${clean(item.toothNumbers)}`),
+      );
+    }
+    if (item.locations.length) {
+      gingivalDescriptionLines.push(
+        indent(2, `Location: ${item.locations.join(", ")}`),
+      );
+    }
+    if (item.distributions.length) {
+      gingivalDescriptionLines.push(
+        indent(2, `Distribution: ${item.distributions.join(", ")}`),
+      );
+    }
+    if (item.notes.trim()) {
+      gingivalDescriptionLines.push(
+        indent(2, `Notes: ${cleanSentence(item.notes)}.`),
+      );
+    }
+  });
+  addSection("Gingival Description", gingivalDescriptionLines);
+
+  addSection("Deposits and Inflammation", [
+    indent(1, formatDepositLine("Plaque", form.plaque, true)),
+    indent(1, formatDepositLine("Calculus", form.calculus, true)),
+    indent(1, formatDepositLine("Extrinsic stain", form.extrinsicStain)),
+    indent(
+      1,
+      formatDepositLine("Bleeding and inflammation", form.bleedingInflammation),
+    ),
   ]);
 
   const perioBits = [
@@ -762,82 +837,108 @@ export function buildSummaryText(form, selectedFindings) {
     form.periodontalStatusGrade,
   ].filter(Boolean);
 
-  addHeadingBlock("Periodontal Status", [
-    perioBits.length ? `Status: ${perioBits.join(", ")}.` : "",
-    form.periodontalStatusNotes.trim()
-      ? `Notes: ${cleanSentence(form.periodontalStatusNotes)}.`
-      : "",
-  ]);
+  const periodontalLines = [];
+  pushList(periodontalLines, "Status", perioBits, 1);
+  pushNestedValue(periodontalLines, "Notes", form.periodontalStatusNotes);
+  addSection("Periodontal Status", periodontalLines);
 
-  addHeadingBlock("Caries Risk", [
-    form.cariesRiskLevel ? `Risk level: ${form.cariesRiskLevel}.` : "",
-    form.cariesRiskFactors.length
-      ? `Risk factors: ${form.cariesRiskFactors.join(", ")}.`
-      : "",
-    form.cariesRiskNotes.trim()
-      ? `Notes: ${cleanSentence(form.cariesRiskNotes)}.`
-      : "",
-  ]);
+  const cariesRiskLines = [];
+  if (form.cariesRiskLevel) {
+    cariesRiskLines.push(indent(1, `Risk level: ${form.cariesRiskLevel}.`));
+  }
+  pushList(cariesRiskLines, "Risk factors", form.cariesRiskFactors, 1);
+  pushNestedValue(cariesRiskLines, "Notes", form.cariesRiskNotes);
+  addSection("Caries Risk", cariesRiskLines);
 
-  addHeadingBlock("Oral Health Education", [
-    form.oheTopics.length
-      ? `Topics reviewed: ${form.oheTopics.join(", ")}.`
-      : "",
-    form.oheNotes.trim() ? `OHE notes: ${cleanSentence(form.oheNotes)}.` : "",
-  ]);
+  const oheLines = [];
+  pushList(oheLines, "Topics reviewed", form.oheTopics, 1);
+  pushNestedValue(oheLines, "OHE notes", form.oheNotes);
+  addSection("Oral Health Education", oheLines);
 
-  addHeadingBlock("Recommendations", [
-    form.recommendations.length
-      ? `Recommendations: ${form.recommendations.join(", ")}.`
-      : "",
-    form.recommendationsNotes.trim()
-      ? `Additional recommendation details: ${cleanSentence(form.recommendationsNotes)}.`
-      : "",
-  ]);
+  const recommendationLines = [];
+  pushList(recommendationLines, "Items", form.recommendations, 1);
+  pushNestedValue(
+    recommendationLines,
+    "Additional details",
+    form.recommendationsNotes,
+  );
+  addSection("Recommendations", recommendationLines);
 
-  addHeadingBlock("Clinical Documentation", [
-    form.otherClinicalFindings.trim()
-      ? `Other clinical findings: ${cleanSentence(form.otherClinicalFindings)}.`
-      : "",
-  ]);
+  const clinicalDocumentationLines = [];
+  pushNestedValue(
+    clinicalDocumentationLines,
+    "Other clinical findings",
+    form.otherClinicalFindings,
+  );
+  addSection("Clinical Documentation", clinicalDocumentationLines);
 
-  addHeadingBlock("Treatment Done Today", [
-    form.treatmentDoneToday.length
-      ? `Completed: ${form.treatmentDoneToday.join(", ")}.`
-      : "",
+  const treatmentDoneLines = [];
+  pushList(treatmentDoneLines, "Completed", form.treatmentDoneToday, 1);
+  if (
     form.treatmentDoneToday.includes("Hand and power instrumentation") &&
     form.treatmentDoneTodayInstrumentationDevices.length
-      ? `Hand and power instrumentation device: ${form.treatmentDoneTodayInstrumentationDevices.join(", ")}.`
-      : "",
+  ) {
+    pushList(
+      treatmentDoneLines,
+      "Hand and power instrumentation device",
+      form.treatmentDoneTodayInstrumentationDevices,
+      1,
+    );
+  }
+  if (
     form.treatmentDoneToday.includes("Hand and power instrumentation") &&
     form.treatmentDoneTodayInstrumentationAreas.length
-      ? `Instrumentation area: ${form.treatmentDoneTodayInstrumentationAreas.join(", ")}.`
-      : "",
-    form.treatmentDoneTodayNotes.trim()
-      ? `Treatment done today notes: ${cleanSentence(form.treatmentDoneTodayNotes)}.`
-      : "",
-  ]);
+  ) {
+    pushList(
+      treatmentDoneLines,
+      "Instrumentation area",
+      form.treatmentDoneTodayInstrumentationAreas,
+      1,
+    );
+  }
+  pushNestedValue(
+    treatmentDoneLines,
+    "Treatment done today notes",
+    form.treatmentDoneTodayNotes,
+  );
+  addSection("Treatment Done Today", treatmentDoneLines);
 
-  addHeadingBlock("Next Appointment", [
-    form.nextAppointment.length
-      ? `Planned care: ${form.nextAppointment.join(", ")}.`
-      : "",
+  const nextAppointmentLines = [];
+  pushList(nextAppointmentLines, "Planned care", form.nextAppointment, 1);
+  if (
     form.nextAppointment.includes("Hand and power instrumentation") &&
     form.nextAppointmentInstrumentationDevices.length
-      ? `Hand and power instrumentation device: ${form.nextAppointmentInstrumentationDevices.join(", ")}.`
-      : "",
+  ) {
+    pushList(
+      nextAppointmentLines,
+      "Hand and power instrumentation device",
+      form.nextAppointmentInstrumentationDevices,
+      1,
+    );
+  }
+  if (
     form.nextAppointment.includes("Hand and power instrumentation") &&
     form.nextAppointmentInstrumentationAreas.length
-      ? `Instrumentation area: ${form.nextAppointmentInstrumentationAreas.join(", ")}.`
-      : "",
-    form.nextAppointmentNotes.trim()
-      ? `Next appointment notes: ${cleanSentence(form.nextAppointmentNotes)}.`
-      : "",
-  ]);
+  ) {
+    pushList(
+      nextAppointmentLines,
+      "Instrumentation area",
+      form.nextAppointmentInstrumentationAreas,
+      1,
+    );
+  }
+  pushNestedValue(
+    nextAppointmentLines,
+    "Next appointment notes",
+    form.nextAppointmentNotes,
+  );
+  addSection("Next Appointment", nextAppointmentLines);
 
-  addHeadingBlock("Disposition", [
-    form.disposition.length ? `Plan: ${form.disposition.join(", ")}.` : "",
-  ]);
+  const dispositionLines = [];
+  pushList(dispositionLines, "Plan", form.disposition, 1);
+  addSection("Disposition", dispositionLines);
+
+  while (lines[lines.length - 1] === "") lines.pop();
 
   return lines.join("\n");
 }
@@ -852,8 +953,7 @@ export const SUMMARY_TEST_CASES = [
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
-      "Visit Details:\n  Date: 2026-03-08",
-      "History and Exam:\n  Patient concerns: Bleeding gums.",
+      "Visit Details:\n  Date: 2026-03-08\n\nHistory and Exam:\n  Patient concerns:\n    Bleeding gums.",
     ],
   },
   {
@@ -872,7 +972,7 @@ export const SUMMARY_TEST_CASES = [
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
-      "EOE/IOE:\n  EOE: Within Normal Limits.\n  EOE findings: Asymptomatic click on opening/closing (Left).\n  EOE observations: No swelling noted.\n  IOE: Within Normal Limits.\n  IOE findings: Coated tongue, Palatine torus at midline (Slight).\n  IOE observations: Linea alba monitored.",
+      "EOE/IOE:\n  EOE:\n    WNL\n    Findings:\n      - Asymptomatic click on opening/closing (Left)\n    Observations:\n      - No swelling noted\n\n  IOE:\n    WNL\n    Findings:\n      - Coated tongue\n      - Palatine torus at midline (Slight)\n    Observations:\n      - Linea alba monitored",
     ],
   },
   {
@@ -891,8 +991,7 @@ export const SUMMARY_TEST_CASES = [
       return { form, selectedFindings: collectSelectedFindings(findings) };
     })(),
     expectedIncludes: [
-      "Gingival Description:",
-      "  Color: Pink (generalized; teeth #5; location Facial; distribution Marginal; Mild).",
+      "Gingival Description:\n  Color: Pink\n    Extent: generalized\n    Teeth: #5\n    Location: Facial\n    Distribution: Marginal\n    Notes: Mild.",
     ],
   },
   {
@@ -903,7 +1002,7 @@ export const SUMMARY_TEST_CASES = [
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
-      "Next Appointment:\n  Planned care: Spot probing, Full mouth probing.",
+      "Next Appointment:\n  Planned care:\n    - Spot probing\n    - Full mouth probing",
     ],
   },
   {
