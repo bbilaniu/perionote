@@ -831,11 +831,12 @@ export function buildSummaryText(form, selectedFindings) {
       .map((line) => indent(1, line)),
   );
 
+  const isPeriodontitis = form.periodontalStatusDiseaseType === "Periodontitis";
   const perioBits = [
     form.periodontalStatusActivity,
     form.periodontalStatusDiseaseType,
-    form.periodontalStatusSeverityStage,
-    form.periodontalStatusGrade,
+    isPeriodontitis ? form.periodontalStatusSeverityStage : "",
+    isPeriodontitis ? form.periodontalStatusGrade : "",
   ].filter(Boolean);
 
   const periodontalLines = [];
@@ -1899,6 +1900,14 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                         setForm((current) => ({
                           ...current,
                           periodontalStatusDiseaseType,
+                          periodontalStatusSeverityStage:
+                            periodontalStatusDiseaseType === "Periodontitis"
+                              ? current.periodontalStatusSeverityStage
+                              : "",
+                          periodontalStatusGrade:
+                            periodontalStatusDiseaseType === "Periodontitis"
+                              ? current.periodontalStatusGrade
+                              : "",
                         }))
                       }
                     >
@@ -1915,54 +1924,60 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Severity / stage</Label>
-                    <Select
-                      value={form.periodontalStatusSeverityStage}
-                      onValueChange={(periodontalStatusSeverityStage) =>
-                        setForm((current) => ({
-                          ...current,
-                          periodontalStatusSeverityStage,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="rounded-xl">
-                        <SelectValue placeholder="Select severity / stage" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">None selected</SelectItem>
-                        {PERIODONTAL_SEVERITY_STAGE_OPTIONS.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Grade</Label>
-                    <Select
-                      value={form.periodontalStatusGrade}
-                      onValueChange={(periodontalStatusGrade) =>
-                        setForm((current) => ({
-                          ...current,
-                          periodontalStatusGrade,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="rounded-xl">
-                        <SelectValue placeholder="Select grade" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">None selected</SelectItem>
-                        {PERIODONTAL_GRADE_OPTIONS.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {form.periodontalStatusDiseaseType === "Periodontitis" ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label>Stage</Label>
+                        <Select
+                          value={form.periodontalStatusSeverityStage}
+                          onValueChange={(periodontalStatusSeverityStage) =>
+                            setForm((current) => ({
+                              ...current,
+                              periodontalStatusSeverityStage,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Select stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None selected</SelectItem>
+                            {PERIODONTAL_SEVERITY_STAGE_OPTIONS.map(
+                              (option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Grade</Label>
+                        <Select
+                          value={form.periodontalStatusGrade}
+                          onValueChange={(periodontalStatusGrade) =>
+                            setForm((current) => ({
+                              ...current,
+                              periodontalStatusGrade,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Select grade" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None selected</SelectItem>
+                            {PERIODONTAL_GRADE_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
                 <SectionTextarea
                   id="periodontal-status-notes"
@@ -2379,7 +2394,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
               <Label>Plain-text output</Label>
               <Textarea
                 readOnly
-                className="min-h-[480px] rounded-2xl font-mono text-sm dark:bg-slate-900"
+                className="min-h-[960px] rounded-2xl font-mono text-sm dark:bg-slate-900"
                 value={summaryText}
               />
             </div>

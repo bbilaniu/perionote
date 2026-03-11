@@ -59,6 +59,29 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
   expect(summary).not.toContain("Deposits and Inflammation:");
 });
 
+test("periodontal stage and grade only show for periodontitis", async ({
+  page,
+}) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await expect(page.getByText("Stage", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Grade", { exact: true })).toHaveCount(0);
+
+  await page.selectOption(
+    'select:has(option[value="Gingivitis"])',
+    "Gingivitis",
+  );
+  await expect(page.getByText("Stage", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Grade", { exact: true })).toHaveCount(0);
+
+  await page.selectOption(
+    'select:has(option[value="Periodontitis"])',
+    "Periodontitis",
+  );
+  await expect(page.getByText("Stage", { exact: true })).toBeVisible();
+  await expect(page.getByText("Grade", { exact: true })).toBeVisible();
+});
+
 test("legacy gingival-description slug reuses the imported template", async ({
   page,
 }) => {
