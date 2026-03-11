@@ -42,11 +42,11 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
   expect(summary).toContain(
     "Visit Details:\n  Date: 2026-03-09\n\nHistory and Exam:",
   );
-  expect(summary).toContain("EOE/IOE:\n  EOE:\n    WNL");
+  expect(summary).toContain("EOE/IOE:\n  EOE: WNL");
   expect(summary).toContain(
     "    Findings:\n      - Asymptomatic click on opening/closing (Bilateral)",
   );
-  expect(summary).toContain("\n\n  IOE:\n    WNL");
+  expect(summary).toContain("\n\n  IOE: WNL");
   expect(summary).toContain(
     "Gingival Description:\n  Color: Red\n    Extent: localized",
   );

@@ -766,8 +766,9 @@ export function buildSummaryText(form, selectedFindings) {
     form.ioeWithinNormalLimits,
   );
   if (form.eoeWithinNormalLimits || eoeFindings.length || eoeObservation) {
-    eoeIoeLines.push(indent(1, "EOE:"));
-    if (form.eoeWithinNormalLimits) eoeIoeLines.push(indent(2, "WNL"));
+    eoeIoeLines.push(
+      indent(1, form.eoeWithinNormalLimits ? "EOE: WNL" : "EOE:"),
+    );
     pushList(eoeIoeLines, "Findings", eoeFindings, 2);
     if (eoeObservation) {
       eoeIoeLines.push(indent(2, "Observations:"));
@@ -776,8 +777,9 @@ export function buildSummaryText(form, selectedFindings) {
   }
   if (form.ioeWithinNormalLimits || ioeFindings.length || ioeObservation) {
     if (eoeIoeLines.length) eoeIoeLines.push("");
-    eoeIoeLines.push(indent(1, "IOE:"));
-    if (form.ioeWithinNormalLimits) eoeIoeLines.push(indent(2, "WNL"));
+    eoeIoeLines.push(
+      indent(1, form.ioeWithinNormalLimits ? "IOE: WNL" : "IOE:"),
+    );
     pushList(eoeIoeLines, "Findings", ioeFindings, 2);
     if (ioeObservation) {
       eoeIoeLines.push(indent(2, "Observations:"));
@@ -972,7 +974,7 @@ export const SUMMARY_TEST_CASES = [
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
-      "EOE/IOE:\n  EOE:\n    WNL\n    Findings:\n      - Asymptomatic click on opening/closing (Left)\n    Observations:\n      - No swelling noted\n\n  IOE:\n    WNL\n    Findings:\n      - Coated tongue\n      - Palatine torus at midline (Slight)\n    Observations:\n      - Linea alba monitored",
+      "EOE/IOE:\n  EOE: WNL\n    Findings:\n      - Asymptomatic click on opening/closing (Left)\n    Observations:\n      - No swelling noted\n\n  IOE: WNL\n    Findings:\n      - Coated tongue\n      - Palatine torus at midline (Slight)\n    Observations:\n      - Linea alba monitored",
     ],
   },
   {
