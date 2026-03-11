@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { templateRegistry } from "@/components/templates/registry";
+import { templateBrowserRegistry } from "@/components/templates/registry";
 
 export default function TemplatesIndexPage() {
   return (
@@ -15,7 +15,7 @@ export default function TemplatesIndexPage() {
       </header>
 
       <div className="grid gap-4">
-        {templateRegistry.map((template) => (
+        {templateBrowserRegistry.map((template) => (
           <Link
             key={template.slug}
             href={`/templates/${template.slug}`}

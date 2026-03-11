@@ -1,8 +1,5 @@
-import { GingivalDescriptionTemplate } from "@/components/templates/native/GingivalDescriptionTemplate";
 import { GingivalDescriptionWebformImportedTemplate } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
-import { gingivalDescriptionFixture } from "@/lib/templates/fixtures/gingivalDescription.fixture";
 import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
-import { buildGingivalDescriptionSummary } from "@/lib/templates/summary/buildGingivalDescriptionSummary";
 import { buildGingivalDescriptionWebformSummary } from "@/lib/templates/summary/buildGingivalDescriptionWebformSummary";
 import type { TemplateDefinition } from "@/lib/templates/types";
 
@@ -17,12 +14,15 @@ export const templateRegistry = [
     slug: "gingival-description",
     title: "Gingival Description",
     description:
-      "Native interactive form for documenting gingival findings and generating a segmented clinical summary.",
+      "Hidden legacy alias that reuses the imported dental hygiene webform template.",
     kind: "native",
-    fixture: gingivalDescriptionFixture,
-    summary: buildGingivalDescriptionSummary(gingivalDescriptionFixture),
-    buildSummary: buildGingivalDescriptionSummary,
-    component: GingivalDescriptionTemplate,
+    hidden: true,
+    fixture: gingivalDescriptionWebformFixture,
+    summary: buildGingivalDescriptionWebformSummary(
+      gingivalDescriptionWebformFixture,
+    ),
+    buildSummary: buildGingivalDescriptionWebformSummary,
+    component: GingivalDescriptionWebformImportedTemplate,
   }),
   defineTemplate({
     slug: "dental-hygiene-note-webform",
@@ -40,6 +40,10 @@ export const templateRegistry = [
 ] as const;
 
 export type RegisteredTemplate = (typeof templateRegistry)[number];
+
+export const templateBrowserRegistry = templateRegistry.filter(
+  (template) => !template.hidden,
+);
 
 export function getTemplateBySlug(
   slug: string,

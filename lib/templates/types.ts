@@ -7,6 +7,7 @@ export interface TemplateDefinition<TFixture = unknown> {
   title: string;
   description: string;
   kind: TemplateKind;
+  hidden?: boolean;
   fixture: TFixture;
   summary: string;
   buildSummary: (fixture: TFixture) => string;
