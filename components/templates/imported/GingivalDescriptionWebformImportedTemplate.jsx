@@ -388,6 +388,16 @@ function emptyAnnotation() {
   };
 }
 
+function emptyDepositEntry() {
+  return {
+    enabled: false,
+    amount: "None",
+    extent: "Localized",
+    locations: [],
+    details: "",
+  };
+}
+
 function buildInitialFindings() {
   return Object.fromEntries(
     Object.entries(FIELD_OPTIONS).map(([sectionKey, options]) => [
@@ -424,28 +434,10 @@ function buildInitialForm(fixture) {
     bilateralMandibularTori: false,
     bilateralMandibularToriProminence: "",
     findings: buildInitialFindings(),
-    plaque: {
-      amount: "None",
-      extent: "Localized",
-      locations: [],
-      details: "",
-    },
-    calculus: {
-      amount: "None",
-      extent: "Localized",
-      locations: [],
-      details: "",
-    },
-    extrinsicStain: {
-      amount: "None",
-      extent: "Localized",
-      details: "",
-    },
-    bleedingInflammation: {
-      amount: "None",
-      extent: "Localized",
-      details: "",
-    },
+    plaque: emptyDepositEntry(),
+    calculus: emptyDepositEntry(),
+    extrinsicStain: emptyDepositEntry(),
+    bleedingInflammation: emptyDepositEntry(),
     treatmentDoneToday: [],
     treatmentDoneTodayInstrumentationDevices: [],
     treatmentDoneTodayInstrumentationAreas: [],
@@ -639,6 +631,7 @@ export function buildSummaryText(form, selectedFindings) {
     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
   const indent = (level, value) => `${"  ".repeat(level)}${value}`;
   const formatDepositLine = (label, entry, includeLocations = false) => {
+    if (!entry.enabled) return "";
     const amount = entry.amount.toLowerCase();
     const base = [amount];
 
@@ -826,15 +819,17 @@ export function buildSummaryText(form, selectedFindings) {
   });
   addSection("Gingival Description", gingivalDescriptionLines);
 
-  addSection("Deposits and Inflammation", [
-    indent(1, formatDepositLine("Plaque", form.plaque, true)),
-    indent(1, formatDepositLine("Calculus", form.calculus, true)),
-    indent(1, formatDepositLine("Extrinsic stain", form.extrinsicStain)),
-    indent(
-      1,
+  addSection(
+    "Deposits and Inflammation",
+    [
+      formatDepositLine("Plaque", form.plaque, true),
+      formatDepositLine("Calculus", form.calculus, true),
+      formatDepositLine("Extrinsic stain", form.extrinsicStain),
       formatDepositLine("Bleeding and inflammation", form.bleedingInflammation),
-    ),
-  ]);
+    ]
+      .filter(Boolean)
+      .map((line) => indent(1, line)),
+  );
 
   const perioBits = [
     form.periodontalStatusActivity,
@@ -1015,6 +1010,7 @@ export const SUMMARY_TEST_CASES = [
     name: "renders deposits block with indentation",
     input: (() => {
       const form = buildInitialForm();
+      form.plaque.enabled = true;
       form.plaque.amount = "Light";
       form.plaque.extent = "Localized";
       form.plaque.locations = ["Facial"];
@@ -1025,17 +1021,21 @@ export const SUMMARY_TEST_CASES = [
     ],
   },
   {
-    name: "omits extent/location when amount is none",
+    name: "omits deposits block when no deposit cards are selected",
     input: (() => {
       const form = buildInitialForm();
       return { form, selectedFindings: [] };
     })(),
-    expectedIncludes: [
-      "Deposits and Inflammation:\n  Plaque: none.",
-      "  Calculus: none.",
-      "  Extrinsic stain: none.",
-      "  Bleeding and inflammation: none.",
-    ],
+    expectedExcludes: ["Deposits and Inflammation:"],
+  },
+  {
+    name: "renders active deposit card with none amount",
+    input: (() => {
+      const form = buildInitialForm();
+      form.plaque.enabled = true;
+      return { form, selectedFindings: [] };
+    })(),
+    expectedIncludes: ["Deposits and Inflammation:\n  Plaque: none."],
   },
 ];
 
@@ -1192,48 +1192,55 @@ function DepositsCard({
   onChange,
   showTypeLocation = false,
   placeholder,
+  description,
 }) {
   const update = (patch) => onChange({ ...value, ...patch });
-  const showExtent = value.amount !== "None";
+  const showDetails = value.enabled;
+  const showExtent = showDetails && value.amount !== "None";
 
   return (
-    <Card className="rounded-3xl border-dashed border-slate-200 dark:border-slate-700">
-      <CardHeader>
-        <CardTitle className="text-xl">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label>Amount</Label>
-            <Select
-              value={value.amount}
-              onValueChange={(amount) => update({ amount })}
+    <div className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            checked={value.enabled}
+            onCheckedChange={(next) => {
+              const isEnabled = Boolean(next);
+              if (!isEnabled) {
+                onChange(emptyDepositEntry());
+              } else {
+                update({ enabled: true });
+              }
+            }}
+            id={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+          />
+          <div>
+            <Label
+              htmlFor={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              className="cursor-pointer text-base font-semibold"
             >
-              <SelectTrigger className="rounded-xl">
-                <SelectValue placeholder="Select amount" />
-              </SelectTrigger>
-              <SelectContent>
-                {AMOUNT_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              {title}
+            </Label>
+            <p className="text-sm text-muted-foreground">{description}</p>
           </div>
+        </div>
+        {value.enabled ? <Badge className="rounded-xl">Selected</Badge> : null}
+      </div>
 
-          {showExtent ? (
+      {showDetails ? (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Extent</Label>
+              <Label>Amount</Label>
               <Select
-                value={value.extent}
-                onValueChange={(extent) => update({ extent })}
+                value={value.amount}
+                onValueChange={(amount) => update({ amount })}
               >
                 <SelectTrigger className="rounded-xl">
-                  <SelectValue placeholder="Select extent" />
+                  <SelectValue placeholder="Select amount" />
                 </SelectTrigger>
                 <SelectContent>
-                  {EXTENT_OPTIONS.map((option) => (
+                  {AMOUNT_OPTIONS.map((option) => (
                     <SelectItem key={option} value={option}>
                       {option}
                     </SelectItem>
@@ -1241,29 +1248,49 @@ function DepositsCard({
                 </SelectContent>
               </Select>
             </div>
+            {showExtent ? (
+              <div className="space-y-2">
+                <Label>Extent</Label>
+                <Select
+                  value={value.extent}
+                  onValueChange={(extent) => update({ extent })}
+                >
+                  <SelectTrigger className="rounded-xl">
+                    <SelectValue placeholder="Select extent" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EXTENT_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : null}
+          </div>
+
+          {showTypeLocation && showExtent ? (
+            <MultiToggle
+              label="Location / Type"
+              options={DEPOSIT_LOCATION_OPTIONS}
+              selected={value.locations}
+              onChange={(locations) => update({ locations })}
+            />
           ) : null}
-        </div>
 
-        {showTypeLocation && showExtent ? (
-          <MultiToggle
-            label="Location / Type"
-            options={DEPOSIT_LOCATION_OPTIONS}
-            selected={value.locations}
-            onChange={(locations) => update({ locations })}
-          />
-        ) : null}
-
-        <div className="space-y-2">
-          <Label>Details</Label>
-          <Textarea
-            className="min-h-[100px] rounded-2xl"
-            placeholder={placeholder}
-            value={value.details}
-            onChange={(e) => update({ details: e.target.value })}
-          />
+          <div className="space-y-2">
+            <Label>Details</Label>
+            <Textarea
+              className="min-h-[100px] rounded-2xl"
+              placeholder={placeholder}
+              value={value.details}
+              onChange={(e) => update({ details: e.target.value })}
+            />
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      ) : null}
+    </div>
   );
 }
 
@@ -1800,6 +1827,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     setForm((current) => ({ ...current, plaque }))
                   }
                   showTypeLocation
+                  description="Mark plaque, then capture amount, extent, location, and detail."
                   placeholder="Describe oral biofilm location, amount, and extent."
                 />
                 <DepositsCard
@@ -1809,6 +1837,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     setForm((current) => ({ ...current, calculus }))
                   }
                   showTypeLocation
+                  description="Mark calculus, then capture amount, extent, location, and detail."
                   placeholder="Describe supragingival/subgingival calculus and affected sites."
                 />
                 <DepositsCard
@@ -1817,6 +1846,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   onChange={(extrinsicStain) =>
                     setForm((current) => ({ ...current, extrinsicStain }))
                   }
+                  description="Mark extrinsic stain, then capture amount, extent, and detail."
                   placeholder="Describe generalized or localized stain and specific teeth/surfaces."
                 />
                 <DepositsCard
@@ -1825,6 +1855,7 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   onChange={(bleedingInflammation) =>
                     setForm((current) => ({ ...current, bleedingInflammation }))
                   }
+                  description="Mark bleeding and inflammation, then capture amount, extent, and detail."
                   placeholder="Note amount, generalized vs localized, and any distribution details."
                 />
               </CardContent>

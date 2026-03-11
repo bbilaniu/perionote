@@ -53,7 +53,10 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
   expect(summary).toContain(
     "Oral Health Education:\n  Topics reviewed:\n    - Caries theory",
   );
-  expect(summary).toContain("Instrumentation area: Q1, Q2, Q3, Q4, Maxilla, Mandible");
+  expect(summary).toContain(
+    "Instrumentation area: Q1, Q2, Q3, Q4, Maxilla, Mandible",
+  );
+  expect(summary).not.toContain("Deposits and Inflammation:");
 });
 
 test("legacy gingival-description slug reuses the imported template", async ({
