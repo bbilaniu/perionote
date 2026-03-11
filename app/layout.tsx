@@ -5,10 +5,14 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PerioNote",
-  description: "Clinical template workspace for periodontal and hygiene notes"
+  description: "Clinical template workspace for periodontal and hygiene notes",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
@@ -21,15 +25,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     var useDark = storedTheme === "dark" || (storedTheme !== "light" && prefersDark);
     document.documentElement.classList.toggle("dark", useDark);
   } catch (e) {}
-})();`
+})();`,
           }}
         />
         <div className="min-h-screen">
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
             <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4">
-              <span className="text-lg font-semibold tracking-tight">PerioNote</span>
+              <span className="text-lg font-semibold tracking-tight">
+                PerioNote
+              </span>
               <ThemeToggle />
-              <Link className="text-sm font-medium text-chart-accent hover:underline" href="/templates">
+              <Link
+                className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
+                href="/templates"
+              >
                 Browse Templates
               </Link>
             </div>

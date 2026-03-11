@@ -7,15 +7,39 @@ function cx(...parts) {
 }
 
 function Card({ className, ...props }) {
-  return <div className={cx("rounded-2xl border bg-white dark:bg-slate-800 dark:border-slate-700", className)} {...props} />;
+  return (
+    <div
+      className={cx(
+        "rounded-2xl border bg-white dark:bg-slate-800 dark:border-slate-700",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 function CardHeader({ className, ...props }) {
-  return <div className={cx("space-y-1.5 p-6 dark:border-b dark:border-slate-700", className)} {...props} />;
+  return (
+    <div
+      className={cx(
+        "space-y-1.5 p-6 dark:border-b dark:border-slate-700",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 function CardTitle({ className, ...props }) {
-  return <h3 className={cx("font-semibold leading-none tracking-tight dark:text-white", className)} {...props} />;
+  return (
+    <h3
+      className={cx(
+        "font-semibold leading-none tracking-tight dark:text-white",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 function CardContent({ className, ...props }) {
@@ -34,7 +58,7 @@ function Button({ className, variant = "default", type = "button", ...props }) {
       className={cx(
         "inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50",
         variantClass,
-        className
+        className,
       )}
       {...props}
     />
@@ -45,7 +69,10 @@ function Checkbox({ className, checked, onCheckedChange, ...props }) {
   return (
     <input
       type="checkbox"
-      className={cx("h-4 w-4 rounded border border-slate-300 dark:border-slate-600 accent-slate-900 dark:accent-slate-400", className)}
+      className={cx(
+        "h-4 w-4 rounded border border-slate-300 dark:border-slate-600 accent-slate-900 dark:accent-slate-400",
+        className,
+      )}
       checked={Boolean(checked)}
       onChange={(event) => onCheckedChange?.(event.target.checked)}
       {...props}
@@ -58,7 +85,7 @@ function Input({ className, ...props }) {
     <input
       className={cx(
         "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
-        className
+        className,
       )}
       {...props}
     />
@@ -66,7 +93,15 @@ function Input({ className, ...props }) {
 }
 
 function Label({ className, ...props }) {
-  return <label className={cx("text-sm font-medium leading-none text-slate-900 dark:text-slate-100", className)} {...props} />;
+  return (
+    <label
+      className={cx(
+        "text-sm font-medium leading-none text-slate-900 dark:text-slate-100",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 function Textarea({ className, ...props }) {
@@ -74,7 +109,7 @@ function Textarea({ className, ...props }) {
     <textarea
       className={cx(
         "flex min-h-[80px] w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
-        className
+        className,
       )}
       {...props}
     />
@@ -91,7 +126,7 @@ function Badge({ className, variant = "default", ...props }) {
       className={cx(
         "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide",
         variantClass,
-        className
+        className,
       )}
       {...props}
     />
@@ -99,7 +134,13 @@ function Badge({ className, variant = "default", ...props }) {
 }
 
 function Separator({ className, ...props }) {
-  return <div role="separator" className={cx("h-px w-full bg-slate-200 dark:bg-slate-700", className)} {...props} />;
+  return (
+    <div
+      role="separator"
+      className={cx("h-px w-full bg-slate-200 dark:bg-slate-700", className)}
+      {...props}
+    />
+  );
 }
 
 function SelectTrigger() {
@@ -126,14 +167,18 @@ function extractText(node) {
   return "";
 }
 
-function collectSelectConfig(children, config = { items: [], placeholder: "", triggerClassName: "" }) {
+function collectSelectConfig(
+  children,
+  config = { items: [], placeholder: "", triggerClassName: "" },
+) {
   React.Children.forEach(children, (child) => {
     if (!React.isValidElement(child)) return;
 
     if (child.type === SelectItem) {
       config.items.push({
         value: String(child.props.value ?? ""),
-        label: extractText(child.props.children) || String(child.props.value ?? ""),
+        label:
+          extractText(child.props.children) || String(child.props.value ?? ""),
       });
       return;
     }
@@ -155,7 +200,10 @@ function collectSelectConfig(children, config = { items: [], placeholder: "", tr
 }
 
 function Select({ value, onValueChange, children }) {
-  const { items, placeholder, triggerClassName } = useMemo(() => collectSelectConfig(children), [children]);
+  const { items, placeholder, triggerClassName } = useMemo(
+    () => collectSelectConfig(children),
+    [children],
+  );
   const normalizedValue = value == null ? "" : String(value);
   const hasValue = normalizedValue !== "";
 
@@ -163,7 +211,7 @@ function Select({ value, onValueChange, children }) {
     <select
       className={cx(
         "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
-        triggerClassName
+        triggerClassName,
       )}
       value={normalizedValue}
       onChange={(event) => onValueChange?.(event.target.value)}
@@ -321,7 +369,7 @@ const CARIES_RISK_FACTOR_OPTIONS = [
 const CLICK_LATERALITY_OPTIONS = ["Bilateral", "Left", "Right"];
 const ASYMPTOMATIC_LYMPH_NODE_OPTIONS = ["Palpable", "Not palpable"];
 const PALATINE_TORUS_OPTIONS = ["Slight", "Prominent"];
-const STRUCTURED_EOE_IOE_FINDINGS = [
+const IOE_FINDING_OPTIONS = [
   "Coated tongue",
   "Fissured tongue",
   "Scalloped tongue",
@@ -344,7 +392,7 @@ function buildInitialFindings() {
     Object.entries(FIELD_OPTIONS).map(([sectionKey, options]) => [
       sectionKey,
       Object.fromEntries(options.map((option) => [option, emptyAnnotation()])),
-    ])
+    ]),
   );
 }
 
@@ -369,7 +417,7 @@ function buildInitialForm(fixture) {
     asymptomaticClickLaterality: "",
     asymptomaticLymphNodes: false,
     asymptomaticLymphNodesPalpability: "",
-    eoeIoeFindings: [],
+    ioeFindings: [],
     palatineTorusAtMidline: false,
     palatineTorusProminence: "",
     bilateralMandibularTori: false,
@@ -446,8 +494,10 @@ function buildInitialForm(fixture) {
 function buildDemoForm(fixture) {
   const form = buildInitialForm(fixture);
 
-  form.patientConcerns = "Sensitivity around lower anterior and occasional bleeding while flossing.";
-  form.medicalHistory = "Med/dent history updated. No new contraindications reported.";
+  form.patientConcerns =
+    "Sensitivity around lower anterior and occasional bleeding while flossing.";
+  form.medicalHistory =
+    "Med/dent history updated. No new contraindications reported.";
   form.bloodPressure = "118/76";
   form.heartRate = "72";
   form.bloodPressureTakenTime = "09:15";
@@ -460,15 +510,21 @@ function buildDemoForm(fixture) {
   form.palatineTorusProminence = "Slight";
   form.bilateralMandibularTori = true;
   form.bilateralMandibularToriProminence = "Slight";
-  form.eoeIoeFindings = ["Coated tongue", "Scalloped tongue", "Bilateral linea alba"];
-  form.eoe = "Within normal limits overall; observations documented for baseline monitoring.";
+  form.ioeFindings = [
+    "Coated tongue",
+    "Scalloped tongue",
+    "Bilateral linea alba",
+  ];
+  form.eoe =
+    "Within normal limits overall; observations documented for baseline monitoring.";
   form.ioe = "Within normal limits overall; mild soft tissue variations noted.";
 
   form.periodontalStatusActivity = "Active";
   form.periodontalStatusDiseaseType = "Periodontitis";
   form.periodontalStatusSeverityStage = "Moderate Periodontitis Stage II";
   form.periodontalStatusGrade = "Grade B moderate rate of progression";
-  form.periodontalStatusNotes = "Reinforced 4-month hygiene interval and home-care compliance.";
+  form.periodontalStatusNotes =
+    "Reinforced 4-month hygiene interval and home-care compliance.";
 
   form.cariesRiskLevel = "Moderate";
   form.cariesRiskFactors = [
@@ -488,14 +544,16 @@ function buildDemoForm(fixture) {
     "Periodontitis theory and risk factors",
     "Importance of maintaining a 4-month hygiene interval",
   ];
-  form.oheNotes = "Demonstrated technique adjustments and reviewed daily routine.";
+  form.oheNotes =
+    "Demonstrated technique adjustments and reviewed daily routine.";
 
   form.recommendations = [
     "High fluoride toothpaste (Prevident 5000)",
     "Mouthwash (0.05% X-PUR Opti-Rinse)",
     "Salt water rinse for 2-3 days",
   ];
-  form.recommendationsNotes = "Start Prevident at night and Opti-Rinse once daily.";
+  form.recommendationsNotes =
+    "Start Prevident at night and Opti-Rinse once daily.";
 
   form.treatmentDoneToday = [
     "Med/dent history update",
@@ -511,8 +569,16 @@ function buildDemoForm(fixture) {
     "Ipana 5% NaF varnish application",
   ];
   form.treatmentDoneTodayInstrumentationDevices = ["Piezo"];
-  form.treatmentDoneTodayInstrumentationAreas = ["Q1", "Q2", "Q3", "Q4", "Maxilla", "Mandible"];
-  form.treatmentDoneTodayNotes = "Completed full periodontal hygiene workflow today.";
+  form.treatmentDoneTodayInstrumentationAreas = [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "Maxilla",
+    "Mandible",
+  ];
+  form.treatmentDoneTodayNotes =
+    "Completed full periodontal hygiene workflow today.";
 
   form.nextAppointment = [
     "EOE/IOE",
@@ -525,11 +591,20 @@ function buildDemoForm(fixture) {
     "Ipana 5% NaF varnish application",
   ];
   form.nextAppointmentInstrumentationDevices = ["Piezo"];
-  form.nextAppointmentInstrumentationAreas = ["Sextant 1", "Sextant 2", "Sextant 3"];
-  form.nextAppointmentNotes = "Reassess inflammation response and home-care adherence.";
+  form.nextAppointmentInstrumentationAreas = [
+    "Sextant 1",
+    "Sextant 2",
+    "Sextant 3",
+  ];
+  form.nextAppointmentNotes =
+    "Reassess inflammation response and home-care adherence.";
 
-  form.disposition = ["DH Re-eval at 4-6 weeks", "DH Re-care at 3-4 months interval"];
-  form.otherClinicalFindings = "Continue monitoring tongue and linea alba findings.";
+  form.disposition = [
+    "DH Re-eval at 4-6 weeks",
+    "DH Re-care at 3-4 months interval",
+  ];
+  form.otherClinicalFindings =
+    "Continue monitoring tongue and linea alba findings.";
 
   return form;
 }
@@ -554,7 +629,10 @@ function collectSelectedFindings(findings) {
 export function buildSummaryText(form, selectedFindings) {
   const lines = [];
 
-  const clean = (value) => String(value ?? "").trim().replace(/[\s\n]+/g, " ");
+  const clean = (value) =>
+    String(value ?? "")
+      .trim()
+      .replace(/[\s\n]+/g, " ");
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
   const formatDepositLine = (label, entry, includeLocations = false) => {
     const amount = entry.amount.toLowerCase();
@@ -586,71 +664,86 @@ export function buildSummaryText(form, selectedFindings) {
     form.patientPresentsForHygieneNoOtherConcerns
       ? "Patient presents for hygiene, no other concerns."
       : "",
-    form.patientConcerns.trim() ? `Patient concerns: ${cleanSentence(form.patientConcerns)}.` : "",
-    form.medicalHistory.trim() ? `Medical history: ${cleanSentence(form.medicalHistory)}.` : "",
+    form.patientConcerns.trim()
+      ? `Patient concerns: ${cleanSentence(form.patientConcerns)}.`
+      : "",
+    form.medicalHistory.trim()
+      ? `Medical history: ${cleanSentence(form.medicalHistory)}.`
+      : "",
     form.bloodPressure || form.heartRate || form.bloodPressureTakenTime
       ? `Vitals: ${[
           form.bloodPressure ? `BP ${clean(form.bloodPressure)}` : "",
           form.heartRate ? `HR ${clean(form.heartRate)}` : "",
-          form.bloodPressureTakenTime ? `BP taken at ${clean(form.bloodPressureTakenTime)}` : "",
+          form.bloodPressureTakenTime
+            ? `BP taken at ${clean(form.bloodPressureTakenTime)}`
+            : "",
         ]
           .filter(Boolean)
           .join(", ")}.`
       : "",
   ]);
 
-  const eoeIoeFindings = [];
+  const eoeFindings = [];
   if (form.asymptomaticClickOnOpeningClosing) {
-    eoeIoeFindings.push(
+    eoeFindings.push(
       `Asymptomatic click on opening/closing${
-        form.asymptomaticClickLaterality ? ` (${form.asymptomaticClickLaterality})` : ""
-      }`
+        form.asymptomaticClickLaterality
+          ? ` (${form.asymptomaticClickLaterality})`
+          : ""
+      }`,
     );
   }
   if (form.asymptomaticLymphNodes) {
-    eoeIoeFindings.push(
+    eoeFindings.push(
       `Asymptomatic lymph nodes${
-        form.asymptomaticLymphNodesPalpability ? ` (${form.asymptomaticLymphNodesPalpability})` : ""
-      }`
+        form.asymptomaticLymphNodesPalpability
+          ? ` (${form.asymptomaticLymphNodesPalpability})`
+          : ""
+      }`,
     );
   }
-  if (form.eoeIoeFindings.length) {
-    eoeIoeFindings.push(...form.eoeIoeFindings);
-  }
+  const ioeFindings = [...form.ioeFindings];
   if (form.palatineTorusAtMidline) {
-    eoeIoeFindings.push(
+    ioeFindings.push(
       `Palatine torus at midline${
         form.palatineTorusProminence ? ` (${form.palatineTorusProminence})` : ""
-      }`
+      }`,
     );
   }
   if (form.bilateralMandibularTori) {
-    eoeIoeFindings.push(
+    ioeFindings.push(
       `Bilateral mandibular tori${
-        form.bilateralMandibularToriProminence ? ` (${form.bilateralMandibularToriProminence})` : ""
-      }`
+        form.bilateralMandibularToriProminence
+          ? ` (${form.bilateralMandibularToriProminence})`
+          : ""
+      }`,
     );
   }
 
   addHeadingBlock("EOE/IOE", [
     form.eoeWithinNormalLimits ? "EOE: Within Normal Limits." : "",
-    form.ioeWithinNormalLimits ? "IOE: Within Normal Limits." : "",
-    eoeIoeFindings.length ? `EOE findings: ${eoeIoeFindings.join(", ")}.` : "",
-    form.eoeIoeFindings.length ? `IOE findings: ${form.eoeIoeFindings.join(", ")}.` : "",
+    eoeFindings.length ? `EOE findings: ${eoeFindings.join(", ")}.` : "",
     form.eoe.trim() ? `EOE observations: ${cleanSentence(form.eoe)}.` : "",
+    form.ioeWithinNormalLimits ? "IOE: Within Normal Limits." : "",
+    ioeFindings.length ? `IOE findings: ${ioeFindings.join(", ")}.` : "",
     form.ioe.trim() ? `IOE observations: ${cleanSentence(form.ioe)}.` : "",
   ]);
 
   addHeadingBlock(
     "Gingival Description",
     selectedFindings.map((item) => {
-      const detailParts = [item.extent === "generalized" ? "generalized" : "localized"];
-      if (item.toothNumbers.trim()) detailParts.push(`teeth ${clean(item.toothNumbers)}`);
-      if (item.locations.length) detailParts.push(`location ${item.locations.join(", ")}`);
-      if (item.distributions.length) detailParts.push(`distribution ${item.distributions.join(", ")}`);
+      const detailParts = [
+        item.extent === "generalized" ? "generalized" : "localized",
+      ];
+      if (item.toothNumbers.trim())
+        detailParts.push(`teeth ${clean(item.toothNumbers)}`);
+      if (item.locations.length)
+        detailParts.push(`location ${item.locations.join(", ")}`);
+      if (item.distributions.length)
+        detailParts.push(`distribution ${item.distributions.join(", ")}`);
       if (item.notes.trim()) detailParts.push(cleanSentence(item.notes));
       return `${item.section}: ${item.finding} (${detailParts.join("; ")}).`;
-    })
+    }),
   );
 
   addHeadingBlock("Deposits and Inflammation", [
@@ -669,22 +762,32 @@ export function buildSummaryText(form, selectedFindings) {
 
   addHeadingBlock("Periodontal Status", [
     perioBits.length ? `Status: ${perioBits.join(", ")}.` : "",
-    form.periodontalStatusNotes.trim() ? `Notes: ${cleanSentence(form.periodontalStatusNotes)}.` : "",
+    form.periodontalStatusNotes.trim()
+      ? `Notes: ${cleanSentence(form.periodontalStatusNotes)}.`
+      : "",
   ]);
 
   addHeadingBlock("Caries Risk", [
     form.cariesRiskLevel ? `Risk level: ${form.cariesRiskLevel}.` : "",
-    form.cariesRiskFactors.length ? `Risk factors: ${form.cariesRiskFactors.join(", ")}.` : "",
-    form.cariesRiskNotes.trim() ? `Notes: ${cleanSentence(form.cariesRiskNotes)}.` : "",
+    form.cariesRiskFactors.length
+      ? `Risk factors: ${form.cariesRiskFactors.join(", ")}.`
+      : "",
+    form.cariesRiskNotes.trim()
+      ? `Notes: ${cleanSentence(form.cariesRiskNotes)}.`
+      : "",
   ]);
 
   addHeadingBlock("Oral Health Education", [
-    form.oheTopics.length ? `Topics reviewed: ${form.oheTopics.join(", ")}.` : "",
+    form.oheTopics.length
+      ? `Topics reviewed: ${form.oheTopics.join(", ")}.`
+      : "",
     form.oheNotes.trim() ? `OHE notes: ${cleanSentence(form.oheNotes)}.` : "",
   ]);
 
   addHeadingBlock("Recommendations", [
-    form.recommendations.length ? `Recommendations: ${form.recommendations.join(", ")}.` : "",
+    form.recommendations.length
+      ? `Recommendations: ${form.recommendations.join(", ")}.`
+      : "",
     form.recommendationsNotes.trim()
       ? `Additional recommendation details: ${cleanSentence(form.recommendationsNotes)}.`
       : "",
@@ -697,7 +800,9 @@ export function buildSummaryText(form, selectedFindings) {
   ]);
 
   addHeadingBlock("Treatment Done Today", [
-    form.treatmentDoneToday.length ? `Completed: ${form.treatmentDoneToday.join(", ")}.` : "",
+    form.treatmentDoneToday.length
+      ? `Completed: ${form.treatmentDoneToday.join(", ")}.`
+      : "",
     form.treatmentDoneToday.includes("Hand and power instrumentation") &&
     form.treatmentDoneTodayInstrumentationDevices.length
       ? `Hand and power instrumentation device: ${form.treatmentDoneTodayInstrumentationDevices.join(", ")}.`
@@ -712,7 +817,9 @@ export function buildSummaryText(form, selectedFindings) {
   ]);
 
   addHeadingBlock("Next Appointment", [
-    form.nextAppointment.length ? `Planned care: ${form.nextAppointment.join(", ")}.` : "",
+    form.nextAppointment.length
+      ? `Planned care: ${form.nextAppointment.join(", ")}.`
+      : "",
     form.nextAppointment.includes("Hand and power instrumentation") &&
     form.nextAppointmentInstrumentationDevices.length
       ? `Hand and power instrumentation device: ${form.nextAppointmentInstrumentationDevices.join(", ")}.`
@@ -745,6 +852,25 @@ export const SUMMARY_TEST_CASES = [
     expectedIncludes: [
       "Visit Details:\n  Date: 2026-03-08",
       "History and Exam:\n  Patient concerns: Bleeding gums.",
+    ],
+  },
+  {
+    name: "groups EOE and IOE summary lines by exam scope",
+    input: (() => {
+      const form = buildInitialForm();
+      form.eoeWithinNormalLimits = true;
+      form.asymptomaticClickOnOpeningClosing = true;
+      form.asymptomaticClickLaterality = "Left";
+      form.eoe = "No swelling noted";
+      form.ioeWithinNormalLimits = true;
+      form.ioeFindings = ["Coated tongue"];
+      form.palatineTorusAtMidline = true;
+      form.palatineTorusProminence = "Slight";
+      form.ioe = "Linea alba monitored";
+      return { form, selectedFindings: [] };
+    })(),
+    expectedIncludes: [
+      "EOE/IOE:\n  EOE: Within Normal Limits.\n  EOE findings: Asymptomatic click on opening/closing (Left).\n  EOE observations: No swelling noted.\n  IOE: Within Normal Limits.\n  IOE findings: Coated tongue, Palatine torus at midline (Slight).\n  IOE observations: Linea alba monitored.",
     ],
   },
   {
@@ -862,11 +988,15 @@ function FindingRow({ sectionKey, option, value, onChange }) {
             id={`${sectionKey}-${option}`}
           />
           <div>
-            <Label htmlFor={`${sectionKey}-${option}`} className="cursor-pointer text-base font-semibold">
+            <Label
+              htmlFor={`${sectionKey}-${option}`}
+              className="cursor-pointer text-base font-semibold"
+            >
               {option}
             </Label>
             <p className="text-sm text-muted-foreground">
-              Mark this finding, then capture extent, tooth number, location, and distribution.
+              Mark this finding, then capture extent, tooth number, location,
+              and distribution.
             </p>
           </div>
         </div>
@@ -877,7 +1007,10 @@ function FindingRow({ sectionKey, option, value, onChange }) {
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Extent</Label>
-            <Select value={value.extent} onValueChange={(next) => update({ extent: next })}>
+            <Select
+              value={value.extent}
+              onValueChange={(next) => update({ extent: next })}
+            >
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="Select extent" />
               </SelectTrigger>
@@ -946,7 +1079,13 @@ function SectionTextarea({ id, label, placeholder, value, onChange }) {
   );
 }
 
-function DepositsCard({ title, value, onChange, showTypeLocation = false, placeholder }) {
+function DepositsCard({
+  title,
+  value,
+  onChange,
+  showTypeLocation = false,
+  placeholder,
+}) {
   const update = (patch) => onChange({ ...value, ...patch });
   const showExtent = value.amount !== "None";
 
@@ -959,7 +1098,10 @@ function DepositsCard({ title, value, onChange, showTypeLocation = false, placeh
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label>Amount</Label>
-            <Select value={value.amount} onValueChange={(amount) => update({ amount })}>
+            <Select
+              value={value.amount}
+              onValueChange={(amount) => update({ amount })}
+            >
               <SelectTrigger className="rounded-xl">
                 <SelectValue placeholder="Select amount" />
               </SelectTrigger>
@@ -976,7 +1118,10 @@ function DepositsCard({ title, value, onChange, showTypeLocation = false, placeh
           {showExtent ? (
             <div className="space-y-2">
               <Label>Extent</Label>
-              <Select value={value.extent} onValueChange={(extent) => update({ extent })}>
+              <Select
+                value={value.extent}
+                onValueChange={(extent) => update({ extent })}
+              >
                 <SelectTrigger className="rounded-xl">
                   <SelectValue placeholder="Select extent" />
                 </SelectTrigger>
@@ -1032,8 +1177,14 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
     }));
   };
 
-  const selectedFindings = useMemo(() => collectSelectedFindings(form.findings), [form.findings]);
-  const summaryText = useMemo(() => buildSummaryText(form, selectedFindings), [form, selectedFindings]);
+  const selectedFindings = useMemo(
+    () => collectSelectedFindings(form.findings),
+    [form.findings],
+  );
+  const summaryText = useMemo(
+    () => buildSummaryText(form, selectedFindings),
+    [form, selectedFindings],
+  );
 
   const resetForm = () => {
     setForm(buildInitialForm());
@@ -1078,9 +1229,12 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
       <div className="mx-auto max-w-7xl space-y-6">
         <Card className="rounded-3xl shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl md:text-3xl">Dental Hygiene Note Webform Template</CardTitle>
+            <CardTitle className="text-2xl md:text-3xl">
+              Dental Hygiene Note Webform Template
+            </CardTitle>
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Expanded from the original gingival description form into a fuller hygiene-note template with chart-ready structured output.
+              Expanded from the original gingival description form into a fuller
+              hygiene-note template with chart-ready structured output.
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1092,7 +1246,9 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   type="date"
                   className="rounded-xl"
                   value={form.date}
-                  onChange={(e) => setForm((current) => ({ ...current, date: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((current) => ({ ...current, date: e.target.value }))
+                  }
                 />
               </div>
             </div>
@@ -1120,20 +1276,24 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   </Label>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                <SectionTextarea
-                  id="patient-concerns"
-                  label="Patient concerns"
-                  placeholder="Document the chief complaint or concerns in the patient’s own words."
-                  value={form.patientConcerns}
-                  onChange={(patientConcerns) => setForm((current) => ({ ...current, patientConcerns }))}
-                />
-                <SectionTextarea
-                  id="medical-history"
-                  label="Medical history"
-                  placeholder="Review and update medications, allergies, surgeries, conditions, or note no changes."
-                  value={form.medicalHistory}
-                  onChange={(medicalHistory) => setForm((current) => ({ ...current, medicalHistory }))}
-                />
+                  <SectionTextarea
+                    id="patient-concerns"
+                    label="Patient concerns"
+                    placeholder="Document the chief complaint or concerns in the patient’s own words."
+                    value={form.patientConcerns}
+                    onChange={(patientConcerns) =>
+                      setForm((current) => ({ ...current, patientConcerns }))
+                    }
+                  />
+                  <SectionTextarea
+                    id="medical-history"
+                    label="Medical history"
+                    placeholder="Review and update medications, allergies, surgeries, conditions, or note no changes."
+                    value={form.medicalHistory}
+                    onChange={(medicalHistory) =>
+                      setForm((current) => ({ ...current, medicalHistory }))
+                    }
+                  />
                 </div>
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
@@ -1143,7 +1303,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       placeholder="e.g. 120/80"
                       value={form.bloodPressure}
                       onChange={(e) =>
-                        setForm((current) => ({ ...current, bloodPressure: e.target.value }))
+                        setForm((current) => ({
+                          ...current,
+                          bloodPressure: e.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -1154,7 +1317,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       placeholder="e.g. 72"
                       value={form.heartRate}
                       onChange={(e) =>
-                        setForm((current) => ({ ...current, heartRate: e.target.value }))
+                        setForm((current) => ({
+                          ...current,
+                          heartRate: e.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -1165,7 +1331,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       type="time"
                       value={form.bloodPressureTakenTime}
                       onChange={(e) =>
-                        setForm((current) => ({ ...current, bloodPressureTakenTime: e.target.value }))
+                        setForm((current) => ({
+                          ...current,
+                          bloodPressureTakenTime: e.target.value,
+                        }))
                       }
                     />
                   </div>
@@ -1177,231 +1346,297 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
               <CardHeader>
                 <CardTitle className="text-xl">EOE / IOE</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant={form.eoeWithinNormalLimits ? "default" : "outline"}
-                    className="rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        eoeWithinNormalLimits: !current.eoeWithinNormalLimits,
-                      }))
-                    }
-                  >
-                    EOE Within Normal Limits
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={form.ioeWithinNormalLimits ? "default" : "outline"}
-                    className="rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        ioeWithinNormalLimits: !current.ioeWithinNormalLimits,
-                      }))
-                    }
-                  >
-                    IOE Within Normal Limits
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>EOE findings</Label>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
+              <CardContent className="space-y-6">
+                <div className="space-y-4 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-lg font-semibold text-slate-900 dark:text-white">
+                        EOE
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        Extraoral exam findings and observations.
+                      </div>
+                    </div>
                     <Button
                       type="button"
-                      variant={form.asymptomaticClickOnOpeningClosing ? "default" : "outline"}
-                      className="w-full justify-start rounded-2xl"
+                      variant={
+                        form.eoeWithinNormalLimits ? "default" : "outline"
+                      }
+                      className="rounded-2xl"
                       onClick={() =>
                         setForm((current) => ({
                           ...current,
-                          asymptomaticClickOnOpeningClosing: !current.asymptomaticClickOnOpeningClosing,
-                          asymptomaticClickLaterality: current.asymptomaticClickOnOpeningClosing
-                            ? ""
-                            : current.asymptomaticClickLaterality,
+                          eoeWithinNormalLimits: !current.eoeWithinNormalLimits,
                         }))
                       }
                     >
-                      Asymptomatic click on opening/closing
+                      EOE Within Normal Limits
                     </Button>
-                    {form.asymptomaticClickOnOpeningClosing ? (
-                      <div className="space-y-2">
-                        <Label>Laterality</Label>
-                        <Select
-                          value={form.asymptomaticClickLaterality}
-                          onValueChange={(asymptomaticClickLaterality) =>
-                            setForm((current) => ({ ...current, asymptomaticClickLaterality }))
-                          }
-                        >
-                          <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder="Select laterality" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">None selected</SelectItem>
-                            {CLICK_LATERALITY_OPTIONS.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : null}
                   </div>
-                  <div className="space-y-2">
-                    <Button
-                      type="button"
-                      variant={form.asymptomaticLymphNodes ? "default" : "outline"}
-                      className="w-full justify-start rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          asymptomaticLymphNodes: !current.asymptomaticLymphNodes,
-                          asymptomaticLymphNodesPalpability: current.asymptomaticLymphNodes
-                            ? ""
-                            : current.asymptomaticLymphNodesPalpability,
-                        }))
-                      }
-                    >
-                      Asymptomatic lymph nodes
-                    </Button>
-                    {form.asymptomaticLymphNodes ? (
-                      <div className="space-y-2">
-                        <Label>Palpability</Label>
-                        <Select
-                          value={form.asymptomaticLymphNodesPalpability}
-                          onValueChange={(asymptomaticLymphNodesPalpability) =>
-                            setForm((current) => ({ ...current, asymptomaticLymphNodesPalpability }))
-                          }
-                        >
-                          <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder="Select palpability" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">None selected</SelectItem>
-                            {ASYMPTOMATIC_LYMPH_NODE_OPTIONS.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
 
-                <MultiToggle
-                  label="IOE Findings"
-                  options={STRUCTURED_EOE_IOE_FINDINGS}
-                  selected={form.eoeIoeFindings}
-                  onChange={(eoeIoeFindings) => setForm((current) => ({ ...current, eoeIoeFindings }))}
-                />
-
-                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Button
-                      type="button"
-                      variant={form.palatineTorusAtMidline ? "default" : "outline"}
-                      className="w-full justify-start rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          palatineTorusAtMidline: !current.palatineTorusAtMidline,
-                          palatineTorusProminence: current.palatineTorusAtMidline
-                            ? ""
-                            : current.palatineTorusProminence,
-                        }))
-                      }
-                    >
-                      Palatine torus at midline
-                    </Button>
-                    {form.palatineTorusAtMidline ? (
-                      <div className="space-y-2">
-                        <Label>Prominence</Label>
-                        <Select
-                          value={form.palatineTorusProminence}
-                          onValueChange={(palatineTorusProminence) =>
-                            setForm((current) => ({ ...current, palatineTorusProminence }))
-                          }
-                        >
-                          <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder="Select prominence" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">None selected</SelectItem>
-                            {PALATINE_TORUS_OPTIONS.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : null}
+                    <Label>EOE findings</Label>
                   </div>
-                  <div className="space-y-2">
-                    <Button
-                      type="button"
-                      variant={form.bilateralMandibularTori ? "default" : "outline"}
-                      className="w-full justify-start rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          bilateralMandibularTori: !current.bilateralMandibularTori,
-                          bilateralMandibularToriProminence: current.bilateralMandibularTori
-                            ? ""
-                            : current.bilateralMandibularToriProminence,
-                        }))
-                      }
-                    >
-                      Bilateral mandibular tori
-                    </Button>
-                    {form.bilateralMandibularTori ? (
-                      <div className="space-y-2">
-                        <Label>Prominence</Label>
-                        <Select
-                          value={form.bilateralMandibularToriProminence}
-                          onValueChange={(bilateralMandibularToriProminence) =>
-                            setForm((current) => ({ ...current, bilateralMandibularToriProminence }))
-                          }
-                        >
-                          <SelectTrigger className="rounded-xl">
-                            <SelectValue placeholder="Select prominence" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">None selected</SelectItem>
-                            {PALATINE_TORUS_OPTIONS.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant={
+                          form.asymptomaticClickOnOpeningClosing
+                            ? "default"
+                            : "outline"
+                        }
+                        className="w-full justify-start rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            asymptomaticClickOnOpeningClosing:
+                              !current.asymptomaticClickOnOpeningClosing,
+                            asymptomaticClickLaterality:
+                              current.asymptomaticClickOnOpeningClosing
+                                ? ""
+                                : current.asymptomaticClickLaterality,
+                          }))
+                        }
+                      >
+                        Asymptomatic click on opening/closing
+                      </Button>
+                      {form.asymptomaticClickOnOpeningClosing ? (
+                        <div className="space-y-2">
+                          <Label>Laterality</Label>
+                          <Select
+                            value={form.asymptomaticClickLaterality}
+                            onValueChange={(asymptomaticClickLaterality) =>
+                              setForm((current) => ({
+                                ...current,
+                                asymptomaticClickLaterality,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="rounded-xl">
+                              <SelectValue placeholder="Select laterality" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">None selected</SelectItem>
+                              {CLICK_LATERALITY_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant={
+                          form.asymptomaticLymphNodes ? "default" : "outline"
+                        }
+                        className="w-full justify-start rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            asymptomaticLymphNodes:
+                              !current.asymptomaticLymphNodes,
+                            asymptomaticLymphNodesPalpability:
+                              current.asymptomaticLymphNodes
+                                ? ""
+                                : current.asymptomaticLymphNodesPalpability,
+                          }))
+                        }
+                      >
+                        Asymptomatic lymph nodes
+                      </Button>
+                      {form.asymptomaticLymphNodes ? (
+                        <div className="space-y-2">
+                          <Label>Palpability</Label>
+                          <Select
+                            value={form.asymptomaticLymphNodesPalpability}
+                            onValueChange={(
+                              asymptomaticLymphNodesPalpability,
+                            ) =>
+                              setForm((current) => ({
+                                ...current,
+                                asymptomaticLymphNodesPalpability,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="rounded-xl">
+                              <SelectValue placeholder="Select palpability" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">None selected</SelectItem>
+                              {ASYMPTOMATIC_LYMPH_NODE_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
                   <SectionTextarea
                     id="eoe"
                     label="EOE observations"
                     placeholder="Document extraoral observations."
                     value={form.eoe}
-                    onChange={(eoe) => setForm((current) => ({ ...current, eoe }))}
+                    onChange={(eoe) =>
+                      setForm((current) => ({ ...current, eoe }))
+                    }
                   />
+                </div>
+
+                <div className="space-y-4 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-lg font-semibold text-slate-900 dark:text-white">
+                        IOE
+                      </div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        Intraoral exam findings and observations.
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant={
+                        form.ioeWithinNormalLimits ? "default" : "outline"
+                      }
+                      className="rounded-2xl"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          ioeWithinNormalLimits: !current.ioeWithinNormalLimits,
+                        }))
+                      }
+                    >
+                      IOE Within Normal Limits
+                    </Button>
+                  </div>
+
+                  <MultiToggle
+                    label="IOE findings"
+                    options={IOE_FINDING_OPTIONS}
+                    selected={form.ioeFindings}
+                    onChange={(ioeFindings) =>
+                      setForm((current) => ({ ...current, ioeFindings }))
+                    }
+                  />
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant={
+                          form.palatineTorusAtMidline ? "default" : "outline"
+                        }
+                        className="w-full justify-start rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            palatineTorusAtMidline:
+                              !current.palatineTorusAtMidline,
+                            palatineTorusProminence:
+                              current.palatineTorusAtMidline
+                                ? ""
+                                : current.palatineTorusProminence,
+                          }))
+                        }
+                      >
+                        Palatine torus at midline
+                      </Button>
+                      {form.palatineTorusAtMidline ? (
+                        <div className="space-y-2">
+                          <Label>Prominence</Label>
+                          <Select
+                            value={form.palatineTorusProminence}
+                            onValueChange={(palatineTorusProminence) =>
+                              setForm((current) => ({
+                                ...current,
+                                palatineTorusProminence,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="rounded-xl">
+                              <SelectValue placeholder="Select prominence" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">None selected</SelectItem>
+                              {PALATINE_TORUS_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+                    </div>
+                    <div className="space-y-2">
+                      <Button
+                        type="button"
+                        variant={
+                          form.bilateralMandibularTori ? "default" : "outline"
+                        }
+                        className="w-full justify-start rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            bilateralMandibularTori:
+                              !current.bilateralMandibularTori,
+                            bilateralMandibularToriProminence:
+                              current.bilateralMandibularTori
+                                ? ""
+                                : current.bilateralMandibularToriProminence,
+                          }))
+                        }
+                      >
+                        Bilateral mandibular tori
+                      </Button>
+                      {form.bilateralMandibularTori ? (
+                        <div className="space-y-2">
+                          <Label>Prominence</Label>
+                          <Select
+                            value={form.bilateralMandibularToriProminence}
+                            onValueChange={(
+                              bilateralMandibularToriProminence,
+                            ) =>
+                              setForm((current) => ({
+                                ...current,
+                                bilateralMandibularToriProminence,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="rounded-xl">
+                              <SelectValue placeholder="Select prominence" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">None selected</SelectItem>
+                              {PALATINE_TORUS_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+
                   <SectionTextarea
                     id="ioe"
                     label="IOE observations"
                     placeholder="Document intraoral observations."
                     value={form.ioe}
-                    onChange={(ioe) => setForm((current) => ({ ...current, ioe }))}
+                    onChange={(ioe) =>
+                      setForm((current) => ({ ...current, ioe }))
+                    }
                   />
                 </div>
               </CardContent>
@@ -1413,57 +1648,76 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-6 xl:grid-cols-2">
-                  {Object.entries(FIELD_OPTIONS).map(([sectionKey, options]) => (
-                    <Card key={sectionKey} className="rounded-3xl border-dashed">
-                      <CardHeader>
-                        <CardTitle className="text-lg">{prettyLabel(sectionKey)}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        {options.map((option) => (
-                          <FindingRow
-                            key={option}
-                            sectionKey={sectionKey}
-                            option={option}
-                            value={form.findings[sectionKey][option]}
-                            onChange={(nextValue) => setFinding(sectionKey, option, nextValue)}
-                          />
-                        ))}
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {Object.entries(FIELD_OPTIONS).map(
+                    ([sectionKey, options]) => (
+                      <Card
+                        key={sectionKey}
+                        className="rounded-3xl border-dashed"
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            {prettyLabel(sectionKey)}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {options.map((option) => (
+                            <FindingRow
+                              key={option}
+                              sectionKey={sectionKey}
+                              option={option}
+                              value={form.findings[sectionKey][option]}
+                              onChange={(nextValue) =>
+                                setFinding(sectionKey, option, nextValue)
+                              }
+                            />
+                          ))}
+                        </CardContent>
+                      </Card>
+                    ),
+                  )}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="rounded-3xl">
               <CardHeader>
-                <CardTitle className="text-xl">Calculus and Biofilm Deposits</CardTitle>
+                <CardTitle className="text-xl">
+                  Calculus and Biofilm Deposits
+                </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-6 xl:grid-cols-2">
                 <DepositsCard
                   title="Plaque"
                   value={form.plaque}
-                  onChange={(plaque) => setForm((current) => ({ ...current, plaque }))}
+                  onChange={(plaque) =>
+                    setForm((current) => ({ ...current, plaque }))
+                  }
                   showTypeLocation
                   placeholder="Describe oral biofilm location, amount, and extent."
                 />
                 <DepositsCard
                   title="Calculus"
                   value={form.calculus}
-                  onChange={(calculus) => setForm((current) => ({ ...current, calculus }))}
+                  onChange={(calculus) =>
+                    setForm((current) => ({ ...current, calculus }))
+                  }
                   showTypeLocation
                   placeholder="Describe supragingival/subgingival calculus and affected sites."
                 />
                 <DepositsCard
                   title="Extrinsic Stain"
                   value={form.extrinsicStain}
-                  onChange={(extrinsicStain) => setForm((current) => ({ ...current, extrinsicStain }))}
+                  onChange={(extrinsicStain) =>
+                    setForm((current) => ({ ...current, extrinsicStain }))
+                  }
                   placeholder="Describe generalized or localized stain and specific teeth/surfaces."
                 />
                 <DepositsCard
                   title="Bleeding and Inflammation"
                   value={form.bleedingInflammation}
-                  onChange={(bleedingInflammation) => setForm((current) => ({ ...current, bleedingInflammation }))}
+                  onChange={(bleedingInflammation) =>
+                    setForm((current) => ({ ...current, bleedingInflammation }))
+                  }
                   placeholder="Note amount, generalized vs localized, and any distribution details."
                 />
               </CardContent>
@@ -1480,7 +1734,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     <Select
                       value={form.periodontalStatusActivity}
                       onValueChange={(periodontalStatusActivity) =>
-                        setForm((current) => ({ ...current, periodontalStatusActivity }))
+                        setForm((current) => ({
+                          ...current,
+                          periodontalStatusActivity,
+                        }))
                       }
                     >
                       <SelectTrigger className="rounded-xl">
@@ -1501,7 +1758,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     <Select
                       value={form.periodontalStatusDiseaseType}
                       onValueChange={(periodontalStatusDiseaseType) =>
-                        setForm((current) => ({ ...current, periodontalStatusDiseaseType }))
+                        setForm((current) => ({
+                          ...current,
+                          periodontalStatusDiseaseType,
+                        }))
                       }
                     >
                       <SelectTrigger className="rounded-xl">
@@ -1522,7 +1782,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     <Select
                       value={form.periodontalStatusSeverityStage}
                       onValueChange={(periodontalStatusSeverityStage) =>
-                        setForm((current) => ({ ...current, periodontalStatusSeverityStage }))
+                        setForm((current) => ({
+                          ...current,
+                          periodontalStatusSeverityStage,
+                        }))
                       }
                     >
                       <SelectTrigger className="rounded-xl">
@@ -1543,7 +1806,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     <Select
                       value={form.periodontalStatusGrade}
                       onValueChange={(periodontalStatusGrade) =>
-                        setForm((current) => ({ ...current, periodontalStatusGrade }))
+                        setForm((current) => ({
+                          ...current,
+                          periodontalStatusGrade,
+                        }))
                       }
                     >
                       <SelectTrigger className="rounded-xl">
@@ -1566,7 +1832,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   placeholder="Document contributing factors or rationale."
                   value={form.periodontalStatusNotes}
                   onChange={(periodontalStatusNotes) =>
-                    setForm((current) => ({ ...current, periodontalStatusNotes }))
+                    setForm((current) => ({
+                      ...current,
+                      periodontalStatusNotes,
+                    }))
                   }
                 />
               </CardContent>
@@ -1596,8 +1865,8 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                         </SelectItem>
                       ))}
                     </SelectContent>
-                    </Select>
-                  </div>
+                  </Select>
+                </div>
                 <div className="md:col-span-2">
                   <MultiToggle
                     label="Caries risk factors"
@@ -1613,28 +1882,36 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   label="Caries risk notes"
                   placeholder="Document rationale for caries risk selection."
                   value={form.cariesRiskNotes}
-                  onChange={(cariesRiskNotes) => setForm((current) => ({ ...current, cariesRiskNotes }))}
+                  onChange={(cariesRiskNotes) =>
+                    setForm((current) => ({ ...current, cariesRiskNotes }))
+                  }
                 />
               </CardContent>
             </Card>
 
             <Card className="rounded-3xl">
               <CardHeader>
-                <CardTitle className="text-xl">Oral Health Education (OHE)</CardTitle>
+                <CardTitle className="text-xl">
+                  Oral Health Education (OHE)
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <MultiToggle
                   label="OHE topics"
                   options={OHE_TOPIC_OPTIONS}
                   selected={form.oheTopics}
-                  onChange={(oheTopics) => setForm((current) => ({ ...current, oheTopics }))}
+                  onChange={(oheTopics) =>
+                    setForm((current) => ({ ...current, oheTopics }))
+                  }
                 />
                 <SectionTextarea
                   id="ohe-notes"
                   label="OHE notes"
                   placeholder="Document OHE details discussed today."
                   value={form.oheNotes}
-                  onChange={(oheNotes) => setForm((current) => ({ ...current, oheNotes }))}
+                  onChange={(oheNotes) =>
+                    setForm((current) => ({ ...current, oheNotes }))
+                  }
                 />
               </CardContent>
             </Card>
@@ -1648,7 +1925,9 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   label="Recommendations"
                   options={RECOMMENDATION_OPTIONS}
                   selected={form.recommendations}
-                  onChange={(recommendations) => setForm((current) => ({ ...current, recommendations }))}
+                  onChange={(recommendations) =>
+                    setForm((current) => ({ ...current, recommendations }))
+                  }
                 />
                 <SectionTextarea
                   id="recommendations-notes"
@@ -1675,27 +1954,34 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     setForm((current) => ({
                       ...current,
                       treatmentDoneToday,
-                      treatmentDoneTodayInstrumentationDevices: treatmentDoneToday.includes(
-                        "Hand and power instrumentation"
-                      )
-                        ? current.treatmentDoneTodayInstrumentationDevices
-                        : [],
-                      treatmentDoneTodayInstrumentationAreas: treatmentDoneToday.includes(
-                        "Hand and power instrumentation"
-                      )
-                        ? current.treatmentDoneTodayInstrumentationAreas
-                        : [],
+                      treatmentDoneTodayInstrumentationDevices:
+                        treatmentDoneToday.includes(
+                          "Hand and power instrumentation",
+                        )
+                          ? current.treatmentDoneTodayInstrumentationDevices
+                          : [],
+                      treatmentDoneTodayInstrumentationAreas:
+                        treatmentDoneToday.includes(
+                          "Hand and power instrumentation",
+                        )
+                          ? current.treatmentDoneTodayInstrumentationAreas
+                          : [],
                     }))
                   }
                 />
-                {form.treatmentDoneToday.includes("Hand and power instrumentation") ? (
+                {form.treatmentDoneToday.includes(
+                  "Hand and power instrumentation",
+                ) ? (
                   <>
                     <MultiToggle
                       label="Hand and power instrumentation device (today)"
                       options={INSTRUMENTATION_DEVICE_OPTIONS}
                       selected={form.treatmentDoneTodayInstrumentationDevices}
                       onChange={(treatmentDoneTodayInstrumentationDevices) =>
-                        setForm((current) => ({ ...current, treatmentDoneTodayInstrumentationDevices }))
+                        setForm((current) => ({
+                          ...current,
+                          treatmentDoneTodayInstrumentationDevices,
+                        }))
                       }
                     />
                     <MultiToggle
@@ -1703,7 +1989,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       options={INSTRUMENTATION_AREA_OPTIONS}
                       selected={form.treatmentDoneTodayInstrumentationAreas}
                       onChange={(treatmentDoneTodayInstrumentationAreas) =>
-                        setForm((current) => ({ ...current, treatmentDoneTodayInstrumentationAreas }))
+                        setForm((current) => ({
+                          ...current,
+                          treatmentDoneTodayInstrumentationAreas,
+                        }))
                       }
                     />
                   </>
@@ -1714,7 +2003,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   placeholder="Add details for treatment done today."
                   value={form.treatmentDoneTodayNotes}
                   onChange={(treatmentDoneTodayNotes) =>
-                    setForm((current) => ({ ...current, treatmentDoneTodayNotes }))
+                    setForm((current) => ({
+                      ...current,
+                      treatmentDoneTodayNotes,
+                    }))
                   }
                 />
               </CardContent>
@@ -1752,27 +2044,34 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                     setForm((current) => ({
                       ...current,
                       nextAppointment,
-                      nextAppointmentInstrumentationDevices: nextAppointment.includes(
-                        "Hand and power instrumentation"
-                      )
-                        ? current.nextAppointmentInstrumentationDevices
-                        : [],
-                      nextAppointmentInstrumentationAreas: nextAppointment.includes(
-                        "Hand and power instrumentation"
-                      )
-                        ? current.nextAppointmentInstrumentationAreas
-                        : [],
+                      nextAppointmentInstrumentationDevices:
+                        nextAppointment.includes(
+                          "Hand and power instrumentation",
+                        )
+                          ? current.nextAppointmentInstrumentationDevices
+                          : [],
+                      nextAppointmentInstrumentationAreas:
+                        nextAppointment.includes(
+                          "Hand and power instrumentation",
+                        )
+                          ? current.nextAppointmentInstrumentationAreas
+                          : [],
                     }))
                   }
                 />
-                {form.nextAppointment.includes("Hand and power instrumentation") ? (
+                {form.nextAppointment.includes(
+                  "Hand and power instrumentation",
+                ) ? (
                   <>
                     <MultiToggle
                       label="Hand and power instrumentation device (next appointment)"
                       options={INSTRUMENTATION_DEVICE_OPTIONS}
                       selected={form.nextAppointmentInstrumentationDevices}
                       onChange={(nextAppointmentInstrumentationDevices) =>
-                        setForm((current) => ({ ...current, nextAppointmentInstrumentationDevices }))
+                        setForm((current) => ({
+                          ...current,
+                          nextAppointmentInstrumentationDevices,
+                        }))
                       }
                     />
                     <MultiToggle
@@ -1780,7 +2079,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       options={INSTRUMENTATION_AREA_OPTIONS}
                       selected={form.nextAppointmentInstrumentationAreas}
                       onChange={(nextAppointmentInstrumentationAreas) =>
-                        setForm((current) => ({ ...current, nextAppointmentInstrumentationAreas }))
+                        setForm((current) => ({
+                          ...current,
+                          nextAppointmentInstrumentationAreas,
+                        }))
                       }
                     />
                   </>
@@ -1819,7 +2121,9 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                                 ? current.disposition.includes(option)
                                   ? current.disposition
                                   : [...current.disposition, option]
-                                : current.disposition.filter((item) => item !== option),
+                                : current.disposition.filter(
+                                    (item) => item !== option,
+                                  ),
                             }))
                           }
                         />
@@ -1833,7 +2137,9 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
 
             <Card className="rounded-3xl">
               <CardHeader>
-                <CardTitle className="text-xl">Additional Clinical Documentation</CardTitle>
+                <CardTitle className="text-xl">
+                  Additional Clinical Documentation
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <SectionTextarea
@@ -1842,25 +2148,38 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   placeholder="Add any additional clinical findings."
                   value={form.otherClinicalFindings}
                   onChange={(otherClinicalFindings) =>
-                    setForm((current) => ({ ...current, otherClinicalFindings }))
+                    setForm((current) => ({
+                      ...current,
+                      otherClinicalFindings,
+                    }))
                   }
                 />
               </CardContent>
             </Card>
 
             <div className="flex flex-wrap gap-3">
-              <Button 
-                type="button" 
-                className="rounded-2xl transition-all" 
+              <Button
+                type="button"
+                className="rounded-2xl transition-all"
                 onClick={copySummary}
                 disabled={isCopied}
               >
                 {isCopied ? "✓ Copied!" : "Copy summary"}
               </Button>
-              <Button type="button" className="rounded-2xl" onClick={loadDemo} variant="outline">
+              <Button
+                type="button"
+                className="rounded-2xl"
+                onClick={loadDemo}
+                variant="outline"
+              >
                 Load demo
               </Button>
-              <Button type="button" className="rounded-2xl" onClick={resetForm} variant="outline">
+              <Button
+                type="button"
+                className="rounded-2xl"
+                onClick={resetForm}
+                variant="outline"
+              >
                 Reset form
               </Button>
             </div>
@@ -1886,25 +2205,45 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       <Badge variant="outline" className="rounded-xl">
                         {item.section}
                       </Badge>
-                      <Badge className="rounded-xl">{item.extent === "generalized" ? "GEN" : "LOC"}</Badge>
+                      <Badge className="rounded-xl">
+                        {item.extent === "generalized" ? "GEN" : "LOC"}
+                      </Badge>
                     </div>
-                    <div className="font-semibold text-slate-900 dark:text-white">{item.finding}</div>
+                    <div className="font-semibold text-slate-900 dark:text-white">
+                      {item.finding}
+                    </div>
                     <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                       <p>Teeth: {item.toothNumbers || "—"}</p>
-                      <p>Location: {item.locations.length ? item.locations.join(", ") : "—"}</p>
-                      <p>Distribution: {item.distributions.length ? item.distributions.join(", ") : "—"}</p>
+                      <p>
+                        Location:{" "}
+                        {item.locations.length
+                          ? item.locations.join(", ")
+                          : "—"}
+                      </p>
+                      <p>
+                        Distribution:{" "}
+                        {item.distributions.length
+                          ? item.distributions.join(", ")
+                          : "—"}
+                      </p>
                       {item.notes ? <p>Notes: {item.notes}</p> : null}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-slate-600 dark:text-slate-400">No gingival findings selected yet.</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  No gingival findings selected yet.
+                </div>
               )}
             </div>
 
             <div className="space-y-2">
               <Label>Plain-text output</Label>
-              <Textarea readOnly className="min-h-[480px] rounded-2xl font-mono text-sm dark:bg-slate-900" value={summaryText} />
+              <Textarea
+                readOnly
+                className="min-h-[480px] rounded-2xl font-mono text-sm dark:bg-slate-900"
+                value={summaryText}
+              />
             </div>
           </CardContent>
         </Card>
