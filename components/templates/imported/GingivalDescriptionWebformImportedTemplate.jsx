@@ -329,7 +329,8 @@ const OHE_TOPIC_OPTIONS = [
   "C-shape flossing technique",
   "Sulcabrush and interdental brush technique",
   "Review benefits of Prevident or Opti-Rinse",
-  "Periodontitis theory and risk factors",
+  "Periodontitis theory",
+  "Periodontitis risk factors",
   "Importance of maintaining a 4-month hygiene interval",
 ];
 const RECOMMENDATION_OPTIONS = [
@@ -541,7 +542,8 @@ function buildDemoForm(fixture) {
     "C-shape flossing technique",
     "Sulcabrush and interdental brush technique",
     "Review benefits of Prevident or Opti-Rinse",
-    "Periodontitis theory and risk factors",
+    "Periodontitis theory",
+    "Periodontitis risk factors",
     "Importance of maintaining a 4-month hygiene interval",
   ];
   form.oheNotes =
