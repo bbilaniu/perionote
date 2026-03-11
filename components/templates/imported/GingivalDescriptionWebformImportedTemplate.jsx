@@ -319,6 +319,7 @@ const CARIES_RISK_FACTOR_OPTIONS = [
   "Symptomatically driven dental visits",
 ];
 const CLICK_LATERALITY_OPTIONS = ["Bilateral", "Left", "Right"];
+const ASYMPTOMATIC_LYMPH_NODE_OPTIONS = ["Palpable", "Not palpable"];
 const PALATINE_TORUS_OPTIONS = ["Slight", "Prominent"];
 const STRUCTURED_EOE_IOE_FINDINGS = [
   "Coated tongue",
@@ -366,6 +367,8 @@ function buildInitialForm(fixture) {
     ioeWithinNormalLimits: false,
     asymptomaticClickOnOpeningClosing: false,
     asymptomaticClickLaterality: "",
+    asymptomaticLymphNodes: false,
+    asymptomaticLymphNodesPalpability: "",
     eoeIoeFindings: [],
     palatineTorusAtMidline: false,
     palatineTorusProminence: "",
@@ -604,6 +607,13 @@ export function buildSummaryText(form, selectedFindings) {
       }`
     );
   }
+  if (form.asymptomaticLymphNodes) {
+    eoeIoeFindings.push(
+      `Asymptomatic lymph nodes${
+        form.asymptomaticLymphNodesPalpability ? ` (${form.asymptomaticLymphNodesPalpability})` : ""
+      }`
+    );
+  }
   if (form.eoeIoeFindings.length) {
     eoeIoeFindings.push(...form.eoeIoeFindings);
   }
@@ -625,7 +635,8 @@ export function buildSummaryText(form, selectedFindings) {
   addHeadingBlock("EOE/IOE", [
     form.eoeWithinNormalLimits ? "EOE: Within Normal Limits." : "",
     form.ioeWithinNormalLimits ? "IOE: Within Normal Limits." : "",
-    eoeIoeFindings.length ? `Findings: ${eoeIoeFindings.join(", ")}.` : "",
+    eoeIoeFindings.length ? `EOE findings: ${eoeIoeFindings.join(", ")}.` : "",
+    form.eoeIoeFindings.length ? `IOE findings: ${form.eoeIoeFindings.join(", ")}.` : "",
     form.eoe.trim() ? `EOE observations: ${cleanSentence(form.eoe)}.` : "",
     form.ioe.trim() ? `IOE observations: ${cleanSentence(form.ioe)}.` : "",
   ]);
@@ -1196,7 +1207,11 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                   </Button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-1">
+                <div className="space-y-2">
+                  <Label>EOE findings</Label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Button
                       type="button"
@@ -1238,10 +1253,51 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
                       </div>
                     ) : null}
                   </div>
+                  <div className="space-y-2">
+                    <Button
+                      type="button"
+                      variant={form.asymptomaticLymphNodes ? "default" : "outline"}
+                      className="w-full justify-start rounded-2xl"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          asymptomaticLymphNodes: !current.asymptomaticLymphNodes,
+                          asymptomaticLymphNodesPalpability: current.asymptomaticLymphNodes
+                            ? ""
+                            : current.asymptomaticLymphNodesPalpability,
+                        }))
+                      }
+                    >
+                      Asymptomatic lymph nodes
+                    </Button>
+                    {form.asymptomaticLymphNodes ? (
+                      <div className="space-y-2">
+                        <Label>Palpability</Label>
+                        <Select
+                          value={form.asymptomaticLymphNodesPalpability}
+                          onValueChange={(asymptomaticLymphNodesPalpability) =>
+                            setForm((current) => ({ ...current, asymptomaticLymphNodesPalpability }))
+                          }
+                        >
+                          <SelectTrigger className="rounded-xl">
+                            <SelectValue placeholder="Select palpability" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None selected</SelectItem>
+                            {ASYMPTOMATIC_LYMPH_NODE_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 <MultiToggle
-                  label="Findings"
+                  label="IOE Findings"
                   options={STRUCTURED_EOE_IOE_FINDINGS}
                   selected={form.eoeIoeFindings}
                   onChange={(eoeIoeFindings) => setForm((current) => ({ ...current, eoeIoeFindings }))}
