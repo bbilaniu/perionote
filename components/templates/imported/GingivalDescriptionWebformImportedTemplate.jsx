@@ -677,6 +677,10 @@ export function buildSummaryText(form, selectedFindings) {
       target.push(indent(level + 1, `- ${item}`));
     });
   };
+  const pushInlineList = (target, label, items, level = 1) => {
+    if (!items.length) return;
+    target.push(indent(level, `${label}: ${items.join(", ")}`));
+  };
   const normalizeObservation = (value, withinNormalLimits) => {
     let normalized = cleanSentence(value);
     if (!normalized) return "";
@@ -891,7 +895,7 @@ export function buildSummaryText(form, selectedFindings) {
     form.treatmentDoneToday.includes("Hand and power instrumentation") &&
     form.treatmentDoneTodayInstrumentationAreas.length
   ) {
-    pushList(
+    pushInlineList(
       treatmentDoneLines,
       "Instrumentation area",
       form.treatmentDoneTodayInstrumentationAreas,
@@ -922,7 +926,7 @@ export function buildSummaryText(form, selectedFindings) {
     form.nextAppointment.includes("Hand and power instrumentation") &&
     form.nextAppointmentInstrumentationAreas.length
   ) {
-    pushList(
+    pushInlineList(
       nextAppointmentLines,
       "Instrumentation area",
       form.nextAppointmentInstrumentationAreas,
