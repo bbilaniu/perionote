@@ -2263,7 +2263,7 @@ export function GingivalDescriptionWebformImportedTemplate({
               }
               contentClassName="space-y-6"
             >
-                <div className={cx("space-y-6", !isVeryShort && "grid gap-6 xl:grid-cols-2")}>
+                <div className={isVeryShort ? "space-y-6" : "grid gap-6 xl:grid-cols-2"}>
                   {Object.entries(FIELD_OPTIONS).map(
                     ([sectionKey, options]) => (
                       <Card
@@ -2276,10 +2276,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </CardTitle>
                         </CardHeader>
                         <CardContent
-                          className={cx(
-                            "space-y-4",
-                            isVeryShort && "grid gap-4 lg:grid-cols-2 2xl:grid-cols-3",
-                          )}
+                          className={
+                            isVeryShort
+                              ? "grid gap-4 lg:grid-cols-2 2xl:grid-cols-3"
+                              : "space-y-4"
+                          }
                         >
                           {options.map((option) => (
                             <div
