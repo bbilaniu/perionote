@@ -1288,7 +1288,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
       className={cx(
         "space-y-4 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
         checked
-          ? "border-sky-400 bg-sky-50/70 ring-2 ring-sky-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+          ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
           : "border-slate-200 dark:border-slate-700",
       )}
       role="checkbox"
@@ -1306,16 +1306,17 @@ function FindingRow({ sectionKey, option, value, onChange }) {
       }}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+        <div className="grid grid-cols-[auto_1fr] items-start gap-x-3">
           <Checkbox
+            className="mt-1 h-5 w-5"
             checked={checked}
             onCheckedChange={(next) => setChecked(Boolean(next))}
             id={`${sectionKey}-${option}`}
           />
-          <div>
+          <div className="space-y-1">
             <Label
               htmlFor={`${sectionKey}-${option}`}
-              className="cursor-pointer text-base font-semibold"
+              className="cursor-pointer text-lg font-semibold leading-tight"
             >
               {option}
             </Label>
@@ -1454,7 +1455,7 @@ function DepositsCard({
       className={cx(
         "space-y-4 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
         value.enabled
-          ? "border-sky-400 bg-sky-50/70 ring-2 ring-sky-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+          ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
           : "border-slate-200 dark:border-slate-700",
       )}
       role="checkbox"
