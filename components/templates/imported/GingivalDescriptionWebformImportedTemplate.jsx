@@ -1642,7 +1642,12 @@ export function GingivalDescriptionWebformImportedTemplate({
       <CardContent className="space-y-4">
         {isVeryShort ? actionButtons : null}
         {(!isVeryShort || structuredSummaryOpen) ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            className={cx(
+              "grid gap-3",
+              isVeryShort ? "grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3",
+            )}
+          >
             {selectedFindings.length ? (
               selectedFindings.map((item, index) => (
                 <div
@@ -1784,9 +1789,9 @@ export function GingivalDescriptionWebformImportedTemplate({
       <div
         className={cx(
           "mx-auto space-y-6",
-          isVeryShort ? "max-w-[104rem]" : "max-w-7xl",
+          isVeryShort ? "max-w-[112rem]" : "max-w-7xl",
           isVeryShort &&
-            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_28rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
+            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_34rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
         )}
       >
         <div className="min-w-0 space-y-6">
