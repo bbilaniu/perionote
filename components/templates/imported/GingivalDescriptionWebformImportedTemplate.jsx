@@ -342,9 +342,13 @@ const DEPOSIT_LOCATION_OPTIONS = [
   "Generalized",
   "Localized",
 ];
+const HAND_INSTRUMENTATION_OPTION = "Hand instrumentation";
+const POWER_INSTRUMENTATION_OPTION = "Power instrumentation";
+const FLUORIDE_VARNISH_OPTION = "Ipana 5% NaF varnish application";
 const TREATMENT_OPTIONS = [
-  "Hand and power instrumentation",
-  "Ipana 5% NaF varnish application",
+  HAND_INSTRUMENTATION_OPTION,
+  POWER_INSTRUMENTATION_OPTION,
+  FLUORIDE_VARNISH_OPTION,
 ];
 const INSTRUMENTATION_DEVICE_OPTIONS = ["Cavitron", "Piezo"];
 const INSTRUMENTATION_AREA_OPTIONS = [
@@ -596,8 +600,9 @@ function buildDemoForm(fixture) {
     "Periodontal risk assessment",
     "Spot probing",
     "Full mouth probing",
-    "Hand and power instrumentation",
-    "Ipana 5% NaF varnish application",
+    HAND_INSTRUMENTATION_OPTION,
+    POWER_INSTRUMENTATION_OPTION,
+    FLUORIDE_VARNISH_OPTION,
   ];
   form.treatmentDoneTodayInstrumentationDevices = ["Piezo"];
   form.treatmentDoneTodayInstrumentationAreas = [
@@ -618,8 +623,9 @@ function buildDemoForm(fixture) {
     "Periodontal risk assessment",
     "Spot probing",
     "Full mouth probing",
-    "Hand and power instrumentation",
-    "Ipana 5% NaF varnish application",
+    HAND_INSTRUMENTATION_OPTION,
+    POWER_INSTRUMENTATION_OPTION,
+    FLUORIDE_VARNISH_OPTION,
   ];
   form.nextAppointmentInstrumentationDevices = ["Piezo"];
   form.nextAppointmentInstrumentationAreas = [
@@ -1030,6 +1036,24 @@ export function buildSummaryText(form, selectedFindings) {
     const line = formatLabelList(form.recommendations, lowerFirst);
     return `Recommendations: ${line}`;
   };
+  const formatInstrumentationSelections = (items, devices, areas) =>
+    items.map((item) => {
+      let label = item;
+
+      if (item === POWER_INSTRUMENTATION_OPTION && devices.length) {
+        label = `${item} (${joinComma(devices)})`;
+      }
+
+      if (
+        (item === HAND_INSTRUMENTATION_OPTION ||
+          item === POWER_INSTRUMENTATION_OPTION) &&
+        areas.length
+      ) {
+        return `${label} - ${joinComma(areas)}`;
+      }
+
+      return label;
+    });
   const formatCompletedTreatments = () => {
     const hasFollowUpContext = form.nextAppointment.length || form.disposition.length;
 
@@ -1041,12 +1065,24 @@ export function buildSummaryText(form, selectedFindings) {
       return "Treatments completed today:";
     }
 
-    return `Treatments completed today: ${joinComma(form.treatmentDoneToday)}`;
+    return `Treatments completed today: ${joinComma(
+      formatInstrumentationSelections(
+        form.treatmentDoneToday,
+        form.treatmentDoneTodayInstrumentationDevices,
+        form.treatmentDoneTodayInstrumentationAreas,
+      ),
+    )}`;
   };
   const formatNextAppointment = () => {
     if (!form.nextAppointment.length) return "";
 
-    return `Next Appointment: ${joinComma(form.nextAppointment)}`;
+    return `Next Appointment: ${joinComma(
+      formatInstrumentationSelections(
+        form.nextAppointment,
+        form.nextAppointmentInstrumentationDevices,
+        form.nextAppointmentInstrumentationAreas,
+      ),
+    )}`;
   };
 
   const blocks = [
@@ -1587,6 +1623,23 @@ export function GingivalDescriptionWebformImportedTemplate({
     target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  const treatmentHasHandInstrumentation = form.treatmentDoneToday.includes(
+    HAND_INSTRUMENTATION_OPTION,
+  );
+  const treatmentHasPowerInstrumentation = form.treatmentDoneToday.includes(
+    POWER_INSTRUMENTATION_OPTION,
+  );
+  const treatmentHasAnyInstrumentation =
+    treatmentHasHandInstrumentation || treatmentHasPowerInstrumentation;
+  const nextAppointmentHasHandInstrumentation = form.nextAppointment.includes(
+    HAND_INSTRUMENTATION_OPTION,
+  );
+  const nextAppointmentHasPowerInstrumentation = form.nextAppointment.includes(
+    POWER_INSTRUMENTATION_OPTION,
+  );
+  const nextAppointmentHasAnyInstrumentation =
+    nextAppointmentHasHandInstrumentation || nextAppointmentHasPowerInstrumentation;
+
   const actionButtons = (
     <div className="flex flex-wrap gap-3">
       <Button
@@ -1791,7 +1844,7 @@ export function GingivalDescriptionWebformImportedTemplate({
           "mx-auto space-y-6",
           isVeryShort ? "max-w-[112rem]" : "max-w-7xl",
           isVeryShort &&
-            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_34rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
+            "2xl:grid 2xl:grid-cols-[minmax(0,0.88fr)_40rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
         )}
       >
         <div className="min-w-0 space-y-6">
@@ -2609,25 +2662,22 @@ export function GingivalDescriptionWebformImportedTemplate({
                       treatmentDoneToday,
                       treatmentDoneTodayInstrumentationDevices:
                         treatmentDoneToday.includes(
-                          "Hand and power instrumentation",
+                          POWER_INSTRUMENTATION_OPTION,
                         )
                           ? current.treatmentDoneTodayInstrumentationDevices
                           : [],
                       treatmentDoneTodayInstrumentationAreas:
-                        treatmentDoneToday.includes(
-                          "Hand and power instrumentation",
-                        )
+                        treatmentDoneToday.includes(HAND_INSTRUMENTATION_OPTION) ||
+                        treatmentDoneToday.includes(POWER_INSTRUMENTATION_OPTION)
                           ? current.treatmentDoneTodayInstrumentationAreas
                           : [],
                     }))
                   }
                 />
-                {form.treatmentDoneToday.includes(
-                  "Hand and power instrumentation",
-                ) ? (
+                {treatmentHasPowerInstrumentation ? (
                   <>
                     <MultiToggle
-                      label="Hand and power instrumentation device (today)"
+                      label="Power instrumentation device (today)"
                       options={INSTRUMENTATION_DEVICE_OPTIONS}
                       selected={form.treatmentDoneTodayInstrumentationDevices}
                       onChange={(treatmentDoneTodayInstrumentationDevices) =>
@@ -2637,6 +2687,10 @@ export function GingivalDescriptionWebformImportedTemplate({
                         }))
                       }
                     />
+                  </>
+                ) : null}
+                {treatmentHasAnyInstrumentation ? (
+                  <>
                     <MultiToggle
                       label="Instrumentation area (today)"
                       options={INSTRUMENTATION_AREA_OPTIONS}
@@ -2701,25 +2755,22 @@ export function GingivalDescriptionWebformImportedTemplate({
                       nextAppointment,
                       nextAppointmentInstrumentationDevices:
                         nextAppointment.includes(
-                          "Hand and power instrumentation",
+                          POWER_INSTRUMENTATION_OPTION,
                         )
                           ? current.nextAppointmentInstrumentationDevices
                           : [],
                       nextAppointmentInstrumentationAreas:
-                        nextAppointment.includes(
-                          "Hand and power instrumentation",
-                        )
+                        nextAppointment.includes(HAND_INSTRUMENTATION_OPTION) ||
+                        nextAppointment.includes(POWER_INSTRUMENTATION_OPTION)
                           ? current.nextAppointmentInstrumentationAreas
                           : [],
                     }))
                   }
                 />
-                {form.nextAppointment.includes(
-                  "Hand and power instrumentation",
-                ) ? (
+                {nextAppointmentHasPowerInstrumentation ? (
                   <>
                     <MultiToggle
-                      label="Hand and power instrumentation device (next appointment)"
+                      label="Power instrumentation device (next appointment)"
                       options={INSTRUMENTATION_DEVICE_OPTIONS}
                       selected={form.nextAppointmentInstrumentationDevices}
                       onChange={(nextAppointmentInstrumentationDevices) =>
@@ -2729,6 +2780,10 @@ export function GingivalDescriptionWebformImportedTemplate({
                         }))
                       }
                     />
+                  </>
+                ) : null}
+                {nextAppointmentHasAnyInstrumentation ? (
+                  <>
                     <MultiToggle
                       label="Instrumentation area (next appointment)"
                       options={INSTRUMENTATION_AREA_OPTIONS}

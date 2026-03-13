@@ -78,10 +78,35 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "OHE: Caries theory and risk factors, bass brushing, c-shaped flossing, sulcabrush and interdental brush technique, review benefits of Prevident or Opti-Rinse, periodontitis theory and risk factors, importance of maintaining a 4-month hygiene interval",
   );
   expect(summary).toContain(
-    "Treatments completed today: Med/dent history update, EOE/IOE, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Hand and power instrumentation, Ipana 5% NaF varnish application",
+    "Treatments completed today: Med/dent history update, EOE/IOE, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Hand instrumentation - Q1, Q2, Q3, Q4, Maxilla, Mandible, Power instrumentation (Piezo) - Q1, Q2, Q3, Q4, Maxilla, Mandible, Ipana 5% NaF varnish application",
   );
   expect(summary).not.toContain("Visit Details:");
   expect(summary).not.toContain("Other clinical findings:");
+});
+
+test("instrumentation controls split hand and power selections", async ({
+  page,
+}) => {
+  await page.goto("/templates/very-short-template");
+
+  await page.getByRole("button", { name: "Hand instrumentation" }).click();
+  await expect(
+    page.getByText("Instrumentation area (today)", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Power instrumentation device (today)", { exact: true }),
+  ).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Power instrumentation" }).click();
+  await expect(
+    page.getByText("Power instrumentation device (today)", { exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Piezo" }).click();
+  await page.getByRole("button", { name: "Q1" }).click();
+
+  const summary = await page.locator("textarea[readonly]").inputValue();
+  expect(summary).toContain("Hand instrumentation - Q1");
+  expect(summary).toContain("Power instrumentation (Piezo) - Q1");
 });
 
 test("periodontal stage and grade only show for periodontitis", async ({
@@ -138,7 +163,9 @@ test("very short template slug renders the sticky-summary variant", async ({
     page.getByRole("heading", { name: "Very short template" }),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Expand all sections" })).toBeVisible();
-  await expect(page.getByText("Structured Summary")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Structured Summary" }),
+  ).toBeVisible();
   await expect(page.locator("#exam-date")).toBeVisible();
 });
 
