@@ -1285,7 +1285,12 @@ function FindingRow({ sectionKey, option, value, onChange }) {
 
   return (
     <div
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+      className={cx(
+        "space-y-4 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
+        checked
+          ? "border-sky-400 bg-sky-50/70 ring-2 ring-sky-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+          : "border-slate-200 dark:border-slate-700",
+      )}
       role="checkbox"
       aria-checked={checked}
       tabIndex={0}
@@ -1314,7 +1319,9 @@ function FindingRow({ sectionKey, option, value, onChange }) {
             >
               {option}
             </Label>
-            <p className="text-xs text-muted-foreground">Select to expand</p>
+            {!checked ? (
+              <p className="text-xs text-muted-foreground">Select to expand</p>
+            ) : null}
           </div>
         </div>
         {checked ? <Badge className="rounded-xl">Selected</Badge> : null}
@@ -1444,7 +1451,12 @@ function DepositsCard({
 
   return (
     <div
-      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+      className={cx(
+        "space-y-4 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
+        value.enabled
+          ? "border-sky-400 bg-sky-50/70 ring-2 ring-sky-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+          : "border-slate-200 dark:border-slate-700",
+      )}
       role="checkbox"
       aria-checked={value.enabled}
       tabIndex={0}
