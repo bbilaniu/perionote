@@ -46,6 +46,45 @@ function CardContent({ className, ...props }) {
   return <div className={cx("p-6 pt-0", className)} {...props} />;
 }
 
+function SectionCard({
+  id,
+  title,
+  open = true,
+  onToggle,
+  children,
+  className,
+  contentClassName,
+}) {
+  return (
+    <Card id={id} className={cx("rounded-3xl", className)}>
+      <CardHeader className="space-y-0">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-xl">{title}</CardTitle>
+          {onToggle ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl px-3 py-1.5 text-xs"
+              onClick={onToggle}
+              aria-expanded={open}
+              aria-controls={`${id}-content`}
+            >
+              {open ? "Collapse" : "Expand"}
+            </Button>
+          ) : null}
+        </div>
+      </CardHeader>
+      <CardContent
+        id={`${id}-content`}
+        className={cx(contentClassName, !open && "hidden")}
+        aria-hidden={!open}
+      >
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
 function Button({ className, variant = "default", type = "button", ...props }) {
   const variantClass =
     variant === "outline"
@@ -1300,6 +1339,32 @@ function SectionTextarea({ id, label, placeholder, value, onChange }) {
   );
 }
 
+const VERY_SHORT_DEFAULT_OPEN_SECTIONS = {
+  historyAndExam: true,
+  eoeIoe: false,
+  gingivalDescription: true,
+  deposits: true,
+  periodontalStatus: true,
+  cariesRisk: false,
+  ohe: false,
+  recommendations: false,
+  treatmentDoneToday: true,
+  nextAppointment: false,
+  disposition: false,
+  additionalClinicalDocumentation: false,
+};
+
+const VERY_SHORT_JUMP_SECTIONS = [
+  ["historyAndExam", "History and Exam"],
+  ["gingivalDescription", "Gingival Description"],
+  ["treatmentDoneToday", "Treatment Done Today"],
+  ["nextAppointment", "Next Appointment"],
+];
+
+function getSectionId(sectionKey) {
+  return `template-section-${sectionKey}`;
+}
+
 function DepositsCard({
   title,
   value,
@@ -1413,9 +1478,14 @@ export function GingivalDescriptionWebformImportedTemplate({
   summary,
   title = "Dental Hygiene Note Webform Template",
   description = "Expanded from the original gingival description form into a fuller hygiene-note template with chart-ready structured output.",
+  variant = "full",
 }) {
+  const isVeryShort = variant === "very-short";
   const [form, setForm] = useState(() => buildInitialForm());
   const [isCopied, setIsCopied] = useState(false);
+  const [openSections, setOpenSections] = useState(
+    VERY_SHORT_DEFAULT_OPEN_SECTIONS,
+  );
   void summary;
 
   const setFinding = (sectionKey, option, nextValue) => {
@@ -1485,9 +1555,140 @@ export function GingivalDescriptionWebformImportedTemplate({
     }
   };
 
+  const toggleSection = (sectionKey) => {
+    setOpenSections((current) => ({
+      ...current,
+      [sectionKey]: !current[sectionKey],
+    }));
+  };
+
+  const setAllSectionsOpen = (nextOpen) => {
+    setOpenSections(
+      Object.fromEntries(
+        Object.keys(VERY_SHORT_DEFAULT_OPEN_SECTIONS).map((sectionKey) => [
+          sectionKey,
+          nextOpen,
+        ]),
+      ),
+    );
+  };
+
+  const jumpToSection = (sectionKey) => {
+    const target = document.getElementById(getSectionId(sectionKey));
+    if (!target) return;
+
+    setOpenSections((current) => ({
+      ...current,
+      [sectionKey]: true,
+    }));
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const actionButtons = (
+    <div className="flex flex-wrap gap-3">
+      <Button
+        type="button"
+        className="rounded-2xl transition-all"
+        onClick={copySummary}
+        disabled={isCopied}
+      >
+        {isCopied ? "✓ Copied!" : "Copy summary"}
+      </Button>
+      <Button
+        type="button"
+        className="rounded-2xl"
+        onClick={loadDemo}
+        variant="outline"
+      >
+        Load demo
+      </Button>
+      <Button
+        type="button"
+        className="rounded-2xl"
+        onClick={resetForm}
+        variant="outline"
+      >
+        Reset form
+      </Button>
+    </div>
+  );
+
+  const summaryPanel = (
+    <Card className="rounded-3xl shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">Structured Summary</CardTitle>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          This preview helps copy the visit into a chart note or EHR later.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isVeryShort ? actionButtons : null}
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {selectedFindings.length ? (
+            selectedFindings.map((item, index) => (
+              <div
+                key={`${item.section}-${item.finding}-${index}`}
+                className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <Badge variant="outline" className="rounded-xl">
+                    {item.section}
+                  </Badge>
+                  <Badge className="rounded-xl">
+                    {item.extent === "generalized" ? "GEN" : "LOC"}
+                  </Badge>
+                </div>
+                <div className="font-semibold text-slate-900 dark:text-white">
+                  {item.finding}
+                </div>
+                <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                  <p>Teeth: {item.toothNumbers || "—"}</p>
+                  <p>
+                    Location:{" "}
+                    {item.locations.length ? item.locations.join(", ") : "—"}
+                  </p>
+                  <p>
+                    Distribution:{" "}
+                    {item.distributions.length
+                      ? item.distributions.join(", ")
+                      : "—"}
+                  </p>
+                  {item.notes ? <p>Notes: {item.notes}</p> : null}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              No gingival findings selected yet.
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Plain-text output</Label>
+          <Textarea
+            readOnly
+            className={cx(
+              "rounded-2xl font-mono text-sm dark:bg-slate-900",
+              isVeryShort ? "min-h-[320px] xl:min-h-[420px]" : "min-h-[960px]",
+            )}
+            value={summaryText}
+          />
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+      <div
+        className={cx(
+          "mx-auto max-w-7xl space-y-6",
+          isVeryShort &&
+            "xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,26rem)] xl:items-start xl:gap-6 xl:space-y-0",
+        )}
+      >
+        <div className="space-y-6">
         <Card className="rounded-3xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl md:text-3xl">
@@ -1498,6 +1699,44 @@ export function GingivalDescriptionWebformImportedTemplate({
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
+            {isVeryShort ? (
+              <div className="space-y-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-2xl px-3 py-1.5 text-xs"
+                    onClick={() => setAllSectionsOpen(true)}
+                  >
+                    Expand all sections
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="rounded-2xl px-3 py-1.5 text-xs"
+                    onClick={() => setAllSectionsOpen(false)}
+                  >
+                    Collapse all sections
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <Label>Quick jump</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
+                      <Button
+                        key={sectionKey}
+                        type="button"
+                        variant="outline"
+                        className="rounded-2xl px-3 py-1.5 text-xs"
+                        onClick={() => jumpToSection(sectionKey)}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="exam-date">Date</Label>
@@ -1515,11 +1754,13 @@ export function GingivalDescriptionWebformImportedTemplate({
 
             <Separator />
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">History and Exam</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <SectionCard
+              id={getSectionId("historyAndExam")}
+              title="History and Exam"
+              open={!isVeryShort || openSections.historyAndExam}
+              onToggle={isVeryShort ? () => toggleSection("historyAndExam") : undefined}
+              contentClassName="space-y-4"
+            >
                 <div className="flex items-center gap-3">
                   <Checkbox
                     id="patient-presents-for-hygiene-no-other-concerns"
@@ -1609,14 +1850,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">EOE / IOE</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <SectionCard
+              id={getSectionId("eoeIoe")}
+              title="EOE / IOE"
+              open={!isVeryShort || openSections.eoeIoe}
+              onToggle={isVeryShort ? () => toggleSection("eoeIoe") : undefined}
+              contentClassName="space-y-6"
+            >
                 <div className="space-y-4 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -1909,14 +2151,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }
                   />
                 </div>
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Gingival Description</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+            <SectionCard
+              id={getSectionId("gingivalDescription")}
+              title="Gingival Description"
+              open={!isVeryShort || openSections.gingivalDescription}
+              onToggle={
+                isVeryShort ? () => toggleSection("gingivalDescription") : undefined
+              }
+              contentClassName="space-y-6"
+            >
                 <div className="grid gap-6 xl:grid-cols-2">
                   {Object.entries(FIELD_OPTIONS).map(
                     ([sectionKey, options]) => (
@@ -1946,16 +2191,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     ),
                   )}
                 </div>
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  Calculus and Biofilm Deposits
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-6 xl:grid-cols-2">
+            <SectionCard
+              id={getSectionId("deposits")}
+              title="Calculus and Biofilm Deposits"
+              open={!isVeryShort || openSections.deposits}
+              onToggle={isVeryShort ? () => toggleSection("deposits") : undefined}
+              contentClassName="grid gap-6 xl:grid-cols-2"
+            >
                 <DepositsCard
                   title="Plaque"
                   value={form.plaque}
@@ -1985,14 +2229,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                   description="Mark extrinsic stain, then capture amount, extent, and detail."
                   placeholder="Describe generalized or localized stain and specific teeth/surfaces."
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Periodontal Status</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <SectionCard
+              id={getSectionId("periodontalStatus")}
+              title="Periodontal Status"
+              open={!isVeryShort || openSections.periodontalStatus}
+              onToggle={
+                isVeryShort ? () => toggleSection("periodontalStatus") : undefined
+              }
+              contentClassName="space-y-4"
+            >
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Activity status</Label>
@@ -2117,14 +2364,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Caries Risk</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
+            <SectionCard
+              id={getSectionId("cariesRisk")}
+              title="Caries Risk"
+              open={!isVeryShort || openSections.cariesRisk}
+              onToggle={isVeryShort ? () => toggleSection("cariesRisk") : undefined}
+              contentClassName="grid gap-4 md:grid-cols-2"
+            >
                 <div className="space-y-2">
                   <Label>Caries risk level</Label>
                   <Select
@@ -2165,16 +2413,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, cariesRiskNotes }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  Oral Health Education (OHE)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <SectionCard
+              id={getSectionId("ohe")}
+              title="Oral Health Education (OHE)"
+              open={!isVeryShort || openSections.ohe}
+              onToggle={isVeryShort ? () => toggleSection("ohe") : undefined}
+              contentClassName="space-y-4"
+            >
                 <MultiToggle
                   label="OHE topics"
                   options={OHE_TOPIC_OPTIONS}
@@ -2192,14 +2439,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, oheNotes }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Recommendations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <SectionCard
+              id={getSectionId("recommendations")}
+              title="Recommendations"
+              open={!isVeryShort || openSections.recommendations}
+              onToggle={
+                isVeryShort ? () => toggleSection("recommendations") : undefined
+              }
+              contentClassName="space-y-4"
+            >
                 <MultiToggle
                   label="Recommendations"
                   options={RECOMMENDATION_OPTIONS}
@@ -2217,14 +2467,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, recommendationsNotes }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Treatment Done Today</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <SectionCard
+              id={getSectionId("treatmentDoneToday")}
+              title="Treatment Done Today"
+              open={!isVeryShort || openSections.treatmentDoneToday}
+              onToggle={
+                isVeryShort ? () => toggleSection("treatmentDoneToday") : undefined
+              }
+              contentClassName="space-y-4"
+            >
                 <MultiToggle
                   label="Completed today"
                   options={VISIT_CARE_OPTIONS}
@@ -2289,14 +2542,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Next Appointment</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <SectionCard
+              id={getSectionId("nextAppointment")}
+              title="Next Appointment"
+              open={!isVeryShort || openSections.nextAppointment}
+              onToggle={isVeryShort ? () => toggleSection("nextAppointment") : undefined}
+              contentClassName="space-y-4"
+            >
                 <div className="flex flex-wrap gap-3">
                   <Button
                     type="button"
@@ -2377,14 +2631,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, nextAppointmentNotes }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">Disposition</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
+            <SectionCard
+              id={getSectionId("disposition")}
+              title="Disposition"
+              open={!isVeryShort || openSections.disposition}
+              onToggle={isVeryShort ? () => toggleSection("disposition") : undefined}
+              contentClassName="space-y-2"
+            >
                 <Label>Hygiene follow-up interval</Label>
                 <div className="space-y-3">
                   {DISPOSITION_OPTIONS.map((option) => {
@@ -2413,16 +2668,18 @@ export function GingivalDescriptionWebformImportedTemplate({
                     );
                   })}
                 </div>
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <Card className="rounded-3xl">
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  Additional Clinical Documentation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <SectionCard
+              id={getSectionId("additionalClinicalDocumentation")}
+              title="Additional Clinical Documentation"
+              open={!isVeryShort || openSections.additionalClinicalDocumentation}
+              onToggle={
+                isVeryShort
+                  ? () => toggleSection("additionalClinicalDocumentation")
+                  : undefined
+              }
+            >
                 <SectionTextarea
                   id="other-clinical-findings"
                   label="Other clinical findings"
@@ -2435,99 +2692,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }))
                   }
                 />
-              </CardContent>
-            </Card>
+            </SectionCard>
 
-            <div className="flex flex-wrap gap-3">
-              <Button
-                type="button"
-                className="rounded-2xl transition-all"
-                onClick={copySummary}
-                disabled={isCopied}
-              >
-                {isCopied ? "✓ Copied!" : "Copy summary"}
-              </Button>
-              <Button
-                type="button"
-                className="rounded-2xl"
-                onClick={loadDemo}
-                variant="outline"
-              >
-                Load demo
-              </Button>
-              <Button
-                type="button"
-                className="rounded-2xl"
-                onClick={resetForm}
-                variant="outline"
-              >
-                Reset form
-              </Button>
-            </div>
+            {!isVeryShort ? actionButtons : null}
           </CardContent>
         </Card>
-
-        <Card className="rounded-3xl shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Structured Summary</CardTitle>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              This preview helps copy the visit into a chart note or EHR later.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {selectedFindings.length ? (
-                selectedFindings.map((item, index) => (
-                  <div
-                    key={`${item.section}-${item.finding}-${index}`}
-                    className="space-y-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <Badge variant="outline" className="rounded-xl">
-                        {item.section}
-                      </Badge>
-                      <Badge className="rounded-xl">
-                        {item.extent === "generalized" ? "GEN" : "LOC"}
-                      </Badge>
-                    </div>
-                    <div className="font-semibold text-slate-900 dark:text-white">
-                      {item.finding}
-                    </div>
-                    <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
-                      <p>Teeth: {item.toothNumbers || "—"}</p>
-                      <p>
-                        Location:{" "}
-                        {item.locations.length
-                          ? item.locations.join(", ")
-                          : "—"}
-                      </p>
-                      <p>
-                        Distribution:{" "}
-                        {item.distributions.length
-                          ? item.distributions.join(", ")
-                          : "—"}
-                      </p>
-                      {item.notes ? <p>Notes: {item.notes}</p> : null}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  No gingival findings selected yet.
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label>Plain-text output</Label>
-              <Textarea
-                readOnly
-                className="min-h-[960px] rounded-2xl font-mono text-sm dark:bg-slate-900"
-                value={summaryText}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        </div>
+        {isVeryShort ? (
+          <div className="space-y-6 xl:sticky xl:top-6">{summaryPanel}</div>
+        ) : (
+          summaryPanel
+        )}
       </div>
     </div>
   );

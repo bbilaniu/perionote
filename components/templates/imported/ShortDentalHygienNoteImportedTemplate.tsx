@@ -12,6 +12,7 @@ export function ShortDentalHygienNoteImportedTemplate({
     <GingivalDescriptionWebformImportedTemplate
       fixture={fixture}
       summary={summary}
+      variant="short"
       title="Short Dental Hygien Note"
       description="Copied from the dental hygiene note webform template for a shorter hygiene-note workflow."
     />

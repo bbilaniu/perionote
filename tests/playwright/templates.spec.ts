@@ -14,6 +14,9 @@ test("template index renders", async ({ page }) => {
     page.locator('a[href="/templates/short-dental-hygien-note/"]'),
   ).toBeVisible();
   await expect(
+    page.locator('a[href="/templates/very-short-template/"]'),
+  ).toBeVisible();
+  await expect(
     page.locator('a[href="/templates/gingival-description/"]'),
   ).toHaveCount(0);
 });
@@ -126,6 +129,19 @@ test("short dental hygien note slug renders the copied template", async ({
   await expect(page.locator("#exam-date")).toBeVisible();
 });
 
+test("very short template slug renders the sticky-summary variant", async ({
+  page,
+}) => {
+  await page.goto("/templates/very-short-template");
+
+  await expect(
+    page.getByRole("heading", { name: "Very short template" }),
+  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Expand all sections" })).toBeVisible();
+  await expect(page.getByText("Structured Summary")).toBeVisible();
+  await expect(page.locator("#exam-date")).toBeVisible();
+});
+
 test("imported template date inputs default to today's date and prefill BP time for both slugs", async ({
   page,
 }) => {
@@ -141,6 +157,10 @@ test("imported template date inputs default to today's date and prefill BP time 
   await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
 
   await page.goto("/templates/short-dental-hygien-note");
+  await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+
+  await page.goto("/templates/very-short-template");
   await expect(page.locator("#exam-date")).toHaveValue(today);
   await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
 });

@@ -1,5 +1,6 @@
 import { GingivalDescriptionWebformImportedTemplate } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
 import { ShortDentalHygienNoteImportedTemplate } from "@/components/templates/imported/ShortDentalHygienNoteImportedTemplate";
+import { VeryShortDentalHygienNoteImportedTemplate } from "@/components/templates/imported/VeryShortDentalHygienNoteImportedTemplate";
 import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
 import { buildGingivalDescriptionWebformSummary } from "@/lib/templates/summary/buildGingivalDescriptionWebformSummary";
 import type { TemplateDefinition } from "@/lib/templates/types";
@@ -50,6 +51,19 @@ export const templateRegistry = [
     ),
     buildSummary: buildGingivalDescriptionWebformSummary,
     component: ShortDentalHygienNoteImportedTemplate,
+  }),
+  defineTemplate({
+    slug: "very-short-template",
+    title: "Very short template",
+    description:
+      "Minimal hygiene-note workflow with a sticky summary panel and collapsible sections.",
+    kind: "imported",
+    fixture: gingivalDescriptionWebformFixture,
+    summary: buildGingivalDescriptionWebformSummary(
+      gingivalDescriptionWebformFixture,
+    ),
+    buildSummary: buildGingivalDescriptionWebformSummary,
+    component: VeryShortDentalHygienNoteImportedTemplate,
   }),
 ] as const;
 
