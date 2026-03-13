@@ -1295,9 +1295,15 @@ function DepositsCard({
   );
 }
 
-export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
+export function GingivalDescriptionWebformImportedTemplate({
+  fixture,
+  summary,
+  title = "Dental Hygiene Note Webform Template",
+  description = "Expanded from the original gingival description form into a fuller hygiene-note template with chart-ready structured output.",
+}) {
   const [form, setForm] = useState(() => buildInitialForm());
   const [isCopied, setIsCopied] = useState(false);
+  void summary;
 
   const setFinding = (sectionKey, option, nextValue) => {
     setForm((current) => ({
@@ -1365,11 +1371,10 @@ export function GingivalDescriptionWebformImportedTemplate({ fixture }) {
         <Card className="rounded-3xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl md:text-3xl">
-              Dental Hygiene Note Webform Template
+              {title}
             </CardTitle>
             <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-              Expanded from the original gingival description form into a fuller
-              hygiene-note template with chart-ready structured output.
+              {description}
             </p>
           </CardHeader>
           <CardContent className="space-y-6">

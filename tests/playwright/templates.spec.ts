@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { getTodayDateString } from "@/lib/templates/date";
 
 test("template index renders", async ({ page }) => {
   await page.goto("/templates");
@@ -8,6 +9,9 @@ test("template index renders", async ({ page }) => {
   ).toBeVisible();
   await expect(
     page.locator('a[href="/templates/dental-hygiene-note-webform/"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('a[href="/templates/short-dental-hygien-note/"]'),
   ).toBeVisible();
   await expect(
     page.locator('a[href="/templates/gingival-description/"]'),
@@ -93,14 +97,28 @@ test("legacy gingival-description slug reuses the imported template", async ({
   await expect(page.locator("#exam-date")).toBeVisible();
 });
 
+test("short dental hygien note slug renders the copied template", async ({
+  page,
+}) => {
+  await page.goto("/templates/short-dental-hygien-note");
+
+  await expect(
+    page.getByRole("heading", { name: "Short Dental Hygien Note" }),
+  ).toBeVisible();
+  await expect(page.locator("#exam-date")).toBeVisible();
+});
+
 test("imported template date inputs default to today's date for both slugs", async ({
   page,
 }) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = getTodayDateString();
 
   await page.goto("/templates/gingival-description");
   await expect(page.locator("#exam-date")).toHaveValue(today);
 
   await page.goto("/templates/dental-hygiene-note-webform");
+  await expect(page.locator("#exam-date")).toHaveValue(today);
+
+  await page.goto("/templates/short-dental-hygien-note");
   await expect(page.locator("#exam-date")).toHaveValue(today);
 });
