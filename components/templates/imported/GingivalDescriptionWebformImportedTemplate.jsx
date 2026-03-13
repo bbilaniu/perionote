@@ -85,6 +85,13 @@ function SectionCard({
   );
 }
 
+function isInteractiveTarget(target) {
+  return Boolean(
+    target instanceof HTMLElement &&
+      target.closest("button, input, select, textarea, label, a"),
+  );
+}
+
 function Button({ className, variant = "default", type = "button", ...props }) {
   const variantClass =
     variant === "outline"
@@ -1267,20 +1274,37 @@ function FindingRow({ sectionKey, option, value, onChange }) {
     onChange({ ...value, ...patch });
   };
 
+  const setChecked = (nextChecked) => {
+    if (!nextChecked) {
+      onChange(emptyAnnotation());
+      return;
+    }
+
+    update({ presence: true });
+  };
+
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+    <div
+      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+      role="checkbox"
+      aria-checked={checked}
+      tabIndex={0}
+      onClick={(event) => {
+        if (isInteractiveTarget(event.target)) return;
+        setChecked(!checked);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (isInteractiveTarget(event.target)) return;
+        event.preventDefault();
+        setChecked(!checked);
+      }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <Checkbox
             checked={checked}
-            onCheckedChange={(next) => {
-              const isChecked = Boolean(next);
-              if (!isChecked) {
-                onChange(emptyAnnotation());
-              } else {
-                update({ presence: true });
-              }
-            }}
+            onCheckedChange={(next) => setChecked(Boolean(next))}
             id={`${sectionKey}-${option}`}
           />
           <div>
@@ -1290,10 +1314,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
             >
               {option}
             </Label>
-            <p className="text-sm text-muted-foreground">
-              Mark this finding, then capture extent, tooth number, location,
-              and distribution.
-            </p>
+            <p className="text-xs text-muted-foreground">Select to expand</p>
           </div>
         </div>
         {checked ? <Badge className="rounded-xl">Selected</Badge> : null}
@@ -1412,21 +1433,37 @@ function DepositsCard({
   const update = (patch) => onChange({ ...value, ...patch });
   const showDetails = value.enabled;
   const showExtent = showDetails && value.amount !== "None";
+  const setEnabled = (nextEnabled) => {
+    if (!nextEnabled) {
+      onChange(emptyDepositEntry());
+      return;
+    }
+
+    update({ enabled: true });
+  };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm">
+    <div
+      className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+      role="checkbox"
+      aria-checked={value.enabled}
+      tabIndex={0}
+      onClick={(event) => {
+        if (isInteractiveTarget(event.target)) return;
+        setEnabled(!value.enabled);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        if (isInteractiveTarget(event.target)) return;
+        event.preventDefault();
+        setEnabled(!value.enabled);
+      }}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           <Checkbox
             checked={value.enabled}
-            onCheckedChange={(next) => {
-              const isEnabled = Boolean(next);
-              if (!isEnabled) {
-                onChange(emptyDepositEntry());
-              } else {
-                update({ enabled: true });
-              }
-            }}
+            onCheckedChange={(next) => setEnabled(Boolean(next))}
             id={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
           />
           <div>
