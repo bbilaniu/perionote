@@ -37,6 +37,19 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   await expect(page.getByText("IOE observations")).toBeVisible();
 });
 
+test("BP time can be reset to the current time with one click", async ({
+  page,
+}) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await page.locator("#blood-pressure-time").fill("00:00");
+  await expect(page.locator("#blood-pressure-time")).toHaveValue("00:00");
+
+  await page.getByRole("button", { name: "Set to now" }).click();
+  await expect(page.locator("#blood-pressure-time")).not.toHaveValue("00:00");
+  await expect(page.locator("#blood-pressure-time")).toHaveValue(/\d{2}:\d{2}/);
+});
+
 test("imported webform summary uses preview a formatting", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
   await page.getByRole("button", { name: "Load demo" }).click();
