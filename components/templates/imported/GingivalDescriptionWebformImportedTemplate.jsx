@@ -1564,28 +1564,28 @@ export function GingivalDescriptionWebformImportedTemplate({
                     />
                   </div>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <Label htmlFor="blood-pressure-time">BP taken time</Label>
+                    <Label htmlFor="blood-pressure-time">BP taken time</Label>
+                    <div className="flex items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
-                        className="rounded-xl px-3 py-1 text-xs"
+                        className="shrink-0 rounded-xl px-3 py-2 text-xs"
                         onClick={setBloodPressureTimeToCurrent}
                       >
                         Set to now
                       </Button>
+                      <Input
+                        id="blood-pressure-time"
+                        type="time"
+                        value={form.bloodPressureTakenTime}
+                        onChange={(e) =>
+                          setForm((current) => ({
+                            ...current,
+                            bloodPressureTakenTime: e.target.value,
+                          }))
+                        }
+                      />
                     </div>
-                    <Input
-                      id="blood-pressure-time"
-                      type="time"
-                      value={form.bloodPressureTakenTime}
-                      onChange={(e) =>
-                        setForm((current) => ({
-                          ...current,
-                          bloodPressureTakenTime: e.target.value,
-                        }))
-                      }
-                    />
                   </div>
                 </div>
               </CardContent>
