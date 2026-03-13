@@ -1683,12 +1683,13 @@ export function GingivalDescriptionWebformImportedTemplate({
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
       <div
         className={cx(
-          "mx-auto max-w-7xl space-y-6",
+          "mx-auto space-y-6",
+          isVeryShort ? "max-w-[96rem]" : "max-w-7xl",
           isVeryShort &&
-            "xl:grid xl:grid-cols-[minmax(0,1.45fr)_minmax(22rem,26rem)] xl:items-start xl:gap-6 xl:space-y-0",
+            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
         )}
       >
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
         <Card className="rounded-3xl shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl md:text-3xl">
@@ -2699,7 +2700,7 @@ export function GingivalDescriptionWebformImportedTemplate({
         </Card>
         </div>
         {isVeryShort ? (
-          <div className="space-y-6 xl:sticky xl:top-6">{summaryPanel}</div>
+          <div className="space-y-6 2xl:sticky 2xl:top-6">{summaryPanel}</div>
         ) : (
           summaryPanel
         )}
