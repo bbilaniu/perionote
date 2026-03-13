@@ -30,7 +30,7 @@ export default function RootLayout({
         />
         <div className="min-h-screen">
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
-            <div className="mx-auto flex max-w-[96rem] items-center justify-between gap-4 px-6 py-4">
+            <div className="mx-auto flex max-w-[104rem] items-center justify-between gap-4 px-6 py-4">
               <span className="text-lg font-semibold tracking-tight">
                 PerioNote
               </span>
@@ -43,7 +43,7 @@ export default function RootLayout({
               </Link>
             </div>
           </header>
-          <main className="mx-auto w-full max-w-[96rem] px-6 py-10">{children}</main>
+          <main className="mx-auto w-full max-w-[104rem] px-6 py-10">{children}</main>
         </div>
       </body>
     </html>

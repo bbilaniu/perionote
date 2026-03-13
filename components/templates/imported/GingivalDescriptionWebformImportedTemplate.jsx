@@ -1483,6 +1483,9 @@ export function GingivalDescriptionWebformImportedTemplate({
   const isVeryShort = variant === "very-short";
   const [form, setForm] = useState(() => buildInitialForm());
   const [isCopied, setIsCopied] = useState(false);
+  const [structuredSummaryOpen, setStructuredSummaryOpen] = useState(
+    !isVeryShort,
+  );
   const [openSections, setOpenSections] = useState(
     VERY_SHORT_DEFAULT_OPEN_SECTIONS,
   );
@@ -1613,7 +1616,108 @@ export function GingivalDescriptionWebformImportedTemplate({
     </div>
   );
 
-  const summaryPanel = (
+  const structuredSummaryPanel = (
+    <Card className="rounded-3xl shadow-lg">
+      <CardHeader className="space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1.5">
+            <CardTitle className="text-2xl">Structured Summary</CardTitle>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              This preview helps copy the visit into a chart note or EHR later.
+            </p>
+          </div>
+          {isVeryShort ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl px-3 py-1.5 text-xs"
+              onClick={() => setStructuredSummaryOpen((current) => !current)}
+              aria-expanded={structuredSummaryOpen}
+            >
+              {structuredSummaryOpen ? "Collapse tags" : "Expand tags"}
+            </Button>
+          ) : null}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isVeryShort ? actionButtons : null}
+        {(!isVeryShort || structuredSummaryOpen) ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {selectedFindings.length ? (
+              selectedFindings.map((item, index) => (
+                <div
+                  key={`${item.section}-${item.finding}-${index}`}
+                  className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <Badge variant="outline" className="rounded-xl">
+                      {item.section}
+                    </Badge>
+                    <Badge className="rounded-xl">
+                      {item.extent === "generalized" ? "GEN" : "LOC"}
+                    </Badge>
+                  </div>
+                  <div className="font-semibold text-slate-900 dark:text-white">
+                    {item.finding}
+                  </div>
+                  <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                    <p>Teeth: {item.toothNumbers || "—"}</p>
+                    <p>
+                      Location:{" "}
+                      {item.locations.length ? item.locations.join(", ") : "—"}
+                    </p>
+                    <p>
+                      Distribution:{" "}
+                      {item.distributions.length
+                        ? item.distributions.join(", ")
+                        : "—"}
+                    </p>
+                    {item.notes ? <p>Notes: {item.notes}</p> : null}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                No gingival findings selected yet.
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Structured summary tags hidden.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  const plainTextSummaryPanel = (
+    <Card className="rounded-3xl shadow-lg">
+      <CardHeader>
+        <CardTitle className="text-2xl">Plain-text Output</CardTitle>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Ready-to-copy chart note output.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Textarea
+          readOnly
+          className={cx(
+            "rounded-2xl font-mono text-sm dark:bg-slate-900",
+            isVeryShort ? "min-h-[320px] xl:min-h-[420px]" : "min-h-[960px]",
+          )}
+          value={summaryText}
+        />
+      </CardContent>
+    </Card>
+  );
+
+  const summaryPanel = isVeryShort ? (
+    <div className="space-y-6">
+      {structuredSummaryPanel}
+      {plainTextSummaryPanel}
+    </div>
+  ) : (
     <Card className="rounded-3xl shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl">Structured Summary</CardTitle>
@@ -1622,7 +1726,6 @@ export function GingivalDescriptionWebformImportedTemplate({
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isVeryShort ? actionButtons : null}
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {selectedFindings.length ? (
             selectedFindings.map((item, index) => (
@@ -1668,10 +1771,7 @@ export function GingivalDescriptionWebformImportedTemplate({
           <Label>Plain-text output</Label>
           <Textarea
             readOnly
-            className={cx(
-              "rounded-2xl font-mono text-sm dark:bg-slate-900",
-              isVeryShort ? "min-h-[320px] xl:min-h-[420px]" : "min-h-[960px]",
-            )}
+            className="min-h-[960px] rounded-2xl font-mono text-sm dark:bg-slate-900"
             value={summaryText}
           />
         </div>
@@ -1684,9 +1784,9 @@ export function GingivalDescriptionWebformImportedTemplate({
       <div
         className={cx(
           "mx-auto space-y-6",
-          isVeryShort ? "max-w-[96rem]" : "max-w-7xl",
+          isVeryShort ? "max-w-[104rem]" : "max-w-7xl",
           isVeryShort &&
-            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
+            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_28rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
         )}
       >
         <div className="min-w-0 space-y-6">
@@ -2163,7 +2263,7 @@ export function GingivalDescriptionWebformImportedTemplate({
               }
               contentClassName="space-y-6"
             >
-                <div className="grid gap-6 xl:grid-cols-2">
+                <div className={cx("space-y-6", !isVeryShort && "grid gap-6 xl:grid-cols-2")}>
                   {Object.entries(FIELD_OPTIONS).map(
                     ([sectionKey, options]) => (
                       <Card
@@ -2175,17 +2275,30 @@ export function GingivalDescriptionWebformImportedTemplate({
                             {prettyLabel(sectionKey)}
                           </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent
+                          className={cx(
+                            "space-y-4",
+                            isVeryShort && "grid gap-4 lg:grid-cols-2 2xl:grid-cols-3",
+                          )}
+                        >
                           {options.map((option) => (
-                            <FindingRow
+                            <div
                               key={option}
-                              sectionKey={sectionKey}
-                              option={option}
-                              value={form.findings[sectionKey][option]}
-                              onChange={(nextValue) =>
-                                setFinding(sectionKey, option, nextValue)
-                              }
-                            />
+                              className={cx(
+                                isVeryShort &&
+                                  form.findings[sectionKey][option].presence &&
+                                  "lg:col-span-2 2xl:col-span-3",
+                              )}
+                            >
+                              <FindingRow
+                                sectionKey={sectionKey}
+                                option={option}
+                                value={form.findings[sectionKey][option]}
+                                onChange={(nextValue) =>
+                                  setFinding(sectionKey, option, nextValue)
+                                }
+                              />
+                            </div>
                           ))}
                         </CardContent>
                       </Card>
