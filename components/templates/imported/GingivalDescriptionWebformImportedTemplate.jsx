@@ -1132,12 +1132,33 @@ export const SUMMARY_TEST_CASES = [
   },
 ];
 
-function MultiToggle({ label, options, selected, onChange }) {
+function MultiToggle({
+  label,
+  options,
+  selected,
+  onChange,
+  showSelectAll = false,
+  selectAllLabel = "Select all",
+}) {
   const selectedSet = new Set(selected);
+  const allSelected = options.length > 0 && selected.length === options.length;
 
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Label className="text-sm font-medium">{label}</Label>
+        {showSelectAll ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-2xl px-3 py-1.5 text-xs"
+            disabled={allSelected}
+            onClick={() => onChange([...options])}
+          >
+            {selectAllLabel}
+          </Button>
+        ) : null}
+      </div>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const isActive = selectedSet.has(option);
@@ -2208,6 +2229,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                   label="Completed today"
                   options={VISIT_CARE_OPTIONS}
                   selected={form.treatmentDoneToday}
+                  showSelectAll
                   onChange={(treatmentDoneToday) =>
                     setForm((current) => ({
                       ...current,
@@ -2298,6 +2320,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                   label="Planned next appointment care"
                   options={VISIT_CARE_OPTIONS}
                   selected={form.nextAppointment}
+                  showSelectAll
                   onChange={(nextAppointment) =>
                     setForm((current) => ({
                       ...current,
