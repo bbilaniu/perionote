@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { getTodayDateString } from "@/lib/templates/date";
+import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
 
 test("template index renders", async ({ page }) => {
   await page.goto("/templates");
@@ -113,17 +113,21 @@ test("short dental hygien note slug renders the copied template", async ({
   await expect(page.locator("#exam-date")).toBeVisible();
 });
 
-test("imported template date inputs default to today's date for both slugs", async ({
+test("imported template date inputs default to today's date and prefill BP time for both slugs", async ({
   page,
 }) => {
   const today = getTodayDateString();
+  const currentTime = getCurrentTimeString();
 
   await page.goto("/templates/gingival-description");
   await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
 
   await page.goto("/templates/dental-hygiene-note-webform");
   await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
 
   await page.goto("/templates/short-dental-hygien-note");
   await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
 });

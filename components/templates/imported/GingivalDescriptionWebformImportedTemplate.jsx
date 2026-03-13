@@ -1,6 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
-import { getTodayDateString } from "@/lib/templates/date";
+import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
 
 function cx(...parts) {
   return parts.filter(Boolean).join(" ");
@@ -419,7 +419,7 @@ function buildInitialForm(fixture) {
     medicalHistory: "Patient reports no changes",
     bloodPressure: "",
     heartRate: "",
-    bloodPressureTakenTime: "",
+    bloodPressureTakenTime: getCurrentTimeString(),
     eoe: "",
     ioe: "",
     eoeWithinNormalLimits: false,
@@ -437,7 +437,6 @@ function buildInitialForm(fixture) {
     plaque: emptyDepositEntry(),
     calculus: emptyDepositEntry(),
     extrinsicStain: emptyDepositEntry(),
-    bleedingInflammation: emptyDepositEntry(),
     treatmentDoneToday: [],
     treatmentDoneTodayInstrumentationDevices: [],
     treatmentDoneTodayInstrumentationAreas: [],
@@ -1947,15 +1946,6 @@ export function GingivalDescriptionWebformImportedTemplate({
                   }
                   description="Mark extrinsic stain, then capture amount, extent, and detail."
                   placeholder="Describe generalized or localized stain and specific teeth/surfaces."
-                />
-                <DepositsCard
-                  title="Bleeding and Inflammation"
-                  value={form.bleedingInflammation}
-                  onChange={(bleedingInflammation) =>
-                    setForm((current) => ({ ...current, bleedingInflammation }))
-                  }
-                  description="Mark bleeding and inflammation, then capture amount, extent, and detail."
-                  placeholder="Note amount, generalized vs localized, and any distribution details."
                 />
               </CardContent>
             </Card>
