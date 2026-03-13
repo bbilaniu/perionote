@@ -620,8 +620,6 @@ function collectSelectedFindings(findings) {
 }
 
 export function buildSummaryText(form, selectedFindings) {
-  const lines = [];
-
   const clean = (value) =>
     String(value ?? "")
       .trim()
@@ -629,54 +627,33 @@ export function buildSummaryText(form, selectedFindings) {
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
   const capitalizeSentence = (value) =>
     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
-  const indent = (level, value) => `${"  ".repeat(level)}${value}`;
-  const formatDepositLine = (label, entry, includeLocations = false) => {
-    if (!entry.enabled) return "";
-    const amount = entry.amount.toLowerCase();
-    const base = [amount];
+  const lowerFirst = (value) =>
+    value ? value.charAt(0).toLowerCase() + value.slice(1) : "";
+  const ensurePeriod = (value) => {
+    const normalized = cleanSentence(value);
+    return normalized ? `${capitalizeSentence(normalized)}.` : "";
+  };
+  const joinComma = (items) => items.filter(Boolean).join(", ");
+  const formatClockTime = (value) => {
+    const normalized = clean(value);
+    const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
 
-    if (entry.amount !== "None") {
-      base.push(entry.extent.toLowerCase());
-      if (includeLocations && entry.locations.length) {
-        base.push(entry.locations.join(", "));
-      }
-    }
+    if (!match) return normalized;
 
-    if (entry.details.trim()) {
-      base.push(cleanSentence(entry.details));
-    }
-
-    return `${label}: ${base.join(" / ")}.`;
+    let hours = Number(match[1]);
+    const minutes = match[2];
+    const period = hours >= 12 ? "PM" : "AM";
+    hours %= 12;
+    if (hours === 0) hours = 12;
+    return `${hours}:${minutes} ${period}`;
   };
-  const addSection = (heading, sectionLines) => {
-    const normalizedSectionLines = [...sectionLines];
-    while (normalizedSectionLines[0] === "") normalizedSectionLines.shift();
-    while (normalizedSectionLines[normalizedSectionLines.length - 1] === "") {
-      normalizedSectionLines.pop();
-    }
-    if (!normalizedSectionLines.some(Boolean)) return;
-    lines.push(`${heading}:`, ...normalizedSectionLines, "");
-  };
-  const pushNestedValue = (target, label, value, level = 1) => {
-    const cleanedValue = cleanSentence(value);
-    if (!cleanedValue) return;
-    target.push(indent(level, `${label}:`));
-    target.push(indent(level + 1, `${capitalizeSentence(cleanedValue)}.`));
-  };
-  const pushList = (target, label, items, level = 1) => {
-    if (!items.length) return;
-    target.push(indent(level, `${label}:`));
-    items.forEach((item) => {
-      target.push(indent(level + 1, `- ${item}`));
-    });
-  };
-  const pushInlineList = (target, label, items, level = 1) => {
-    if (!items.length) return;
-    target.push(indent(level, `${label}: ${items.join(", ")}`));
-  };
+  const formatLabelList = (items, mapper = (item) => item) =>
+    joinComma(items.map((item) => mapper(item)).filter(Boolean));
   const normalizeObservation = (value, withinNormalLimits) => {
     let normalized = cleanSentence(value);
+
     if (!normalized) return "";
+
     if (withinNormalLimits) {
       normalized = normalized.replace(
         /^within normal limits overall[;,]?\s*/i,
@@ -684,265 +661,381 @@ export function buildSummaryText(form, selectedFindings) {
       );
       normalized = normalized.replace(/^within normal limits[;,]?\s*/i, "");
     }
+
     normalized = normalized.replace(/^observations documented for\s+/i, "");
-    normalized = cleanSentence(normalized);
-    return normalized ? `${capitalizeSentence(normalized)}.` : "";
+    return lowerFirst(cleanSentence(normalized));
+  };
+  const formatPatientConcerns = () => {
+    const parts = [];
+
+    if (form.patientPresentsForHygieneNoOtherConcerns) {
+      parts.push("Patient presents for hygiene, no other concerns");
+    }
+
+    if (cleanSentence(form.patientConcerns)) {
+      parts.push(cleanSentence(form.patientConcerns));
+    }
+
+    if (!parts.length) return "";
+    return `Patient concerns: ${capitalizeSentence(parts.join(". "))}.`;
+  };
+  const formatMedicalHistoryBlock = () => {
+    const lines = [];
+    const medicalHistory = cleanSentence(form.medicalHistory);
+    const shouldHideDefaultMedicalHistory =
+      medicalHistory.toLowerCase() === "patient reports no changes";
+
+    if (
+      !medicalHistory &&
+      !form.bloodPressure &&
+      !form.heartRate &&
+      !form.bloodPressureTakenTime
+    ) {
+      return "";
+    }
+
+    lines.push("Medical history update:");
+    if (medicalHistory && !shouldHideDefaultMedicalHistory) {
+      lines.push(ensurePeriod(medicalHistory));
+    }
+    if (form.bloodPressure) {
+      lines.push(`BP: ${clean(form.bloodPressure)} mmHg`);
+    }
+    if (form.heartRate) {
+      lines.push(`HR: ${clean(form.heartRate)} bpm`);
+    }
+    if (form.bloodPressureTakenTime) {
+      lines.push(`Taken at ${formatClockTime(form.bloodPressureTakenTime)}`);
+    }
+
+    return lines.join("\n");
+  };
+  const formatEoeLine = () => {
+    const findings = [];
+
+    if (form.asymptomaticClickOnOpeningClosing) {
+      const laterality = clean(form.asymptomaticClickLaterality).toLowerCase();
+      findings.push(
+        `${laterality ? `${laterality} ` : ""}TMJ click on opening - asymptomatic`,
+      );
+    }
+
+    if (form.asymptomaticLymphNodes) {
+      const palpability = clean(form.asymptomaticLymphNodesPalpability).toLowerCase();
+      findings.push(
+        palpability
+          ? `lymph nodes ${palpability} - asymptomatic`
+          : "lymph nodes - asymptomatic",
+      );
+    }
+
+    const observation = normalizeObservation(form.eoe, form.eoeWithinNormalLimits);
+    if (observation) findings.push(observation);
+    if (form.eoeWithinNormalLimits && !findings.length) {
+      findings.push("within normal limits");
+    }
+    if (!findings.length) return "";
+
+    return `EOE: ${joinComma(findings)}`;
+  };
+  const formatIoeFinding = (value) => {
+    const normalizedValue = clean(value).toLowerCase();
+    return normalizedValue;
+  };
+  const formatIoeLine = () => {
+    const findings = form.ioeFindings.map((item) => formatIoeFinding(item));
+
+    if (form.palatineTorusAtMidline) {
+      const prominence = clean(form.palatineTorusProminence).toLowerCase();
+      findings.push(
+        `${prominence ? `${prominence} ` : ""}palatine torus at midline`,
+      );
+    }
+
+    if (form.bilateralMandibularTori) {
+      const prominence = clean(form.bilateralMandibularToriProminence).toLowerCase();
+      findings.push(
+        `${prominence ? `${prominence} ` : ""}bilateral mandibular tori`,
+      );
+    }
+
+    const observation = normalizeObservation(form.ioe, form.ioeWithinNormalLimits);
+    if (observation) findings.push(observation);
+    if (form.ioeWithinNormalLimits && !findings.length) {
+      findings.push("within normal limits");
+    }
+    if (!findings.length) return "";
+
+    return `IOE: ${joinComma(findings)}`;
+  };
+  const formatAreaSuffix = (item) => {
+    if (item.toothNumbers && clean(item.toothNumbers)) {
+      return ` on ${clean(item.toothNumbers)}`;
+    }
+
+    if (item.locations.length) {
+      return ` on ${item.locations.map((location) => location.toLowerCase()).join(", ")}`;
+    }
+
+    return "";
+  };
+  const formatFindingDescriptor = (item) => {
+    let descriptor = clean(item.finding).toLowerCase();
+
+    if (item.section === "Color" && descriptor === "red") {
+      descriptor = "redness";
+    }
+    if (item.section === "Surface Texture" && descriptor === "stippling") {
+      descriptor = "stippled";
+    }
+    if (item.section === "Bleeding & Exudate" && descriptor === "bop") {
+      descriptor = "bleeding on probing";
+    }
+    descriptor = descriptor
+      .replace(/^margins:\s*/i, "")
+      .replace(/^papilla:\s*/i, "");
+
+    if (item.distributions.length) {
+      descriptor = `${item.distributions
+        .map((distribution) => distribution.toLowerCase())
+        .join(" ")} ${descriptor}`;
+    }
+
+    let phrase = `${item.extent} ${descriptor}${formatAreaSuffix(item)}`;
+
+    if (item.notes && cleanSentence(item.notes)) {
+      phrase += ` (${cleanSentence(item.notes)})`;
+    }
+
+    return phrase;
+  };
+  const combineFindingsBySection = (items) => {
+    if (!items.length) return [];
+
+    const generalized = items.filter((item) => item.extent === "generalized");
+    const localized = items.filter((item) => item.extent === "localized");
+    const phrases = [];
+
+    if (
+      generalized.length === 1 &&
+      localized.length === 1 &&
+      ["Color", "Consistency", "Surface Texture"].includes(items[0].section)
+    ) {
+      phrases.push(
+        `${formatFindingDescriptor(generalized[0])} with ${formatFindingDescriptor(localized[0])}`,
+      );
+      return phrases;
+    }
+
+    generalized.forEach((item) => {
+      phrases.push(formatFindingDescriptor(item));
+    });
+    localized.forEach((item) => {
+      phrases.push(formatFindingDescriptor(item));
+    });
+
+    return phrases;
+  };
+  const formatGingivalDescription = () => {
+    if (!selectedFindings.length) return "";
+
+    const sectionOrder = [
+      "Color",
+      "Contour / Shape",
+      "Consistency",
+      "Surface Texture",
+      "Gingival Position",
+      "Bleeding & Exudate",
+    ];
+    const phrases = [];
+
+    sectionOrder.forEach((section) => {
+      const sectionItems = selectedFindings.filter((item) => item.section === section);
+      phrases.push(...combineFindingsBySection(sectionItems));
+    });
+
+    if (!phrases.length) return "";
+    return `Gingival Description: ${joinComma(phrases)}.`;
+  };
+  const formatDepositLine = (label, entry) => {
+    if (!entry.enabled) return "";
+
+    if (entry.amount === "None") {
+      return `${label}: none`;
+    }
+
+    const details = cleanSentence(entry.details);
+
+    if (details) {
+      return `${label}: ${entry.extent.toLowerCase()} ${lowerFirst(details)}`;
+    }
+
+    const parts = [entry.extent.toLowerCase()];
+
+    if (entry.amount) {
+      parts.push(entry.amount.toLowerCase());
+    }
+
+    parts.push(label.toLowerCase());
+
+    if (entry.locations.length) {
+      parts.push(entry.locations.map((location) => location.toLowerCase()).join(", "));
+    }
+
+    return `${label}: ${parts.join(" ")}`;
+  };
+  const formatPeriodontalDiagnosis = () => {
+    const isPeriodontitis = form.periodontalStatusDiseaseType === "Periodontitis";
+    const parts = [
+      form.periodontalStatusActivity,
+      isPeriodontitis
+        ? form.periodontalStatusSeverityStage
+        : form.periodontalStatusDiseaseType,
+      isPeriodontitis ? form.periodontalStatusGrade : "",
+    ].filter(Boolean);
+
+    if (!parts.length) {
+      return "";
+    }
+
+    return `Periodontal diagnosis: ${parts.join(" ")}`;
+  };
+  const formatCariesRiskFactor = (factor) => {
+    const normalizedFactor = clean(factor);
+
+    switch (normalizedFactor) {
+      case "Inadequate brushing oral hygiene":
+        return "inadequate oral hygiene";
+      case "History of caries in the last 36 months":
+        return "history of active decay in the last 36 months";
+      default:
+        return lowerFirst(normalizedFactor);
+    }
+  };
+  const formatCariesRisk = () => {
+    if (
+      !form.cariesRiskLevel &&
+      !form.cariesRiskFactors.length &&
+      !cleanSentence(form.cariesRiskNotes)
+    ) {
+      return "";
+    }
+
+    let line = form.cariesRiskLevel
+      ? `${form.cariesRiskLevel} caries risk`
+      : "Caries risk";
+
+    if (form.cariesRiskFactors.length) {
+      line += ` due to ${formatLabelList(
+        form.cariesRiskFactors,
+        formatCariesRiskFactor,
+      )}`;
+    }
+
+    return `Caries risk: ${line}`;
+  };
+  const formatOheTopics = () => {
+    const selected = [...form.oheTopics];
+    const seen = new Set();
+    const result = [];
+
+    selected.forEach((topic) => {
+      if (seen.has(topic)) return;
+
+      if (
+        topic === "Caries theory" &&
+        selected.includes("Caries risk factors")
+      ) {
+        result.push("caries theory and risk factors");
+        seen.add("Caries theory");
+        seen.add("Caries risk factors");
+        return;
+      }
+
+      if (
+        topic === "Periodontitis theory" &&
+        selected.includes("Periodontitis risk factors")
+      ) {
+        result.push("periodontitis theory and risk factors");
+        seen.add("Periodontitis theory");
+        seen.add("Periodontitis risk factors");
+        return;
+      }
+
+      const mappedTopic = {
+        "Bass brushing": "bass brushing",
+        "C-shape flossing technique": "c-shaped flossing",
+        "Sulcabrush and interdental brush technique":
+          "sulcabrush and interdental brush technique",
+        "Review benefits of Prevident or Opti-Rinse":
+          "review benefits of Prevident or Opti-Rinse",
+        "Importance of maintaining a 4-month hygiene interval":
+          "importance of maintaining a 4-month hygiene interval",
+      }[topic] ?? lowerFirst(topic);
+
+      result.push(mappedTopic);
+      seen.add(topic);
+    });
+
+    return result;
+  };
+  const formatOhe = () => {
+    const topics = formatOheTopics();
+
+    if (!topics.length) return "";
+
+    return `OHE: ${capitalizeSentence(joinComma(topics))}`;
+  };
+  const formatRecommendations = () => {
+    if (!form.recommendations.length) return "";
+
+    const line = formatLabelList(form.recommendations, lowerFirst);
+    return `Recommendations: ${line}`;
+  };
+  const formatCompletedTreatments = () => {
+    const hasFollowUpContext = form.nextAppointment.length || form.disposition.length;
+
+    if (!form.treatmentDoneToday.length && !hasFollowUpContext) {
+      return "";
+    }
+
+    if (!form.treatmentDoneToday.length) {
+      return "Treatments completed today:";
+    }
+
+    return `Treatments completed today: ${joinComma(form.treatmentDoneToday)}`;
+  };
+  const formatNextAppointment = () => {
+    if (!form.nextAppointment.length) return "";
+
+    return `Next Appointment: ${joinComma(form.nextAppointment)}`;
   };
 
-  addSection(
-    "Visit Details",
-    form.date ? [indent(1, `Date: ${form.date}`)] : [],
-  );
-
-  const historyLines = [];
-  if (form.patientPresentsForHygieneNoOtherConcerns) {
-    historyLines.push(
-      indent(1, "Patient presents for hygiene, no other concerns."),
-    );
-  }
-  pushNestedValue(historyLines, "Patient concerns", form.patientConcerns);
-  pushNestedValue(historyLines, "Medical history", form.medicalHistory);
-  if (form.bloodPressure || form.heartRate || form.bloodPressureTakenTime) {
-    historyLines.push(indent(1, "Vitals:"));
-    if (form.bloodPressure)
-      historyLines.push(indent(2, `BP ${clean(form.bloodPressure)}`));
-    if (form.heartRate)
-      historyLines.push(indent(2, `HR ${clean(form.heartRate)}`));
-    if (form.bloodPressureTakenTime) {
-      historyLines.push(
-        indent(2, `BP taken at ${clean(form.bloodPressureTakenTime)}`),
-      );
-    }
-  }
-  addSection("History and Exam", historyLines);
-
-  const eoeFindings = [];
-  if (form.asymptomaticClickOnOpeningClosing) {
-    eoeFindings.push(
-      `Asymptomatic click on opening/closing${
-        form.asymptomaticClickLaterality
-          ? ` (${form.asymptomaticClickLaterality})`
-          : ""
-      }`,
-    );
-  }
-  if (form.asymptomaticLymphNodes) {
-    eoeFindings.push(
-      `Asymptomatic lymph nodes${
-        form.asymptomaticLymphNodesPalpability
-          ? ` (${form.asymptomaticLymphNodesPalpability})`
-          : ""
-      }`,
-    );
-  }
-  const ioeFindings = [...form.ioeFindings];
-  if (form.palatineTorusAtMidline) {
-    ioeFindings.push(
-      `Palatine torus at midline${
-        form.palatineTorusProminence ? ` (${form.palatineTorusProminence})` : ""
-      }`,
-    );
-  }
-  if (form.bilateralMandibularTori) {
-    ioeFindings.push(
-      `Bilateral mandibular tori${
-        form.bilateralMandibularToriProminence
-          ? ` (${form.bilateralMandibularToriProminence})`
-          : ""
-      }`,
-    );
-  }
-
-  const eoeIoeLines = [];
-  const eoeObservation = normalizeObservation(
-    form.eoe,
-    form.eoeWithinNormalLimits,
-  );
-  const ioeObservation = normalizeObservation(
-    form.ioe,
-    form.ioeWithinNormalLimits,
-  );
-  if (form.eoeWithinNormalLimits || eoeFindings.length || eoeObservation) {
-    eoeIoeLines.push(
-      indent(1, form.eoeWithinNormalLimits ? "EOE: WNL" : "EOE:"),
-    );
-    pushList(eoeIoeLines, "Findings", eoeFindings, 2);
-    if (eoeObservation) {
-      eoeIoeLines.push(indent(2, "Observations:"));
-      eoeIoeLines.push(indent(3, `- ${eoeObservation.replace(/[.]+$/g, "")}`));
-    }
-  }
-  if (form.ioeWithinNormalLimits || ioeFindings.length || ioeObservation) {
-    if (eoeIoeLines.length) eoeIoeLines.push("");
-    eoeIoeLines.push(
-      indent(1, form.ioeWithinNormalLimits ? "IOE: WNL" : "IOE:"),
-    );
-    pushList(eoeIoeLines, "Findings", ioeFindings, 2);
-    if (ioeObservation) {
-      eoeIoeLines.push(indent(2, "Observations:"));
-      eoeIoeLines.push(indent(3, `- ${ioeObservation.replace(/[.]+$/g, "")}`));
-    }
-  }
-  addSection("EOE/IOE", eoeIoeLines);
-
-  const gingivalDescriptionLines = [];
-  selectedFindings.forEach((item) => {
-    gingivalDescriptionLines.push(
-      indent(1, `${item.section}: ${item.finding}`),
-    );
-    gingivalDescriptionLines.push(
-      indent(
-        2,
-        `Extent: ${item.extent === "generalized" ? "generalized" : "localized"}`,
-      ),
-    );
-    if (item.toothNumbers.trim()) {
-      gingivalDescriptionLines.push(
-        indent(2, `Teeth: ${clean(item.toothNumbers)}`),
-      );
-    }
-    if (item.locations.length) {
-      gingivalDescriptionLines.push(
-        indent(2, `Location: ${item.locations.join(", ")}`),
-      );
-    }
-    if (item.distributions.length) {
-      gingivalDescriptionLines.push(
-        indent(2, `Distribution: ${item.distributions.join(", ")}`),
-      );
-    }
-    if (item.notes.trim()) {
-      gingivalDescriptionLines.push(
-        indent(2, `Notes: ${cleanSentence(item.notes)}.`),
-      );
-    }
-  });
-  addSection("Gingival Description", gingivalDescriptionLines);
-
-  addSection(
-    "Deposits and Inflammation",
-    [
-      formatDepositLine("Plaque", form.plaque, true),
-      formatDepositLine("Calculus", form.calculus, true),
-      formatDepositLine("Extrinsic stain", form.extrinsicStain),
-      formatDepositLine("Bleeding and inflammation", form.bleedingInflammation),
-    ]
-      .filter(Boolean)
-      .map((line) => indent(1, line)),
-  );
-
-  const isPeriodontitis = form.periodontalStatusDiseaseType === "Periodontitis";
-  const perioBits = [
-    form.periodontalStatusActivity,
-    form.periodontalStatusDiseaseType,
-    isPeriodontitis ? form.periodontalStatusSeverityStage : "",
-    isPeriodontitis ? form.periodontalStatusGrade : "",
+  const blocks = [
+    formatPatientConcerns(),
+    formatMedicalHistoryBlock(),
+    formatEoeLine(),
+    formatIoeLine(),
+    formatGingivalDescription(),
+    formatDepositLine("Calculus", form.calculus),
+    formatDepositLine("Plaque", form.plaque),
+    formatDepositLine("Extrinsic Stain", form.extrinsicStain),
+    formatPeriodontalDiagnosis(),
+    formatCariesRisk(),
+    formatOhe(),
+    formatRecommendations(),
   ].filter(Boolean);
 
-  const periodontalLines = [];
-  pushList(periodontalLines, "Status", perioBits, 1);
-  pushNestedValue(periodontalLines, "Notes", form.periodontalStatusNotes);
-  addSection("Periodontal Status", periodontalLines);
+  const treatmentLine = formatCompletedTreatments();
+  if (treatmentLine) blocks.push(treatmentLine);
 
-  const cariesRiskLines = [];
-  if (form.cariesRiskLevel) {
-    cariesRiskLines.push(indent(1, `Risk level: ${form.cariesRiskLevel}.`));
-  }
-  pushList(cariesRiskLines, "Risk factors", form.cariesRiskFactors, 1);
-  pushNestedValue(cariesRiskLines, "Notes", form.cariesRiskNotes);
-  addSection("Caries Risk", cariesRiskLines);
+  const nextAppointmentLine = formatNextAppointment();
+  if (nextAppointmentLine) blocks.push(nextAppointmentLine);
 
-  const oheLines = [];
-  pushList(oheLines, "Topics reviewed", form.oheTopics, 1);
-  pushNestedValue(oheLines, "OHE notes", form.oheNotes);
-  addSection("Oral Health Education", oheLines);
+  const summary = blocks.join("\n\n");
 
-  const recommendationLines = [];
-  pushList(recommendationLines, "Items", form.recommendations, 1);
-  pushNestedValue(
-    recommendationLines,
-    "Additional details",
-    form.recommendationsNotes,
-  );
-  addSection("Recommendations", recommendationLines);
-
-  const clinicalDocumentationLines = [];
-  pushNestedValue(
-    clinicalDocumentationLines,
-    "Other clinical findings",
-    form.otherClinicalFindings,
-  );
-  addSection("Clinical Documentation", clinicalDocumentationLines);
-
-  const treatmentDoneLines = [];
-  pushList(treatmentDoneLines, "Completed", form.treatmentDoneToday, 1);
-  if (
-    form.treatmentDoneToday.includes("Hand and power instrumentation") &&
-    form.treatmentDoneTodayInstrumentationDevices.length
-  ) {
-    pushList(
-      treatmentDoneLines,
-      "Hand and power instrumentation device",
-      form.treatmentDoneTodayInstrumentationDevices,
-      1,
-    );
-  }
-  if (
-    form.treatmentDoneToday.includes("Hand and power instrumentation") &&
-    form.treatmentDoneTodayInstrumentationAreas.length
-  ) {
-    pushInlineList(
-      treatmentDoneLines,
-      "Instrumentation area",
-      form.treatmentDoneTodayInstrumentationAreas,
-      1,
-    );
-  }
-  pushNestedValue(
-    treatmentDoneLines,
-    "Treatment done today notes",
-    form.treatmentDoneTodayNotes,
-  );
-  addSection("Treatment Done Today", treatmentDoneLines);
-
-  const nextAppointmentLines = [];
-  pushList(nextAppointmentLines, "Planned care", form.nextAppointment, 1);
-  if (
-    form.nextAppointment.includes("Hand and power instrumentation") &&
-    form.nextAppointmentInstrumentationDevices.length
-  ) {
-    pushList(
-      nextAppointmentLines,
-      "Hand and power instrumentation device",
-      form.nextAppointmentInstrumentationDevices,
-      1,
-    );
-  }
-  if (
-    form.nextAppointment.includes("Hand and power instrumentation") &&
-    form.nextAppointmentInstrumentationAreas.length
-  ) {
-    pushInlineList(
-      nextAppointmentLines,
-      "Instrumentation area",
-      form.nextAppointmentInstrumentationAreas,
-      1,
-    );
-  }
-  pushNestedValue(
-    nextAppointmentLines,
-    "Next appointment notes",
-    form.nextAppointmentNotes,
-  );
-  addSection("Next Appointment", nextAppointmentLines);
-
-  const dispositionLines = [];
-  pushList(dispositionLines, "Plan", form.disposition, 1);
-  addSection("Disposition", dispositionLines);
-
-  while (lines[lines.length - 1] === "") lines.pop();
-
-  return lines.join("\n");
+  if (!form.disposition.length) return summary;
+  return [summary, form.disposition.join("\n")].filter(Boolean).join("\n\n");
 }
 
 export const SUMMARY_TEST_CASES = [

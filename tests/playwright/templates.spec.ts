@@ -44,23 +44,28 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
   const summary = await page.locator("textarea[readonly]").inputValue();
 
   expect(summary).toContain(
-    "Visit Details:\n  Date: 2026-03-09\n\nHistory and Exam:",
-  );
-  expect(summary).toContain("EOE/IOE:\n  EOE: WNL");
-  expect(summary).toContain(
-    "    Findings:\n      - Asymptomatic click on opening/closing (Bilateral)",
-  );
-  expect(summary).toContain("\n\n  IOE: WNL");
-  expect(summary).toContain(
-    "Gingival Description:\n  Color: Red\n    Extent: localized",
+    "Patient concerns: Sensitivity around lower anterior and occasional bleeding while flossing.",
   );
   expect(summary).toContain(
-    "Oral Health Education:\n  Topics reviewed:\n    - Caries theory",
+    "Medical history update:\nMed/dent history updated. No new contraindications reported.\nBP: 118/76 mmHg\nHR: 72 bpm\nTaken at 9:15 AM",
   );
   expect(summary).toContain(
-    "Instrumentation area: Q1, Q2, Q3, Q4, Maxilla, Mandible",
+    "EOE: bilateral TMJ click on opening - asymptomatic, baseline monitoring only",
   );
-  expect(summary).not.toContain("Deposits and Inflammation:");
+  expect(summary).toContain(
+    "IOE: coated tongue, scalloped tongue, bilateral linea alba, slight palatine torus at midline, slight bilateral mandibular tori, mild soft tissue variations noted",
+  );
+  expect(summary).toContain(
+    "Gingival Description: localized marginal papillary redness on #5, #6-8",
+  );
+  expect(summary).toContain(
+    "OHE: Caries theory and risk factors, bass brushing, c-shaped flossing, sulcabrush and interdental brush technique, review benefits of Prevident or Opti-Rinse, periodontitis theory and risk factors, importance of maintaining a 4-month hygiene interval",
+  );
+  expect(summary).toContain(
+    "Treatments completed today: Med/dent history update, EOE/IOE, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Hand and power instrumentation, Ipana 5% NaF varnish application",
+  );
+  expect(summary).not.toContain("Visit Details:");
+  expect(summary).not.toContain("Other clinical findings:");
 });
 
 test("periodontal stage and grade only show for periodontitis", async ({
