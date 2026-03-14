@@ -5,7 +5,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PerioNote",
-  description: "Clinical template workspace for periodontal and hygiene notes",
+  description: "Periodontal chart notes",
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({
