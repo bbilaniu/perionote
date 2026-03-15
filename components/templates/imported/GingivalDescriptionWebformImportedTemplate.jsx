@@ -363,6 +363,7 @@ const INSTRUMENTATION_AREA_OPTIONS = [
   "Q2",
   "Q3",
   "Q4",
+  "Full mouth",
   "Maxilla",
   "Mandible",
   "Sextant 1",
