@@ -618,6 +618,7 @@ function buildDemoForm(fixture) {
     "Q2",
     "Q3",
     "Q4",
+    "Full mouth",
     "Maxilla",
     "Mandible",
   ];
@@ -637,6 +638,7 @@ function buildDemoForm(fixture) {
   ];
   form.nextAppointmentInstrumentationDevices = ["Piezo"];
   form.nextAppointmentInstrumentationAreas = [
+    "Full mouth",
     "Sextant 1",
     "Sextant 2",
     "Sextant 3",
