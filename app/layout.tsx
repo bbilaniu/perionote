@@ -3,10 +3,35 @@ import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import "./globals.css";
 
+const isGithubActions = process.env.GITHUB_ACTIONS === "true";
+const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
+const repoBasePath = isGithubActions && repositoryName ? `/${repositoryName}` : "";
+
 export const metadata: Metadata = {
   title: "PerioNote",
   description: "Periodontal chart notes",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      {
+        url: `${repoBasePath}/icon-192.png`,
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: `${repoBasePath}/icon-512.png`,
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: `${repoBasePath}/icon-192.png`,
+        sizes: "192x192",
+        type: "image/png",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
