@@ -8,8 +8,8 @@ const repoBasePath = isGithubActions && repositoryName ? `/${repositoryName}` : 
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PerioNote",
-    short_name: "PerioNote",
+    name: "HygieneNote",
+    short_name: "HygieneNote",
     description: "Periodontal chart notes",
     start_url: `${repoBasePath}/`,
     display: "standalone",

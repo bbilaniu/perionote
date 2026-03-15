@@ -3,9 +3,9 @@ import Link from "next/link";
 export default function HomePage() {
   return (
     <section className="space-y-6">
-      <h1 className="text-3xl font-semibold tracking-tight">PerioNote Bootstrap</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">HygieneNote Bootstrap</h1>
       <p className="max-w-3xl text-slate-700 dark:text-slate-300">
-        PerioNote is a template library for periodontal and hygiene notes.
+        HygieneNote is a template library for periodontal and hygiene notes.
         This bootstrap includes template routing, summary builders, fixtures, and starter tests.
       </p>
       <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">

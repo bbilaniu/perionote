@@ -1,6 +1,6 @@
 # Codex Workflow
 
-Use Codex for focused, reviewable tasks in PerioNote.
+Use Codex for focused, reviewable tasks in HygieneNote.
 
 ## Scope each Codex task
 

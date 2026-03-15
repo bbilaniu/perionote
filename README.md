@@ -1,6 +1,6 @@
-# PerioNote
+# HygieneNote
 
-PerioNote is a Next.js + Tailwind workspace for building, previewing, importing, and testing periodontal and dental hygiene note templates.
+HygieneNote is a Next.js + Tailwind workspace for building, previewing, importing, and testing periodontal and dental hygiene note templates.
 
 It is designed for two kinds of work at the same time:
 
@@ -31,7 +31,7 @@ The repo is also structured to support **quick import of legacy ChatGPT-generate
 
 ## Architecture
 
-PerioNote is intentionally both:
+HygieneNote is intentionally both:
 
 - a **runnable app**
 - a **template component library**
@@ -46,7 +46,7 @@ That allows contributors to:
 ## Recommended Repository Structure
 
 ```text
-PerioNote/
+HygieneNote/
   app/
     page.tsx
     templates/
@@ -87,7 +87,7 @@ PerioNote/
 ## Template Types
 
 ### Native templates
-These are templates written directly for PerioNote in TSX.
+These are templates written directly for HygieneNote in TSX.
 
 ### Imported templates
 These are templates migrated from older standalone JSX files. The import strategy is **render first, refactor later**.
@@ -209,7 +209,7 @@ npx playwright install chromium
 
 ## Preview Deploys
 
-PerioNote should support both:
+HygieneNote should support both:
 
 - local preview during development
 - automatic preview deploys for branch review on iPad, MacBook, or desktop
@@ -268,7 +268,7 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full contributor workflow.
 
 ## Design Principle
 
-PerioNote is a clinical template workspace.
+HygieneNote is a clinical template workspace.
 
 The priority is to make templates:
 

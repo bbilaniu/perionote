@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 type Theme = "light" | "dark" | "system";
 
-const storageKey = "perionote-theme";
+const storageKey = "hygienenote-theme";
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;

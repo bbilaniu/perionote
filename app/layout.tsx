@@ -8,7 +8,7 @@ const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
 const repoBasePath = isGithubActions && repositoryName ? `/${repositoryName}` : "";
 
 export const metadata: Metadata = {
-  title: "PerioNote",
+  title: "HygieneNote",
   description: "Periodontal chart notes",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -46,7 +46,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `(function() {
   try {
-    var storedTheme = localStorage.getItem("perionote-theme");
+    var storedTheme = localStorage.getItem("hygienenote-theme");
     var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     var useDark = storedTheme === "dark" || (storedTheme !== "light" && prefersDark);
     document.documentElement.classList.toggle("dark", useDark);
@@ -58,7 +58,7 @@ export default function RootLayout({
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
             <div className="mx-auto flex max-w-[112rem] items-center justify-between gap-4 px-6 py-4">
               <span className="text-lg font-semibold tracking-tight">
-                PerioNote
+                HygieneNote
               </span>
               <ThemeToggle />
               <Link

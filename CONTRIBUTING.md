@@ -1,4 +1,4 @@
-# Contributing to PerioNote
+# Contributing to HygieneNote
 
 This repository is built for collaborative development of dental and periodontal note templates.
 
@@ -14,7 +14,7 @@ The project supports:
 
 ## Contribution Principles
 
-When contributing to PerioNote, prioritize:
+When contributing to HygieneNote, prioritize:
 
 - small, reviewable changes
 - working previews over perfect architecture
@@ -108,7 +108,7 @@ The goal is **working import first**.
 
 ## Native Template Workflow
 
-For new templates built directly in PerioNote:
+For new templates built directly in HygieneNote:
 
 1. create the template component in `components/templates/native/...`
 2. add a preview page
@@ -133,7 +133,7 @@ For new templates built directly in PerioNote:
 
 ## Summary Output Guidelines
 
-PerioNote summaries should prefer:
+HygieneNote summaries should prefer:
 
 - headings
 - indentation
