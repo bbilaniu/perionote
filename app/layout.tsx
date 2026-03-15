@@ -10,9 +10,17 @@ const repoBasePath = isGithubActions && repositoryName ? `/${repositoryName}` : 
 export const metadata: Metadata = {
   title: "HygieneNote",
   description: "Periodontal chart notes",
-  manifest: "/manifest.webmanifest",
+  manifest: `${repoBasePath}/manifest.webmanifest`,
   icons: {
     icon: [
+      {
+        url: `${repoBasePath}/favicon.ico`,
+        sizes: "any",
+      },
+      {
+        url: `${repoBasePath}/favicon.svg`,
+        type: "image/svg+xml",
+      },
       {
         url: `${repoBasePath}/icon-192.png`,
         sizes: "192x192",
@@ -24,6 +32,7 @@ export const metadata: Metadata = {
         type: "image/png",
       },
     ],
+    shortcut: `${repoBasePath}/favicon.ico`,
     apple: [
       {
         url: `${repoBasePath}/icon-192.png`,
