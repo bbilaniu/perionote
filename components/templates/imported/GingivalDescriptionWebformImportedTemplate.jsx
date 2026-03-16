@@ -2066,7 +2066,7 @@ export function GingivalDescriptionWebformImportedTemplate({
           "mx-auto space-y-6",
           isVeryShort ? "max-w-[112rem]" : "max-w-7xl",
           isVeryShort &&
-            "2xl:grid 2xl:grid-cols-[minmax(0,0.88fr)_40rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
+            "2xl:grid 2xl:grid-cols-[minmax(0,1fr)_40rem] 2xl:items-start 2xl:gap-8 2xl:space-y-0",
         )}
       >
         <div className="min-w-0 space-y-6">

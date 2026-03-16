@@ -181,6 +181,27 @@ test("very short template slug renders the sticky-summary variant", async ({
   await expect(page.locator("#exam-date")).toBeVisible();
 });
 
+test("very short template desktop shell does not leave trailing space after the summary column", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1664, height: 900 });
+  await page.goto("/templates/very-short-template");
+
+  const layoutMetrics = await page.locator("main > div.min-h-screen > div").evaluate((root) => {
+    const children = Array.from(root.children);
+    const summary = children[1];
+    const rootRect = root.getBoundingClientRect();
+    const summaryRect = summary?.getBoundingClientRect();
+
+    return {
+      trailingGap: summaryRect ? rootRect.right - summaryRect.right : null,
+    };
+  });
+
+  expect(layoutMetrics.trailingGap).not.toBeNull();
+  expect(layoutMetrics.trailingGap ?? Number.POSITIVE_INFINITY).toBeLessThan(2);
+});
+
 test("imported template date inputs default to today's date and prefill BP time for both slugs", async ({
   page,
 }) => {
