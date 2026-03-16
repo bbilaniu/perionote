@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
 
 function cx(...parts) {
@@ -1741,14 +1741,49 @@ export function GingivalDescriptionWebformImportedTemplate({
     () => buildSummaryText(form, selectedFindings),
     [form, selectedFindings],
   );
+  const warningMessage =
+    "WARNING: This will replace the current form and DELETE ALL ENTERED DATA. Do you want to continue?";
 
   const confirmReplaceForm = () => {
     if (typeof window === "undefined") return true;
 
-    return window.confirm(
-      "WARNING: This will replace the current form and DELETE ALL ENTERED DATA. Do you want to continue?",
-    );
+    return window.confirm(warningMessage);
   };
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const handleBeforeUnload = (event) => {
+      event.preventDefault();
+      event.returnValue = warningMessage;
+      return warningMessage;
+    };
+
+    const handleTemplatesLinkClick = (event) => {
+      if (event.defaultPrevented) return;
+      if (event.button !== 0) return;
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+      const link =
+        event.target instanceof Element
+          ? event.target.closest('a[href="/templates"]')
+          : null;
+
+      if (!link) return;
+      if (confirmReplaceForm()) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("click", handleTemplatesLinkClick, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleTemplatesLinkClick, true);
+    };
+  }, []);
 
   const resetForm = () => {
     if (!confirmReplaceForm()) return;
