@@ -1742,11 +1742,21 @@ export function GingivalDescriptionWebformImportedTemplate({
     [form, selectedFindings],
   );
 
+  const confirmReplaceForm = () => {
+    if (typeof window === "undefined") return true;
+
+    return window.confirm(
+      "WARNING: This will replace the current form and DELETE ALL ENTERED DATA. Do you want to continue?",
+    );
+  };
+
   const resetForm = () => {
+    if (!confirmReplaceForm()) return;
     setForm(buildInitialForm());
   };
 
   const loadDemo = () => {
+    if (!confirmReplaceForm()) return;
     setForm(buildDemoForm(fixture));
   };
 
