@@ -73,6 +73,8 @@ export default function RootLayout({
               <Link
                 className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
                 href="/templates"
+                target="_blank"
+                rel="noopener noreferrer"
               >
                 Browse Templates
               </Link>

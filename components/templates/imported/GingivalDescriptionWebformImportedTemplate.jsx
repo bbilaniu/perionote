@@ -1759,29 +1759,10 @@ export function GingivalDescriptionWebformImportedTemplate({
       return warningMessage;
     };
 
-    const handleTemplatesLinkClick = (event) => {
-      if (event.defaultPrevented) return;
-      if (event.button !== 0) return;
-      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
-      const link =
-        event.target instanceof Element
-          ? event.target.closest('a[href="/templates"]')
-          : null;
-
-      if (!link) return;
-      if (confirmReplaceForm()) return;
-
-      event.preventDefault();
-      event.stopPropagation();
-    };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("click", handleTemplatesLinkClick, true);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("click", handleTemplatesLinkClick, true);
     };
   }, []);
 
