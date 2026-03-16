@@ -326,9 +326,8 @@ const PERIODONTAL_GRADE_OPTIONS = [
   "Grade B moderate rate of progression",
   "Grade C rapid rate of progression",
 ];
-const DEPOSIT_LOCATION_OPTIONS = [
-  "Supragingival",
-  "Subgingival",
+const DEPOSIT_TYPE_OPTIONS = ["Supragingival", "Subgingival"];
+const DEPOSIT_DISTRIBUTION_OPTIONS = [
   "Interproximal",
   "Facial",
   "Lingual",
@@ -451,6 +450,8 @@ function emptyDepositEntry() {
     amount: "None",
     extent: "Localized",
     locations: [],
+    types: [],
+    distributions: [],
     details: "",
   };
 }
@@ -963,8 +964,20 @@ export function buildSummaryText(form, selectedFindings) {
 
     parts.push(label.toLowerCase());
 
-    if (entry.locations.length) {
-      parts.push(entry.locations.map((location) => location.toLowerCase()).join(", "));
+    if ((entry.locations || []).length) {
+      parts.push(
+        entry.locations.map((location) => location.toLowerCase()).join(", "),
+      );
+    }
+    if ((entry.types || []).length) {
+      parts.push(entry.types.map((type) => type.toLowerCase()).join(", "));
+    }
+    if ((entry.distributions || []).length) {
+      parts.push(
+        entry.distributions
+          .map((distribution) => distribution.toLowerCase())
+          .join(", "),
+      );
     }
 
     return `${label}: ${parts.join(" ")}`;
@@ -1263,7 +1276,8 @@ export const SUMMARY_TEST_CASES = [
       form.plaque.enabled = true;
       form.plaque.amount = "Light";
       form.plaque.extent = "Localized";
-      form.plaque.locations = ["Facial"];
+      form.plaque.locations = ["Sextant 1 (Upper right)"];
+      form.plaque.distributions = ["Facial"];
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
@@ -1520,7 +1534,6 @@ function DepositsCard({
   onChange,
   showTypeLocation = false,
   placeholder,
-  description,
 }) {
   const update = (patch) => onChange({ ...value, ...patch });
   const showDetails = value.enabled;
@@ -1557,20 +1570,23 @@ function DepositsCard({
       }}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+        <div className="grid grid-cols-[auto_1fr] items-start gap-x-3">
           <Checkbox
+            className="mt-1 h-5 w-5"
             checked={value.enabled}
             onCheckedChange={(next) => setEnabled(Boolean(next))}
             id={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
           />
-          <div>
+          <div className="space-y-1">
             <Label
               htmlFor={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-              className="cursor-pointer text-base font-semibold"
+              className="cursor-pointer text-lg font-semibold leading-tight"
             >
               {title}
             </Label>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            {!value.enabled ? (
+              <p className="text-xs text-muted-foreground">Select to expand</p>
+            ) : null}
           </div>
         </div>
         {value.enabled ? <Badge className="rounded-xl">Selected</Badge> : null}
@@ -1620,12 +1636,26 @@ function DepositsCard({
           </div>
 
           {showTypeLocation && showExtent ? (
-            <MultiToggle
-              label="Location / Type"
-              options={DEPOSIT_LOCATION_OPTIONS}
-              selected={value.locations}
-              onChange={(locations) => update({ locations })}
-            />
+            <div className="space-y-4">
+              <MultiToggle
+                label="Location"
+                options={LOCATION_OPTIONS}
+                selected={value.locations || []}
+                onChange={(locations) => update({ locations })}
+              />
+              <MultiToggle
+                label="Type"
+                options={DEPOSIT_TYPE_OPTIONS}
+                selected={value.types || []}
+                onChange={(types) => update({ types })}
+              />
+              <MultiToggle
+                label="Distribution"
+                options={DEPOSIT_DISTRIBUTION_OPTIONS}
+                selected={value.distributions || []}
+                onChange={(distributions) => update({ distributions })}
+              />
+            </div>
           ) : null}
 
           <div className="space-y-2">
@@ -2549,37 +2579,40 @@ export function GingivalDescriptionWebformImportedTemplate({
               title="Calculus and Biofilm Deposits"
               open={!isVeryShort || openSections.deposits}
               onToggle={isVeryShort ? () => toggleSection("deposits") : undefined}
-              contentClassName="grid gap-6 xl:grid-cols-2"
+              contentClassName="grid gap-4 lg:grid-cols-3"
             >
-                <DepositsCard
-                  title="Plaque"
-                  value={form.plaque}
-                  onChange={(plaque) =>
-                    setForm((current) => ({ ...current, plaque }))
-                  }
-                  showTypeLocation
-                  description="Mark plaque, then capture amount, extent, location, and detail."
-                  placeholder="Describe oral biofilm location, amount, and extent."
-                />
-                <DepositsCard
-                  title="Calculus"
-                  value={form.calculus}
-                  onChange={(calculus) =>
-                    setForm((current) => ({ ...current, calculus }))
-                  }
-                  showTypeLocation
-                  description="Mark calculus, then capture amount, extent, location, and detail."
-                  placeholder="Describe supragingival/subgingival calculus and affected sites."
-                />
-                <DepositsCard
-                  title="Extrinsic Stain"
-                  value={form.extrinsicStain}
-                  onChange={(extrinsicStain) =>
-                    setForm((current) => ({ ...current, extrinsicStain }))
-                  }
-                  description="Mark extrinsic stain, then capture amount, extent, and detail."
-                  placeholder="Describe generalized or localized stain and specific teeth/surfaces."
-                />
+                <div className={cx(form.plaque.enabled && "lg:col-span-3")}>
+                  <DepositsCard
+                    title="Plaque"
+                    value={form.plaque}
+                    onChange={(plaque) =>
+                      setForm((current) => ({ ...current, plaque }))
+                    }
+                    showTypeLocation
+                    placeholder="Describe oral biofilm location, amount, and extent."
+                  />
+                </div>
+                <div className={cx(form.calculus.enabled && "lg:col-span-3")}>
+                  <DepositsCard
+                    title="Calculus"
+                    value={form.calculus}
+                    onChange={(calculus) =>
+                      setForm((current) => ({ ...current, calculus }))
+                    }
+                    showTypeLocation
+                    placeholder="Describe supragingival/subgingival calculus and affected sites."
+                  />
+                </div>
+                <div className={cx(form.extrinsicStain.enabled && "lg:col-span-3")}>
+                  <DepositsCard
+                    title="Extrinsic Stain"
+                    value={form.extrinsicStain}
+                    onChange={(extrinsicStain) =>
+                      setForm((current) => ({ ...current, extrinsicStain }))
+                    }
+                    placeholder="Describe generalized or localized stain and specific teeth/surfaces."
+                  />
+                </div>
             </SectionCard>
 
             <SectionCard
