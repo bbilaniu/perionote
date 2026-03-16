@@ -22,7 +22,7 @@ function CardHeader({ className, ...props }) {
   return (
     <div
       className={cx(
-        "space-y-1.5 p-6 dark:border-b dark:border-slate-700",
+        "space-y-1.5 p-6",
         className,
       )}
       {...props}
@@ -409,6 +409,11 @@ const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
   "GP",
   "NP",
 ];
+const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
+  "Astracaine 4% with 1:100K epinephrine",
+  "Xylocaine 2% with 1:100K epinephrine",
+  "Mepivacaine 3% without epinephrine",
+];
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
 const DISPOSITION_OPTIONS = [
   "DH Re-eval at 4-6 weeks",
@@ -461,7 +466,7 @@ function emptyLocalAnesthesiaEntry() {
     injectionType: "",
     quadrant: "",
     anestheticProduct: "",
-    amountMl: "",
+    amountMl: "1.8",
     timeAdministered: getCurrentTimeString(),
   };
 }
@@ -522,6 +527,7 @@ function buildInitialForm(fixture) {
     localAnesthesiaNoAdverseReactions: false,
     localAnesthesiaAdequateAchieved: false,
     localAnesthesiaEntries: [],
+    localAnesthesiaNotes: "",
     oheTopics: [],
     oheNotes: "",
     recommendations: [],
@@ -673,6 +679,26 @@ function buildDemoForm(fixture) {
   ];
   form.nextAppointmentNotes =
     "Reassess inflammation response and home-care adherence.";
+  form.localAnesthesiaNoContraindication = true;
+  form.localAnesthesiaBenzocaineApplied = true;
+  form.localAnesthesiaEntries = [
+    {
+      injectionType: "IA/L",
+      quadrant: "Q3",
+      anestheticProduct: "Mepivacaine 3% without epinephrine",
+      amountMl: "1.8",
+      timeAdministered: "09:25",
+    },
+    {
+      injectionType: "M/I",
+      quadrant: "Q3",
+      anestheticProduct: "Mepivacaine 3% without epinephrine",
+      amountMl: "1.8",
+      timeAdministered: "09:27",
+    },
+  ];
+  form.localAnesthesiaNotes =
+    "Patient tolerated injections well and post-op instructions reviewed.";
 
   form.disposition = [
     "DH Re-eval at 4-6 weeks",
@@ -1142,6 +1168,9 @@ export function buildSummaryText(form, selectedFindings) {
     }
     if (form.localAnesthesiaAdequateAchieved) {
       lines.push("Adequate anesthesia achieved");
+    }
+    if (clean(form.localAnesthesiaNotes)) {
+      lines.push(cleanSentence(form.localAnesthesiaNotes));
     }
 
     return lines.join("\n");
@@ -1725,6 +1754,17 @@ export function GingivalDescriptionWebformImportedTemplate({
     setForm((current) => ({
       ...current,
       bloodPressureTakenTime: getCurrentTimeString(),
+    }));
+  };
+
+  const setLocalAnesthesiaEntryTimeToCurrent = (entryIndex) => {
+    setForm((current) => ({
+      ...current,
+      localAnesthesiaEntries: current.localAnesthesiaEntries.map((row, rowIndex) =>
+        rowIndex === entryIndex
+          ? { ...row, timeAdministered: getCurrentTimeString() }
+          : row,
+      ),
     }));
   };
 
@@ -3038,189 +3078,259 @@ export function GingivalDescriptionWebformImportedTemplate({
             >
                 <MultiToggle
                   label="Local anesthesia toggles"
-                  options={[
-                    "No C/I to LA",
-                    "Benzocaine 20% applied to the injection site",
-                    "No adverse reactions noted",
-                    "Adequate anesthesia achieved",
-                  ]}
+                  options={
+                    form.localAnesthesiaNoContraindication
+                      ? [
+                          "No C/I to LA",
+                          "Benzocaine 20% applied to the injection site",
+                        ]
+                      : ["No C/I to LA"]
+                  }
                   selected={[
                     form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
                     form.localAnesthesiaBenzocaineApplied
                       ? "Benzocaine 20% applied to the injection site"
                       : "",
-                    form.localAnesthesiaNoAdverseReactions
-                      ? "No adverse reactions noted"
-                      : "",
-                    form.localAnesthesiaAdequateAchieved
-                      ? "Adequate anesthesia achieved"
-                      : "",
                   ].filter(Boolean)}
-                  onChange={(selected) =>
+                  onChange={(selected) => {
+                    const hasNoContraindication = selected.includes("No C/I to LA");
+
                     setForm((current) => ({
                       ...current,
-                      localAnesthesiaNoContraindication:
-                        selected.includes("No C/I to LA"),
-                      localAnesthesiaBenzocaineApplied: selected.includes(
-                        "Benzocaine 20% applied to the injection site",
-                      ),
-                      localAnesthesiaNoAdverseReactions: selected.includes(
-                        "No adverse reactions noted",
-                      ),
-                      localAnesthesiaAdequateAchieved: selected.includes(
-                        "Adequate anesthesia achieved",
-                      ),
-                    }))
-                  }
+                      localAnesthesiaNoContraindication: hasNoContraindication,
+                      localAnesthesiaBenzocaineApplied: hasNoContraindication
+                        ? selected.includes(
+                            "Benzocaine 20% applied to the injection site",
+                          )
+                        : false,
+                      localAnesthesiaNoAdverseReactions: hasNoContraindication
+                        ? current.localAnesthesiaNoAdverseReactions
+                        : false,
+                      localAnesthesiaAdequateAchieved: hasNoContraindication
+                        ? current.localAnesthesiaAdequateAchieved
+                        : false,
+                      localAnesthesiaEntries: hasNoContraindication
+                        ? current.localAnesthesiaEntries
+                        : [],
+                      localAnesthesiaNotes: hasNoContraindication
+                        ? current.localAnesthesiaNotes
+                        : "",
+                    }));
+                  }}
                 />
 
-                <div className="space-y-3">
-                  <Label className="block">Injection entries</Label>
-                  {form.localAnesthesiaEntries.map((entry, index) => (
-                    <Card key={`la-${index}`} className="rounded-2xl border-dashed p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <Label>Injection entry #{index + 1}</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="rounded-2xl px-3 py-1.5 text-xs"
-                          onClick={() =>
-                            setForm((current) => ({
-                              ...current,
-                              localAnesthesiaEntries: current.localAnesthesiaEntries.filter(
-                                (_, entryIndex) => entryIndex !== index,
-                              ),
-                            }))
-                          }
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label>Injection type</Label>
-                          <Select
-                            value={entry.injectionType}
-                            onValueChange={(injectionType) =>
+                {form.localAnesthesiaNoContraindication ? (
+                  <div className="space-y-3">
+                    <Label className="block">Injection entries</Label>
+                    {form.localAnesthesiaEntries.map((entry, index) => (
+                      <Card key={`la-${index}`} className="rounded-2xl border-dashed p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                          <Label>Injection entry #{index + 1}</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-2xl px-3 py-1.5 text-xs"
+                            onClick={() =>
                               setForm((current) => ({
                                 ...current,
-                                localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                  (row, rowIndex) =>
-                                    rowIndex === index ? { ...row, injectionType } : row,
+                                localAnesthesiaEntries: current.localAnesthesiaEntries.filter(
+                                  (_, entryIndex) => entryIndex !== index,
                                 ),
                               }))
                             }
                           >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select injection type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">None selected</SelectItem>
-                              {LOCAL_ANESTHESIA_TYPE_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            Remove
+                          </Button>
                         </div>
-                        <div className="space-y-2">
-                          <Label>Quadrant</Label>
-                          <Select
-                            value={entry.quadrant}
-                            onValueChange={(quadrant) =>
-                              setForm((current) => ({
-                                ...current,
-                                localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                  (row, rowIndex) =>
-                                    rowIndex === index ? { ...row, quadrant } : row,
-                                ),
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select quadrant" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">None selected</SelectItem>
-                              {QUADRANT_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label>Injection type</Label>
+                            <Select
+                              value={entry.injectionType}
+                              onValueChange={(injectionType) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index ? { ...row, injectionType } : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select injection type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None selected</SelectItem>
+                                {LOCAL_ANESTHESIA_TYPE_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Quadrant</Label>
+                            <Select
+                              value={entry.quadrant}
+                              onValueChange={(quadrant) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index ? { ...row, quadrant } : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select quadrant" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None selected</SelectItem>
+                                {QUADRANT_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label>Anesthetic product</Label>
+                            <Select
+                              value={entry.anestheticProduct}
+                              onValueChange={(anestheticProduct) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index
+                                        ? { ...row, anestheticProduct }
+                                        : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select anesthetic product" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None selected</SelectItem>
+                                {LOCAL_ANESTHETIC_PRODUCT_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Amount (ml)</Label>
+                            <Input
+                              value={entry.amountMl}
+                              onChange={(e) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index ? { ...row, amountMl: e.target.value } : row,
+                                  ),
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Time administered</Label>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="shrink-0 rounded-xl px-3 py-2 text-xs"
+                                onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
+                              >
+                                Set to now
+                              </Button>
+                              <Input
+                                type="time"
+                                value={entry.timeAdministered}
+                                onChange={(e) =>
+                                  setForm((current) => ({
+                                    ...current,
+                                    localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                      (row, rowIndex) =>
+                                        rowIndex === index
+                                          ? { ...row, timeAdministered: e.target.value }
+                                          : row,
+                                    ),
+                                  }))
+                                }
+                              />
+                            </div>
+                          </div>
                         </div>
-                        <div className="space-y-2 md:col-span-2">
-                          <Label>Anesthetic product</Label>
-                          <Input
-                            value={entry.anestheticProduct}
-                            onChange={(e) =>
-                              setForm((current) => ({
-                                ...current,
-                                localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                  (row, rowIndex) =>
-                                    rowIndex === index
-                                      ? { ...row, anestheticProduct: e.target.value }
-                                      : row,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Amount (ml)</Label>
-                          <Input
-                            value={entry.amountMl}
-                            onChange={(e) =>
-                              setForm((current) => ({
-                                ...current,
-                                localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                  (row, rowIndex) =>
-                                    rowIndex === index ? { ...row, amountMl: e.target.value } : row,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Time administered</Label>
-                          <Input
-                            type="time"
-                            value={entry.timeAdministered}
-                            onChange={(e) =>
-                              setForm((current) => ({
-                                ...current,
-                                localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                  (row, rowIndex) =>
-                                    rowIndex === index
-                                      ? { ...row, timeAdministered: e.target.value }
-                                      : row,
-                                ),
-                              }))
-                            }
-                          />
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        localAnesthesiaEntries: [
-                          ...current.localAnesthesiaEntries,
-                          emptyLocalAnesthesiaEntry(),
-                        ],
-                      }))
-                    }
-                  >
-                    Add injection entry
-                  </Button>
-                </div>
+                      </Card>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-2xl"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          localAnesthesiaEntries: [
+                            ...current.localAnesthesiaEntries,
+                            emptyLocalAnesthesiaEntry(),
+                          ],
+                        }))
+                      }
+                    >
+                      Add injection entry
+                    </Button>
+
+                    <div className="space-y-4">
+                      <MultiToggle
+                        label="Anesthesia assessment"
+                        options={[
+                          "No adverse reactions noted",
+                          "Adequate anesthesia achieved",
+                        ]}
+                        selected={[
+                          form.localAnesthesiaNoAdverseReactions
+                            ? "No adverse reactions noted"
+                            : "",
+                          form.localAnesthesiaAdequateAchieved
+                            ? "Adequate anesthesia achieved"
+                            : "",
+                        ].filter(Boolean)}
+                        onChange={(selected) =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaNoAdverseReactions: selected.includes(
+                              "No adverse reactions noted",
+                            ),
+                            localAnesthesiaAdequateAchieved: selected.includes(
+                              "Adequate anesthesia achieved",
+                            ),
+                          }))
+                        }
+                      />
+                      <SectionTextarea
+                        id="local-anesthesia-notes"
+                        label="Anesthesia notes"
+                        placeholder="Add anesthesia assessment notes."
+                        value={form.localAnesthesiaNotes}
+                        onChange={(localAnesthesiaNotes) =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaNotes,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : null}
             </SectionCard>
 
             <SectionCard
