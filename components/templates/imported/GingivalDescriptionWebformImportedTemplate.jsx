@@ -3036,74 +3036,46 @@ export function GingivalDescriptionWebformImportedTemplate({
               onToggle={isVeryShort ? () => toggleSection("localAnesthesia") : undefined}
               contentClassName="space-y-4"
             >
-                <div className="grid gap-2 md:grid-cols-2">
-                  <Button
-                    type="button"
-                    variant={
-                      form.localAnesthesiaNoContraindication ? "default" : "outline"
-                    }
-                    className="w-full justify-start rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        localAnesthesiaNoContraindication:
-                          !current.localAnesthesiaNoContraindication,
-                      }))
-                    }
-                  >
-                    No C/I to LA
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={
-                      form.localAnesthesiaBenzocaineApplied ? "default" : "outline"
-                    }
-                    className="w-full justify-start rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        localAnesthesiaBenzocaineApplied:
-                          !current.localAnesthesiaBenzocaineApplied,
-                      }))
-                    }
-                  >
-                    Benzocaine 20% applied to the injection site
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={
-                      form.localAnesthesiaNoAdverseReactions ? "default" : "outline"
-                    }
-                    className="w-full justify-start rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        localAnesthesiaNoAdverseReactions:
-                          !current.localAnesthesiaNoAdverseReactions,
-                      }))
-                    }
-                  >
-                    No adverse reactions noted
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={
-                      form.localAnesthesiaAdequateAchieved ? "default" : "outline"
-                    }
-                    className="w-full justify-start rounded-2xl"
-                    onClick={() =>
-                      setForm((current) => ({
-                        ...current,
-                        localAnesthesiaAdequateAchieved:
-                          !current.localAnesthesiaAdequateAchieved,
-                      }))
-                    }
-                  >
-                    Adequate anesthesia achieved
-                  </Button>
-                </div>
+                <MultiToggle
+                  label="Local anesthesia toggles"
+                  options={[
+                    "No C/I to LA",
+                    "Benzocaine 20% applied to the injection site",
+                    "No adverse reactions noted",
+                    "Adequate anesthesia achieved",
+                  ]}
+                  selected={[
+                    form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
+                    form.localAnesthesiaBenzocaineApplied
+                      ? "Benzocaine 20% applied to the injection site"
+                      : "",
+                    form.localAnesthesiaNoAdverseReactions
+                      ? "No adverse reactions noted"
+                      : "",
+                    form.localAnesthesiaAdequateAchieved
+                      ? "Adequate anesthesia achieved"
+                      : "",
+                  ].filter(Boolean)}
+                  onChange={(selected) =>
+                    setForm((current) => ({
+                      ...current,
+                      localAnesthesiaNoContraindication:
+                        selected.includes("No C/I to LA"),
+                      localAnesthesiaBenzocaineApplied: selected.includes(
+                        "Benzocaine 20% applied to the injection site",
+                      ),
+                      localAnesthesiaNoAdverseReactions: selected.includes(
+                        "No adverse reactions noted",
+                      ),
+                      localAnesthesiaAdequateAchieved: selected.includes(
+                        "Adequate anesthesia achieved",
+                      ),
+                    }))
+                  }
+                />
 
                 <div className="space-y-3">
+                  <Label className="block">Injection entries</Label>
                   {form.localAnesthesiaEntries.map((entry, index) => (
                     <Card key={`la-${index}`} className="rounded-2xl border-dashed p-4">
                       <div className="mb-3 flex items-center justify-between">
