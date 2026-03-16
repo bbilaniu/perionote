@@ -22,7 +22,7 @@ function CardHeader({ className, ...props }) {
   return (
     <div
       className={cx(
-        "space-y-1.5 p-6 dark:border-b dark:border-slate-700",
+        "space-y-1.5 p-6",
         className,
       )}
       {...props}
@@ -279,29 +279,18 @@ function Select({ value, onValueChange, children }) {
 const FIELD_OPTIONS = {
   color: ["Pink", "Dark Pink", "Red", "Cyanotic", "Pigmented"],
   consistency: ["Firm", "Spongy", "Fibrotic"],
-  contourShape: [
-    "Margins: Knife-edged",
-    "Margins: Rolled",
-    "Papilla: Pointed",
-    "Papilla: Bulbous",
-    "Papilla: Blunted",
-    "Papilla: Cratered",
-    "Papilla: Clefted",
-  ],
+  gingivalMargins: ["Knife-edged", "Rolled"],
+  interdentalPapilla: ["Pointed", "Bulbous", "Blunted"],
   surfaceTexture: ["Stippling", "Shiny", "Smooth"],
-  gingivalPosition: ["Recession", "Pseudo pocket", "MAG"],
-  bleedingExudate: ["BOP", "Exudate"],
 };
 
 const LOCATION_OPTIONS = [
-  "Facial",
-  "Lingual",
-  "Buccal",
-  "Mesial",
-  "Distal",
-  "Interproximal",
-  "Labial",
-  "Palatal",
+  "Sextant 1 (Upper right)",
+  "Sextant 2 (Upper anterior)",
+  "Sextant 3 (Upper left)",
+  "Sextant 4 (Lower left)",
+  "Sextant 5 (Lower anterior)",
+  "Sextant 6 (Lower right)",
 ];
 
 const DISTRIBUTION_OPTIONS = ["Diffuse", "Marginal", "Papillary"];
@@ -309,19 +298,17 @@ const DISTRIBUTION_OPTIONS = ["Diffuse", "Marginal", "Papillary"];
 const SECTION_LABELS = {
   color: "Color",
   consistency: "Consistency",
-  contourShape: "Contour / Shape",
+  gingivalMargins: "Gingival margins",
+  interdentalPapilla: "Interdental papilla",
   surfaceTexture: "Surface Texture",
-  gingivalPosition: "Gingival Position",
-  bleedingExudate: "Bleeding & Exudate",
 };
 
 const SECTION_KEY_BY_LABEL = {
   Color: "color",
   Consistency: "consistency",
-  "Contour / Shape": "contourShape",
+  "Gingival margins": "gingivalMargins",
+  "Interdental papilla": "interdentalPapilla",
   "Surface Texture": "surfaceTexture",
-  "Gingival Position": "gingivalPosition",
-  "Bleeding & Exudate": "bleedingExudate",
 };
 
 const AMOUNT_OPTIONS = ["None", "Light", "Moderate", "Heavy"];
@@ -339,22 +326,19 @@ const PERIODONTAL_GRADE_OPTIONS = [
   "Grade B moderate rate of progression",
   "Grade C rapid rate of progression",
 ];
-const DEPOSIT_LOCATION_OPTIONS = [
-  "Supragingival",
-  "Subgingival",
+const DEPOSIT_TYPE_OPTIONS = ["Supragingival", "Subgingival"];
+const DEPOSIT_DISTRIBUTION_OPTIONS = [
   "Interproximal",
   "Facial",
   "Lingual",
   "At gingival margin",
-  "Generalized",
-  "Localized",
 ];
-const HAND_INSTRUMENTATION_OPTION = "Hand instrumentation";
-const POWER_INSTRUMENTATION_OPTION = "Power instrumentation";
+const HAND_POWER_INSTRUMENTATION_OPTION = "Hand and Power Instrumentation";
 const FLUORIDE_VARNISH_OPTION = "Ipana 5% NaF varnish application";
+const OHE_REINFORCED_OPTION = "OHE reinforced";
+const REVIEWED_HOMECARE_OPTION = "Reviewed homecare";
 const TREATMENT_OPTIONS = [
-  HAND_INSTRUMENTATION_OPTION,
-  POWER_INSTRUMENTATION_OPTION,
+  HAND_POWER_INSTRUMENTATION_OPTION,
   FLUORIDE_VARNISH_OPTION,
 ];
 const INSTRUMENTATION_DEVICE_OPTIONS = ["Cavitron", "Piezo"];
@@ -395,6 +379,8 @@ const RECOMMENDATION_OPTIONS = [
 const VISIT_CARE_BASE_OPTIONS = [
   "Med/dent history update",
   "EOE/IOE",
+  OHE_REINFORCED_OPTION,
+  REVIEWED_HOMECARE_OPTION,
   "Gingival assessments",
   "Calculus index",
   "Caries risk",
@@ -404,6 +390,31 @@ const VISIT_CARE_BASE_OPTIONS = [
   "Full mouth probing",
 ];
 const VISIT_CARE_OPTIONS = [...VISIT_CARE_BASE_OPTIONS, ...TREATMENT_OPTIONS];
+const VISIT_CARE_SELECT_CORE_OPTIONS = [
+  "Med/dent history update",
+  "EOE/IOE",
+  OHE_REINFORCED_OPTION,
+  REVIEWED_HOMECARE_OPTION,
+];
+const TMJ_CLICKING_STATUS_OPTIONS = ["Symptomatic", "Asymptomatic"];
+const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = ["On open", "On close"];
+const LYMPH_NODE_LOCATION_OPTIONS = ["Submandibular", "Sublingual"];
+const LYMPH_NODE_SWELLING_OPTIONS = ["Slightly enlarged", "Very swollen"];
+const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
+  "I/O",
+  "M/I",
+  "PSA",
+  "IA/L",
+  "Buccal NB",
+  "GP",
+  "NP",
+];
+const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
+  "Astracaine 4% with 1:100K epinephrine",
+  "Xylocaine 2% with 1:100K epinephrine",
+  "Mepivacaine 3% without epinephrine",
+];
+const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
 const DISPOSITION_OPTIONS = [
   "DH Re-eval at 4-6 weeks",
   "DH Re-care at 3-4 months interval",
@@ -419,7 +430,6 @@ const CARIES_RISK_FACTOR_OPTIONS = [
   "Symptomatically driven dental visits",
 ];
 const CLICK_LATERALITY_OPTIONS = ["Bilateral", "Left", "Right"];
-const ASYMPTOMATIC_LYMPH_NODE_OPTIONS = ["Palpable", "Not palpable"];
 const PALATINE_TORUS_OPTIONS = ["Slight", "Prominent"];
 const IOE_FINDING_OPTIONS = [
   "Coated tongue",
@@ -445,7 +455,19 @@ function emptyDepositEntry() {
     amount: "None",
     extent: "Localized",
     locations: [],
+    types: [],
+    distributions: [],
     details: "",
+  };
+}
+
+function emptyLocalAnesthesiaEntry() {
+  return {
+    injectionType: "",
+    quadrant: "",
+    anestheticProduct: "",
+    amountMl: "1.8",
+    timeAdministered: getCurrentTimeString(),
   };
 }
 
@@ -476,9 +498,13 @@ function buildInitialForm(fixture) {
     eoeWithinNormalLimits: false,
     ioeWithinNormalLimits: false,
     asymptomaticClickOnOpeningClosing: false,
+    tmjClickingStatus: [],
+    tmjClickingPhase: [],
     asymptomaticClickLaterality: "",
     asymptomaticLymphNodes: false,
-    asymptomaticLymphNodesPalpability: "",
+    palpableLymphNodeLaterality: "",
+    palpableLymphNodeLocation: [],
+    palpableLymphNodeSwelling: [],
     ioeFindings: [],
     palatineTorusAtMidline: false,
     palatineTorusProminence: "",
@@ -496,6 +522,12 @@ function buildInitialForm(fixture) {
     nextAppointmentInstrumentationDevices: [],
     nextAppointmentInstrumentationAreas: [],
     nextAppointmentNotes: "",
+    localAnesthesiaNoContraindication: false,
+    localAnesthesiaBenzocaineApplied: false,
+    localAnesthesiaNoAdverseReactions: false,
+    localAnesthesiaAdequateAchieved: false,
+    localAnesthesiaEntries: [],
+    localAnesthesiaNotes: "",
     oheTopics: [],
     oheNotes: "",
     recommendations: [],
@@ -601,6 +633,8 @@ function buildDemoForm(fixture) {
   form.treatmentDoneToday = [
     "Med/dent history update",
     "EOE/IOE",
+    OHE_REINFORCED_OPTION,
+    REVIEWED_HOMECARE_OPTION,
     "Gingival assessments",
     "Calculus index",
     "Caries risk",
@@ -608,8 +642,7 @@ function buildDemoForm(fixture) {
     "Periodontal risk assessment",
     "Spot probing",
     "Full mouth probing",
-    HAND_INSTRUMENTATION_OPTION,
-    POWER_INSTRUMENTATION_OPTION,
+    HAND_POWER_INSTRUMENTATION_OPTION,
     FLUORIDE_VARNISH_OPTION,
   ];
   form.treatmentDoneTodayInstrumentationDevices = ["Piezo"];
@@ -627,13 +660,14 @@ function buildDemoForm(fixture) {
 
   form.nextAppointment = [
     "EOE/IOE",
+    OHE_REINFORCED_OPTION,
+    REVIEWED_HOMECARE_OPTION,
     "Gingival assessments",
     "Caries risk",
     "Periodontal risk assessment",
     "Spot probing",
     "Full mouth probing",
-    HAND_INSTRUMENTATION_OPTION,
-    POWER_INSTRUMENTATION_OPTION,
+    HAND_POWER_INSTRUMENTATION_OPTION,
     FLUORIDE_VARNISH_OPTION,
   ];
   form.nextAppointmentInstrumentationDevices = ["Piezo"];
@@ -645,6 +679,26 @@ function buildDemoForm(fixture) {
   ];
   form.nextAppointmentNotes =
     "Reassess inflammation response and home-care adherence.";
+  form.localAnesthesiaNoContraindication = true;
+  form.localAnesthesiaBenzocaineApplied = true;
+  form.localAnesthesiaEntries = [
+    {
+      injectionType: "IA/L",
+      quadrant: "Q3",
+      anestheticProduct: "Mepivacaine 3% without epinephrine",
+      amountMl: "1.8",
+      timeAdministered: "09:25",
+    },
+    {
+      injectionType: "M/I",
+      quadrant: "Q3",
+      anestheticProduct: "Mepivacaine 3% without epinephrine",
+      amountMl: "1.8",
+      timeAdministered: "09:27",
+    },
+  ];
+  form.localAnesthesiaNotes =
+    "Patient tolerated injections well and post-op instructions reviewed.";
 
   form.disposition = [
     "DH Re-eval at 4-6 weeks",
@@ -769,18 +823,29 @@ export function buildSummaryText(form, selectedFindings) {
 
     if (form.asymptomaticClickOnOpeningClosing) {
       const laterality = clean(form.asymptomaticClickLaterality).toLowerCase();
+      const status = form.tmjClickingStatus.length
+        ? form.tmjClickingStatus.map((item) => clean(item).toLowerCase()).join("/")
+        : "asymptomatic";
+      const phase = form.tmjClickingPhase.length
+        ? form.tmjClickingPhase.map((item) => clean(item).toLowerCase()).join("/")
+        : "on open";
       findings.push(
-        `${laterality ? `${laterality} ` : ""}TMJ click on opening - asymptomatic`,
+        `${laterality ? `${laterality} ` : ""}tmj clicking (${status}, ${phase})`,
       );
     }
 
     if (form.asymptomaticLymphNodes) {
-      const palpability = clean(form.asymptomaticLymphNodesPalpability).toLowerCase();
-      findings.push(
-        palpability
-          ? `lymph nodes ${palpability} - asymptomatic`
-          : "lymph nodes - asymptomatic",
-      );
+      const segments = [];
+      if (form.palpableLymphNodeLaterality) {
+        segments.push(clean(form.palpableLymphNodeLaterality).toLowerCase());
+      }
+      if (form.palpableLymphNodeLocation.length) {
+        segments.push(form.palpableLymphNodeLocation.map((item) => clean(item).toLowerCase()).join("/"));
+      }
+      if (form.palpableLymphNodeSwelling.length) {
+        segments.push(form.palpableLymphNodeSwelling.map((item) => clean(item).toLowerCase()).join("/"));
+      }
+      findings.push(`palpable lymph nodes${segments.length ? ` (${segments.join(", ")})` : ""}`);
     }
 
     const observation = normalizeObservation(form.eoe, form.eoeWithinNormalLimits);
@@ -842,12 +907,6 @@ export function buildSummaryText(form, selectedFindings) {
     if (item.section === "Surface Texture" && descriptor === "stippling") {
       descriptor = "stippled";
     }
-    if (item.section === "Bleeding & Exudate" && descriptor === "bop") {
-      descriptor = "bleeding on probing";
-    }
-    descriptor = descriptor
-      .replace(/^margins:\s*/i, "")
-      .replace(/^papilla:\s*/i, "");
 
     if (item.distributions.length) {
       descriptor = `${item.distributions
@@ -895,11 +954,10 @@ export function buildSummaryText(form, selectedFindings) {
 
     const sectionOrder = [
       "Color",
-      "Contour / Shape",
+      "Gingival margins",
+      "Interdental papilla",
       "Consistency",
       "Surface Texture",
-      "Gingival Position",
-      "Bleeding & Exudate",
     ];
     const phrases = [];
 
@@ -932,8 +990,20 @@ export function buildSummaryText(form, selectedFindings) {
 
     parts.push(label.toLowerCase());
 
-    if (entry.locations.length) {
-      parts.push(entry.locations.map((location) => location.toLowerCase()).join(", "));
+    if ((entry.locations || []).length) {
+      parts.push(
+        entry.locations.map((location) => location.toLowerCase()).join(", "),
+      );
+    }
+    if ((entry.types || []).length) {
+      parts.push(entry.types.map((type) => type.toLowerCase()).join(", "));
+    }
+    if ((entry.distributions || []).length) {
+      parts.push(
+        entry.distributions
+          .map((distribution) => distribution.toLowerCase())
+          .join(", "),
+      );
     }
 
     return `${label}: ${parts.join(" ")}`;
@@ -1050,20 +1120,61 @@ export function buildSummaryText(form, selectedFindings) {
     items.map((item) => {
       let label = item;
 
-      if (item === POWER_INSTRUMENTATION_OPTION && devices.length) {
+      if (item === HAND_POWER_INSTRUMENTATION_OPTION && devices.length) {
         label = `${item} (${joinComma(devices)})`;
       }
 
-      if (
-        (item === HAND_INSTRUMENTATION_OPTION ||
-          item === POWER_INSTRUMENTATION_OPTION) &&
-        areas.length
-      ) {
-        return `${label} - ${joinComma(areas)}`;
+      if (item === HAND_POWER_INSTRUMENTATION_OPTION && areas.length) {
+        return `${joinComma(areas)} ${label}`;
       }
 
       return label;
     });
+  const formatLocalAnesthesia = () => {
+    const lines = [];
+
+    if (form.localAnesthesiaNoContraindication) {
+      lines.push("Local anesthetic administered: No C/I to LA");
+    }
+    if (form.localAnesthesiaBenzocaineApplied) {
+      lines.push("Benzocaine 20% applied to the injection site");
+    }
+
+    const totals = new Map();
+    form.localAnesthesiaEntries.forEach((entry) => {
+      const injectionType = clean(entry.injectionType);
+      const quadrant = clean(entry.quadrant);
+      const product = clean(entry.anestheticProduct);
+      const amountMlRaw = clean(entry.amountMl);
+      if (!injectionType || !quadrant || !product || !amountMlRaw) return;
+
+      const amount = Number(amountMlRaw);
+      const time = clean(entry.timeAdministered);
+      lines.push(
+        `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
+      );
+
+      if (Number.isFinite(amount)) {
+        totals.set(product, (totals.get(product) ?? 0) + amount);
+      }
+    });
+
+    totals.forEach((amount, product) => {
+      lines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+    });
+
+    if (form.localAnesthesiaNoAdverseReactions) {
+      lines.push("No adverse reactions noted");
+    }
+    if (form.localAnesthesiaAdequateAchieved) {
+      lines.push("Adequate anesthesia achieved");
+    }
+    if (clean(form.localAnesthesiaNotes)) {
+      lines.push(cleanSentence(form.localAnesthesiaNotes));
+    }
+
+    return lines.join("\n");
+  };
   const formatCompletedTreatments = () => {
     const hasFollowUpContext = form.nextAppointment.length || form.disposition.length;
 
@@ -1116,6 +1227,9 @@ export function buildSummaryText(form, selectedFindings) {
   const nextAppointmentLine = formatNextAppointment();
   if (nextAppointmentLine) blocks.push(nextAppointmentLine);
 
+  const localAnesthesiaLine = formatLocalAnesthesia();
+  if (localAnesthesiaLine) blocks.push(localAnesthesiaLine);
+
   const summary = blocks.join("\n\n");
 
   if (!form.disposition.length) return summary;
@@ -1151,7 +1265,7 @@ export const SUMMARY_TEST_CASES = [
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
-      "EOE/IOE:\n  EOE: WNL\n    Findings:\n      - Asymptomatic click on opening/closing (Left)\n    Observations:\n      - No swelling noted\n\n  IOE: WNL\n    Findings:\n      - Coated tongue\n      - Palatine torus at midline (Slight)\n    Observations:\n      - Linea alba monitored",
+      "EOE/IOE:\n  EOE: WNL\n    Findings:\n      - TMJ clicking (Left)\n    Observations:\n      - No swelling noted\n\n  IOE: WNL\n    Findings:\n      - Coated tongue\n      - Palatine torus at midline (Slight)\n    Observations:\n      - Linea alba monitored",
     ],
   },
   {
@@ -1191,7 +1305,8 @@ export const SUMMARY_TEST_CASES = [
       form.plaque.enabled = true;
       form.plaque.amount = "Light";
       form.plaque.extent = "Localized";
-      form.plaque.locations = ["Facial"];
+      form.plaque.locations = ["Sextant 1 (Upper right)"];
+      form.plaque.distributions = ["Facial"];
       return { form, selectedFindings: [] };
     })(),
     expectedIncludes: [
@@ -1223,7 +1338,8 @@ function MultiToggle({
   selected,
   onChange,
   showSelectAll = false,
-  selectAllLabel = "Select all",
+  selectAllLabel = "Select Core",
+  onSelectAll,
 }) {
   const selectedSet = new Set(selected);
   const allSelected = options.length > 0 && selected.length === options.length;
@@ -1238,7 +1354,13 @@ function MultiToggle({
             variant="outline"
             className="rounded-2xl px-3 py-1.5 text-xs"
             disabled={allSelected}
-            onClick={() => onChange([...options])}
+            onClick={() => {
+              if (onSelectAll) {
+                onSelectAll();
+                return;
+              }
+              onChange([...options]);
+            }}
           >
             {selectAllLabel}
           </Button>
@@ -1418,6 +1540,7 @@ const VERY_SHORT_DEFAULT_OPEN_SECTIONS = {
   recommendations: false,
   treatmentDoneToday: true,
   nextAppointment: false,
+  localAnesthesia: false,
   disposition: false,
   additionalClinicalDocumentation: false,
 };
@@ -1426,6 +1549,7 @@ const VERY_SHORT_JUMP_SECTIONS = [
   ["historyAndExam", "History and Exam"],
   ["gingivalDescription", "Gingival Description"],
   ["treatmentDoneToday", "Treatment Done Today"],
+  ["localAnesthesia", "Local Anesthesia"],
   ["nextAppointment", "Next Appointment"],
 ];
 
@@ -1439,7 +1563,6 @@ function DepositsCard({
   onChange,
   showTypeLocation = false,
   placeholder,
-  description,
 }) {
   const update = (patch) => onChange({ ...value, ...patch });
   const showDetails = value.enabled;
@@ -1476,20 +1599,23 @@ function DepositsCard({
       }}
     >
       <div className="flex items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
+        <div className="grid grid-cols-[auto_1fr] items-start gap-x-3">
           <Checkbox
+            className="mt-1 h-5 w-5"
             checked={value.enabled}
             onCheckedChange={(next) => setEnabled(Boolean(next))}
             id={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
           />
-          <div>
+          <div className="space-y-1">
             <Label
               htmlFor={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-              className="cursor-pointer text-base font-semibold"
+              className="cursor-pointer text-lg font-semibold leading-tight"
             >
               {title}
             </Label>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            {!value.enabled ? (
+              <p className="text-xs text-muted-foreground">Select to expand</p>
+            ) : null}
           </div>
         </div>
         {value.enabled ? <Badge className="rounded-xl">Selected</Badge> : null}
@@ -1539,12 +1665,26 @@ function DepositsCard({
           </div>
 
           {showTypeLocation && showExtent ? (
-            <MultiToggle
-              label="Location / Type"
-              options={DEPOSIT_LOCATION_OPTIONS}
-              selected={value.locations}
-              onChange={(locations) => update({ locations })}
-            />
+            <div className="space-y-4">
+              <MultiToggle
+                label="Location"
+                options={LOCATION_OPTIONS}
+                selected={value.locations || []}
+                onChange={(locations) => update({ locations })}
+              />
+              <MultiToggle
+                label="Type"
+                options={DEPOSIT_TYPE_OPTIONS}
+                selected={value.types || []}
+                onChange={(types) => update({ types })}
+              />
+              <MultiToggle
+                label="Distribution"
+                options={DEPOSIT_DISTRIBUTION_OPTIONS}
+                selected={value.distributions || []}
+                onChange={(distributions) => update({ distributions })}
+              />
+            </div>
           ) : null}
 
           <div className="space-y-2">
@@ -1617,6 +1757,17 @@ export function GingivalDescriptionWebformImportedTemplate({
     }));
   };
 
+  const setLocalAnesthesiaEntryTimeToCurrent = (entryIndex) => {
+    setForm((current) => ({
+      ...current,
+      localAnesthesiaEntries: current.localAnesthesiaEntries.map((row, rowIndex) =>
+        rowIndex === entryIndex
+          ? { ...row, timeAdministered: getCurrentTimeString() }
+          : row,
+      ),
+    }));
+  };
+
   const copySummary = async () => {
     let copied = false;
 
@@ -1677,21 +1828,13 @@ export function GingivalDescriptionWebformImportedTemplate({
   };
 
   const treatmentHasHandInstrumentation = form.treatmentDoneToday.includes(
-    HAND_INSTRUMENTATION_OPTION,
+    HAND_POWER_INSTRUMENTATION_OPTION,
   );
-  const treatmentHasPowerInstrumentation = form.treatmentDoneToday.includes(
-    POWER_INSTRUMENTATION_OPTION,
-  );
-  const treatmentHasAnyInstrumentation =
-    treatmentHasHandInstrumentation || treatmentHasPowerInstrumentation;
+  const treatmentHasAnyInstrumentation = treatmentHasHandInstrumentation;
   const nextAppointmentHasHandInstrumentation = form.nextAppointment.includes(
-    HAND_INSTRUMENTATION_OPTION,
+    HAND_POWER_INSTRUMENTATION_OPTION,
   );
-  const nextAppointmentHasPowerInstrumentation = form.nextAppointment.includes(
-    POWER_INSTRUMENTATION_OPTION,
-  );
-  const nextAppointmentHasAnyInstrumentation =
-    nextAppointmentHasHandInstrumentation || nextAppointmentHasPowerInstrumentation;
+  const nextAppointmentHasAnyInstrumentation = nextAppointmentHasHandInstrumentation;
 
   const actionButtons = (
     <div className="flex flex-wrap gap-3">
@@ -2124,7 +2267,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                           }))
                         }
                       >
-                        Asymptomatic click on opening/closing
+                        TMJ clicking
                       </Button>
                       {form.asymptomaticClickOnOpeningClosing ? (
                         <div className="space-y-2">
@@ -2150,6 +2293,28 @@ export function GingivalDescriptionWebformImportedTemplate({
                               ))}
                             </SelectContent>
                           </Select>
+                          <MultiToggle
+                            label="Status"
+                            options={TMJ_CLICKING_STATUS_OPTIONS}
+                            selected={form.tmjClickingStatus}
+                            onChange={(tmjClickingStatus) =>
+                              setForm((current) => ({
+                                ...current,
+                                tmjClickingStatus,
+                              }))
+                            }
+                          />
+                          <MultiToggle
+                            label="On open / close"
+                            options={TMJ_CLICKING_OPEN_CLOSE_OPTIONS}
+                            selected={form.tmjClickingPhase}
+                            onChange={(tmjClickingPhase) =>
+                              setForm((current) => ({
+                                ...current,
+                                tmjClickingPhase,
+                              }))
+                            }
+                          />
                         </div>
                       ) : null}
                     </div>
@@ -2165,41 +2330,71 @@ export function GingivalDescriptionWebformImportedTemplate({
                             ...current,
                             asymptomaticLymphNodes:
                               !current.asymptomaticLymphNodes,
-                            asymptomaticLymphNodesPalpability:
+                            palpableLymphNodeLaterality:
                               current.asymptomaticLymphNodes
                                 ? ""
-                                : current.asymptomaticLymphNodesPalpability,
+                                : current.palpableLymphNodeLaterality,
+                            palpableLymphNodeLocation:
+                              current.asymptomaticLymphNodes
+                                ? []
+                                : current.palpableLymphNodeLocation,
+                            palpableLymphNodeSwelling:
+                              current.asymptomaticLymphNodes
+                                ? []
+                                : current.palpableLymphNodeSwelling,
                           }))
                         }
                       >
-                        Asymptomatic lymph nodes
+                        Palpable Lymph Nodes
                       </Button>
                       {form.asymptomaticLymphNodes ? (
                         <div className="space-y-2">
-                          <Label>Palpability</Label>
+                          <Label>Laterality</Label>
                           <Select
-                            value={form.asymptomaticLymphNodesPalpability}
+                            value={form.palpableLymphNodeLaterality}
                             onValueChange={(
-                              asymptomaticLymphNodesPalpability,
+                              palpableLymphNodeLaterality,
                             ) =>
                               setForm((current) => ({
                                 ...current,
-                                asymptomaticLymphNodesPalpability,
+                                palpableLymphNodeLaterality,
                               }))
                             }
                           >
                             <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select palpability" />
+                              <SelectValue placeholder="Select laterality" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="">None selected</SelectItem>
-                              {ASYMPTOMATIC_LYMPH_NODE_OPTIONS.map((option) => (
+                              {CLICK_LATERALITY_OPTIONS.map((option) => (
                                 <SelectItem key={option} value={option}>
                                   {option}
                                 </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          <MultiToggle
+                            label="Location"
+                            options={LYMPH_NODE_LOCATION_OPTIONS}
+                            selected={form.palpableLymphNodeLocation}
+                            onChange={(palpableLymphNodeLocation) =>
+                              setForm((current) => ({
+                                ...current,
+                                palpableLymphNodeLocation,
+                              }))
+                            }
+                          />
+                          <MultiToggle
+                            label="Swelling"
+                            options={LYMPH_NODE_SWELLING_OPTIONS}
+                            selected={form.palpableLymphNodeSwelling}
+                            onChange={(palpableLymphNodeSwelling) =>
+                              setForm((current) => ({
+                                ...current,
+                                palpableLymphNodeSwelling,
+                              }))
+                            }
+                          />
                         </div>
                       ) : null}
                     </div>
@@ -2424,37 +2619,40 @@ export function GingivalDescriptionWebformImportedTemplate({
               title="Calculus and Biofilm Deposits"
               open={!isVeryShort || openSections.deposits}
               onToggle={isVeryShort ? () => toggleSection("deposits") : undefined}
-              contentClassName="grid gap-6 xl:grid-cols-2"
+              contentClassName="grid gap-4 lg:grid-cols-3"
             >
-                <DepositsCard
-                  title="Plaque"
-                  value={form.plaque}
-                  onChange={(plaque) =>
-                    setForm((current) => ({ ...current, plaque }))
-                  }
-                  showTypeLocation
-                  description="Mark plaque, then capture amount, extent, location, and detail."
-                  placeholder="Describe oral biofilm location, amount, and extent."
-                />
-                <DepositsCard
-                  title="Calculus"
-                  value={form.calculus}
-                  onChange={(calculus) =>
-                    setForm((current) => ({ ...current, calculus }))
-                  }
-                  showTypeLocation
-                  description="Mark calculus, then capture amount, extent, location, and detail."
-                  placeholder="Describe supragingival/subgingival calculus and affected sites."
-                />
-                <DepositsCard
-                  title="Extrinsic Stain"
-                  value={form.extrinsicStain}
-                  onChange={(extrinsicStain) =>
-                    setForm((current) => ({ ...current, extrinsicStain }))
-                  }
-                  description="Mark extrinsic stain, then capture amount, extent, and detail."
-                  placeholder="Describe generalized or localized stain and specific teeth/surfaces."
-                />
+                <div className={cx(form.plaque.enabled && "lg:col-span-3")}>
+                  <DepositsCard
+                    title="Plaque"
+                    value={form.plaque}
+                    onChange={(plaque) =>
+                      setForm((current) => ({ ...current, plaque }))
+                    }
+                    showTypeLocation
+                    placeholder="Describe oral biofilm location, amount, and extent."
+                  />
+                </div>
+                <div className={cx(form.calculus.enabled && "lg:col-span-3")}>
+                  <DepositsCard
+                    title="Calculus"
+                    value={form.calculus}
+                    onChange={(calculus) =>
+                      setForm((current) => ({ ...current, calculus }))
+                    }
+                    showTypeLocation
+                    placeholder="Describe supragingival/subgingival calculus and affected sites."
+                  />
+                </div>
+                <div className={cx(form.extrinsicStain.enabled && "lg:col-span-3")}>
+                  <DepositsCard
+                    title="Extrinsic Stain"
+                    value={form.extrinsicStain}
+                    onChange={(extrinsicStain) =>
+                      setForm((current) => ({ ...current, extrinsicStain }))
+                    }
+                    placeholder="Describe generalized or localized stain and specific teeth/surfaces."
+                  />
+                </div>
             </SectionCard>
 
             <SectionCard
@@ -2709,25 +2907,30 @@ export function GingivalDescriptionWebformImportedTemplate({
                   options={VISIT_CARE_OPTIONS}
                   selected={form.treatmentDoneToday}
                   showSelectAll
+                  onSelectAll={() =>
+                    setForm((current) => ({
+                      ...current,
+                      treatmentDoneToday: VISIT_CARE_SELECT_CORE_OPTIONS,
+                    }))
+                  }
                   onChange={(treatmentDoneToday) =>
                     setForm((current) => ({
                       ...current,
                       treatmentDoneToday,
                       treatmentDoneTodayInstrumentationDevices:
                         treatmentDoneToday.includes(
-                          POWER_INSTRUMENTATION_OPTION,
+                          HAND_POWER_INSTRUMENTATION_OPTION,
                         )
                           ? current.treatmentDoneTodayInstrumentationDevices
                           : [],
                       treatmentDoneTodayInstrumentationAreas:
-                        treatmentDoneToday.includes(HAND_INSTRUMENTATION_OPTION) ||
-                        treatmentDoneToday.includes(POWER_INSTRUMENTATION_OPTION)
+                        treatmentDoneToday.includes(HAND_POWER_INSTRUMENTATION_OPTION)
                           ? current.treatmentDoneTodayInstrumentationAreas
                           : [],
                     }))
                   }
                 />
-                {treatmentHasPowerInstrumentation ? (
+                {treatmentHasAnyInstrumentation ? (
                   <>
                     <MultiToggle
                       label="Power instrumentation device (today)"
@@ -2802,25 +3005,30 @@ export function GingivalDescriptionWebformImportedTemplate({
                   options={VISIT_CARE_OPTIONS}
                   selected={form.nextAppointment}
                   showSelectAll
+                  onSelectAll={() =>
+                    setForm((current) => ({
+                      ...current,
+                      nextAppointment: VISIT_CARE_SELECT_CORE_OPTIONS,
+                    }))
+                  }
                   onChange={(nextAppointment) =>
                     setForm((current) => ({
                       ...current,
                       nextAppointment,
                       nextAppointmentInstrumentationDevices:
                         nextAppointment.includes(
-                          POWER_INSTRUMENTATION_OPTION,
+                          HAND_POWER_INSTRUMENTATION_OPTION,
                         )
                           ? current.nextAppointmentInstrumentationDevices
                           : [],
                       nextAppointmentInstrumentationAreas:
-                        nextAppointment.includes(HAND_INSTRUMENTATION_OPTION) ||
-                        nextAppointment.includes(POWER_INSTRUMENTATION_OPTION)
+                        nextAppointment.includes(HAND_POWER_INSTRUMENTATION_OPTION)
                           ? current.nextAppointmentInstrumentationAreas
                           : [],
                     }))
                   }
                 />
-                {nextAppointmentHasPowerInstrumentation ? (
+                {nextAppointmentHasAnyInstrumentation ? (
                   <>
                     <MultiToggle
                       label="Power instrumentation device (next appointment)"
@@ -2859,6 +3067,270 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, nextAppointmentNotes }))
                   }
                 />
+            </SectionCard>
+
+            <SectionCard
+              id={getSectionId("localAnesthesia")}
+              title="Local Anesthesia"
+              open={!isVeryShort || openSections.localAnesthesia}
+              onToggle={isVeryShort ? () => toggleSection("localAnesthesia") : undefined}
+              contentClassName="space-y-4"
+            >
+                <MultiToggle
+                  label="Local anesthesia toggles"
+                  options={
+                    form.localAnesthesiaNoContraindication
+                      ? [
+                          "No C/I to LA",
+                          "Benzocaine 20% applied to the injection site",
+                        ]
+                      : ["No C/I to LA"]
+                  }
+                  selected={[
+                    form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
+                    form.localAnesthesiaBenzocaineApplied
+                      ? "Benzocaine 20% applied to the injection site"
+                      : "",
+                  ].filter(Boolean)}
+                  onChange={(selected) => {
+                    const hasNoContraindication = selected.includes("No C/I to LA");
+
+                    setForm((current) => ({
+                      ...current,
+                      localAnesthesiaNoContraindication: hasNoContraindication,
+                      localAnesthesiaBenzocaineApplied: hasNoContraindication
+                        ? selected.includes(
+                            "Benzocaine 20% applied to the injection site",
+                          )
+                        : false,
+                      localAnesthesiaNoAdverseReactions: hasNoContraindication
+                        ? current.localAnesthesiaNoAdverseReactions
+                        : false,
+                      localAnesthesiaAdequateAchieved: hasNoContraindication
+                        ? current.localAnesthesiaAdequateAchieved
+                        : false,
+                      localAnesthesiaEntries: hasNoContraindication
+                        ? current.localAnesthesiaEntries
+                        : [],
+                      localAnesthesiaNotes: hasNoContraindication
+                        ? current.localAnesthesiaNotes
+                        : "",
+                    }));
+                  }}
+                />
+
+                {form.localAnesthesiaNoContraindication ? (
+                  <div className="space-y-3">
+                    <Label className="block">Injection entries</Label>
+                    {form.localAnesthesiaEntries.map((entry, index) => (
+                      <Card key={`la-${index}`} className="rounded-2xl border-dashed p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                          <Label>Injection entry #{index + 1}</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-2xl px-3 py-1.5 text-xs"
+                            onClick={() =>
+                              setForm((current) => ({
+                                ...current,
+                                localAnesthesiaEntries: current.localAnesthesiaEntries.filter(
+                                  (_, entryIndex) => entryIndex !== index,
+                                ),
+                              }))
+                            }
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div className="space-y-2">
+                            <Label>Injection type</Label>
+                            <Select
+                              value={entry.injectionType}
+                              onValueChange={(injectionType) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index ? { ...row, injectionType } : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select injection type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None selected</SelectItem>
+                                {LOCAL_ANESTHESIA_TYPE_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Quadrant</Label>
+                            <Select
+                              value={entry.quadrant}
+                              onValueChange={(quadrant) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index ? { ...row, quadrant } : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select quadrant" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None selected</SelectItem>
+                                {QUADRANT_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label>Anesthetic product</Label>
+                            <Select
+                              value={entry.anestheticProduct}
+                              onValueChange={(anestheticProduct) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index
+                                        ? { ...row, anestheticProduct }
+                                        : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select anesthetic product" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">None selected</SelectItem>
+                                {LOCAL_ANESTHETIC_PRODUCT_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Amount (ml)</Label>
+                            <Input
+                              value={entry.amountMl}
+                              onChange={(e) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index ? { ...row, amountMl: e.target.value } : row,
+                                  ),
+                                }))
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Time administered</Label>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="shrink-0 rounded-xl px-3 py-2 text-xs"
+                                onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
+                              >
+                                Set to now
+                              </Button>
+                              <Input
+                                type="time"
+                                value={entry.timeAdministered}
+                                onChange={(e) =>
+                                  setForm((current) => ({
+                                    ...current,
+                                    localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                      (row, rowIndex) =>
+                                        rowIndex === index
+                                          ? { ...row, timeAdministered: e.target.value }
+                                          : row,
+                                    ),
+                                  }))
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-2xl"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          localAnesthesiaEntries: [
+                            ...current.localAnesthesiaEntries,
+                            emptyLocalAnesthesiaEntry(),
+                          ],
+                        }))
+                      }
+                    >
+                      Add injection entry
+                    </Button>
+
+                    <div className="space-y-4">
+                      <MultiToggle
+                        label="Anesthesia assessment"
+                        options={[
+                          "No adverse reactions noted",
+                          "Adequate anesthesia achieved",
+                        ]}
+                        selected={[
+                          form.localAnesthesiaNoAdverseReactions
+                            ? "No adverse reactions noted"
+                            : "",
+                          form.localAnesthesiaAdequateAchieved
+                            ? "Adequate anesthesia achieved"
+                            : "",
+                        ].filter(Boolean)}
+                        onChange={(selected) =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaNoAdverseReactions: selected.includes(
+                              "No adverse reactions noted",
+                            ),
+                            localAnesthesiaAdequateAchieved: selected.includes(
+                              "Adequate anesthesia achieved",
+                            ),
+                          }))
+                        }
+                      />
+                      <SectionTextarea
+                        id="local-anesthesia-notes"
+                        label="Anesthesia notes"
+                        placeholder="Add anesthesia assessment notes."
+                        value={form.localAnesthesiaNotes}
+                        onChange={(localAnesthesiaNotes) =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaNotes,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : null}
             </SectionCard>
 
             <SectionCard
