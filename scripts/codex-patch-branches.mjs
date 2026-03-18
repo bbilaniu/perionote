@@ -8,6 +8,7 @@ import path from "node:path";
 const VERSION_COUNT = 4;
 const PATCH_DIRNAME = "patch";
 const SESSION_FILENAME = ".codex-patch-session.json";
+const APPLY_TEMP_DIRNAME = ".codex-patch-apply";
 
 function fail(message) {
   console.error(`Error: ${message}`);
@@ -340,7 +341,8 @@ function listChangedPathsExcludingPatch(repoRoot) {
   return getStatusLines(repoRoot)
     .map(parseStatusPath)
     .map((filePath) => filePath.replace(/\\/g, "/"))
-    .filter((filePath) => !filePath.startsWith(`${PATCH_DIRNAME}/`));
+    .filter((filePath) => !filePath.startsWith(`${PATCH_DIRNAME}/`))
+    .filter((filePath) => !filePath.startsWith(`${APPLY_TEMP_DIRNAME}/`));
 }
 
 function stageChangedPaths(repoRoot) {
@@ -447,6 +449,30 @@ function preflightPatchApplications(repoRoot, session, baseRef, patchFiles) {
   }
 }
 
+function stageApplyTempPatches(repoRoot, patchFiles) {
+  const tempDir = path.join(repoRoot, APPLY_TEMP_DIRNAME);
+  fs.rmSync(tempDir, { recursive: true, force: true });
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  const stagedFiles = patchFiles.map((file) => {
+    const tempRelativePath = `${APPLY_TEMP_DIRNAME}/${path.posix.basename(file.relativePath)}`;
+    const tempAbsolutePath = path.join(repoRoot, APPLY_TEMP_DIRNAME, path.posix.basename(file.relativePath));
+    fs.copyFileSync(file.absolutePath, tempAbsolutePath);
+
+    return {
+      ...file,
+      tempRelativePath,
+    };
+  });
+
+  return {
+    stagedFiles,
+    cleanup() {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    },
+  };
+}
+
 function apply(repoRoot, options) {
   const session = readSession(repoRoot);
   if (!session) {
@@ -491,38 +517,43 @@ function apply(repoRoot, options) {
   }
 
   preflightPatchApplications(repoRoot, resolvedSession, baseRef, patchFiles);
+  const applyTemp = stageApplyTempPatches(repoRoot, patchFiles);
 
-  patchFiles.forEach((file) => {
-    const branchName = getBranchName(resolvedSession, file.version);
+  try {
+    applyTemp.stagedFiles.forEach((file) => {
+      const branchName = getBranchName(resolvedSession, file.version);
 
-    runGit(repoRoot, ["switch", "-c", branchName, baseRef], { stdio: ["ignore", "pipe", "inherit"] });
-    const applyArgs = ["apply", "--3way"];
-    if (resolvedSession.ignoreSpaceChange) {
-      applyArgs.push("--ignore-space-change");
+      runGit(repoRoot, ["switch", "-c", branchName, baseRef], { stdio: ["ignore", "pipe", "inherit"] });
+      const applyArgs = ["apply", "--3way"];
+      if (resolvedSession.ignoreSpaceChange) {
+        applyArgs.push("--ignore-space-change");
+      }
+      applyArgs.push(file.tempRelativePath);
+      runGit(repoRoot, applyArgs, { stdio: ["ignore", "pipe", "inherit"] });
+      stageChangedPaths(repoRoot);
+      runGit(
+        repoRoot,
+        ["commit", "-m", `chore(patch): apply ${resolvedSession.date}--${resolvedSession.run}---${file.version}`],
+        { stdio: ["ignore", "pipe", "inherit"] },
+      );
+      console.log(`Created ${branchName}`);
+    });
+
+    runGit(repoRoot, ["switch", restoreRef], { stdio: ["ignore", "pipe", "inherit"] });
+
+    if (!options.keepPatches) {
+      archivePatchFiles(repoRoot, resolvedSession, patchFiles, false);
     }
-    applyArgs.push(file.relativePath);
-    runGit(repoRoot, applyArgs, { stdio: ["ignore", "pipe", "inherit"] });
-    stageChangedPaths(repoRoot);
-    runGit(
-      repoRoot,
-      ["commit", "-m", `chore(patch): apply ${resolvedSession.date}--${resolvedSession.run}---${file.version}`],
-      { stdio: ["ignore", "pipe", "inherit"] },
-    );
-    console.log(`Created ${branchName}`);
-  });
 
-  runGit(repoRoot, ["switch", restoreRef], { stdio: ["ignore", "pipe", "inherit"] });
+    writeSession(repoRoot, {
+      ...resolvedSession,
+      appliedAt: new Date().toISOString(),
+    });
 
-  if (!options.keepPatches) {
-    archivePatchFiles(repoRoot, resolvedSession, patchFiles, false);
+    console.log(`Finished creating branches for run ${resolvedSession.run} on ${resolvedSession.date}.`);
+  } finally {
+    applyTemp.cleanup();
   }
-
-  writeSession(repoRoot, {
-    ...resolvedSession,
-    appliedAt: new Date().toISOString(),
-  });
-
-  console.log(`Finished creating branches for run ${resolvedSession.run} on ${resolvedSession.date}.`);
 }
 
 function main() {
