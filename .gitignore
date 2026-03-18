@@ -38,3 +38,8 @@ next-env.d.ts
 # playwright
 /test-results/
 /playwright-report/
+
+# local patch workflow
+/patch/*.patch
+/patch/.codex-patch-session.json
+/patch/archive/*.patch

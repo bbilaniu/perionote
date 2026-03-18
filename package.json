@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "codex:patches:prepare": "node scripts/codex-patch-branches.mjs prepare",
+    "codex:patches:apply": "node scripts/codex-patch-branches.mjs apply"
   },
   "dependencies": {
     "next": "15.5.12",
