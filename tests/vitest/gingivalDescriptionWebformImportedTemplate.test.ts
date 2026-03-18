@@ -12,7 +12,8 @@ function buildBaseForm() {
     providerName: "",
     patientConcerns: "",
     patientPresentsForHygieneNoOtherConcerns: false,
-    medicalHistory: "Patient reports no changes",
+    medicalHistoryNoChange: false,
+    medicalHistory: "",
     vitalsReadings: [
       {
         systolic: "",
@@ -102,6 +103,8 @@ describe("buildSummaryText", () => {
     const form = buildInitialForm(gingivalDescriptionWebformFixture);
 
     expect(form.date).toBe("2026-03-09");
+    expect(form.medicalHistoryNoChange).toBe(false);
+    expect(form.medicalHistory).toBe("");
     expect(form.findings.color.Red).toMatchObject({
       presence: false,
       extent: "generalized",
@@ -141,6 +144,21 @@ describe("buildSummaryText", () => {
     expect(summary).toContain("Other clinical findings: Monitor linea alba.");
   });
 
+  it("renders patient concerns checkbox text on the heading line and textarea text below it", () => {
+    const form = buildBaseForm();
+    form.patientPresentsForHygieneNoOtherConcerns = true;
+    form.patientConcerns = "Blah";
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain(
+      [
+        "Patient concerns: Patient presents for hygiene, no other concerns.",
+        "   Blah.",
+      ].join("\n"),
+    );
+  });
+
   it("formats the medical history block with indented detail lines and combined vitals", () => {
     const form = buildBaseForm();
     form.medicalHistory = "Med/dent history updated. No new contraindications reported.";
@@ -164,6 +182,21 @@ describe("buildSummaryText", () => {
     );
   });
 
+  it("renders the medical history no-change checkbox selection in the summary", () => {
+    const form = buildBaseForm();
+    form.medicalHistoryNoChange = true;
+    form.medicalHistory = "Blah";
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain(
+      [
+        "Medical history update: Patient reports no change.",
+        "   Blah.",
+      ].join("\n"),
+    );
+  });
+
   it("renders Date and Provider at the top when present", () => {
     const form = buildBaseForm();
     form.date = "2026-03-18";
@@ -171,7 +204,7 @@ describe("buildSummaryText", () => {
 
     const summary = buildSummaryText(form, []);
 
-    expect(summary.startsWith("Date: 2026-03-18\nProvider: Dr. Example\n\n")).toBe(true);
+    expect(summary).toBe("Date: 2026-03-18\nProvider: Dr. Example");
   });
 
   it("renders each vitals reading and averages when multiple valid readings exist", () => {

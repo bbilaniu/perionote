@@ -499,7 +499,8 @@ export function buildInitialForm(fixture) {
     providerName: "",
     patientConcerns: "",
     patientPresentsForHygieneNoOtherConcerns: false,
-    medicalHistory: "Patient reports no changes",
+    medicalHistoryNoChange: false,
+    medicalHistory: "",
     vitalsReadings: [emptyVitalReading()],
     eoe: "",
     ioe: "",
@@ -866,24 +867,25 @@ export function buildSummaryText(form, selectedFindings) {
     return lowerFirst(cleanSentence(normalized));
   };
   const formatPatientConcerns = () => {
-    const parts = [];
+    const concernText = cleanSentence(form.patientConcerns);
 
     if (form.patientPresentsForHygieneNoOtherConcerns) {
-      parts.push("Patient presents for hygiene, no other concerns");
+      const lines = [
+        "Patient concerns: Patient presents for hygiene, no other concerns.",
+      ];
+      if (concernText) {
+        lines.push(indentLine(ensurePeriod(concernText)));
+      }
+      return lines.join("\n");
     }
 
-    if (cleanSentence(form.patientConcerns)) {
-      parts.push(cleanSentence(form.patientConcerns));
-    }
-
-    if (!parts.length) return "";
-    return `Patient concerns: ${capitalizeSentence(parts.join(". "))}.`;
+    if (!concernText) return "";
+    return `Patient concerns: ${ensurePeriod(concernText)}`;
   };
   const formatMedicalHistoryBlock = () => {
     const lines = [];
     const medicalHistory = cleanSentence(form.medicalHistory);
-    const shouldHideDefaultMedicalHistory =
-      medicalHistory.toLowerCase() === "patient reports no changes";
+    const medicalHistoryNoChange = Boolean(form.medicalHistoryNoChange);
     const vitalsReadings = getVitalsReadings();
     const formattedReadings = vitalsReadings
       .map((reading) => formatVitalsLine(reading))
@@ -895,15 +897,16 @@ export function buildSummaryText(form, selectedFindings) {
         parseNumeric(reading.heartRate) != null,
     ).length;
 
-    if (
-      !medicalHistory &&
-      !formattedReadings.length
-    ) {
+    if (!medicalHistoryNoChange && !medicalHistory && !formattedReadings.length) {
       return "";
     }
 
-    lines.push("Medical history update:");
-    if (medicalHistory && !shouldHideDefaultMedicalHistory) {
+    lines.push(
+      medicalHistoryNoChange
+        ? "Medical history update: Patient reports no change."
+        : "Medical history update:",
+    );
+    if (medicalHistory) {
       lines.push(indentLine(ensurePeriod(medicalHistory)));
     }
     formattedReadings.forEach((readingLine) => {
@@ -2357,40 +2360,67 @@ export function GingivalDescriptionWebformImportedTemplate({
               onToggle={isVeryShort ? () => toggleSection("historyAndExam") : undefined}
               contentClassName="space-y-4"
             >
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id="patient-presents-for-hygiene-no-other-concerns"
-                    checked={form.patientPresentsForHygieneNoOtherConcerns}
-                    onCheckedChange={(next) =>
-                      setForm((current) => ({
-                        ...current,
-                        patientPresentsForHygieneNoOtherConcerns: Boolean(next),
-                      }))
-                    }
-                  />
-                  <Label htmlFor="patient-presents-for-hygiene-no-other-concerns">
-                    Patient presents for hygiene, no other concerns
-                  </Label>
-                </div>
                 <div className="grid gap-4 md:grid-cols-2">
-                  <SectionTextarea
-                    id="patient-concerns"
-                    label="Patient concerns"
-                    placeholder="Document the chief complaint or concerns in the patient’s own words."
-                    value={form.patientConcerns}
-                    onChange={(patientConcerns) =>
-                      setForm((current) => ({ ...current, patientConcerns }))
-                    }
-                  />
-                  <SectionTextarea
-                    id="medical-history"
-                    label="Medical history"
-                    placeholder="Review and update medications, allergies, surgeries, conditions, or note no changes."
-                    value={form.medicalHistory}
-                    onChange={(medicalHistory) =>
-                      setForm((current) => ({ ...current, medicalHistory }))
-                    }
-                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="patient-concerns">Patient concerns</Label>
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="patient-presents-for-hygiene-no-other-concerns"
+                        checked={form.patientPresentsForHygieneNoOtherConcerns}
+                        onCheckedChange={(next) =>
+                          setForm((current) => ({
+                            ...current,
+                            patientPresentsForHygieneNoOtherConcerns: Boolean(next),
+                          }))
+                        }
+                      />
+                      <Label htmlFor="patient-presents-for-hygiene-no-other-concerns">
+                        Patient presents for hygiene, no other concerns
+                      </Label>
+                    </div>
+                    <Textarea
+                      id="patient-concerns"
+                      className="min-h-[110px] rounded-2xl"
+                      placeholder="Document the chief complaint or concerns in the patient’s own words."
+                      value={form.patientConcerns}
+                      onChange={(e) =>
+                        setForm((current) => ({
+                          ...current,
+                          patientConcerns: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="medical-history">Medical history</Label>
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="medical-history-no-change"
+                        checked={form.medicalHistoryNoChange}
+                        onCheckedChange={(next) =>
+                          setForm((current) => ({
+                            ...current,
+                            medicalHistoryNoChange: Boolean(next),
+                          }))
+                        }
+                      />
+                      <Label htmlFor="medical-history-no-change">
+                        Patient reports no change.
+                      </Label>
+                    </div>
+                    <Textarea
+                      id="medical-history"
+                      className="min-h-[110px] rounded-2xl"
+                      placeholder="Review and update medications, allergies, surgeries, or conditions."
+                      value={form.medicalHistory}
+                      onChange={(e) =>
+                        setForm((current) => ({
+                          ...current,
+                          medicalHistory: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="space-y-3 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
                   <div className="flex flex-wrap items-center gap-3">
