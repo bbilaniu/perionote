@@ -98,17 +98,17 @@ function buildBaseForm() {
 }
 
 describe("buildSummaryText", () => {
-  it("seeds the initial form from the provided fixture", () => {
+  it("keeps gingival findings cleared when the provided fixture has none", () => {
     const form = buildInitialForm(gingivalDescriptionWebformFixture);
 
     expect(form.date).toBe("2026-03-09");
     expect(form.findings.color.Red).toMatchObject({
-      presence: true,
-      extent: "localized",
-      toothNumbers: "#5, #6-8",
-      locations: ["Facial", "Interproximal"],
-      distributions: ["Marginal", "Papillary"],
-      notes: "More pronounced in maxillary anterior region.",
+      presence: false,
+      extent: "generalized",
+      toothNumbers: "",
+      locations: [],
+      distributions: [],
+      notes: "",
     });
   });
 
@@ -116,7 +116,7 @@ describe("buildSummaryText", () => {
     const form = buildDemoForm(gingivalDescriptionWebformFixture);
 
     expect(form.date).toBe("2026-03-09");
-    expect(form.findings.color.Red.presence).toBe(true);
+    expect(form.findings.color.Red.presence).toBe(false);
     expect(form.patientConcerns).toBeTruthy();
   });
 

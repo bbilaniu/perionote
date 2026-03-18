@@ -3,11 +3,10 @@ import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/ging
 import { buildGingivalDescriptionWebformSummary } from "@/lib/templates/summary/buildGingivalDescriptionWebformSummary";
 
 describe("buildGingivalDescriptionWebformSummary", () => {
-  it("formats findings in the imported webform line style", () => {
+  it("omits finding lines when the imported webform fixture has none selected", () => {
     const summary = buildGingivalDescriptionWebformSummary(gingivalDescriptionWebformFixture);
 
-    expect(summary).toContain("Date: 2026-03-09");
-    expect(summary).toContain("Color - Red | LOC");
+    expect(summary).toBe("Date: 2026-03-09");
     expect(summary).not.toContain("Dental Hygiene Diagnosis:");
   });
 });
