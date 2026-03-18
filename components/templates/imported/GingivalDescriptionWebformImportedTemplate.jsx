@@ -2051,6 +2051,16 @@ export function GingivalDescriptionWebformImportedTemplate({
     HAND_POWER_INSTRUMENTATION_OPTION,
   );
   const nextAppointmentHasAnyInstrumentation = nextAppointmentHasHandInstrumentation;
+  const hasLocalAnesthesiaActivity =
+    form.localAnesthesiaBenzocaineApplied ||
+    form.localAnesthesiaEntries.length > 0;
+  const isLocalAnesthesiaAssessmentIncomplete =
+    !form.localAnesthesiaNoAdverseReactions &&
+    !form.localAnesthesiaAdequateAchieved;
+  const shouldHighlightLocalAnesthesiaAssessment =
+    form.localAnesthesiaNoContraindication &&
+    hasLocalAnesthesiaActivity &&
+    isLocalAnesthesiaAssessmentIncomplete;
 
   const actionButtons = (
     <div className="flex flex-wrap gap-3">
@@ -3610,7 +3620,24 @@ export function GingivalDescriptionWebformImportedTemplate({
                       Add injection entry
                     </Button>
 
-                    <div className="space-y-4">
+                    <div
+                      className={cx(
+                        "space-y-4 rounded-2xl border p-4 transition-colors",
+                        shouldHighlightLocalAnesthesiaAssessment
+                          ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+                          : "border-slate-200 dark:border-slate-700",
+                      )}
+                    >
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                          Post-anesthetic assessment
+                        </div>
+                        {shouldHighlightLocalAnesthesiaAssessment ? (
+                          <p className="text-sm text-slate-700 dark:text-slate-300">
+                            Complete the post-anesthetic assessment before finishing the note.
+                          </p>
+                        ) : null}
+                      </div>
                       <MultiToggle
                         label="Anesthesia assessment"
                         options={[

@@ -86,6 +86,25 @@ test("local anesthesia entry time can be cleared and reset", async ({ page }) =>
   await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
 });
 
+test("local anesthesia assessment is emphasized when activity is documented without assessment", async ({
+  page,
+}) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("button", { name: "Benzocaine 20% applied to the injection site" }).click();
+
+  await expect(
+    page.getByText("Complete the post-anesthetic assessment before finishing the note."),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "No adverse reactions noted" }).click();
+
+  await expect(
+    page.getByText("Complete the post-anesthetic assessment before finishing the note."),
+  ).toHaveCount(0);
+});
+
 test("imported webform summary uses preview a formatting", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
   page.once("dialog", (dialog) => dialog.accept());
