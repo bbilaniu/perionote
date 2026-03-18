@@ -822,7 +822,9 @@ export function buildSummaryText(form, selectedFindings) {
 
       vitalSegments.forEach((segment) => {
         if (segment.startsWith("Taken at ")) {
-          vitalsLine = vitalsLine ? `${vitalsLine} ${segment}` : segment;
+          vitalsLine = vitalsLine
+            ? `${vitalsLine} (${segment.replace(/^Taken /, "").trim()})`
+            : segment;
           return;
         }
 

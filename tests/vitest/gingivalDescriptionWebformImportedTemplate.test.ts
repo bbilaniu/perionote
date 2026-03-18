@@ -148,7 +148,7 @@ describe("buildSummaryText", () => {
       [
         "Medical history update:",
         "   Med/dent history updated. No new contraindications reported.",
-        "   BP: 118/76 mmHg, HR: 72 bpm Taken at 9:15 AM",
+        "   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
       ].join("\n"),
     );
   });
