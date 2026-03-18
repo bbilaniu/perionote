@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "codex:patches:prepare": "node scripts/codex-patch-branches.mjs prepare",
+    "codex:patches:configure": "node scripts/codex-patch-branches.mjs configure",
     "codex:patches:apply": "node scripts/codex-patch-branches.mjs apply"
   },
   "dependencies": {

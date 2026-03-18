@@ -82,6 +82,9 @@ function parseArgs(argv) {
       case "base":
         options.base = value;
         break;
+      case "ignore-space-change":
+        options.ignoreSpaceChange = value === "true";
+        break;
       case "force":
         options.force = value === "true";
         break;
@@ -104,10 +107,12 @@ function printHelp() {
 
 Usage:
   node scripts/codex-patch-branches.mjs prepare
+  node scripts/codex-patch-branches.mjs configure
   node scripts/codex-patch-branches.mjs apply
 
 Commands:
   prepare   Create patch/X---1.patch through patch/X---4.patch for the next run.
+  configure Update the current patch session metadata without touching patch files.
   apply     Create YYYY-MM-DD--X---Y branches, apply each patch, and commit it.
 
 Options:
@@ -115,6 +120,7 @@ Options:
   --date=YYYY-MM-DD Override the branch date. Defaults to today.
   --versions=N      Number of patch/branch versions to manage. Defaults to 4.
   --base=<ref>      Base branch/ref for branch creation during apply. Defaults to current HEAD.
+  --ignore-space-change  Apply and preflight patches with git's --ignore-space-change mode.
   --force           Allow prepare to overwrite existing patch files for the target run.
   --dry-run         Print the planned actions without changing files or branches.
   --keep-patches    Keep patch/X---Y.patch files after apply instead of archiving them.
@@ -193,6 +199,8 @@ function ensurePrepareInputs(repoRoot, options) {
 function prepare(repoRoot, options) {
   const { date, run, versions } = ensurePrepareInputs(repoRoot, options);
   const patchPaths = getPatchPaths(repoRoot, run, versions);
+  const base = options.base ?? getCurrentRef(repoRoot);
+  const ignoreSpaceChange = options.ignoreSpaceChange === true;
 
   if (!options.force) {
     const existing = patchPaths.filter((filePath) => fs.existsSync(filePath));
@@ -207,6 +215,8 @@ function prepare(repoRoot, options) {
 
   if (options.dryRun) {
     console.log(`Would prepare run ${run} for ${date}:`);
+    console.log(`Base ref: ${base}`);
+    console.log(`Ignore space change: ${ignoreSpaceChange}`);
     patchPaths.forEach((filePath) => {
       console.log(`- ${toRepoRelative(repoRoot, filePath)}`);
     });
@@ -222,14 +232,46 @@ function prepare(repoRoot, options) {
     date,
     run,
     versions,
+    base,
+    ignoreSpaceChange,
     preparedAt: new Date().toISOString(),
   });
 
   console.log(`Prepared patch files for run ${run} on ${date}:`);
+  console.log(`Base ref: ${base}`);
+  console.log(`Ignore space change: ${ignoreSpaceChange}`);
   patchPaths.forEach((filePath) => {
     console.log(`- ${toRepoRelative(repoRoot, filePath)}`);
   });
   console.log("Paste your GitHub patch content into those files, then run apply.");
+}
+
+function configure(repoRoot, options) {
+  const session = readSession(repoRoot);
+  if (!session) {
+    fail(`No ${PATCH_DIRNAME}/${SESSION_FILENAME} found. Run prepare first.`);
+  }
+
+  const nextSession = {
+    ...session,
+    ...(options.date ? { date: options.date } : {}),
+    ...(Number.isInteger(options.run) ? { run: options.run } : {}),
+    ...(Number.isInteger(options.versions) ? { versions: options.versions } : {}),
+    ...(options.base ? { base: options.base } : {}),
+    ...(typeof options.ignoreSpaceChange === "boolean"
+      ? { ignoreSpaceChange: options.ignoreSpaceChange }
+      : {}),
+    configuredAt: new Date().toISOString(),
+  };
+
+  if (options.dryRun) {
+    console.log(JSON.stringify(nextSession, null, 2));
+    return;
+  }
+
+  writeSession(repoRoot, nextSession);
+  console.log("Updated patch session:");
+  console.log(JSON.stringify(nextSession, null, 2));
 }
 
 function getCurrentRef(repoRoot) {
@@ -360,12 +402,16 @@ function preflightPatchApplications(repoRoot, session, baseRef, patchPaths) {
 
     patchPaths.forEach((filePath, index) => {
       const version = index + 1;
-      const result = tryRunGit(tempWorktree, [
+      const applyArgs = [
         "apply",
         "--check",
         "--verbose",
         filePath,
-      ]);
+      ];
+      if (session.ignoreSpaceChange) {
+        applyArgs.splice(2, 0, "--ignore-space-change");
+      }
+      const result = tryRunGit(tempWorktree, applyArgs);
 
       if (result.ok) return;
 
@@ -389,7 +435,7 @@ function preflightPatchApplications(repoRoot, session, baseRef, patchPaths) {
       .join("\n\n");
 
     fail(
-      `One or more patches do not apply cleanly from base ${baseRef}. No branches were created.\n\n${details}`,
+      `One or more patches do not apply cleanly from base ${baseRef}${session.ignoreSpaceChange ? " with --ignore-space-change" : ""}. No branches were created.\n\n${details}`,
     );
   }
 }
@@ -404,6 +450,11 @@ function apply(repoRoot, options) {
     date: options.date ?? session.date,
     run: options.run ?? session.run,
     versions: options.versions ?? session.versions ?? VERSION_COUNT,
+    base: options.base ?? session.base ?? getCurrentRef(repoRoot),
+    ignoreSpaceChange:
+      typeof options.ignoreSpaceChange === "boolean"
+        ? options.ignoreSpaceChange
+        : session.ignoreSpaceChange === true,
   };
 
   if (!Number.isInteger(resolvedSession.run) || resolvedSession.run <= 0) {
@@ -413,13 +464,14 @@ function apply(repoRoot, options) {
   validateApplyWorktree(repoRoot, resolvedSession);
 
   const patchPaths = ensurePatchFilesReady(repoRoot, resolvedSession);
-  const baseRef = options.base ?? getCurrentRef(repoRoot);
+  const baseRef = resolvedSession.base;
   const restoreRef = getCurrentRef(repoRoot);
 
   ensureBranchesDoNotExist(repoRoot, resolvedSession);
 
   if (options.dryRun) {
     console.log(`Would create ${resolvedSession.versions} branches from ${baseRef}:`);
+    console.log(`Ignore space change: ${resolvedSession.ignoreSpaceChange}`);
     patchPaths.forEach((filePath, index) => {
       console.log(
         `- ${resolvedSession.date}--${resolvedSession.run}---${index + 1} <= ${path.relative(
@@ -441,7 +493,12 @@ function apply(repoRoot, options) {
     const branchName = getBranchName(resolvedSession, version);
 
     runGit(repoRoot, ["switch", "-c", branchName, baseRef], { stdio: ["ignore", "pipe", "inherit"] });
-    runGit(repoRoot, ["apply", "--3way", filePath], { stdio: ["ignore", "pipe", "inherit"] });
+    const applyArgs = ["apply", "--3way"];
+    if (resolvedSession.ignoreSpaceChange) {
+      applyArgs.push("--ignore-space-change");
+    }
+    applyArgs.push(filePath);
+    runGit(repoRoot, applyArgs, { stdio: ["ignore", "pipe", "inherit"] });
     stageChangedPaths(repoRoot);
     runGit(
       repoRoot,
@@ -475,6 +532,9 @@ function main() {
       break;
     case "apply":
       apply(repoRoot, options);
+      break;
+    case "configure":
+      configure(repoRoot, options);
       break;
     case "help":
     case "--help":
