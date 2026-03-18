@@ -410,8 +410,8 @@ const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
   "NP",
 ];
 const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
-  "Astracaine 4% with 1:100K epinephrine",
-  "Xylocaine 2% with 1:100K epinephrine",
+  "Articaine 4% with 1:200K epinephrine",
+  "Lidocaine 2% with 1:100K epinephrine",
   "Mepivacaine 3% without epinephrine",
 ];
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
