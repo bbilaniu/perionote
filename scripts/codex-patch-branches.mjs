@@ -2,6 +2,7 @@
 
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 const VERSION_COUNT = 4;
@@ -20,6 +21,28 @@ function runGit(repoRoot, args, options = {}) {
     stdio: ["ignore", "pipe", "pipe"],
     ...options,
   }).trim();
+}
+
+function tryRunGit(repoRoot, args, options = {}) {
+  try {
+    return {
+      ok: true,
+      stdout: execFileSync("git", args, {
+        cwd: repoRoot,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+        ...options,
+      }).trim(),
+      error: null,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      stdout: error.stdout?.toString?.() ?? "",
+      stderr: error.stderr?.toString?.() ?? "",
+      error,
+    };
+  }
 }
 
 function getRepoRoot() {
@@ -310,6 +333,67 @@ function archivePatchFiles(repoRoot, session, patchPaths, dryRun) {
   });
 }
 
+function getBranchName(session, version) {
+  return `${session.date}--${session.run}---${version}`;
+}
+
+function ensureBranchesDoNotExist(repoRoot, session) {
+  const branches = new Set(listBranches(repoRoot));
+  const existing = Array.from({ length: session.versions }, (_, index) =>
+    getBranchName(session, index + 1),
+  ).filter((branchName) => branches.has(branchName));
+
+  if (existing.length) {
+    fail(`These branches already exist: ${existing.join(", ")}`);
+  }
+}
+
+function preflightPatchApplications(repoRoot, session, baseRef, patchPaths) {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "codex-patch-preflight-"));
+  const tempWorktree = path.join(tempRoot, "repo");
+  const failures = [];
+
+  try {
+    runGit(repoRoot, ["worktree", "add", "--detach", tempWorktree, baseRef], {
+      stdio: ["ignore", "pipe", "inherit"],
+    });
+
+    patchPaths.forEach((filePath, index) => {
+      const version = index + 1;
+      const result = tryRunGit(tempWorktree, [
+        "apply",
+        "--check",
+        "--verbose",
+        filePath,
+      ]);
+
+      if (result.ok) return;
+
+      failures.push({
+        branchName: getBranchName(session, version),
+        patchPath: toRepoRelative(repoRoot, filePath),
+        details: `${result.stdout}${result.stderr}`.trim(),
+      });
+    });
+  } finally {
+    tryRunGit(repoRoot, ["worktree", "remove", "--force", tempWorktree]);
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+
+  if (failures.length) {
+    const details = failures
+      .map(
+        ({ branchName, patchPath, details: failureDetails }) =>
+          `- ${branchName} <= ${patchPath}\n${failureDetails}`,
+      )
+      .join("\n\n");
+
+    fail(
+      `One or more patches do not apply cleanly from base ${baseRef}. No branches were created.\n\n${details}`,
+    );
+  }
+}
+
 function apply(repoRoot, options) {
   const session = readSession(repoRoot);
   if (!session) {
@@ -332,6 +416,8 @@ function apply(repoRoot, options) {
   const baseRef = options.base ?? getCurrentRef(repoRoot);
   const restoreRef = getCurrentRef(repoRoot);
 
+  ensureBranchesDoNotExist(repoRoot, resolvedSession);
+
   if (options.dryRun) {
     console.log(`Would create ${resolvedSession.versions} branches from ${baseRef}:`);
     patchPaths.forEach((filePath, index) => {
@@ -348,16 +434,11 @@ function apply(repoRoot, options) {
     return;
   }
 
+  preflightPatchApplications(repoRoot, resolvedSession, baseRef, patchPaths);
+
   patchPaths.forEach((filePath, index) => {
     const version = index + 1;
-    const branchName = `${resolvedSession.date}--${resolvedSession.run}---${version}`;
-
-    try {
-      runGit(repoRoot, ["rev-parse", "--verify", "--quiet", branchName]);
-      fail(`Branch already exists: ${branchName}`);
-    } catch {
-      // Branch does not exist. Continue.
-    }
+    const branchName = getBranchName(resolvedSession, version);
 
     runGit(repoRoot, ["switch", "-c", branchName, baseRef], { stdio: ["ignore", "pipe", "inherit"] });
     runGit(repoRoot, ["apply", "--3way", filePath], { stdio: ["ignore", "pipe", "inherit"] });
