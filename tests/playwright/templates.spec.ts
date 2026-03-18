@@ -53,6 +53,39 @@ test("vitals reading time can be reset to the current time with one click", asyn
   await expect(page.locator("#vitals-time-0")).toHaveValue(/\d{2}:\d{2}/);
 });
 
+test("last vitals reading can be removed and re-added", async ({ page }) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await expect(page.getByText("Vitals Entry 1")).toBeVisible();
+  await expect(page.locator("#vitals-systolic-0")).toBeVisible();
+  await page.getByRole("button", { name: "Remove" }).click();
+  await expect(page.locator("#vitals-systolic-0")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Add reading" }).click();
+  await expect(page.getByText("Vitals Entry 1")).toBeVisible();
+  await expect(page.locator("#vitals-systolic-0")).toBeVisible();
+});
+
+test("local anesthesia entry time can be cleared and reset", async ({ page }) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("button", { name: "Add injection entry" }).click();
+
+  const entry = page.locator("#local-anesthesia-entry-0");
+  const timeInput = page.locator("#local-anesthesia-time-0");
+
+  await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
+  await timeInput.fill("00:00");
+  await expect(timeInput).toHaveValue("00:00");
+
+  await entry.getByRole("button", { name: "Clear time" }).click();
+  await expect(timeInput).toHaveValue("");
+
+  await entry.getByRole("button", { name: "Set to now" }).click();
+  await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
+});
+
 test("imported webform summary uses preview a formatting", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
   page.once("dialog", (dialog) => dialog.accept());

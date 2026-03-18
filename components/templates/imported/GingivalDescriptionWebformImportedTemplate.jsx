@@ -2383,16 +2383,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                   />
                 </div>
                 <div className="space-y-3 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <Label>Vitals Readings</Label>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-xl px-3 py-2 text-xs"
-                      onClick={addVitalsReading}
-                    >
-                      Add reading
-                    </Button>
                   </div>
                   <div className="space-y-3">
                     {form.vitalsReadings.map((reading, readingIndex) => (
@@ -2400,6 +2392,19 @@ export function GingivalDescriptionWebformImportedTemplate({
                         key={`vitals-reading-${readingIndex}`}
                         className="space-y-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"
                       >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                            Vitals Entry {readingIndex + 1}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl px-3 py-2 text-xs"
+                            onClick={() => removeVitalsReading(readingIndex)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
                         <div className="grid gap-3 md:grid-cols-4">
                           <div className="space-y-2">
                             <Label htmlFor={`vitals-systolic-${readingIndex}`}>
@@ -2483,18 +2488,19 @@ export function GingivalDescriptionWebformImportedTemplate({
                           >
                             Clear time
                           </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-xl px-3 py-2 text-xs"
-                            onClick={() => removeVitalsReading(readingIndex)}
-                            disabled={form.vitalsReadings.length === 1}
-                          >
-                            Remove
-                          </Button>
                         </div>
                       </div>
                     ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl px-3 py-2 text-xs"
+                      onClick={addVitalsReading}
+                    >
+                      Add reading
+                    </Button>
                   </div>
                 </div>
             </SectionCard>
@@ -3415,7 +3421,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                   <div className="space-y-3">
                     <Label className="block">Injection entries</Label>
                     {form.localAnesthesiaEntries.map((entry, index) => (
-                      <Card key={`la-${index}`} className="rounded-2xl border-dashed p-4">
+                      <Card
+                        key={`la-${index}`}
+                        id={`local-anesthesia-entry-${index}`}
+                        className="rounded-2xl border-dashed p-4"
+                      >
                         <div className="mb-3 flex items-center justify-between">
                           <Label>Injection entry #{index + 1}</Label>
                           <Button
@@ -3535,16 +3545,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
                           <div className="space-y-2">
                             <Label>Time administered</Label>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="shrink-0 rounded-xl px-3 py-2 text-xs"
-                                onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
-                              >
-                                Set to now
-                              </Button>
+                            <div className="space-y-2">
                               <Input
+                                id={`local-anesthesia-time-${index}`}
                                 type="time"
                                 value={entry.timeAdministered}
                                 onChange={(e) =>
@@ -3559,6 +3562,34 @@ export function GingivalDescriptionWebformImportedTemplate({
                                   }))
                                 }
                               />
+                              <div className="flex flex-wrap gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="rounded-xl px-3 py-2 text-xs"
+                                  onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
+                                >
+                                  Set to now
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="rounded-xl px-3 py-2 text-xs"
+                                  onClick={() =>
+                                    setForm((current) => ({
+                                      ...current,
+                                      localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                        (row, rowIndex) =>
+                                          rowIndex === index
+                                            ? { ...row, timeAdministered: "" }
+                                            : row,
+                                      ),
+                                    }))
+                                  }
+                                >
+                                  Clear time
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         </div>
