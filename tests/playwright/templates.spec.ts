@@ -55,7 +55,11 @@ test("BP time can be reset to the current time with one click", async ({
 
 test("imported webform summary uses preview a formatting", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
+  page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Load demo" }).click();
+  await expect(page.locator("#periodontal-status-notes")).toHaveValue(
+    "Reinforced 4-month hygiene interval and home-care compliance.",
+  );
 
   const summary = await page.locator("textarea[readonly]").inputValue();
 
@@ -66,7 +70,7 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "Medical history update:\nMed/dent history updated. No new contraindications reported.\nBP: 118/76 mmHg\nHR: 72 bpm\nTaken at 9:15 AM",
   );
   expect(summary).toContain(
-    "EOE: bilateral TMJ click on opening - asymptomatic, baseline monitoring only",
+    "EOE: bilateral tmj clicking (asymptomatic, on open), baseline monitoring only",
   );
   expect(summary).toContain(
     "IOE: coated tongue, scalloped tongue, bilateral linea alba, slight palatine torus at midline, slight bilateral mandibular tori, mild soft tissue variations noted",
@@ -75,10 +79,16 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "Gingival Description: localized marginal papillary redness on #5, #6-8",
   );
   expect(summary).toContain(
+    "Periodontal diagnosis: Active Moderate Periodontitis Stage II Grade B moderate rate of progression. Reinforced 4-month hygiene interval and home-care compliance.",
+  );
+  expect(summary).toContain(
+    "Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride, history of active decay in the last 36 months. Diet and home-care factors reviewed.",
+  );
+  expect(summary).toContain(
     "OHE: Caries theory and risk factors, bass brushing, c-shaped flossing, sulcabrush and interdental brush technique, review benefits of Prevident or Opti-Rinse, periodontitis theory and risk factors, importance of maintaining a 4-month hygiene interval",
   );
   expect(summary).toContain(
-    "Treatments completed today: Med/dent history update, EOE/IOE, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Hand instrumentation - Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible, Power instrumentation (Piezo) - Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible, Ipana 5% NaF varnish application",
+    "Treatments completed today: Med/dent history update, EOE/IOE, OHE reinforced, Reviewed homecare, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible Hand and Power Instrumentation (Piezo), Ipana 5% NaF varnish application",
   );
   expect(summary).not.toContain("Visit Details:");
   expect(summary).not.toContain("Other clinical findings:");

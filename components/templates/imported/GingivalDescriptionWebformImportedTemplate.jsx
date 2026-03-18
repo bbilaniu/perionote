@@ -1017,12 +1017,22 @@ export function buildSummaryText(form, selectedFindings) {
         : form.periodontalStatusDiseaseType,
       isPeriodontitis ? form.periodontalStatusGrade : "",
     ].filter(Boolean);
+    const notes = cleanSentence(form.periodontalStatusNotes);
 
-    if (!parts.length) {
+    if (!parts.length && !notes) {
       return "";
     }
 
-    return `Periodontal diagnosis: ${parts.join(" ")}`;
+    if (!parts.length) {
+      return `Periodontal diagnosis: ${ensurePeriod(notes)}`;
+    }
+
+    const diagnosisLine = `Periodontal diagnosis: ${parts.join(" ")}`;
+    if (!notes) {
+      return diagnosisLine;
+    }
+
+    return `${diagnosisLine}. ${ensurePeriod(notes)}`;
   };
   const formatCariesRiskFactor = (factor) => {
     const normalizedFactor = clean(factor);
@@ -1037,17 +1047,19 @@ export function buildSummaryText(form, selectedFindings) {
     }
   };
   const formatCariesRisk = () => {
-    if (
-      !form.cariesRiskLevel &&
-      !form.cariesRiskFactors.length &&
-      !cleanSentence(form.cariesRiskNotes)
-    ) {
+    const notes = cleanSentence(form.cariesRiskNotes);
+
+    if (!form.cariesRiskLevel && !form.cariesRiskFactors.length && !notes) {
       return "";
     }
 
-    let line = form.cariesRiskLevel
-      ? `${form.cariesRiskLevel} caries risk`
-      : "Caries risk";
+    let line = "";
+
+    if (form.cariesRiskLevel) {
+      line = `${form.cariesRiskLevel} caries risk`;
+    } else if (form.cariesRiskFactors.length) {
+      line = "Caries risk";
+    }
 
     if (form.cariesRiskFactors.length) {
       line += ` due to ${formatLabelList(
@@ -1056,7 +1068,15 @@ export function buildSummaryText(form, selectedFindings) {
       )}`;
     }
 
-    return `Caries risk: ${line}`;
+    if (!line) {
+      return `Caries risk: ${ensurePeriod(notes)}`;
+    }
+
+    if (!notes) {
+      return `Caries risk: ${line}`;
+    }
+
+    return `Caries risk: ${line}. ${ensurePeriod(notes)}`;
   };
   const formatOheTopics = () => {
     const selected = [...form.oheTopics];
