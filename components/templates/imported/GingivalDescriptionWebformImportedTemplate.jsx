@@ -3424,7 +3424,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                       <Card
                         key={`la-${index}`}
                         id={`local-anesthesia-entry-${index}`}
-                        className="rounded-2xl border-dashed p-4"
+                        className="space-y-3 rounded-2xl border-dashed p-4"
                       >
                         <div className="mb-3 flex items-center justify-between">
                           <Label>Injection entry #{index + 1}</Label>
@@ -3444,8 +3444,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                             Remove
                           </Button>
                         </div>
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <div className="space-y-2">
+                        <div className="grid gap-3 md:grid-cols-4">
+                          <div className="space-y-2 md:col-span-2">
                             <Label>Injection type</Label>
                             <Select
                               value={entry.injectionType}
@@ -3472,7 +3472,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-2 md:col-span-2">
                             <Label>Quadrant</Label>
                             <Select
                               value={entry.quadrant}
@@ -3545,53 +3545,51 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
                           <div className="space-y-2">
                             <Label>Time administered</Label>
-                            <div className="space-y-2">
-                              <Input
-                                id={`local-anesthesia-time-${index}`}
-                                type="time"
-                                value={entry.timeAdministered}
-                                onChange={(e) =>
-                                  setForm((current) => ({
-                                    ...current,
-                                    localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                      (row, rowIndex) =>
-                                        rowIndex === index
-                                          ? { ...row, timeAdministered: e.target.value }
-                                          : row,
-                                    ),
-                                  }))
-                                }
-                              />
-                              <div className="flex flex-wrap gap-2">
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="rounded-xl px-3 py-2 text-xs"
-                                  onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
-                                >
-                                  Set to now
-                                </Button>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  className="rounded-xl px-3 py-2 text-xs"
-                                  onClick={() =>
-                                    setForm((current) => ({
-                                      ...current,
-                                      localAnesthesiaEntries: current.localAnesthesiaEntries.map(
-                                        (row, rowIndex) =>
-                                          rowIndex === index
-                                            ? { ...row, timeAdministered: "" }
-                                            : row,
-                                      ),
-                                    }))
-                                  }
-                                >
-                                  Clear time
-                                </Button>
-                              </div>
-                            </div>
+                            <Input
+                              id={`local-anesthesia-time-${index}`}
+                              type="time"
+                              value={entry.timeAdministered}
+                              onChange={(e) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index
+                                        ? { ...row, timeAdministered: e.target.value }
+                                        : row,
+                                  ),
+                                }))
+                              }
+                            />
                           </div>
+                        </div>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl px-3 py-2 text-xs"
+                            onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
+                          >
+                            Set to now
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl px-3 py-2 text-xs"
+                            onClick={() =>
+                              setForm((current) => ({
+                                ...current,
+                                localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                  (row, rowIndex) =>
+                                    rowIndex === index
+                                      ? { ...row, timeAdministered: "" }
+                                      : row,
+                                ),
+                              }))
+                            }
+                          >
+                            Clear time
+                          </Button>
                         </div>
                       </Card>
                     ))}
