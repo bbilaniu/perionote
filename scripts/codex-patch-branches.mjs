@@ -151,11 +151,17 @@ function detectNextRun(branches, date) {
   return maxRun + 1;
 }
 
-function getPatchPaths(repoRoot, run, versions) {
-  const patchDir = path.join(repoRoot, PATCH_DIRNAME);
-  return Array.from({ length: versions }, (_, index) =>
-    path.join(patchDir, `${run}---${index + 1}.patch`),
-  );
+function getPatchFiles(repoRoot, run, versions) {
+  return Array.from({ length: versions }, (_, index) => {
+    const version = index + 1;
+    const relativePath = `${PATCH_DIRNAME}/${run}---${version}.patch`;
+
+    return {
+      version,
+      relativePath,
+      absolutePath: path.join(repoRoot, PATCH_DIRNAME, `${run}---${version}.patch`),
+    };
+  });
 }
 
 function getSessionPath(repoRoot) {
@@ -198,16 +204,16 @@ function ensurePrepareInputs(repoRoot, options) {
 
 function prepare(repoRoot, options) {
   const { date, run, versions } = ensurePrepareInputs(repoRoot, options);
-  const patchPaths = getPatchPaths(repoRoot, run, versions);
+  const patchFiles = getPatchFiles(repoRoot, run, versions);
   const base = options.base ?? getCurrentRef(repoRoot);
   const ignoreSpaceChange = options.ignoreSpaceChange === true;
 
   if (!options.force) {
-    const existing = patchPaths.filter((filePath) => fs.existsSync(filePath));
+    const existing = patchFiles.filter((file) => fs.existsSync(file.absolutePath));
     if (existing.length) {
       fail(
         `Patch files already exist for run ${run}: ${existing
-          .map((filePath) => toRepoRelative(repoRoot, filePath))
+          .map((file) => file.relativePath)
           .join(", ")}. Use --force to overwrite them.`,
       );
     }
@@ -217,15 +223,15 @@ function prepare(repoRoot, options) {
     console.log(`Would prepare run ${run} for ${date}:`);
     console.log(`Base ref: ${base}`);
     console.log(`Ignore space change: ${ignoreSpaceChange}`);
-    patchPaths.forEach((filePath) => {
-      console.log(`- ${toRepoRelative(repoRoot, filePath)}`);
+    patchFiles.forEach((file) => {
+      console.log(`- ${file.relativePath}`);
     });
     return;
   }
 
   fs.mkdirSync(path.join(repoRoot, PATCH_DIRNAME), { recursive: true });
-  patchPaths.forEach((filePath) => {
-    fs.writeFileSync(filePath, "");
+  patchFiles.forEach((file) => {
+    fs.writeFileSync(file.absolutePath, "");
   });
 
   writeSession(repoRoot, {
@@ -240,8 +246,8 @@ function prepare(repoRoot, options) {
   console.log(`Prepared patch files for run ${run} on ${date}:`);
   console.log(`Base ref: ${base}`);
   console.log(`Ignore space change: ${ignoreSpaceChange}`);
-  patchPaths.forEach((filePath) => {
-    console.log(`- ${toRepoRelative(repoRoot, filePath)}`);
+  patchFiles.forEach((file) => {
+    console.log(`- ${file.relativePath}`);
   });
   console.log("Paste your GitHub patch content into those files, then run apply.");
 }
@@ -297,9 +303,7 @@ function parseStatusPath(line) {
 
 function validateApplyWorktree(repoRoot, session) {
   const allowed = new Set(
-    getPatchPaths(repoRoot, session.run, session.versions).map((filePath) =>
-      toRepoRelative(repoRoot, filePath),
-    ),
+    getPatchFiles(repoRoot, session.run, session.versions).map((file) => file.relativePath),
   );
   allowed.add(path.posix.join(PATCH_DIRNAME, SESSION_FILENAME));
 
@@ -316,20 +320,20 @@ function validateApplyWorktree(repoRoot, session) {
 }
 
 function ensurePatchFilesReady(repoRoot, session) {
-  const patchPaths = getPatchPaths(repoRoot, session.run, session.versions);
+  const patchFiles = getPatchFiles(repoRoot, session.run, session.versions);
 
-  patchPaths.forEach((filePath) => {
-    if (!fs.existsSync(filePath)) {
-      fail(`Missing patch file: ${toRepoRelative(repoRoot, filePath)}`);
+  patchFiles.forEach((file) => {
+    if (!fs.existsSync(file.absolutePath)) {
+      fail(`Missing patch file: ${file.relativePath}`);
     }
 
-    const content = fs.readFileSync(filePath, "utf8").trim();
+    const content = fs.readFileSync(file.absolutePath, "utf8").trim();
     if (!content) {
-      fail(`Patch file is empty: ${toRepoRelative(repoRoot, filePath)}`);
+      fail(`Patch file is empty: ${file.relativePath}`);
     }
   });
 
-  return patchPaths;
+  return patchFiles;
 }
 
 function listChangedPathsExcludingPatch(repoRoot) {
@@ -349,13 +353,13 @@ function stageChangedPaths(repoRoot) {
   runGit(repoRoot, ["add", "--", ...changedPaths]);
 }
 
-function archivePatchFiles(repoRoot, session, patchPaths, dryRun) {
+function archivePatchFiles(repoRoot, session, patchFiles, dryRun) {
   const archiveDir = path.join(repoRoot, PATCH_DIRNAME, "archive");
 
   if (dryRun) {
-    patchPaths.forEach((filePath, index) => {
+    patchFiles.forEach((file, index) => {
       console.log(
-        `Would archive ${path.relative(repoRoot, filePath)} -> ${path.join(
+        `Would archive ${file.relativePath} -> ${path.join(
           PATCH_DIRNAME,
           "archive",
           `${session.date}--${session.run}---${index + 1}.patch`,
@@ -366,12 +370,12 @@ function archivePatchFiles(repoRoot, session, patchPaths, dryRun) {
   }
 
   fs.mkdirSync(archiveDir, { recursive: true });
-  patchPaths.forEach((filePath, index) => {
+  patchFiles.forEach((file, index) => {
     const archivePath = path.join(
       archiveDir,
       `${session.date}--${session.run}---${index + 1}.patch`,
     );
-    fs.renameSync(filePath, archivePath);
+    fs.renameSync(file.absolutePath, archivePath);
   });
 }
 
@@ -390,7 +394,7 @@ function ensureBranchesDoNotExist(repoRoot, session) {
   }
 }
 
-function preflightPatchApplications(repoRoot, session, baseRef, patchPaths) {
+function preflightPatchApplications(repoRoot, session, baseRef, patchFiles) {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "codex-patch-preflight-"));
   const tempWorktree = path.join(tempRoot, "repo");
   const failures = [];
@@ -400,13 +404,16 @@ function preflightPatchApplications(repoRoot, session, baseRef, patchPaths) {
       stdio: ["ignore", "pipe", "inherit"],
     });
 
-    patchPaths.forEach((filePath, index) => {
-      const version = index + 1;
+    patchFiles.forEach((file) => {
+      const tempPatchPath = path.join(tempWorktree, file.relativePath);
+      fs.mkdirSync(path.dirname(tempPatchPath), { recursive: true });
+      fs.copyFileSync(file.absolutePath, tempPatchPath);
+
       const applyArgs = [
         "apply",
         "--check",
         "--verbose",
-        filePath,
+        file.relativePath,
       ];
       if (session.ignoreSpaceChange) {
         applyArgs.splice(2, 0, "--ignore-space-change");
@@ -416,8 +423,8 @@ function preflightPatchApplications(repoRoot, session, baseRef, patchPaths) {
       if (result.ok) return;
 
       failures.push({
-        branchName: getBranchName(session, version),
-        patchPath: toRepoRelative(repoRoot, filePath),
+        branchName: getBranchName(session, file.version),
+        patchPath: file.relativePath,
         details: `${result.stdout}${result.stderr}`.trim(),
       });
     });
@@ -463,7 +470,7 @@ function apply(repoRoot, options) {
 
   validateApplyWorktree(repoRoot, resolvedSession);
 
-  const patchPaths = ensurePatchFilesReady(repoRoot, resolvedSession);
+  const patchFiles = ensurePatchFilesReady(repoRoot, resolvedSession);
   const baseRef = resolvedSession.base;
   const restoreRef = getCurrentRef(repoRoot);
 
@@ -472,37 +479,33 @@ function apply(repoRoot, options) {
   if (options.dryRun) {
     console.log(`Would create ${resolvedSession.versions} branches from ${baseRef}:`);
     console.log(`Ignore space change: ${resolvedSession.ignoreSpaceChange}`);
-    patchPaths.forEach((filePath, index) => {
+    patchFiles.forEach((file, index) => {
       console.log(
-        `- ${resolvedSession.date}--${resolvedSession.run}---${index + 1} <= ${path.relative(
-          repoRoot,
-          filePath,
-        ).replace(/\\/g, "/")}`,
+        `- ${resolvedSession.date}--${resolvedSession.run}---${index + 1} <= ${file.relativePath}`,
       );
     });
     if (!options.keepPatches) {
-      archivePatchFiles(repoRoot, resolvedSession, patchPaths, true);
+      archivePatchFiles(repoRoot, resolvedSession, patchFiles, true);
     }
     return;
   }
 
-  preflightPatchApplications(repoRoot, resolvedSession, baseRef, patchPaths);
+  preflightPatchApplications(repoRoot, resolvedSession, baseRef, patchFiles);
 
-  patchPaths.forEach((filePath, index) => {
-    const version = index + 1;
-    const branchName = getBranchName(resolvedSession, version);
+  patchFiles.forEach((file) => {
+    const branchName = getBranchName(resolvedSession, file.version);
 
     runGit(repoRoot, ["switch", "-c", branchName, baseRef], { stdio: ["ignore", "pipe", "inherit"] });
     const applyArgs = ["apply", "--3way"];
     if (resolvedSession.ignoreSpaceChange) {
       applyArgs.push("--ignore-space-change");
     }
-    applyArgs.push(filePath);
+    applyArgs.push(file.relativePath);
     runGit(repoRoot, applyArgs, { stdio: ["ignore", "pipe", "inherit"] });
     stageChangedPaths(repoRoot);
     runGit(
       repoRoot,
-      ["commit", "-m", `chore(patch): apply ${resolvedSession.date}--${resolvedSession.run}---${version}`],
+      ["commit", "-m", `chore(patch): apply ${resolvedSession.date}--${resolvedSession.run}---${file.version}`],
       { stdio: ["ignore", "pipe", "inherit"] },
     );
     console.log(`Created ${branchName}`);
@@ -511,7 +514,7 @@ function apply(repoRoot, options) {
   runGit(repoRoot, ["switch", restoreRef], { stdio: ["ignore", "pipe", "inherit"] });
 
   if (!options.keepPatches) {
-    archivePatchFiles(repoRoot, resolvedSession, patchPaths, false);
+    archivePatchFiles(repoRoot, resolvedSession, patchFiles, false);
   }
 
   writeSession(repoRoot, {
