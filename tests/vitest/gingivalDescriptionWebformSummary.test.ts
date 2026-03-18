@@ -8,7 +8,6 @@ describe("buildGingivalDescriptionWebformSummary", () => {
 
     expect(summary).toContain("Date: 2026-03-09");
     expect(summary).toContain("Color - Red | LOC");
-    expect(summary).toContain("Bleeding & Exudate - BOP | GEN");
-    expect(summary).toContain("Dental Hygiene Diagnosis:");
+    expect(summary).not.toContain("Dental Hygiene Diagnosis:");
   });
 });

@@ -34,9 +34,5 @@ export function buildGingivalDescriptionWebformSummary(
     lines.push(parts.join(" | "));
   });
 
-  if (fixture.dentalHygieneDiagnosis.trim()) {
-    lines.push(`Dental Hygiene Diagnosis: ${fixture.dentalHygieneDiagnosis.trim()}`);
-  }
-
   return lines.join("\n");
 }

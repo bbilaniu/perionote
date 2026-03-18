@@ -484,7 +484,7 @@ function prettyLabel(key) {
   return SECTION_LABELS[key] ?? key;
 }
 
-function buildInitialForm(fixture) {
+export function buildInitialForm(fixture) {
   const form = {
     date: getTodayDateString(),
     patientConcerns: "",
@@ -566,7 +566,7 @@ function buildInitialForm(fixture) {
   return form;
 }
 
-function buildDemoForm(fixture) {
+export function buildDemoForm(fixture) {
   const form = buildInitialForm(fixture);
 
   form.patientConcerns =
@@ -1125,16 +1125,30 @@ export function buildSummaryText(form, selectedFindings) {
   };
   const formatOhe = () => {
     const topics = formatOheTopics();
+    const notes = cleanSentence(form.oheNotes);
 
-    if (!topics.length) return "";
+    if (!topics.length && !notes) return "";
 
-    return `OHE: ${capitalizeSentence(joinComma(topics))}`;
+    if (!topics.length) {
+      return `OHE: ${ensurePeriod(notes)}`;
+    }
+
+    const line = `OHE: ${capitalizeSentence(joinComma(topics))}`;
+    if (!notes) return line;
+    return `${line}. ${ensurePeriod(notes)}`;
   };
   const formatRecommendations = () => {
-    if (!form.recommendations.length) return "";
+    const notes = cleanSentence(form.recommendationsNotes);
+
+    if (!form.recommendations.length && !notes) return "";
+
+    if (!form.recommendations.length) {
+      return `Recommendations: ${ensurePeriod(notes)}`;
+    }
 
     const line = formatLabelList(form.recommendations, lowerFirst);
-    return `Recommendations: ${line}`;
+    if (!notes) return `Recommendations: ${line}`;
+    return `Recommendations: ${line}. ${ensurePeriod(notes)}`;
   };
   const formatInstrumentationSelections = (items, devices, areas) =>
     items.map((item) => {
@@ -1197,33 +1211,54 @@ export function buildSummaryText(form, selectedFindings) {
   };
   const formatCompletedTreatments = () => {
     const hasFollowUpContext = form.nextAppointment.length || form.disposition.length;
+    const notes = cleanSentence(form.treatmentDoneTodayNotes);
 
-    if (!form.treatmentDoneToday.length && !hasFollowUpContext) {
+    if (!form.treatmentDoneToday.length && !hasFollowUpContext && !notes) {
       return "";
     }
 
     if (!form.treatmentDoneToday.length) {
-      return "Treatments completed today:";
+      return notes
+        ? `Treatments completed today: ${ensurePeriod(notes)}`
+        : "Treatments completed today:";
     }
 
-    return `Treatments completed today: ${joinComma(
+    const line = `Treatments completed today: ${joinComma(
       formatInstrumentationSelections(
         form.treatmentDoneToday,
         form.treatmentDoneTodayInstrumentationDevices,
         form.treatmentDoneTodayInstrumentationAreas,
       ),
     )}`;
+
+    if (!notes) return line;
+    return `${line}. ${ensurePeriod(notes)}`;
   };
   const formatNextAppointment = () => {
-    if (!form.nextAppointment.length) return "";
+    const notes = cleanSentence(form.nextAppointmentNotes);
 
-    return `Next Appointment: ${joinComma(
+    if (!form.nextAppointment.length && !notes) return "";
+
+    if (!form.nextAppointment.length) {
+      return `Next Appointment: ${ensurePeriod(notes)}`;
+    }
+
+    const line = `Next Appointment: ${joinComma(
       formatInstrumentationSelections(
         form.nextAppointment,
         form.nextAppointmentInstrumentationDevices,
         form.nextAppointmentInstrumentationAreas,
       ),
     )}`;
+
+    if (!notes) return line;
+    return `${line}. ${ensurePeriod(notes)}`;
+  };
+  const formatOtherClinicalFindings = () => {
+    const notes = cleanSentence(form.otherClinicalFindings);
+
+    if (!notes) return "";
+    return `Other clinical findings: ${ensurePeriod(notes)}`;
   };
 
   const blocks = [
@@ -1249,6 +1284,9 @@ export function buildSummaryText(form, selectedFindings) {
 
   const localAnesthesiaLine = formatLocalAnesthesia();
   if (localAnesthesiaLine) blocks.push(localAnesthesiaLine);
+
+  const otherClinicalFindingsLine = formatOtherClinicalFindings();
+  if (otherClinicalFindingsLine) blocks.push(otherClinicalFindingsLine);
 
   const summary = blocks.join("\n\n");
 
@@ -1730,7 +1768,7 @@ export function GingivalDescriptionWebformImportedTemplate({
   variant = "full",
 }) {
   const isVeryShort = variant === "very-short";
-  const [form, setForm] = useState(() => buildInitialForm());
+  const [form, setForm] = useState(() => buildInitialForm(fixture));
   const [isCopied, setIsCopied] = useState(false);
   const [structuredSummaryOpen, setStructuredSummaryOpen] = useState(
     !isVeryShort,
@@ -1788,7 +1826,7 @@ export function GingivalDescriptionWebformImportedTemplate({
 
   const resetForm = () => {
     if (!confirmReplaceForm()) return;
-    setForm(buildInitialForm());
+    setForm(buildInitialForm(fixture));
   };
 
   const loadDemo = () => {
