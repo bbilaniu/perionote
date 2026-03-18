@@ -1,0 +1,1190 @@
+diff --git a/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx b/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx
+index b78d7934b23c1543e4aed46b78ff81dff7dfceb9..bfdf4d0d7300c72bc45b550338e98dd3df8a37c6 100644
+--- a/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx
++++ b/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx
+@@ -439,82 +439,90 @@ const IOE_FINDING_OPTIONS = [
+ ];
+ 
+ function emptyAnnotation() {
+   return {
+     presence: false,
+     extent: "generalized",
+     toothNumbers: "",
+     locations: [],
+     distributions: [],
+     notes: "",
+   };
+ }
+ 
+ function emptyDepositEntry() {
+   return {
+     enabled: false,
+     amount: "None",
+     extent: "Localized",
+     locations: [],
+     types: [],
+     distributions: [],
+     details: "",
+   };
+ }
+ 
+-function emptyLocalAnesthesiaEntry() {
+-  return {
++function emptyLocalAnesthesiaEntry() {
++  return {
+     injectionType: "",
+     quadrant: "",
+     anestheticProduct: "",
+     amountMl: "1.8",
+     timeAdministered: getCurrentTimeString(),
+-  };
+-}
++  };
++}
++
++function emptyVitalsReading() {
++  return {
++    systolic: "",
++    diastolic: "",
++    heartRate: "",
++    time: getCurrentTimeString(),
++  };
++}
+ 
+ function buildInitialFindings() {
+   return Object.fromEntries(
+     Object.entries(FIELD_OPTIONS).map(([sectionKey, options]) => [
+       sectionKey,
+       Object.fromEntries(options.map((option) => [option, emptyAnnotation()])),
+     ]),
+   );
+ }
+ 
+ function prettyLabel(key) {
+   return SECTION_LABELS[key] ?? key;
+ }
+ 
+-export function buildInitialForm(fixture) {
+-  const form = {
+-    date: getTodayDateString(),
+-    patientConcerns: "",
+-    patientPresentsForHygieneNoOtherConcerns: false,
+-    medicalHistory: "Patient reports no changes",
+-    bloodPressure: "",
+-    heartRate: "",
+-    bloodPressureTakenTime: getCurrentTimeString(),
++export function buildInitialForm(fixture) {
++  const form = {
++    date: getTodayDateString(),
++    providerName: "",
++    patientConcerns: "",
++    patientPresentsForHygieneNoOtherConcerns: false,
++    medicalHistory: "Patient reports no changes",
++    vitalsReadings: [emptyVitalsReading()],
+     eoe: "",
+     ioe: "",
+     eoeWithinNormalLimits: false,
+     ioeWithinNormalLimits: false,
+     asymptomaticClickOnOpeningClosing: false,
+     tmjClickingStatus: [],
+     tmjClickingPhase: [],
+     asymptomaticClickLaterality: "",
+     asymptomaticLymphNodes: false,
+     palpableLymphNodeLaterality: "",
+     palpableLymphNodeLocation: [],
+     palpableLymphNodeSwelling: [],
+     ioeFindings: [],
+     palatineTorusAtMidline: false,
+     palatineTorusProminence: "",
+     bilateralMandibularTori: false,
+     bilateralMandibularToriProminence: "",
+     findings: buildInitialFindings(),
+     plaque: emptyDepositEntry(),
+     calculus: emptyDepositEntry(),
+     extrinsicStain: emptyDepositEntry(),
+     treatmentDoneToday: [],
+     treatmentDoneTodayInstrumentationDevices: [],
+     treatmentDoneTodayInstrumentationAreas: [],
+     treatmentDoneTodayNotes: "",
+@@ -544,60 +552,65 @@ export function buildInitialForm(fixture) {
+     otherClinicalFindings: "",
+   };
+ 
+   if (fixture) {
+     form.date = fixture.date || getTodayDateString();
+ 
+     (fixture.findings || []).forEach((item) => {
+       const sectionKey = SECTION_KEY_BY_LABEL[item.section];
+       if (!sectionKey) return;
+       if (!(item.finding in form.findings[sectionKey])) return;
+ 
+       form.findings[sectionKey][item.finding] = {
+         presence: true,
+         extent: item.extent || "generalized",
+         toothNumbers: item.toothNumbers || "",
+         locations: item.locations || [],
+         distributions: item.distributions || [],
+         notes: item.notes || "",
+       };
+     });
+   }
+ 
+   return form;
+ }
+ 
+-export function buildDemoForm(fixture) {
+-  const form = buildInitialForm(fixture);
++export function buildDemoForm(fixture) {
++  const form = buildInitialForm(fixture);
+ 
+   form.patientConcerns =
+     "Sensitivity around lower anterior and occasional bleeding while flossing.";
+   form.medicalHistory =
+     "Med/dent history updated. No new contraindications reported.";
+-  form.bloodPressure = "118/76";
+-  form.heartRate = "72";
+-  form.bloodPressureTakenTime = "09:15";
++  form.vitalsReadings = [
++    {
++      systolic: "118",
++      diastolic: "76",
++      heartRate: "72",
++      time: "09:15",
++    },
++  ];
+ 
+   form.eoeWithinNormalLimits = true;
+   form.ioeWithinNormalLimits = true;
+   form.asymptomaticClickOnOpeningClosing = true;
+   form.asymptomaticClickLaterality = "Bilateral";
+   form.palatineTorusAtMidline = true;
+   form.palatineTorusProminence = "Slight";
+   form.bilateralMandibularTori = true;
+   form.bilateralMandibularToriProminence = "Slight";
+   form.ioeFindings = [
+     "Coated tongue",
+     "Scalloped tongue",
+     "Bilateral linea alba",
+   ];
+   form.eoe = "Baseline monitoring only.";
+   form.ioe = "Mild soft tissue variations noted.";
+ 
+   form.periodontalStatusActivity = "Active";
+   form.periodontalStatusDiseaseType = "Periodontitis";
+   form.periodontalStatusSeverityStage = "Moderate Periodontitis Stage II";
+   form.periodontalStatusGrade = "Grade B moderate rate of progression";
+   form.periodontalStatusNotes =
+     "Reinforced 4-month hygiene interval and home-care compliance.";
+ 
+   form.cariesRiskLevel = "Moderate";
+@@ -734,126 +747,180 @@ export function buildSummaryText(form, selectedFindings) {
+       .replace(/[\s\n]+/g, " ");
+   const indentLine = (value) => `   ${value}`;
+   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
+   const capitalizeSentence = (value) =>
+     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
+   const lowerFirst = (value) =>
+     value ? value.charAt(0).toLowerCase() + value.slice(1) : "";
+   const ensurePeriod = (value) => {
+     const normalized = cleanSentence(value);
+     return normalized ? `${capitalizeSentence(normalized)}.` : "";
+   };
+   const joinComma = (items) => items.filter(Boolean).join(", ");
+   const formatClockTime = (value) => {
+     const normalized = clean(value);
+     const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+ 
+     if (!match) return normalized;
+ 
+     let hours = Number(match[1]);
+     const minutes = match[2];
+     const period = hours >= 12 ? "PM" : "AM";
+     hours %= 12;
+     if (hours === 0) hours = 12;
+     return `${hours}:${minutes} ${period}`;
+   };
+-  const formatLabelList = (items, mapper = (item) => item) =>
+-    joinComma(items.map((item) => mapper(item)).filter(Boolean));
++  const formatLabelList = (items, mapper = (item) => item) =>
++    joinComma(items.map((item) => mapper(item)).filter(Boolean));
++  const parsePositiveInteger = (value) => {
++    const normalized = clean(value);
++    if (!/^\d+$/.test(normalized)) return null;
++
++    const parsed = Number.parseInt(normalized, 10);
++    return Number.isFinite(parsed) ? parsed : null;
++  };
++  const roundAverage = (values) =>
++    values.length
++      ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length)
++      : null;
+   const normalizeObservation = (value, withinNormalLimits) => {
+     let normalized = cleanSentence(value);
+ 
+     if (!normalized) return "";
+ 
+     if (withinNormalLimits) {
+       normalized = normalized.replace(
+         /^within normal limits overall[;,]?\s*/i,
+         "",
+       );
+       normalized = normalized.replace(/^within normal limits[;,]?\s*/i, "");
+     }
+ 
+     normalized = normalized.replace(/^observations documented for\s+/i, "");
+     return lowerFirst(cleanSentence(normalized));
+   };
+   const formatPatientConcerns = () => {
+     const parts = [];
+ 
+     if (form.patientPresentsForHygieneNoOtherConcerns) {
+       parts.push("Patient presents for hygiene, no other concerns");
+     }
+ 
+     if (cleanSentence(form.patientConcerns)) {
+       parts.push(cleanSentence(form.patientConcerns));
+     }
+ 
+     if (!parts.length) return "";
+     return `Patient concerns: ${capitalizeSentence(parts.join(". "))}.`;
+   };
+   const formatMedicalHistoryBlock = () => {
+     const lines = [];
+     const medicalHistory = cleanSentence(form.medicalHistory);
+     const shouldHideDefaultMedicalHistory =
+       medicalHistory.toLowerCase() === "patient reports no changes";
+-    const vitalSegments = [];
++    const vitalsReadings = Array.isArray(form.vitalsReadings)
++      ? form.vitalsReadings
++      : [];
++    const validVitalsReadings = [];
+ 
+     if (
+       !medicalHistory &&
+-      !form.bloodPressure &&
+-      !form.heartRate &&
+-      !form.bloodPressureTakenTime
+-    ) {
+-      return "";
+-    }
++      !vitalsReadings.some((reading) => {
++        const systolic = parsePositiveInteger(reading?.systolic);
++        const diastolic = parsePositiveInteger(reading?.diastolic);
++        const heartRate = parsePositiveInteger(reading?.heartRate);
++        return systolic !== null || diastolic !== null || heartRate !== null;
++      })
++    ) {
++      return "";
++    }
+ 
+     lines.push("Medical history update:");
+     if (medicalHistory && !shouldHideDefaultMedicalHistory) {
+       lines.push(indentLine(ensurePeriod(medicalHistory)));
+     }
+-    if (form.bloodPressure) {
+-      vitalSegments.push(`BP: ${clean(form.bloodPressure)} mmHg`);
+-    }
+-    if (form.heartRate) {
+-      vitalSegments.push(`HR: ${clean(form.heartRate)} bpm`);
+-    }
+-    if (form.bloodPressureTakenTime) {
+-      vitalSegments.push(`Taken at ${formatClockTime(form.bloodPressureTakenTime)}`);
+-    }
+-    if (vitalSegments.length) {
+-      let vitalsLine = "";
++    vitalsReadings.forEach((reading) => {
++      const systolic = parsePositiveInteger(reading?.systolic);
++      const diastolic = parsePositiveInteger(reading?.diastolic);
++      const heartRate = parsePositiveInteger(reading?.heartRate);
++      const time = clean(reading?.time);
++      const segments = [];
++      const hasNumericValue =
++        systolic !== null || diastolic !== null || heartRate !== null;
++
++      if (!hasNumericValue) return;
+ 
+-      vitalSegments.forEach((segment) => {
+-        if (segment.startsWith("Taken at ")) {
+-          vitalsLine = vitalsLine
+-            ? `${vitalsLine} (${segment.replace(/^Taken /, "").trim()})`
+-            : segment;
+-          return;
+-        }
++      validVitalsReadings.push({ systolic, diastolic, heartRate });
+ 
+-        vitalsLine = vitalsLine ? `${vitalsLine}, ${segment}` : segment;
+-      });
++      if (systolic !== null && diastolic !== null) {
++        segments.push(`BP: ${systolic}/${diastolic} mmHg`);
++      }
++      if (heartRate !== null) {
++        segments.push(`HR: ${heartRate} bpm`);
++      }
+ 
++      if (!segments.length) return;
++
++      let vitalsLine = joinComma(segments);
++      if (time) {
++        vitalsLine = `${vitalsLine} (at ${formatClockTime(time)})`;
++      }
+       lines.push(indentLine(vitalsLine));
++    });
++
++    if (validVitalsReadings.length > 1) {
++      const systolicAverage = roundAverage(
++        validVitalsReadings
++          .map((reading) => reading.systolic)
++          .filter((value) => value !== null),
++      );
++      const diastolicAverage = roundAverage(
++        validVitalsReadings
++          .map((reading) => reading.diastolic)
++          .filter((value) => value !== null),
++      );
++      const heartRateAverage = roundAverage(
++        validVitalsReadings
++          .map((reading) => reading.heartRate)
++          .filter((value) => value !== null),
++      );
++
++      const averageSegments = [];
++      if (systolicAverage !== null && diastolicAverage !== null) {
++        averageSegments.push(`Average BP: ${systolicAverage}/${diastolicAverage} mmHg`);
++      }
++      if (heartRateAverage !== null) {
++        averageSegments.push(
++          `${
++            averageSegments.length ? "HR" : "Average HR"
++          }: ${heartRateAverage} bpm`,
++        );
++      }
++
++      if (averageSegments.length) {
++        lines.push(indentLine(joinComma(averageSegments)));
++      }
+     }
+ 
+     return lines.join("\n");
+   };
+   const formatEoeLine = () => {
+     const findings = [];
+ 
+     if (form.asymptomaticClickOnOpeningClosing) {
+       const laterality = clean(form.asymptomaticClickLaterality).toLowerCase();
+       const status = form.tmjClickingStatus.length
+         ? form.tmjClickingStatus.map((item) => clean(item).toLowerCase()).join("/")
+         : "asymptomatic";
+       const phase = form.tmjClickingPhase.length
+         ? form.tmjClickingPhase.map((item) => clean(item).toLowerCase()).join("/")
+         : "on open";
+       findings.push(
+         `${laterality ? `${laterality} ` : ""}tmj clicking (${status}, ${phase})`,
+       );
+     }
+ 
+     if (form.asymptomaticLymphNodes) {
+       const segments = [];
+       if (form.palpableLymphNodeLaterality) {
+         segments.push(clean(form.palpableLymphNodeLaterality).toLowerCase());
+       }
+@@ -1266,53 +1333,55 @@ export function buildSummaryText(form, selectedFindings) {
+     }
+ 
+     const line = `Next Appointment: ${joinComma(
+       formatInstrumentationSelections(
+         form.nextAppointment,
+         form.nextAppointmentInstrumentationDevices,
+         form.nextAppointmentInstrumentationAreas,
+       ),
+     )}`;
+ 
+     if (!notes) return line;
+     return `${line}. ${ensurePeriod(notes)}`;
+   };
+   const formatOtherClinicalFindings = () => {
+     const notes = cleanSentence(form.otherClinicalFindings);
+ 
+     if (!notes) return "";
+     return `Other clinical findings: ${ensurePeriod(notes)}`;
+   };
+   const formatContinuityOfCare = () => {
+     if (!form.disposition.length) return "";
+ 
+     return ["Continuity of Care", ...form.disposition.map(indentLine)].join("\n");
+   };
+ 
+-  const blocks = [
+-    formatPatientConcerns(),
+-    formatMedicalHistoryBlock(),
++  const blocks = [
++    clean(form.date) ? `Date: ${clean(form.date)}` : "",
++    clean(form.providerName) ? `Provider: ${clean(form.providerName)}` : "",
++    formatPatientConcerns(),
++    formatMedicalHistoryBlock(),
+     formatEoeLine(),
+     formatIoeLine(),
+     formatGingivalDescription(),
+     formatDepositLine("Calculus", form.calculus),
+     formatDepositLine("Plaque", form.plaque),
+     formatDepositLine("Extrinsic Stain", form.extrinsicStain),
+     formatPeriodontalDiagnosis(),
+     formatCariesRisk(),
+     formatOhe(),
+     formatRecommendations(),
+   ].filter(Boolean);
+ 
+   const treatmentLine = formatCompletedTreatments();
+   if (treatmentLine) blocks.push(treatmentLine);
+ 
+   const nextAppointmentLine = formatNextAppointment();
+   if (nextAppointmentLine) blocks.push(nextAppointmentLine);
+ 
+   const localAnesthesiaLine = formatLocalAnesthesia();
+   if (localAnesthesiaLine) blocks.push(localAnesthesiaLine);
+ 
+   const otherClinicalFindingsLine = formatOtherClinicalFindings();
+   if (otherClinicalFindingsLine) blocks.push(otherClinicalFindingsLine);
+ 
+   const continuityOfCareLine = formatContinuityOfCare();
+@@ -1839,56 +1908,78 @@ export function GingivalDescriptionWebformImportedTemplate({
+     if (typeof window === "undefined") return undefined;
+ 
+     const handleBeforeUnload = (event) => {
+       event.preventDefault();
+       event.returnValue = warningMessage;
+       return warningMessage;
+     };
+ 
+     window.addEventListener("beforeunload", handleBeforeUnload);
+ 
+     return () => {
+       window.removeEventListener("beforeunload", handleBeforeUnload);
+     };
+   }, []);
+ 
+   const resetForm = () => {
+     if (!confirmReplaceForm()) return;
+     setForm(buildInitialForm(fixture));
+   };
+ 
+   const loadDemo = () => {
+     if (!confirmReplaceForm()) return;
+     setForm(buildDemoForm(fixture));
+   };
+ 
+-  const setBloodPressureTimeToCurrent = () => {
+-    setForm((current) => ({
+-      ...current,
+-      bloodPressureTakenTime: getCurrentTimeString(),
+-    }));
+-  };
++  const addVitalsReading = () => {
++    setForm((current) => ({
++      ...current,
++      vitalsReadings: [...current.vitalsReadings, emptyVitalsReading()],
++    }));
++  };
++
++  const removeVitalsReading = (readingIndex) => {
++    setForm((current) => ({
++      ...current,
++      vitalsReadings: current.vitalsReadings.filter(
++        (_, currentIndex) => currentIndex !== readingIndex,
++      ),
++    }));
++  };
++
++  const updateVitalsReading = (readingIndex, patch) => {
++    setForm((current) => ({
++      ...current,
++      vitalsReadings: current.vitalsReadings.map((reading, currentIndex) =>
++        currentIndex === readingIndex ? { ...reading, ...patch } : reading,
++      ),
++    }));
++  };
++
++  const setVitalsReadingTimeToCurrent = (readingIndex) => {
++    updateVitalsReading(readingIndex, { time: getCurrentTimeString() });
++  };
+ 
+   const setLocalAnesthesiaEntryTimeToCurrent = (entryIndex) => {
+     setForm((current) => ({
+       ...current,
+       localAnesthesiaEntries: current.localAnesthesiaEntries.map((row, rowIndex) =>
+         rowIndex === entryIndex
+           ? { ...row, timeAdministered: getCurrentTimeString() }
+           : row,
+       ),
+     }));
+   };
+ 
+   const copySummary = async () => {
+     let copied = false;
+ 
+     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+       try {
+         await navigator.clipboard.writeText(summaryText);
+         copied = true;
+       } catch {
+         copied = false;
+       }
+     }
+ 
+     if (!copied && typeof document !== "undefined") {
+@@ -2181,164 +2272,230 @@ export function GingivalDescriptionWebformImportedTemplate({
+                     variant="outline"
+                     className="rounded-2xl px-3 py-1.5 text-xs"
+                     onClick={() => setAllSectionsOpen(false)}
+                   >
+                     Collapse all sections
+                   </Button>
+                 </div>
+                 <div className="space-y-2">
+                   <Label>Quick jump</Label>
+                   <div className="flex flex-wrap gap-2">
+                     {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
+                       <Button
+                         key={sectionKey}
+                         type="button"
+                         variant="outline"
+                         className="rounded-2xl px-3 py-1.5 text-xs"
+                         onClick={() => jumpToSection(sectionKey)}
+                       >
+                         {label}
+                       </Button>
+                     ))}
+                   </div>
+                 </div>
+               </div>
+             ) : null}
+-            <div className="grid gap-4 md:grid-cols-3">
+-              <div className="space-y-2">
+-                <Label htmlFor="exam-date">Date</Label>
+-                <Input
++            <div className="grid gap-4 md:grid-cols-2">
++              <div className="space-y-2">
++                <Label htmlFor="exam-date">Date</Label>
++                <Input
+                   id="exam-date"
+                   type="date"
+                   className="rounded-xl"
+                   value={form.date}
+                   onChange={(e) =>
+                     setForm((current) => ({ ...current, date: e.target.value }))
+-                  }
+-                />
+-              </div>
+-            </div>
++                  }
++                />
++              </div>
++              <div className="space-y-2">
++                <Label htmlFor="provider-name">Provider Name</Label>
++                <Input
++                  id="provider-name"
++                  placeholder="e.g. Dr. Example"
++                  value={form.providerName}
++                  onChange={(e) =>
++                    setForm((current) => ({
++                      ...current,
++                      providerName: e.target.value,
++                    }))
++                  }
++                />
++              </div>
++            </div>
+ 
+             <Separator />
+ 
+             <SectionCard
+               id={getSectionId("historyAndExam")}
+               title="History and Exam"
+               open={!isVeryShort || openSections.historyAndExam}
+               onToggle={isVeryShort ? () => toggleSection("historyAndExam") : undefined}
+               contentClassName="space-y-4"
+             >
+                 <div className="flex items-center gap-3">
+                   <Checkbox
+                     id="patient-presents-for-hygiene-no-other-concerns"
+                     checked={form.patientPresentsForHygieneNoOtherConcerns}
+                     onCheckedChange={(next) =>
+                       setForm((current) => ({
+                         ...current,
+                         patientPresentsForHygieneNoOtherConcerns: Boolean(next),
+                       }))
+                     }
+                   />
+                   <Label htmlFor="patient-presents-for-hygiene-no-other-concerns">
+                     Patient presents for hygiene, no other concerns
+                   </Label>
+                 </div>
+                 <div className="grid gap-4 md:grid-cols-2">
+                   <SectionTextarea
+                     id="patient-concerns"
+                     label="Patient concerns"
+                     placeholder="Document the chief complaint or concerns in the patient’s own words."
+                     value={form.patientConcerns}
+                     onChange={(patientConcerns) =>
+                       setForm((current) => ({ ...current, patientConcerns }))
+                     }
+                   />
+                   <SectionTextarea
+                     id="medical-history"
+                     label="Medical history"
+                     placeholder="Review and update medications, allergies, surgeries, conditions, or note no changes."
+                     value={form.medicalHistory}
+                     onChange={(medicalHistory) =>
+                       setForm((current) => ({ ...current, medicalHistory }))
+                     }
+                   />
+                 </div>
+-                <div className="grid gap-4 md:grid-cols-3">
+-                  <div className="space-y-2">
+-                    <Label htmlFor="blood-pressure">BP</Label>
+-                    <Input
+-                      id="blood-pressure"
+-                      placeholder="e.g. 120/80"
+-                      value={form.bloodPressure}
+-                      onChange={(e) =>
+-                        setForm((current) => ({
+-                          ...current,
+-                          bloodPressure: e.target.value,
+-                        }))
+-                      }
+-                    />
+-                  </div>
+-                  <div className="space-y-2">
+-                    <Label htmlFor="heart-rate">HR</Label>
+-                    <Input
+-                      id="heart-rate"
+-                      placeholder="e.g. 72"
+-                      value={form.heartRate}
+-                      onChange={(e) =>
+-                        setForm((current) => ({
+-                          ...current,
+-                          heartRate: e.target.value,
+-                        }))
+-                      }
+-                    />
+-                  </div>
+-                  <div className="space-y-2">
+-                    <Label htmlFor="blood-pressure-time">BP taken time</Label>
+-                    <div className="flex items-center gap-2">
+-                      <Button
+-                        type="button"
+-                        variant="outline"
+-                        className="shrink-0 rounded-xl px-3 py-2 text-xs"
+-                        onClick={setBloodPressureTimeToCurrent}
+-                      >
+-                        Set to now
+-                      </Button>
+-                      <Input
+-                        id="blood-pressure-time"
+-                        type="time"
+-                        value={form.bloodPressureTakenTime}
+-                        onChange={(e) =>
+-                          setForm((current) => ({
+-                            ...current,
+-                            bloodPressureTakenTime: e.target.value,
+-                          }))
+-                        }
+-                      />
+-                    </div>
+-                  </div>
+-                </div>
+-            </SectionCard>
++                <div className="space-y-4">
++                  <div className="flex flex-wrap items-center justify-between gap-3">
++                    <Label>Vitals Readings</Label>
++                    <Button
++                      type="button"
++                      variant="outline"
++                      className="rounded-2xl px-3 py-1.5 text-xs"
++                      onClick={addVitalsReading}
++                    >
++                      Add reading
++                    </Button>
++                  </div>
++                  {form.vitalsReadings.map((reading, index) => (
++                    <div
++                      key={`vitals-reading-${index}`}
++                      className="space-y-4 rounded-2xl border border-slate-200 p-4 dark:border-slate-700"
++                    >
++                      <div className="flex items-center justify-between gap-3">
++                        <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
++                          Reading {index + 1}
++                        </div>
++                        <Button
++                          type="button"
++                          variant="outline"
++                          className="rounded-2xl px-3 py-1.5 text-xs"
++                          onClick={() => removeVitalsReading(index)}
++                        >
++                          Remove reading
++                        </Button>
++                      </div>
++                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
++                        <div className="space-y-2">
++                          <Label htmlFor={`vital-systolic-${index}`}>Systolic</Label>
++                          <Input
++                            id={`vital-systolic-${index}`}
++                            type="number"
++                            inputMode="numeric"
++                            min="0"
++                            placeholder="e.g. 118"
++                            value={reading.systolic}
++                            onChange={(e) =>
++                              updateVitalsReading(index, { systolic: e.target.value })
++                            }
++                          />
++                        </div>
++                        <div className="space-y-2">
++                          <Label htmlFor={`vital-diastolic-${index}`}>Diastolic</Label>
++                          <Input
++                            id={`vital-diastolic-${index}`}
++                            type="number"
++                            inputMode="numeric"
++                            min="0"
++                            placeholder="e.g. 76"
++                            value={reading.diastolic}
++                            onChange={(e) =>
++                              updateVitalsReading(index, { diastolic: e.target.value })
++                            }
++                          />
++                        </div>
++                        <div className="space-y-2">
++                          <Label htmlFor={`vital-heart-rate-${index}`}>Heart Rate</Label>
++                          <Input
++                            id={`vital-heart-rate-${index}`}
++                            type="number"
++                            inputMode="numeric"
++                            min="0"
++                            placeholder="e.g. 72"
++                            value={reading.heartRate}
++                            onChange={(e) =>
++                              updateVitalsReading(index, { heartRate: e.target.value })
++                            }
++                          />
++                        </div>
++                        <div className="space-y-2">
++                          <Label htmlFor={`vital-time-${index}`}>Time</Label>
++                          <div className="flex items-center gap-2">
++                            <Button
++                              type="button"
++                              variant="outline"
++                              className="shrink-0 rounded-xl px-3 py-2 text-xs"
++                              onClick={() => setVitalsReadingTimeToCurrent(index)}
++                            >
++                              Set to now
++                            </Button>
++                            <Button
++                              type="button"
++                              variant="outline"
++                              className="shrink-0 rounded-xl px-3 py-2 text-xs"
++                              onClick={() => updateVitalsReading(index, { time: "" })}
++                            >
++                              Clear
++                            </Button>
++                            <Input
++                              id={`vital-time-${index}`}
++                              type="time"
++                              value={reading.time}
++                              onChange={(e) =>
++                                updateVitalsReading(index, { time: e.target.value })
++                              }
++                            />
++                          </div>
++                        </div>
++                      </div>
++                    </div>
++                  ))}
++                </div>
++            </SectionCard>
+ 
+             <SectionCard
+               id={getSectionId("eoeIoe")}
+               title="EOE / IOE"
+               open={!isVeryShort || openSections.eoeIoe}
+               onToggle={isVeryShort ? () => toggleSection("eoeIoe") : undefined}
+               contentClassName="space-y-6"
+             >
+                 <div className="space-y-4 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
+                   <div className="flex flex-wrap items-center justify-between gap-3">
+                     <div>
+                       <div className="text-lg font-semibold text-slate-900 dark:text-white">
+                         EOE
+                       </div>
+                       <div className="text-sm text-slate-600 dark:text-slate-400">
+                         Extraoral exam findings and observations.
+                       </div>
+                     </div>
+                     <Button
+                       type="button"
+                       variant={
+                         form.eoeWithinNormalLimits ? "default" : "outline"
+                       }
+                       className="rounded-2xl"
+                       onClick={() =>
+@@ -3422,53 +3579,53 @@ export function GingivalDescriptionWebformImportedTemplate({
+                               "No adverse reactions noted",
+                             ),
+                             localAnesthesiaAdequateAchieved: selected.includes(
+                               "Adequate anesthesia achieved",
+                             ),
+                           }))
+                         }
+                       />
+                       <SectionTextarea
+                         id="local-anesthesia-notes"
+                         label="Anesthesia notes"
+                         placeholder="Add anesthesia assessment notes."
+                         value={form.localAnesthesiaNotes}
+                         onChange={(localAnesthesiaNotes) =>
+                           setForm((current) => ({
+                             ...current,
+                             localAnesthesiaNotes,
+                           }))
+                         }
+                       />
+                     </div>
+                   </div>
+                 ) : null}
+             </SectionCard>
+ 
+-            <SectionCard
+-              id={getSectionId("disposition")}
+-              title="Disposition"
++            <SectionCard
++              id={getSectionId("disposition")}
++              title="Continuity of Care"
+               open={!isVeryShort || openSections.disposition}
+               onToggle={isVeryShort ? () => toggleSection("disposition") : undefined}
+               contentClassName="space-y-2"
+             >
+                 <Label>Hygiene follow-up interval</Label>
+                 <div className="space-y-3">
+                   {DISPOSITION_OPTIONS.map((option) => {
+                     const checked = form.disposition.includes(option);
+                     const optionId = `disposition-${option.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+                     return (
+                       <div key={option} className="flex items-center gap-3">
+                         <Checkbox
+                           id={optionId}
+                           checked={checked}
+                           onCheckedChange={(next) =>
+                             setForm((current) => ({
+                               ...current,
+                               disposition: next
+                                 ? current.disposition.includes(option)
+                                   ? current.disposition
+                                   : [...current.disposition, option]
+                                 : current.disposition.filter(
+                                     (item) => item !== option,
+                                   ),
+                             }))
+diff --git a/tests/playwright/templates.spec.ts b/tests/playwright/templates.spec.ts
+index 2c07373725af6e69e96291da02a272297a50db14..2ba748bb527eb89964f6d5bb8809c96d1f1f5a04 100644
+--- a/tests/playwright/templates.spec.ts
++++ b/tests/playwright/templates.spec.ts
+@@ -18,79 +18,79 @@ test("template index renders", async ({ page }) => {
+   ).toBeVisible();
+   await expect(
+     page.locator('a[href="/templates/gingival-description/"]'),
+   ).toHaveCount(0);
+ });
+ 
+ test("imported webform preview renders summary panel and updated EOE/IOE sections", async ({
+   page,
+ }) => {
+   await page.goto("/templates/dental-hygiene-note-webform");
+ 
+   await expect(
+     page.getByRole("heading", { name: "Dental Hygiene Note Webform Template" }),
+   ).toBeVisible();
+   await expect(page.getByText("Structured Summary")).toBeVisible();
+   await expect(
+     page.getByRole("button", { name: "EOE Within Normal Limits" }),
+   ).toBeVisible();
+   await expect(
+     page.getByRole("button", { name: "IOE Within Normal Limits" }),
+   ).toBeVisible();
+   await expect(page.getByText("EOE observations")).toBeVisible();
+   await expect(page.getByText("IOE observations")).toBeVisible();
+ });
+ 
+-test("BP time can be reset to the current time with one click", async ({
+-  page,
+-}) => {
+-  await page.goto("/templates/dental-hygiene-note-webform");
+-
+-  await page.locator("#blood-pressure-time").fill("00:00");
+-  await expect(page.locator("#blood-pressure-time")).toHaveValue("00:00");
+-
+-  await page.getByRole("button", { name: "Set to now" }).click();
+-  await expect(page.locator("#blood-pressure-time")).not.toHaveValue("00:00");
+-  await expect(page.locator("#blood-pressure-time")).toHaveValue(/\d{2}:\d{2}/);
+-});
++test("vitals reading time can be reset to the current time with one click", async ({
++  page,
++}) => {
++  await page.goto("/templates/dental-hygiene-note-webform");
++
++  await page.locator("#vital-time-0").fill("00:00");
++  await expect(page.locator("#vital-time-0")).toHaveValue("00:00");
++
++  await page.getByRole("button", { name: "Set to now" }).click();
++  await expect(page.locator("#vital-time-0")).not.toHaveValue("00:00");
++  await expect(page.locator("#vital-time-0")).toHaveValue(/\d{2}:\d{2}/);
++});
+ 
+ test("imported webform summary uses preview a formatting", async ({ page }) => {
+   await page.goto("/templates/dental-hygiene-note-webform");
+   page.once("dialog", (dialog) => dialog.accept());
+   await page.getByRole("button", { name: "Load demo" }).click();
+   await expect(page.locator("#periodontal-status-notes")).toHaveValue(
+     "Reinforced 4-month hygiene interval and home-care compliance.",
+   );
+ 
+   const summary = await page.locator("textarea[readonly]").inputValue();
+ 
+   expect(summary).toContain(
+     "Patient concerns: Sensitivity around lower anterior and occasional bleeding while flossing.",
+   );
+-  expect(summary).toContain(
+-    "Medical history update:\nMed/dent history updated. No new contraindications reported.\nBP: 118/76 mmHg\nHR: 72 bpm\nTaken at 9:15 AM",
+-  );
++  expect(summary).toContain(
++    "Medical history update:\n   Med/dent history updated. No new contraindications reported.\n   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
++  );
+   expect(summary).toContain(
+     "EOE: bilateral tmj clicking (asymptomatic, on open), baseline monitoring only",
+   );
+   expect(summary).toContain(
+     "IOE: coated tongue, scalloped tongue, bilateral linea alba, slight palatine torus at midline, slight bilateral mandibular tori, mild soft tissue variations noted",
+   );
+   expect(summary).toContain(
+     "Gingival Description: localized marginal papillary redness on #5, #6-8",
+   );
+   expect(summary).toContain(
+     "Periodontal diagnosis: Active Moderate Periodontitis Stage II Grade B moderate rate of progression. Reinforced 4-month hygiene interval and home-care compliance.",
+   );
+   expect(summary).toContain(
+     "Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride, history of active decay in the last 36 months. Diet and home-care factors reviewed.",
+   );
+   expect(summary).toContain(
+     "OHE: Caries theory and risk factors, bass brushing, c-shaped flossing, sulcabrush and interdental brush technique, review benefits of Prevident or Opti-Rinse, periodontitis theory and risk factors, importance of maintaining a 4-month hygiene interval",
+   );
+   expect(summary).toContain(
+     "Treatments completed today: Med/dent history update, EOE/IOE, OHE reinforced, Reviewed homecare, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible Hand and Power Instrumentation (Piezo), Ipana 5% NaF varnish application",
+   );
+   expect(summary).not.toContain("Visit Details:");
+   expect(summary).not.toContain("Other clinical findings:");
+ });
+ 
+@@ -190,47 +190,47 @@ test("very short template slug renders the sticky-summary variant", async ({
+   ).toBeVisible();
+   await expect(page.locator("#exam-date")).toBeVisible();
+ });
+ 
+ test("very short template desktop shell does not leave trailing space after the summary column", async ({
+   page,
+ }) => {
+   await page.setViewportSize({ width: 1664, height: 900 });
+   await page.goto("/templates/very-short-template");
+ 
+   const layoutMetrics = await page.locator("main > div.min-h-screen > div").evaluate((root) => {
+     const children = Array.from(root.children);
+     const summary = children[1];
+     const rootRect = root.getBoundingClientRect();
+     const summaryRect = summary?.getBoundingClientRect();
+ 
+     return {
+       trailingGap: summaryRect ? rootRect.right - summaryRect.right : null,
+     };
+   });
+ 
+   expect(layoutMetrics.trailingGap).not.toBeNull();
+   expect(layoutMetrics.trailingGap ?? Number.POSITIVE_INFINITY).toBeLessThan(2);
+ });
+ 
+-test("imported template date inputs default to today's date and prefill BP time for both slugs", async ({
++test("imported template date inputs default to today's date and prefill vitals time for both slugs", async ({
+   page,
+ }) => {
+   const today = getTodayDateString();
+   const currentTime = getCurrentTimeString();
+ 
+-  await page.goto("/templates/gingival-description");
+-  await expect(page.locator("#exam-date")).toHaveValue(today);
+-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+-
+-  await page.goto("/templates/dental-hygiene-note-webform");
+-  await expect(page.locator("#exam-date")).toHaveValue(today);
+-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+-
++  await page.goto("/templates/gingival-description");
++  await expect(page.locator("#exam-date")).toHaveValue(today);
++  await expect(page.locator("#vital-time-0")).toHaveValue(currentTime);
++
++  await page.goto("/templates/dental-hygiene-note-webform");
++  await expect(page.locator("#exam-date")).toHaveValue(today);
++  await expect(page.locator("#vital-time-0")).toHaveValue(currentTime);
++
+   await page.goto("/templates/short-dental-hygien-note");
+   await expect(page.locator("#exam-date")).toHaveValue(today);
+-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
++  await expect(page.locator("#vital-time-0")).toHaveValue(currentTime);
+ 
+   await page.goto("/templates/very-short-template");
+   await expect(page.locator("#exam-date")).toHaveValue(today);
+-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
++  await expect(page.locator("#vital-time-0")).toHaveValue(currentTime);
+ });
+diff --git a/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts b/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts
+index bcec8983aea9355bd9b3e573571f9aefbc451178..70a869e3505e15f9dd81e9daa1a02731ab6688a9 100644
+--- a/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts
++++ b/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts
+@@ -1,42 +1,41 @@
+ import { describe, expect, it } from "vitest";
+ import {
+   buildDemoForm,
+   buildInitialForm,
+   buildSummaryText,
+ } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
+ import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
+ 
+ function buildBaseForm() {
+   return {
+     date: "2026-03-18",
++    providerName: "",
+     patientConcerns: "",
+     patientPresentsForHygieneNoOtherConcerns: false,
+     medicalHistory: "Patient reports no changes",
+-    bloodPressure: "",
+-    heartRate: "",
+-    bloodPressureTakenTime: "",
++    vitalsReadings: [],
+     eoe: "",
+     ioe: "",
+     eoeWithinNormalLimits: false,
+     ioeWithinNormalLimits: false,
+     asymptomaticClickOnOpeningClosing: false,
+     tmjClickingStatus: [],
+     tmjClickingPhase: [],
+     asymptomaticClickLaterality: "",
+     asymptomaticLymphNodes: false,
+     palpableLymphNodeLaterality: "",
+     palpableLymphNodeLocation: [],
+     palpableLymphNodeSwelling: [],
+     ioeFindings: [],
+     palatineTorusAtMidline: false,
+     palatineTorusProminence: "",
+     bilateralMandibularTori: false,
+     bilateralMandibularToriProminence: "",
+     findings: {},
+     plaque: {
+       enabled: false,
+       amount: "None",
+       extent: "Localized",
+       locations: [],
+       types: [],
+       distributions: [],
+@@ -113,68 +112,94 @@ describe("buildSummaryText", () => {
+     expect(form.findings.color.Red.presence).toBe(true);
+     expect(form.patientConcerns).toBeTruthy();
+   });
+ 
+   it("includes note-only fields that were previously omitted from the plain-text summary", () => {
+     const form = buildBaseForm();
+     form.oheNotes = "Reviewed brushing modifications";
+     form.recommendationsNotes = "Use Prevident nightly";
+     form.treatmentDoneTodayNotes = "Localized debridement completed";
+     form.nextAppointmentNotes = "Re-evaluate lower anterior tissue response";
+     form.otherClinicalFindings = "Monitor linea alba";
+ 
+     const summary = buildSummaryText(form, []);
+ 
+     expect(summary).toContain("OHE: Reviewed brushing modifications.");
+     expect(summary).toContain("Recommendations: Use Prevident nightly.");
+     expect(summary).toContain(
+       "Treatments completed today: Localized debridement completed.",
+     );
+     expect(summary).toContain(
+       "Next Appointment: Re-evaluate lower anterior tissue response.",
+     );
+     expect(summary).toContain("Other clinical findings: Monitor linea alba.");
+   });
+ 
+-  it("formats the medical history block with indented detail lines and combined vitals", () => {
++  it("formats the medical history block with indented detail lines and repeatable vitals", () => {
+     const form = buildBaseForm();
+     form.medicalHistory = "Med/dent history updated. No new contraindications reported.";
+-    form.bloodPressure = "118/76";
+-    form.heartRate = "72";
+-    form.bloodPressureTakenTime = "09:15";
++    form.vitalsReadings = [
++      { systolic: "118", diastolic: "76", heartRate: "72", time: "09:15" },
++      { systolic: "114", diastolic: "72", heartRate: "68", time: "" },
++    ];
+ 
+     const summary = buildSummaryText(form, []);
+ 
+     expect(summary).toContain(
+       [
+         "Medical history update:",
+         "   Med/dent history updated. No new contraindications reported.",
+         "   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
++        "   BP: 114/72 mmHg, HR: 68 bpm",
++        "   Average BP: 116/74 mmHg, HR: 70 bpm",
+       ].join("\n"),
+     );
+   });
+ 
++  it("places date and provider at the top when present", () => {
++    const form = buildBaseForm();
++    form.date = "2026-03-18";
++    form.providerName = "Dr. Example";
++    form.patientConcerns = "Bleeding while flossing";
++
++    const summary = buildSummaryText(form, []);
++
++    expect(summary.startsWith("Date: 2026-03-18\n\nProvider: Dr. Example\n\nPatient concerns:")).toBe(true);
++  });
++
++  it("omits blank date and provider lines from the summary header", () => {
++    const form = buildBaseForm();
++    form.date = "";
++    form.providerName = "";
++    form.medicalHistory = "";
++    form.patientConcerns = "Needs follow-up";
++
++    const summary = buildSummaryText(form, []);
++
++    expect(summary).toBe("Patient concerns: Needs follow-up.");
++  });
++
+   it("formats local anesthesia as a heading with indented detail lines", () => {
+     const form = buildBaseForm();
+     form.localAnesthesiaNoContraindication = true;
+     form.localAnesthesiaBenzocaineApplied = true;
+     form.localAnesthesiaEntries = [
+       {
+         injectionType: "IA/L",
+         quadrant: "Q3",
+         anestheticProduct: "Mepivacaine 3% without epinephrine",
+         amountMl: "1.8",
+         timeAdministered: "09:25",
+       },
+     ];
+     form.localAnesthesiaNoAdverseReactions = true;
+     form.localAnesthesiaAdequateAchieved = true;
+     form.localAnesthesiaNotes =
+       "Patient tolerated injections well and post-op instructions reviewed";
+ 
+     const summary = buildSummaryText(form, []);
+ 
+     expect(summary).toContain("Local anesthetic administered: No C/I to LA");
+     expect(summary).toContain(
+       "   Benzocaine 20% applied to the injection site",
+     );
+     expect(summary).toContain(
