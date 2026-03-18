@@ -9,12 +9,18 @@ import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/ging
 function buildBaseForm() {
   return {
     date: "2026-03-18",
+    providerName: "",
     patientConcerns: "",
     patientPresentsForHygieneNoOtherConcerns: false,
     medicalHistory: "Patient reports no changes",
-    bloodPressure: "",
-    heartRate: "",
-    bloodPressureTakenTime: "",
+    vitalsReadings: [
+      {
+        systolic: "",
+        diastolic: "",
+        heartRate: "",
+        time: "",
+      },
+    ],
     eoe: "",
     ioe: "",
     eoeWithinNormalLimits: false,
@@ -138,9 +144,14 @@ describe("buildSummaryText", () => {
   it("formats the medical history block with indented detail lines and combined vitals", () => {
     const form = buildBaseForm();
     form.medicalHistory = "Med/dent history updated. No new contraindications reported.";
-    form.bloodPressure = "118/76";
-    form.heartRate = "72";
-    form.bloodPressureTakenTime = "09:15";
+    form.vitalsReadings = [
+      {
+        systolic: "118",
+        diastolic: "76",
+        heartRate: "72",
+        time: "09:15",
+      },
+    ];
 
     const summary = buildSummaryText(form, []);
 
@@ -151,6 +162,42 @@ describe("buildSummaryText", () => {
         "   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
       ].join("\n"),
     );
+  });
+
+  it("renders Date and Provider at the top when present", () => {
+    const form = buildBaseForm();
+    form.date = "2026-03-18";
+    form.providerName = "Dr. Example";
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary.startsWith("Date: 2026-03-18\nProvider: Dr. Example\n\n")).toBe(true);
+  });
+
+  it("renders each vitals reading and averages when multiple valid readings exist", () => {
+    const form = buildBaseForm();
+    form.vitalsReadings = [
+      { systolic: "142", diastolic: "88", heartRate: "78", time: "09:05" },
+      { systolic: "136", diastolic: "84", heartRate: "74", time: "09:15" },
+    ];
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain("   BP: 142/88 mmHg, HR: 78 bpm (at 9:05 AM)");
+    expect(summary).toContain("   BP: 136/84 mmHg, HR: 74 bpm (at 9:15 AM)");
+    expect(summary).toContain("   Average BP: 139/86 mmHg, HR: 76 bpm");
+  });
+
+  it("omits average line when only one valid reading is present", () => {
+    const form = buildBaseForm();
+    form.vitalsReadings = [
+      { systolic: "118", diastolic: "76", heartRate: "72", time: "" },
+    ];
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain("   BP: 118/76 mmHg, HR: 72 bpm");
+    expect(summary).not.toContain("Average BP:");
   });
 
   it("formats local anesthesia as a heading with indented detail lines", () => {

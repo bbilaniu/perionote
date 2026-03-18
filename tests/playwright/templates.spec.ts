@@ -40,17 +40,17 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   await expect(page.getByText("IOE observations")).toBeVisible();
 });
 
-test("BP time can be reset to the current time with one click", async ({
+test("vitals reading time can be reset to the current time with one click", async ({
   page,
 }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
-  await page.locator("#blood-pressure-time").fill("00:00");
-  await expect(page.locator("#blood-pressure-time")).toHaveValue("00:00");
+  await page.locator("#vitals-time-0").fill("00:00");
+  await expect(page.locator("#vitals-time-0")).toHaveValue("00:00");
 
   await page.getByRole("button", { name: "Set to now" }).click();
-  await expect(page.locator("#blood-pressure-time")).not.toHaveValue("00:00");
-  await expect(page.locator("#blood-pressure-time")).toHaveValue(/\d{2}:\d{2}/);
+  await expect(page.locator("#vitals-time-0")).not.toHaveValue("00:00");
+  await expect(page.locator("#vitals-time-0")).toHaveValue(/\d{2}:\d{2}/);
 });
 
 test("imported webform summary uses preview a formatting", async ({ page }) => {
@@ -67,8 +67,10 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "Patient concerns: Sensitivity around lower anterior and occasional bleeding while flossing.",
   );
   expect(summary).toContain(
-    "Medical history update:\nMed/dent history updated. No new contraindications reported.\nBP: 118/76 mmHg\nHR: 72 bpm\nTaken at 9:15 AM",
+    "Medical history update:\n   Med/dent history updated. No new contraindications reported.\n   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
   );
+  expect(summary).toContain("Date: 2026-03-09");
+  expect(summary).toContain("Provider: Dr. Example");
   expect(summary).toContain(
     "EOE: bilateral tmj clicking (asymptomatic, on open), baseline monitoring only",
   );
@@ -212,7 +214,7 @@ test("very short template desktop shell does not leave trailing space after the 
   expect(layoutMetrics.trailingGap ?? Number.POSITIVE_INFINITY).toBeLessThan(2);
 });
 
-test("imported template date inputs default to today's date and prefill BP time for both slugs", async ({
+test("imported template date inputs default to today's date and prefill vitals time for both slugs", async ({
   page,
 }) => {
   const today = getTodayDateString();
@@ -220,17 +222,17 @@ test("imported template date inputs default to today's date and prefill BP time 
 
   await page.goto("/templates/gingival-description");
   await expect(page.locator("#exam-date")).toHaveValue(today);
-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 
   await page.goto("/templates/dental-hygiene-note-webform");
   await expect(page.locator("#exam-date")).toHaveValue(today);
-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 
   await page.goto("/templates/short-dental-hygien-note");
   await expect(page.locator("#exam-date")).toHaveValue(today);
-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 
   await page.goto("/templates/very-short-template");
   await expect(page.locator("#exam-date")).toHaveValue(today);
-  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 });

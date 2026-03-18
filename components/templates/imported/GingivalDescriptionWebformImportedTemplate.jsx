@@ -471,6 +471,15 @@ function emptyLocalAnesthesiaEntry() {
   };
 }
 
+function emptyVitalReading() {
+  return {
+    systolic: "",
+    diastolic: "",
+    heartRate: "",
+    time: getCurrentTimeString(),
+  };
+}
+
 function buildInitialFindings() {
   return Object.fromEntries(
     Object.entries(FIELD_OPTIONS).map(([sectionKey, options]) => [
@@ -487,12 +496,11 @@ function prettyLabel(key) {
 export function buildInitialForm(fixture) {
   const form = {
     date: getTodayDateString(),
+    providerName: "",
     patientConcerns: "",
     patientPresentsForHygieneNoOtherConcerns: false,
     medicalHistory: "Patient reports no changes",
-    bloodPressure: "",
-    heartRate: "",
-    bloodPressureTakenTime: getCurrentTimeString(),
+    vitalsReadings: [emptyVitalReading()],
     eoe: "",
     ioe: "",
     eoeWithinNormalLimits: false,
@@ -569,13 +577,19 @@ export function buildInitialForm(fixture) {
 export function buildDemoForm(fixture) {
   const form = buildInitialForm(fixture);
 
+  form.providerName = "Dr. Example";
   form.patientConcerns =
     "Sensitivity around lower anterior and occasional bleeding while flossing.";
   form.medicalHistory =
     "Med/dent history updated. No new contraindications reported.";
-  form.bloodPressure = "118/76";
-  form.heartRate = "72";
-  form.bloodPressureTakenTime = "09:15";
+  form.vitalsReadings = [
+    {
+      systolic: "118",
+      diastolic: "76",
+      heartRate: "72",
+      time: "09:15",
+    },
+  ];
 
   form.eoeWithinNormalLimits = true;
   form.ioeWithinNormalLimits = true;
@@ -756,6 +770,83 @@ export function buildSummaryText(form, selectedFindings) {
     if (hours === 0) hours = 12;
     return `${hours}:${minutes} ${period}`;
   };
+  const parseNumeric = (value) => {
+    const normalized = clean(value);
+    if (!normalized) return null;
+    if (!/^-?\d+(\.\d+)?$/.test(normalized)) return null;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const formatNumber = (value) => {
+    if (!Number.isFinite(value)) return "";
+    return Number.isInteger(value) ? String(value) : value.toFixed(1);
+  };
+  const getVitalsReadings = () =>
+    Array.isArray(form.vitalsReadings) ? form.vitalsReadings : [];
+  const formatVitalsLine = (reading) => {
+    const systolic = parseNumeric(reading.systolic);
+    const diastolic = parseNumeric(reading.diastolic);
+    const heartRate = parseNumeric(reading.heartRate);
+    const time = clean(reading.time);
+    const segments = [];
+
+    if (systolic != null && diastolic != null) {
+      segments.push(`BP: ${formatNumber(systolic)}/${formatNumber(diastolic)} mmHg`);
+    }
+    if (heartRate != null) {
+      segments.push(`HR: ${formatNumber(heartRate)} bpm`);
+    }
+    if (!segments.length) return "";
+
+    const vitals = segments.join(", ");
+    return time ? `${vitals} (at ${formatClockTime(time)})` : vitals;
+  };
+  const formatAverageVitalsLine = (readings) => {
+    const systolicValues = [];
+    const diastolicValues = [];
+    const heartRateValues = [];
+
+    readings.forEach((reading) => {
+      const systolic = parseNumeric(reading.systolic);
+      const diastolic = parseNumeric(reading.diastolic);
+      const heartRate = parseNumeric(reading.heartRate);
+      if (systolic != null) systolicValues.push(systolic);
+      if (diastolic != null) diastolicValues.push(diastolic);
+      if (heartRate != null) heartRateValues.push(heartRate);
+    });
+
+    const average = (values) =>
+      values.length
+        ? Math.round(values.reduce((total, value) => total + value, 0) / values.length)
+        : null;
+    const averageSystolic = average(systolicValues);
+    const averageDiastolic = average(diastolicValues);
+    const averageHeartRate = average(heartRateValues);
+    const segments = [];
+
+    if (averageSystolic != null && averageDiastolic != null) {
+      segments.push(
+        `Average BP: ${formatNumber(averageSystolic)}/${formatNumber(averageDiastolic)} mmHg`,
+      );
+    }
+    if (averageHeartRate != null) {
+      segments.push(
+        `${segments.length ? "HR" : "Average HR"}: ${formatNumber(averageHeartRate)} bpm`,
+      );
+    }
+
+    return segments.join(", ");
+  };
+  const formatHeaderBlock = () => {
+    const lines = [];
+    const date = clean(form.date);
+    const providerName = clean(form.providerName);
+
+    if (date) lines.push(`Date: ${date}`);
+    if (providerName) lines.push(`Provider: ${providerName}`);
+
+    return lines.join("\n");
+  };
   const formatLabelList = (items, mapper = (item) => item) =>
     joinComma(items.map((item) => mapper(item)).filter(Boolean));
   const normalizeObservation = (value, withinNormalLimits) => {
@@ -793,13 +884,20 @@ export function buildSummaryText(form, selectedFindings) {
     const medicalHistory = cleanSentence(form.medicalHistory);
     const shouldHideDefaultMedicalHistory =
       medicalHistory.toLowerCase() === "patient reports no changes";
-    const vitalSegments = [];
+    const vitalsReadings = getVitalsReadings();
+    const formattedReadings = vitalsReadings
+      .map((reading) => formatVitalsLine(reading))
+      .filter(Boolean);
+    const validReadingsCount = vitalsReadings.filter(
+      (reading) =>
+        parseNumeric(reading.systolic) != null ||
+        parseNumeric(reading.diastolic) != null ||
+        parseNumeric(reading.heartRate) != null,
+    ).length;
 
     if (
       !medicalHistory &&
-      !form.bloodPressure &&
-      !form.heartRate &&
-      !form.bloodPressureTakenTime
+      !formattedReadings.length
     ) {
       return "";
     }
@@ -808,30 +906,12 @@ export function buildSummaryText(form, selectedFindings) {
     if (medicalHistory && !shouldHideDefaultMedicalHistory) {
       lines.push(indentLine(ensurePeriod(medicalHistory)));
     }
-    if (form.bloodPressure) {
-      vitalSegments.push(`BP: ${clean(form.bloodPressure)} mmHg`);
-    }
-    if (form.heartRate) {
-      vitalSegments.push(`HR: ${clean(form.heartRate)} bpm`);
-    }
-    if (form.bloodPressureTakenTime) {
-      vitalSegments.push(`Taken at ${formatClockTime(form.bloodPressureTakenTime)}`);
-    }
-    if (vitalSegments.length) {
-      let vitalsLine = "";
-
-      vitalSegments.forEach((segment) => {
-        if (segment.startsWith("Taken at ")) {
-          vitalsLine = vitalsLine
-            ? `${vitalsLine} (${segment.replace(/^Taken /, "").trim()})`
-            : segment;
-          return;
-        }
-
-        vitalsLine = vitalsLine ? `${vitalsLine}, ${segment}` : segment;
-      });
-
-      lines.push(indentLine(vitalsLine));
+    formattedReadings.forEach((readingLine) => {
+      lines.push(indentLine(readingLine));
+    });
+    if (validReadingsCount > 1) {
+      const averageLine = formatAverageVitalsLine(vitalsReadings);
+      if (averageLine) lines.push(indentLine(averageLine));
     }
 
     return lines.join("\n");
@@ -1318,7 +1398,10 @@ export function buildSummaryText(form, selectedFindings) {
   const continuityOfCareLine = formatContinuityOfCare();
   if (continuityOfCareLine) blocks.push(continuityOfCareLine);
 
-  return blocks.join("\n\n");
+  const headerBlock = formatHeaderBlock();
+  const allBlocks = headerBlock ? [headerBlock, ...blocks] : blocks;
+
+  return allBlocks.join("\n\n");
 }
 
 export const SUMMARY_TEST_CASES = [
@@ -1861,11 +1944,33 @@ export function GingivalDescriptionWebformImportedTemplate({
     setForm(buildDemoForm(fixture));
   };
 
-  const setBloodPressureTimeToCurrent = () => {
+  const updateVitalsReading = (readingIndex, patch) => {
     setForm((current) => ({
       ...current,
-      bloodPressureTakenTime: getCurrentTimeString(),
+      vitalsReadings: current.vitalsReadings.map((reading, currentIndex) =>
+        currentIndex === readingIndex ? { ...reading, ...patch } : reading,
+      ),
     }));
+  };
+
+  const addVitalsReading = () => {
+    setForm((current) => ({
+      ...current,
+      vitalsReadings: [...current.vitalsReadings, emptyVitalReading()],
+    }));
+  };
+
+  const removeVitalsReading = (readingIndex) => {
+    setForm((current) => ({
+      ...current,
+      vitalsReadings: current.vitalsReadings.filter(
+        (_reading, currentIndex) => currentIndex !== readingIndex,
+      ),
+    }));
+  };
+
+  const setVitalsReadingTimeToCurrent = (readingIndex) => {
+    updateVitalsReading(readingIndex, { time: getCurrentTimeString() });
   };
 
   const setLocalAnesthesiaEntryTimeToCurrent = (entryIndex) => {
@@ -2203,7 +2308,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                 </div>
               </div>
             ) : null}
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="exam-date">Date</Label>
                 <Input
@@ -2213,6 +2318,21 @@ export function GingivalDescriptionWebformImportedTemplate({
                   value={form.date}
                   onChange={(e) =>
                     setForm((current) => ({ ...current, date: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="provider-name">Provider Name</Label>
+                <Input
+                  id="provider-name"
+                  className="rounded-xl"
+                  placeholder="e.g. Dr. Example"
+                  value={form.providerName}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      providerName: e.target.value,
+                    }))
                   }
                 />
               </div>
@@ -2262,58 +2382,119 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }
                   />
                 </div>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="blood-pressure">BP</Label>
-                    <Input
-                      id="blood-pressure"
-                      placeholder="e.g. 120/80"
-                      value={form.bloodPressure}
-                      onChange={(e) =>
-                        setForm((current) => ({
-                          ...current,
-                          bloodPressure: e.target.value,
-                        }))
-                      }
-                    />
+                <div className="space-y-3 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <Label>Vitals Readings</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl px-3 py-2 text-xs"
+                      onClick={addVitalsReading}
+                    >
+                      Add reading
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="heart-rate">HR</Label>
-                    <Input
-                      id="heart-rate"
-                      placeholder="e.g. 72"
-                      value={form.heartRate}
-                      onChange={(e) =>
-                        setForm((current) => ({
-                          ...current,
-                          heartRate: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="blood-pressure-time">BP taken time</Label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="shrink-0 rounded-xl px-3 py-2 text-xs"
-                        onClick={setBloodPressureTimeToCurrent}
+                  <div className="space-y-3">
+                    {form.vitalsReadings.map((reading, readingIndex) => (
+                      <div
+                        key={`vitals-reading-${readingIndex}`}
+                        className="space-y-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"
                       >
-                        Set to now
-                      </Button>
-                      <Input
-                        id="blood-pressure-time"
-                        type="time"
-                        value={form.bloodPressureTakenTime}
-                        onChange={(e) =>
-                          setForm((current) => ({
-                            ...current,
-                            bloodPressureTakenTime: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
+                        <div className="grid gap-3 md:grid-cols-4">
+                          <div className="space-y-2">
+                            <Label htmlFor={`vitals-systolic-${readingIndex}`}>
+                              Systolic
+                            </Label>
+                            <Input
+                              id={`vitals-systolic-${readingIndex}`}
+                              type="number"
+                              inputMode="numeric"
+                              placeholder="e.g. 118"
+                              value={reading.systolic}
+                              onChange={(e) =>
+                                updateVitalsReading(readingIndex, {
+                                  systolic: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`vitals-diastolic-${readingIndex}`}>
+                              Diastolic
+                            </Label>
+                            <Input
+                              id={`vitals-diastolic-${readingIndex}`}
+                              type="number"
+                              inputMode="numeric"
+                              placeholder="e.g. 76"
+                              value={reading.diastolic}
+                              onChange={(e) =>
+                                updateVitalsReading(readingIndex, {
+                                  diastolic: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`vitals-heart-rate-${readingIndex}`}>
+                              Heart Rate
+                            </Label>
+                            <Input
+                              id={`vitals-heart-rate-${readingIndex}`}
+                              type="number"
+                              inputMode="numeric"
+                              placeholder="e.g. 72"
+                              value={reading.heartRate}
+                              onChange={(e) =>
+                                updateVitalsReading(readingIndex, {
+                                  heartRate: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`vitals-time-${readingIndex}`}>Time</Label>
+                            <Input
+                              id={`vitals-time-${readingIndex}`}
+                              type="time"
+                              value={reading.time}
+                              onChange={(e) =>
+                                updateVitalsReading(readingIndex, {
+                                  time: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl px-3 py-2 text-xs"
+                            onClick={() => setVitalsReadingTimeToCurrent(readingIndex)}
+                          >
+                            Set to now
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl px-3 py-2 text-xs"
+                            onClick={() => updateVitalsReading(readingIndex, { time: "" })}
+                          >
+                            Clear time
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="rounded-xl px-3 py-2 text-xs"
+                            onClick={() => removeVitalsReading(readingIndex)}
+                            disabled={form.vitalsReadings.length === 1}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
             </SectionCard>
@@ -3446,7 +3627,7 @@ export function GingivalDescriptionWebformImportedTemplate({
 
             <SectionCard
               id={getSectionId("disposition")}
-              title="Disposition"
+              title="Continuity of Care"
               open={!isVeryShort || openSections.disposition}
               onToggle={isVeryShort ? () => toggleSection("disposition") : undefined}
               contentClassName="space-y-2"
