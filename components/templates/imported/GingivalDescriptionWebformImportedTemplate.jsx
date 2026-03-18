@@ -732,6 +732,7 @@ export function buildSummaryText(form, selectedFindings) {
     String(value ?? "")
       .trim()
       .replace(/[\s\n]+/g, " ");
+  const indentLine = (value) => `   ${value}`;
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
   const capitalizeSentence = (value) =>
     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
@@ -792,6 +793,7 @@ export function buildSummaryText(form, selectedFindings) {
     const medicalHistory = cleanSentence(form.medicalHistory);
     const shouldHideDefaultMedicalHistory =
       medicalHistory.toLowerCase() === "patient reports no changes";
+    const vitalSegments = [];
 
     if (
       !medicalHistory &&
@@ -804,16 +806,30 @@ export function buildSummaryText(form, selectedFindings) {
 
     lines.push("Medical history update:");
     if (medicalHistory && !shouldHideDefaultMedicalHistory) {
-      lines.push(ensurePeriod(medicalHistory));
+      lines.push(indentLine(ensurePeriod(medicalHistory)));
     }
     if (form.bloodPressure) {
-      lines.push(`BP: ${clean(form.bloodPressure)} mmHg`);
+      vitalSegments.push(`BP: ${clean(form.bloodPressure)} mmHg`);
     }
     if (form.heartRate) {
-      lines.push(`HR: ${clean(form.heartRate)} bpm`);
+      vitalSegments.push(`HR: ${clean(form.heartRate)} bpm`);
     }
     if (form.bloodPressureTakenTime) {
-      lines.push(`Taken at ${formatClockTime(form.bloodPressureTakenTime)}`);
+      vitalSegments.push(`Taken at ${formatClockTime(form.bloodPressureTakenTime)}`);
+    }
+    if (vitalSegments.length) {
+      let vitalsLine = "";
+
+      vitalSegments.forEach((segment) => {
+        if (segment.startsWith("Taken at ")) {
+          vitalsLine = vitalsLine ? `${vitalsLine} ${segment}` : segment;
+          return;
+        }
+
+        vitalsLine = vitalsLine ? `${vitalsLine}, ${segment}` : segment;
+      });
+
+      lines.push(indentLine(vitalsLine));
     }
 
     return lines.join("\n");
@@ -1165,13 +1181,14 @@ export function buildSummaryText(form, selectedFindings) {
       return label;
     });
   const formatLocalAnesthesia = () => {
-    const lines = [];
+    const detailLines = [];
+    let heading = "";
 
     if (form.localAnesthesiaNoContraindication) {
-      lines.push("Local anesthetic administered: No C/I to LA");
+      heading = "Local anesthetic administered: No C/I to LA";
     }
     if (form.localAnesthesiaBenzocaineApplied) {
-      lines.push("Benzocaine 20% applied to the injection site");
+      detailLines.push("Benzocaine 20% applied to the injection site");
     }
 
     const totals = new Map();
@@ -1184,7 +1201,7 @@ export function buildSummaryText(form, selectedFindings) {
 
       const amount = Number(amountMlRaw);
       const time = clean(entry.timeAdministered);
-      lines.push(
+      detailLines.push(
         `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
       );
 
@@ -1194,20 +1211,23 @@ export function buildSummaryText(form, selectedFindings) {
     });
 
     totals.forEach((amount, product) => {
-      lines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+      detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
     });
 
     if (form.localAnesthesiaNoAdverseReactions) {
-      lines.push("No adverse reactions noted");
+      detailLines.push("No adverse reactions noted");
     }
     if (form.localAnesthesiaAdequateAchieved) {
-      lines.push("Adequate anesthesia achieved");
+      detailLines.push("Adequate anesthesia achieved");
     }
     if (clean(form.localAnesthesiaNotes)) {
-      lines.push(cleanSentence(form.localAnesthesiaNotes));
+      detailLines.push(cleanSentence(form.localAnesthesiaNotes));
     }
 
-    return lines.join("\n");
+    if (!heading && !detailLines.length) return "";
+    if (!heading) heading = "Local anesthetic administered:";
+
+    return [heading, ...detailLines.map(indentLine)].join("\n");
   };
   const formatCompletedTreatments = () => {
     const hasFollowUpContext = form.nextAppointment.length || form.disposition.length;
@@ -1260,6 +1280,11 @@ export function buildSummaryText(form, selectedFindings) {
     if (!notes) return "";
     return `Other clinical findings: ${ensurePeriod(notes)}`;
   };
+  const formatContinuityOfCare = () => {
+    if (!form.disposition.length) return "";
+
+    return ["Continuity of Care", ...form.disposition.map(indentLine)].join("\n");
+  };
 
   const blocks = [
     formatPatientConcerns(),
@@ -1288,10 +1313,10 @@ export function buildSummaryText(form, selectedFindings) {
   const otherClinicalFindingsLine = formatOtherClinicalFindings();
   if (otherClinicalFindingsLine) blocks.push(otherClinicalFindingsLine);
 
-  const summary = blocks.join("\n\n");
+  const continuityOfCareLine = formatContinuityOfCare();
+  if (continuityOfCareLine) blocks.push(continuityOfCareLine);
 
-  if (!form.disposition.length) return summary;
-  return [summary, form.disposition.join("\n")].filter(Boolean).join("\n\n");
+  return blocks.join("\n\n");
 }
 
 export const SUMMARY_TEST_CASES = [

@@ -134,4 +134,77 @@ describe("buildSummaryText", () => {
     );
     expect(summary).toContain("Other clinical findings: Monitor linea alba.");
   });
+
+  it("formats the medical history block with indented detail lines and combined vitals", () => {
+    const form = buildBaseForm();
+    form.medicalHistory = "Med/dent history updated. No new contraindications reported.";
+    form.bloodPressure = "118/76";
+    form.heartRate = "72";
+    form.bloodPressureTakenTime = "09:15";
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain(
+      [
+        "Medical history update:",
+        "   Med/dent history updated. No new contraindications reported.",
+        "   BP: 118/76 mmHg, HR: 72 bpm Taken at 9:15 AM",
+      ].join("\n"),
+    );
+  });
+
+  it("formats local anesthesia as a heading with indented detail lines", () => {
+    const form = buildBaseForm();
+    form.localAnesthesiaNoContraindication = true;
+    form.localAnesthesiaBenzocaineApplied = true;
+    form.localAnesthesiaEntries = [
+      {
+        injectionType: "IA/L",
+        quadrant: "Q3",
+        anestheticProduct: "Mepivacaine 3% without epinephrine",
+        amountMl: "1.8",
+        timeAdministered: "09:25",
+      },
+    ];
+    form.localAnesthesiaNoAdverseReactions = true;
+    form.localAnesthesiaAdequateAchieved = true;
+    form.localAnesthesiaNotes =
+      "Patient tolerated injections well and post-op instructions reviewed";
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain("Local anesthetic administered: No C/I to LA");
+    expect(summary).toContain(
+      "   Benzocaine 20% applied to the injection site",
+    );
+    expect(summary).toContain(
+      "   IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
+    );
+    expect(summary).toContain(
+      "   Total: Mepivacaine 3% without epinephrine 1.8 ml",
+    );
+    expect(summary).toContain("   No adverse reactions noted");
+    expect(summary).toContain("   Adequate anesthesia achieved");
+    expect(summary).toContain(
+      "   Patient tolerated injections well and post-op instructions reviewed",
+    );
+  });
+
+  it("formats disposition under a Continuity of Care heading", () => {
+    const form = buildBaseForm();
+    form.disposition = [
+      "DH Re-eval at 4-6 weeks",
+      "DH Re-care at 3-4 months interval",
+    ];
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).toContain(
+      [
+        "Continuity of Care",
+        "   DH Re-eval at 4-6 weeks",
+        "   DH Re-care at 3-4 months interval",
+      ].join("\n"),
+    );
+  });
 });
