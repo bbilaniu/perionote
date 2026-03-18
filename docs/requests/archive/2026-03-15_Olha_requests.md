@@ -1,3 +1,10 @@
+---
+status: implemented
+implemented_on: 2026-03-15
+---
+
+> Implemented on 2026-03-15.
+
 # Very Short Template Changes
 
 Implement the following changes in the `very short template`.
@@ -143,3 +150,18 @@ Benzocaine 20% applied to the injection site
 PSA Q2: Articaine 4% 1:200,000 epi 1.2 ml (at 8:38 AM)
 Total: Articaine 4% 1:200,000 epi 1.2 ml
 No adverse reactions noted
+
+## Follow-Up Amendment
+
+After the original request was written, the Local Anesthesia workflow was intentionally made stricter than the initial independent-toggle proposal.
+
+Implemented amendment:
+- Local anesthesia entry is gated behind `No C/I to LA`.
+- Injection entries, benzocaine selection, post-anesthetic assessment toggles, and anesthesia notes are only available once the patient is documented as cleared for local anesthesia.
+
+Justification:
+- This prevents documenting anesthetic administration details before the chart shows the patient was cleared to receive local anesthesia.
+- It keeps the workflow aligned with the intended clinical sequence: confirm no contraindication first, then document anesthetic delivery and follow-up assessment.
+- It reduces the chance of partial or internally inconsistent documentation, such as recorded injections or post-anesthetic outcomes without clearance being documented.
+
+This amendment superseded the original requirement that the local-anesthesia global toggles be independently selectable.

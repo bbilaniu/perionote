@@ -1,3 +1,10 @@
+---
+status: implemented
+implemented_on: 2026-03-13
+---
+
+> Implemented on 2026-03-13.
+
 # Request: Very Short Template Proposal
 
 ## Goal
