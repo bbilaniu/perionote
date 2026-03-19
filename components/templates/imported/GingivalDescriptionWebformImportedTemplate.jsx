@@ -415,10 +415,23 @@ const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
   "Mepivacaine 3% without epinephrine",
 ];
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
-const DISPOSITION_OPTIONS = [
-  "DH Re-eval at 4-6 weeks",
-  "DH Re-care at 3-4 months interval",
+const DISPOSITION_INTERVAL_OPTIONS = [
+  {
+    key: "reEval",
+    label: "DH Re-eval",
+    defaultInterval: "4-6",
+    defaultUnit: "weeks",
+    trailingLabel: "",
+  },
+  {
+    key: "reCare",
+    label: "DH Re-care",
+    defaultInterval: "3-4",
+    defaultUnit: "months",
+    trailingLabel: "interval",
+  },
 ];
+const DISPOSITION_UNIT_OPTIONS = ["weeks", "months"];
 const CARIES_RISK_LEVEL_OPTIONS = ["Low", "Moderate", "High"];
 const CARIES_RISK_FACTOR_OPTIONS = [
   "High frequency of sugar intake",
@@ -478,6 +491,17 @@ function emptyVitalReading() {
     heartRate: "",
     time: getCurrentTimeString(),
   };
+}
+
+function buildInitialDisposition() {
+  return DISPOSITION_INTERVAL_OPTIONS.map((option) => ({
+    key: option.key,
+    label: option.label,
+    enabled: false,
+    interval: option.defaultInterval,
+    unit: option.defaultUnit,
+    trailingLabel: option.trailingLabel,
+  }));
 }
 
 function buildInitialFindings() {
@@ -549,7 +573,7 @@ export function buildInitialForm(fixture) {
     periodontalStatusSeverityStage: "",
     periodontalStatusGrade: "",
     periodontalStatusNotes: "",
-    disposition: [],
+    disposition: buildInitialDisposition(),
     otherClinicalFindings: "",
   };
 
@@ -715,10 +739,10 @@ export function buildDemoForm(fixture) {
   form.localAnesthesiaNotes =
     "Patient tolerated injections well and post-op instructions reviewed.";
 
-  form.disposition = [
-    "DH Re-eval at 4-6 weeks",
-    "DH Re-care at 3-4 months interval",
-  ];
+  form.disposition = form.disposition.map((entry) => ({
+    ...entry,
+    enabled: true,
+  }));
   form.otherClinicalFindings =
     "Continue monitoring tongue and linea alba findings.";
 
@@ -850,6 +874,34 @@ export function buildSummaryText(form, selectedFindings) {
   };
   const formatLabelList = (items, mapper = (item) => item) =>
     joinComma(items.map((item) => mapper(item)).filter(Boolean));
+  const formatDispositionLine = (entry) => {
+    if (typeof entry === "string") {
+      return cleanSentence(entry);
+    }
+
+    if (!entry?.enabled) return "";
+
+    const config = DISPOSITION_INTERVAL_OPTIONS.find(
+      (option) => option.key === entry.key,
+    );
+    const label = clean(entry.label || config?.label);
+    const interval = clean(entry.interval);
+    const unit = clean(entry.unit || config?.defaultUnit);
+    const trailingLabel = clean(
+      entry.trailingLabel ?? config?.trailingLabel ?? "",
+    );
+
+    if (!label) return "";
+
+    const timing = [interval, unit].filter(Boolean).join(" ");
+    if (!timing) return label;
+
+    return `${label} at ${timing}${trailingLabel ? ` ${trailingLabel}` : ""}`;
+  };
+  const getSelectedDispositionLines = () =>
+    Array.isArray(form.disposition)
+      ? form.disposition.map((entry) => formatDispositionLine(entry)).filter(Boolean)
+      : [];
   const normalizeObservation = (value, withinNormalLimits) => {
     let normalized = cleanSentence(value);
 
@@ -1315,7 +1367,9 @@ export function buildSummaryText(form, selectedFindings) {
     return [heading, ...detailLines.map(indentLine)].join("\n");
   };
   const formatCompletedTreatments = () => {
-    const hasFollowUpContext = form.nextAppointment.length || form.disposition.length;
+    const selectedDispositionLines = getSelectedDispositionLines();
+    const hasFollowUpContext =
+      form.nextAppointment.length || selectedDispositionLines.length;
     const notes = cleanSentence(form.treatmentDoneTodayNotes);
 
     if (!form.treatmentDoneToday.length && !hasFollowUpContext && !notes) {
@@ -1366,9 +1420,13 @@ export function buildSummaryText(form, selectedFindings) {
     return `Other clinical findings: ${ensurePeriod(notes)}`;
   };
   const formatContinuityOfCare = () => {
-    if (!form.disposition.length) return "";
+    const selectedDispositionLines = getSelectedDispositionLines();
 
-    return ["Continuity of Care", ...form.disposition.map(indentLine)].join("\n");
+    if (!selectedDispositionLines.length) return "";
+
+    return ["Continuity of Care", ...selectedDispositionLines.map(indentLine)].join(
+      "\n",
+    );
   };
 
   const blocks = [
@@ -1901,6 +1959,18 @@ export function GingivalDescriptionWebformImportedTemplate({
           [option]: nextValue,
         },
       },
+    }));
+  };
+  const setDispositionEntry = (entryKey, patch) => {
+    setForm((current) => ({
+      ...current,
+      disposition: Array.isArray(current.disposition)
+        ? current.disposition.map((entry) =>
+            typeof entry === "string" || entry.key !== entryKey
+              ? entry
+              : { ...entry, ...patch },
+          )
+        : buildInitialDisposition(),
     }));
   };
 
@@ -3719,32 +3789,75 @@ export function GingivalDescriptionWebformImportedTemplate({
               contentClassName="space-y-2"
             >
                 <Label>Hygiene follow-up interval</Label>
-                <div className="space-y-3">
-                  {DISPOSITION_OPTIONS.map((option) => {
-                    const checked = form.disposition.includes(option);
-                    const optionId = `disposition-${option.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+                <div className="space-y-4">
+                  {Array.isArray(form.disposition)
+                    ? form.disposition.map((entry) => {
+                    if (typeof entry === "string") return null;
+
+                    const optionId = `disposition-${entry.key}`;
+                    const intervalId = `${optionId}-interval`;
                     return (
-                      <div key={option} className="flex items-center gap-3">
-                        <Checkbox
-                          id={optionId}
-                          checked={checked}
-                          onCheckedChange={(next) =>
-                            setForm((current) => ({
-                              ...current,
-                              disposition: next
-                                ? current.disposition.includes(option)
-                                  ? current.disposition
-                                  : [...current.disposition, option]
-                                : current.disposition.filter(
-                                    (item) => item !== option,
-                                  ),
-                            }))
-                          }
-                        />
-                        <Label htmlFor={optionId}>{option}</Label>
+                      <div
+                        key={entry.key}
+                        className={cx(
+                          "space-y-3 rounded-2xl border p-4 transition-colors",
+                          entry.enabled
+                            ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+                            : "border-slate-200 dark:border-slate-700",
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            id={optionId}
+                            checked={entry.enabled}
+                            onCheckedChange={(next) =>
+                              setDispositionEntry(entry.key, {
+                                enabled: Boolean(next),
+                              })
+                            }
+                          />
+                          <Label htmlFor={optionId}>{entry.label}</Label>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2 md:pl-8">
+                          <div className="space-y-2">
+                            <Label htmlFor={intervalId}>Interval</Label>
+                            <Input
+                              id={intervalId}
+                              className="rounded-xl"
+                              placeholder="e.g. 4-6"
+                              value={entry.interval}
+                              onChange={(e) =>
+                                setDispositionEntry(entry.key, {
+                                  interval: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Unit</Label>
+                            <Select
+                              value={entry.unit}
+                              onValueChange={(unit) =>
+                                setDispositionEntry(entry.key, { unit })
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select unit" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DISPOSITION_UNIT_OPTIONS.map((unit) => (
+                                  <SelectItem key={unit} value={unit}>
+                                    {unit.charAt(0).toUpperCase() + unit.slice(1)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       </div>
                     );
-                  })}
+                  })
+                    : null}
                 </div>
             </SectionCard>
 

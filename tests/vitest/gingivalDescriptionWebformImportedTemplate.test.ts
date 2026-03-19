@@ -6,6 +6,27 @@ import {
 } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
 import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
 
+function buildBaseDisposition() {
+  return [
+    {
+      key: "reEval",
+      label: "DH Re-eval",
+      enabled: false,
+      interval: "4-6",
+      unit: "weeks",
+      trailingLabel: "",
+    },
+    {
+      key: "reCare",
+      label: "DH Re-care",
+      enabled: false,
+      interval: "3-4",
+      unit: "months",
+      trailingLabel: "interval",
+    },
+  ];
+}
+
 function buildBaseForm() {
   return {
     date: "2026-03-18",
@@ -93,7 +114,7 @@ function buildBaseForm() {
     periodontalStatusSeverityStage: "",
     periodontalStatusGrade: "",
     periodontalStatusNotes: "",
-    disposition: [],
+    disposition: buildBaseDisposition(),
     otherClinicalFindings: "",
   };
 }
@@ -105,6 +126,7 @@ describe("buildSummaryText", () => {
     expect(form.date).toBe("2026-03-09");
     expect(form.medicalHistoryNoChange).toBe(false);
     expect(form.medicalHistory).toBe("");
+    expect(form.disposition).toMatchObject(buildBaseDisposition());
     expect(form.findings.color.Red).toMatchObject({
       presence: false,
       extent: "generalized",
@@ -120,6 +142,16 @@ describe("buildSummaryText", () => {
 
     expect(form.date).toBe("2026-03-09");
     expect(form.findings.color.Red.presence).toBe(false);
+    expect(form.disposition).toMatchObject([
+      { key: "reEval", enabled: true, interval: "4-6", unit: "weeks" },
+      {
+        key: "reCare",
+        enabled: true,
+        interval: "3-4",
+        unit: "months",
+        trailingLabel: "interval",
+      },
+    ]);
     expect(form.patientConcerns).toBeTruthy();
   });
 
@@ -272,10 +304,13 @@ describe("buildSummaryText", () => {
 
   it("formats disposition under a Continuity of Care heading", () => {
     const form = buildBaseForm();
-    form.disposition = [
-      "DH Re-eval at 4-6 weeks",
-      "DH Re-care at 3-4 months interval",
-    ];
+    form.disposition = form.disposition.map((entry) =>
+      entry.key === "reEval"
+        ? { ...entry, enabled: true }
+        : entry.key === "reCare"
+          ? { ...entry, enabled: true, interval: "6" }
+          : entry,
+    );
 
     const summary = buildSummaryText(form, []);
 
@@ -283,7 +318,7 @@ describe("buildSummaryText", () => {
       [
         "Continuity of Care",
         "   DH Re-eval at 4-6 weeks",
-        "   DH Re-care at 3-4 months interval",
+        "   DH Re-care at 6 months interval",
       ].join("\n"),
     );
   });
