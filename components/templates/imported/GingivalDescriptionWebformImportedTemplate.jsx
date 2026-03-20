@@ -335,10 +335,12 @@ const DEPOSIT_DISTRIBUTION_OPTIONS = [
 ];
 const HAND_POWER_INSTRUMENTATION_OPTION = "Hand and Power Instrumentation";
 const FLUORIDE_VARNISH_OPTION = "Ipana 5% NaF varnish application";
+const PLAQUE_SCORE_DISCLOSING_OPTION = "Plaque score with disclosing solution";
 const OHE_REINFORCED_OPTION = "OHE reinforced";
 const REVIEWED_HOMECARE_OPTION = "Reviewed homecare";
 const TREATMENT_OPTIONS = [
   HAND_POWER_INSTRUMENTATION_OPTION,
+  PLAQUE_SCORE_DISCLOSING_OPTION,
   FLUORIDE_VARNISH_OPTION,
 ];
 const INSTRUMENTATION_DEVICE_OPTIONS = ["Cavitron", "Piezo"];
