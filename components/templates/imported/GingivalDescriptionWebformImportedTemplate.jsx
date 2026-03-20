@@ -633,6 +633,61 @@ export function buildDemoForm(fixture) {
   ];
   form.eoe = "Baseline monitoring only.";
   form.ioe = "Mild soft tissue variations noted.";
+  form.findings.color["Dark Pink"] = {
+    presence: true,
+    extent: "generalized",
+    toothNumbers: "",
+    locations: ["Sextant 1 (Upper right)", "Sextant 3 (Upper left)"],
+    distributions: ["Marginal"],
+    notes: "Inflammation most notable posteriorly",
+  };
+  form.findings.consistency.Spongy = {
+    presence: true,
+    extent: "localized",
+    toothNumbers: "#23-26",
+    locations: ["Sextant 5 (Lower anterior)"],
+    distributions: ["Papillary"],
+    notes: "Correlates with plaque retention areas",
+  };
+  form.findings.gingivalMargins.Rolled = {
+    presence: true,
+    extent: "localized",
+    toothNumbers: "#14-16",
+    locations: ["Sextant 4 (Lower left)"],
+    distributions: ["Marginal"],
+    notes: "",
+  };
+  form.plaque = {
+    enabled: true,
+    amount: "Heavy",
+    extent: "Generalized",
+    locations: [
+      "Sextant 1 (Upper right)",
+      "Sextant 5 (Lower anterior)",
+      "Sextant 6 (Lower right)",
+    ],
+    types: [],
+    distributions: ["Facial", "At gingival margin"],
+    details: "",
+  };
+  form.calculus = {
+    enabled: true,
+    amount: "Moderate",
+    extent: "Localized",
+    locations: ["Sextant 5 (Lower anterior)"],
+    types: ["Supragingival", "Subgingival"],
+    distributions: ["Lingual", "Interproximal"],
+    details: "",
+  };
+  form.extrinsicStain = {
+    enabled: true,
+    amount: "Light",
+    extent: "Localized",
+    locations: ["Sextant 1 (Upper right)", "Sextant 3 (Upper left)"],
+    types: [],
+    distributions: [],
+    details: "Tea and coffee staining on posterior facial surfaces",
+  };
 
   form.periodontalStatusActivity = "Active";
   form.periodontalStatusDiseaseType = "Periodontitis";
@@ -2164,6 +2219,25 @@ export function GingivalDescriptionWebformImportedTemplate({
     </div>
   );
 
+  const depositTagItems = [
+    ["Plaque", form.plaque],
+    ["Calculus", form.calculus],
+    ["Extrinsic Stain", form.extrinsicStain],
+  ]
+    .filter(([, entry]) => entry.enabled)
+    .map(([label, entry]) => ({
+      section: "Deposits",
+      label,
+      amount: entry.amount || "",
+      extent: entry.amount === "None" ? "" : entry.extent || "",
+      locations: Array.isArray(entry.locations) ? entry.locations : [],
+      types: Array.isArray(entry.types) ? entry.types : [],
+      distributions: Array.isArray(entry.distributions)
+        ? entry.distributions
+        : [],
+      details: String(entry.details || "").trim(),
+    }));
+
   const tagsSummaryContent = (
     <div
       className={cx(
@@ -2171,39 +2245,74 @@ export function GingivalDescriptionWebformImportedTemplate({
         isVeryShort ? "grid-cols-2" : "md:grid-cols-2 xl:grid-cols-3",
       )}
     >
-      {selectedFindings.length ? (
-        selectedFindings.map((item, index) => (
-          <div
-            key={`${item.section}-${item.finding}-${index}`}
-            className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <Badge variant="outline" className="rounded-xl">
-                {item.section}
-              </Badge>
-              <Badge className="rounded-xl">
-                {item.extent === "generalized" ? "GEN" : "LOC"}
-              </Badge>
+      {selectedFindings.length || depositTagItems.length ? (
+        <>
+          {selectedFindings.map((item, index) => (
+            <div
+              key={`${item.section}-${item.finding}-${index}`}
+              className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="outline" className="rounded-xl">
+                  {item.section}
+                </Badge>
+                <Badge className="rounded-xl">
+                  {item.extent === "generalized" ? "GEN" : "LOC"}
+                </Badge>
+              </div>
+              <div className="font-semibold text-slate-900 dark:text-white">
+                {item.finding}
+              </div>
+              <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <p>Teeth: {item.toothNumbers || "—"}</p>
+                <p>
+                  Location: {item.locations.length ? item.locations.join(", ") : "—"}
+                </p>
+                <p>
+                  Distribution:{" "}
+                  {item.distributions.length ? item.distributions.join(", ") : "—"}
+                </p>
+                {item.notes ? <p>Notes: {item.notes}</p> : null}
+              </div>
             </div>
-            <div className="font-semibold text-slate-900 dark:text-white">
-              {item.finding}
+          ))}
+          {depositTagItems.map((item, index) => (
+            <div
+              key={`${item.section}-${item.label}-${index}`}
+              className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="outline" className="rounded-xl">
+                  {item.section}
+                </Badge>
+                <Badge className="rounded-xl">
+                  {item.amount === "None"
+                    ? "NONE"
+                    : [item.amount, item.extent].filter(Boolean).join(" ")}
+                </Badge>
+              </div>
+              <div className="font-semibold text-slate-900 dark:text-white">
+                {item.label}
+              </div>
+              <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
+                <p>Amount: {item.amount || "—"}</p>
+                <p>Extent: {item.extent || "—"}</p>
+                <p>
+                  Location: {item.locations.length ? item.locations.join(", ") : "—"}
+                </p>
+                <p>Type: {item.types.length ? item.types.join(", ") : "—"}</p>
+                <p>
+                  Distribution:{" "}
+                  {item.distributions.length ? item.distributions.join(", ") : "—"}
+                </p>
+                {item.details ? <p>Notes: {item.details}</p> : null}
+              </div>
             </div>
-            <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
-              <p>Teeth: {item.toothNumbers || "—"}</p>
-              <p>
-                Location: {item.locations.length ? item.locations.join(", ") : "—"}
-              </p>
-              <p>
-                Distribution:{" "}
-                {item.distributions.length ? item.distributions.join(", ") : "—"}
-              </p>
-              {item.notes ? <p>Notes: {item.notes}</p> : null}
-            </div>
-          </div>
-        ))
+          ))}
+        </>
       ) : (
         <div className="text-sm text-slate-600 dark:text-slate-400">
-          No gingival findings selected yet.
+          No gingival findings or deposit tags selected yet.
         </div>
       )}
     </div>
