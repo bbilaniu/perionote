@@ -437,7 +437,7 @@ const DISPOSITION_UNIT_OPTIONS = ["weeks", "months"];
 const CARIES_RISK_LEVEL_OPTIONS = ["Low", "Moderate", "High"];
 const CARIES_RISK_FACTOR_OPTIONS = [
   "High frequency of sugar intake",
-  "Inadequate brushing oral hygiene",
+  "Inadequate oral hygiene",
   "Insufficient exposure to fluoride",
   "Heavily restored dentition",
   "Hyposalivation",
@@ -1193,7 +1193,7 @@ export function buildSummaryText(form, selectedFindings) {
     const normalizedFactor = clean(factor);
 
     switch (normalizedFactor) {
-      case "Inadequate brushing oral hygiene":
+      case "Inadequate oral hygiene":
         return "inadequate oral hygiene";
       case "History of caries in the last 36 months":
         return "history of active decay in the last 36 months";
