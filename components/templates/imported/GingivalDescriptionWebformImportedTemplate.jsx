@@ -414,6 +414,7 @@ const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
 const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
   "Articaine 4% with 1:200K epinephrine",
   "Lidocaine 2% with 1:100K epinephrine",
+  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
   "Mepivacaine 3% without epinephrine",
 ];
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];

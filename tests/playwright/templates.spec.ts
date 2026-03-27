@@ -86,6 +86,26 @@ test("local anesthesia entry time can be cleared and reset", async ({ page }) =>
   await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
 });
 
+test("very short template local anesthesia product list includes ORAQIX", async ({
+  page,
+}) => {
+  const oraqixProduct =
+    "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%";
+
+  await page.goto("/templates/very-short-template");
+  await page.getByRole("button", { name: "Expand all sections" }).click();
+  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("button", { name: "Add injection entry" }).click();
+
+  const productSelect = page
+    .locator("#local-anesthesia-entry-0")
+    .locator("select")
+    .nth(2);
+
+  await productSelect.selectOption(oraqixProduct);
+  await expect(productSelect).toHaveValue(oraqixProduct);
+});
+
 test("local anesthesia assessment is emphasized when activity is documented without assessment", async ({
   page,
 }) => {
