@@ -3898,38 +3898,40 @@ export function GingivalDescriptionWebformImportedTemplate({
                         </div>
                       </Card>
                     ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          localAnesthesiaEntries: [
-                            ...current.localAnesthesiaEntries,
-                            emptyLocalAnesthesiaEntry(),
-                          ],
-                        }))
-                      }
-                    >
-                      Add injection entry
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          localAnesthesiaEntries: [
-                            ...current.localAnesthesiaEntries,
-                            emptyLocalAnesthesiaEntry("Topical"),
-                          ],
-                        }))
-                      }
-                    >
-                      Add topical entry
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaEntries: [
+                              ...current.localAnesthesiaEntries,
+                              emptyLocalAnesthesiaEntry(),
+                            ],
+                          }))
+                        }
+                      >
+                        Add injection entry
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaEntries: [
+                              ...current.localAnesthesiaEntries,
+                              emptyLocalAnesthesiaEntry("Topical"),
+                            ],
+                          }))
+                        }
+                      >
+                        Add topical entry
+                      </Button>
+                    </div>
 
                     <div
                       className={cx(
