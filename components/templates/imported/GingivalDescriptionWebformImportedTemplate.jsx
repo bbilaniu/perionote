@@ -411,12 +411,24 @@ const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
   "GP",
   "NP",
 ];
-const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
+const LOCAL_ANESTHESIA_ROUTE_OPTIONS = ["Injection", "Topical"];
+const LOCAL_ANESTHESIA_APPLICATION_TYPE_OPTIONS = [
+  "Mucosal application",
+  "Sulcular application",
+];
+const INJECTION_ANESTHETIC_PRODUCT_OPTIONS = [
   "Articaine 4% with 1:200K epinephrine",
   "Lidocaine 2% with 1:100K epinephrine",
-  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
   "Mepivacaine 3% without epinephrine",
 ];
+const TOPICAL_ANESTHETIC_PRODUCT_OPTIONS = [
+  "Benzocaine 20% paste",
+  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+];
+const TOPICAL_PRODUCT_AMOUNT_DEFAULTS = {
+  "Benzocaine 20% paste": "0.5",
+  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%": "1.7",
+};
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
 const DISPOSITION_INTERVAL_OPTIONS = [
   {
@@ -479,12 +491,37 @@ function emptyDepositEntry() {
 
 function emptyLocalAnesthesiaEntry() {
   return {
+    route: "Injection",
     injectionType: "",
+    applicationType: "",
     quadrant: "",
     anestheticProduct: "",
     amountMl: "1.8",
     timeAdministered: getCurrentTimeString(),
   };
+}
+
+function emptyTopicalLocalAnesthesiaEntry() {
+  return {
+    route: "Topical",
+    injectionType: "",
+    applicationType: "",
+    quadrant: "",
+    anestheticProduct: "",
+    amountMl: "",
+    timeAdministered: getCurrentTimeString(),
+  };
+}
+
+function getProductOptionsForRoute(route) {
+  return route === "Topical"
+    ? TOPICAL_ANESTHETIC_PRODUCT_OPTIONS
+    : INJECTION_ANESTHETIC_PRODUCT_OPTIONS;
+}
+
+function getDefaultAmountForRouteAndProduct(route, product) {
+  if (route !== "Topical") return "";
+  return TOPICAL_PRODUCT_AMOUNT_DEFAULTS[product] ?? "";
 }
 
 function emptyVitalReading() {
@@ -559,7 +596,6 @@ export function buildInitialForm(fixture) {
     nextAppointmentInstrumentationAreas: [],
     nextAppointmentNotes: "",
     localAnesthesiaNoContraindication: false,
-    localAnesthesiaBenzocaineApplied: false,
     localAnesthesiaNoAdverseReactions: false,
     localAnesthesiaAdequateAchieved: false,
     localAnesthesiaEntries: [],
@@ -777,17 +813,20 @@ export function buildDemoForm(fixture) {
   form.nextAppointmentNotes =
     "Reassess inflammation response and home-care adherence.";
   form.localAnesthesiaNoContraindication = true;
-  form.localAnesthesiaBenzocaineApplied = true;
   form.localAnesthesiaEntries = [
     {
+      route: "Injection",
       injectionType: "IA/L",
+      applicationType: "",
       quadrant: "Q3",
       anestheticProduct: "Mepivacaine 3% without epinephrine",
       amountMl: "1.8",
       timeAdministered: "09:25",
     },
     {
+      route: "Injection",
       injectionType: "M/I",
+      applicationType: "",
       quadrant: "Q3",
       anestheticProduct: "Mepivacaine 3% without epinephrine",
       amountMl: "1.8",
@@ -1382,22 +1421,25 @@ export function buildSummaryText(form, selectedFindings) {
     if (form.localAnesthesiaNoContraindication) {
       heading = "Local anesthetic administered: No C/I to LA";
     }
-    if (form.localAnesthesiaBenzocaineApplied) {
-      detailLines.push("Benzocaine 20% applied to the injection site");
-    }
 
     const totals = new Map();
     form.localAnesthesiaEntries.forEach((entry) => {
+      const route = clean(entry.route);
       const injectionType = clean(entry.injectionType);
+      const applicationType = clean(entry.applicationType);
       const quadrant = clean(entry.quadrant);
       const product = clean(entry.anestheticProduct);
       const amountMlRaw = clean(entry.amountMl);
-      if (!injectionType || !quadrant || !product || !amountMlRaw) return;
+      if (!route || !quadrant || !product || !amountMlRaw) return;
+      if (route === "Injection" && !injectionType) return;
+      if (route === "Topical" && !applicationType) return;
 
       const amount = Number(amountMlRaw);
       const time = clean(entry.timeAdministered);
+      const detailPrefix =
+        route === "Topical" ? `${applicationType} ${quadrant}` : `${injectionType} ${quadrant}`;
       detailLines.push(
-        `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
+        `${detailPrefix}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
       );
 
       if (Number.isFinite(amount)) {
@@ -2180,9 +2222,7 @@ export function GingivalDescriptionWebformImportedTemplate({
     HAND_POWER_INSTRUMENTATION_OPTION,
   );
   const nextAppointmentHasAnyInstrumentation = nextAppointmentHasHandInstrumentation;
-  const hasLocalAnesthesiaActivity =
-    form.localAnesthesiaBenzocaineApplied ||
-    form.localAnesthesiaEntries.length > 0;
+  const hasLocalAnesthesiaActivity = form.localAnesthesiaEntries.length > 0;
   const isLocalAnesthesiaAssessmentIncomplete =
     !form.localAnesthesiaNoAdverseReactions &&
     !form.localAnesthesiaAdequateAchieved;
@@ -3547,19 +3587,9 @@ export function GingivalDescriptionWebformImportedTemplate({
             >
                 <MultiToggle
                   label="Local anesthesia toggles"
-                  options={
-                    form.localAnesthesiaNoContraindication
-                      ? [
-                          "No C/I to LA",
-                          "Benzocaine 20% applied to the injection site",
-                        ]
-                      : ["No C/I to LA"]
-                  }
+                  options={["No C/I to LA"]}
                   selected={[
                     form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
-                    form.localAnesthesiaBenzocaineApplied
-                      ? "Benzocaine 20% applied to the injection site"
-                      : "",
                   ].filter(Boolean)}
                   onChange={(selected) => {
                     const hasNoContraindication = selected.includes("No C/I to LA");
@@ -3567,11 +3597,6 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({
                       ...current,
                       localAnesthesiaNoContraindication: hasNoContraindication,
-                      localAnesthesiaBenzocaineApplied: hasNoContraindication
-                        ? selected.includes(
-                            "Benzocaine 20% applied to the injection site",
-                          )
-                        : false,
                       localAnesthesiaNoAdverseReactions: hasNoContraindication
                         ? current.localAnesthesiaNoAdverseReactions
                         : false,
@@ -3590,7 +3615,7 @@ export function GingivalDescriptionWebformImportedTemplate({
 
                 {form.localAnesthesiaNoContraindication ? (
                   <div className="space-y-3">
-                    <Label className="block">Injection entries</Label>
+                    <Label className="block">Local anesthesia entries</Label>
                     {form.localAnesthesiaEntries.map((entry, index) => (
                       <Card
                         key={`la-${index}`}
@@ -3598,7 +3623,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         className="space-y-3 rounded-2xl border-dashed p-4"
                       >
                         <div className="mb-3 flex items-center justify-between">
-                          <Label>Injection entry #{index + 1}</Label>
+                          <Label>Local anesthesia entry #{index + 1}</Label>
                           <Button
                             type="button"
                             variant="outline"
@@ -3616,6 +3641,50 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </Button>
                         </div>
                         <div className="grid gap-3 md:grid-cols-4">
+                          <div className="space-y-2 md:col-span-2">
+                            <Label>Route</Label>
+                            <Select
+                              value={entry.route || "Injection"}
+                              onValueChange={(route) =>
+                                setForm((current) => ({
+                                  ...current,
+                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                    (row, rowIndex) =>
+                                      rowIndex === index
+                                        ? {
+                                            ...row,
+                                            route,
+                                            injectionType: route === "Topical" ? "" : row.injectionType,
+                                            applicationType:
+                                              route === "Injection" ? "" : row.applicationType,
+                                            anestheticProduct: getProductOptionsForRoute(route).includes(
+                                              row.anestheticProduct,
+                                            )
+                                              ? row.anestheticProduct
+                                              : "",
+                                            amountMl:
+                                              route === "Injection"
+                                                ? row.amountMl || "1.8"
+                                                : row.amountMl,
+                                          }
+                                        : row,
+                                  ),
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="rounded-xl">
+                                <SelectValue placeholder="Select route" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {LOCAL_ANESTHESIA_ROUTE_OPTIONS.map((option) => (
+                                  <SelectItem key={option} value={option}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {(entry.route || "Injection") === "Injection" ? (
                           <div className="space-y-2 md:col-span-2">
                             <Label>Injection type</Label>
                             <Select
@@ -3643,6 +3712,37 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
+                          ) : (
+                            <div className="space-y-2 md:col-span-2">
+                              <Label>Application type</Label>
+                              <Select
+                                value={entry.applicationType}
+                                onValueChange={(applicationType) =>
+                                  setForm((current) => ({
+                                    ...current,
+                                    localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                      (row, rowIndex) =>
+                                        rowIndex === index
+                                          ? { ...row, applicationType }
+                                          : row,
+                                    ),
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="rounded-xl">
+                                  <SelectValue placeholder="Select application type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">None selected</SelectItem>
+                                  {LOCAL_ANESTHESIA_APPLICATION_TYPE_OPTIONS.map((option) => (
+                                    <SelectItem key={option} value={option}>
+                                      {option}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                           <div className="space-y-2 md:col-span-2">
                             <Label>Quadrant</Label>
                             <Select
@@ -3680,7 +3780,16 @@ export function GingivalDescriptionWebformImportedTemplate({
                                   localAnesthesiaEntries: current.localAnesthesiaEntries.map(
                                     (row, rowIndex) =>
                                       rowIndex === index
-                                        ? { ...row, anestheticProduct }
+                                        ? {
+                                            ...row,
+                                            anestheticProduct,
+                                            amountMl:
+                                              row.amountMl ||
+                                              getDefaultAmountForRouteAndProduct(
+                                                row.route || "Injection",
+                                                anestheticProduct,
+                                              ),
+                                          }
                                         : row,
                                   ),
                                 }))
@@ -3691,7 +3800,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="">None selected</SelectItem>
-                                {LOCAL_ANESTHETIC_PRODUCT_OPTIONS.map((option) => (
+                                {getProductOptionsForRoute(entry.route || "Injection").map((option) => (
                                   <SelectItem key={option} value={option}>
                                     {option}
                                   </SelectItem>
@@ -3779,6 +3888,22 @@ export function GingivalDescriptionWebformImportedTemplate({
                       }
                     >
                       Add injection entry
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-2xl"
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          localAnesthesiaEntries: [
+                            ...current.localAnesthesiaEntries,
+                            emptyTopicalLocalAnesthesiaEntry(),
+                          ],
+                        }))
+                      }
+                    >
+                      Add topical entry
                     </Button>
 
                     <div
