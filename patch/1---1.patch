@@ -1,8 +1,103 @@
 diff --git a/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx b/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx
-index b78d7934b23c1543e4aed46b78ff81dff7dfceb9..4be8e1c1b876cac3018c437b81e5a99b8776cd2c 100644
+index 3521b80ea01a8e42f320cb87312efd6536bed9ad..c0211cf77e684d7f6c482df8ce6b3ad55819e93c 100644
 --- a/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx
 +++ b/components/templates/imported/GingivalDescriptionWebformImportedTemplate.jsx
-@@ -439,82 +439,90 @@ const IOE_FINDING_OPTIONS = [
+@@ -380,66 +380,78 @@ const RECOMMENDATION_OPTIONS = [
+ const VISIT_CARE_BASE_OPTIONS = [
+   "Med/dent history update",
+   "EOE/IOE",
+   "Nutrition score",
+   "Gingival assessments",
+   "Calculus index",
+   "Caries risk",
+   "Periodontal risk assessment",
+   "Spot probing",
+   "Full mouth probing",
+   PLAQUE_SCORE_DISCLOSING_OPTION,
+   OHE_REINFORCED_OPTION,
+   REVIEWED_HOMECARE_OPTION,
+ ];
+ const VISIT_CARE_OPTIONS = [...VISIT_CARE_BASE_OPTIONS, ...TREATMENT_OPTIONS];
+ const VISIT_CARE_SELECT_CORE_OPTIONS = [
+   "Med/dent history update",
+   "EOE/IOE",
+   OHE_REINFORCED_OPTION,
+   REVIEWED_HOMECARE_OPTION,
+ ];
+ const TMJ_CLICKING_STATUS_OPTIONS = ["Symptomatic", "Asymptomatic"];
+ const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = ["On open", "On close"];
+ const LYMPH_NODE_LOCATION_OPTIONS = ["Submandibular", "Sublingual"];
+ const LYMPH_NODE_SWELLING_OPTIONS = ["Slightly enlarged", "Very swollen"];
+-const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
+-  "I/O",
+-  "M/I",
+-  "PSA",
+-  "IA/L",
+-  "Buccal NB",
+-  "GP",
+-  "NP",
+-];
+-const LOCAL_ANESTHETIC_PRODUCT_OPTIONS = [
+-  "Articaine 4% with 1:200K epinephrine",
+-  "Lidocaine 2% with 1:100K epinephrine",
+-  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+-  "Mepivacaine 3% without epinephrine",
+-];
+-const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
++const LOCAL_ANESTHESIA_ROUTE_OPTIONS = ["Injection", "Topical"];
++const LOCAL_ANESTHESIA_INJECTION_TYPE_OPTIONS = [
++  "I/O",
++  "M/I",
++  "PSA",
++  "IA/L",
++  "Buccal NB",
++  "GP",
++  "NP",
++];
++const LOCAL_ANESTHESIA_APPLICATION_TYPE_OPTIONS = [
++  "Mucosal application",
++  "Sulcular application",
++];
++const LOCAL_ANESTHETIC_INJECTION_PRODUCT_OPTIONS = [
++  "Articaine 4% with 1:200K epinephrine",
++  "Lidocaine 2% with 1:100K epinephrine",
++  "Mepivacaine 3% without epinephrine",
++];
++const LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS = [
++  "Benzocaine 20% paste",
++  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
++];
++const LOCAL_ANESTHETIC_TOPICAL_DEFAULT_AMOUNT_ML = {
++  "Benzocaine 20% paste": "0.5",
++  "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%": "1.7",
++};
++const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
+ const DISPOSITION_INTERVAL_OPTIONS = [
+   {
+     key: "reEval",
+     label: "DH Re-eval",
+     defaultInterval: "4-6",
+     defaultUnit: "weeks",
+     trailingLabel: "",
+   },
+   {
+     key: "reCare",
+     label: "DH Re-care",
+     defaultInterval: "3-4",
+     defaultUnit: "months",
+     trailingLabel: "interval",
+   },
+ ];
+ const DISPOSITION_UNIT_OPTIONS = ["weeks", "months"];
+ const CARIES_RISK_LEVEL_OPTIONS = ["Low", "Moderate", "High"];
+ const CARIES_RISK_FACTOR_OPTIONS = [
+   "High frequency of sugar intake",
+   "Inadequate oral hygiene",
+   "Insufficient exposure to fluoride",
+   "Heavily restored dentition",
+   "Hyposalivation",
+   "History of caries in the last 36 months",
+@@ -455,59 +467,74 @@ const IOE_FINDING_OPTIONS = [
  ];
  
  function emptyAnnotation() {
@@ -30,58 +125,63 @@ index b78d7934b23c1543e4aed46b78ff81dff7dfceb9..4be8e1c1b876cac3018c437b81e5a99b
  
 -function emptyLocalAnesthesiaEntry() {
 -  return {
-+function emptyLocalAnesthesiaEntry() {
-+  return {
-     injectionType: "",
-     quadrant: "",
-     anestheticProduct: "",
-     amountMl: "1.8",
-     timeAdministered: getCurrentTimeString(),
+-    injectionType: "",
+-    quadrant: "",
+-    anestheticProduct: "",
+-    amountMl: "1.8",
+-    timeAdministered: getCurrentTimeString(),
 -  };
 -}
-+  };
++function getLocalAnestheticProductOptions(route) {
++  return route === "Topical"
++    ? LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS
++    : LOCAL_ANESTHETIC_INJECTION_PRODUCT_OPTIONS;
 +}
 +
-+function emptyVitalsReading() {
++function getDefaultTopicalAmountMl(product) {
++  return LOCAL_ANESTHETIC_TOPICAL_DEFAULT_AMOUNT_ML[product] ?? "";
++}
++
++function emptyLocalAnesthesiaEntry(route = "Injection") {
++  const defaultTopicalProduct = LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS[0] ?? "";
++  const isTopical = route === "Topical";
++
 +  return {
-+    systolic: "",
-+    diastolic: "",
-+    heartRate: "",
-+    time: getCurrentTimeString(),
++    route,
++    injectionType: "",
++    applicationType: "",
++    quadrant: "",
++    anestheticProduct: isTopical ? defaultTopicalProduct : "",
++    amountMl: isTopical ? getDefaultTopicalAmountMl(defaultTopicalProduct) : "1.8",
++    timeAdministered: getCurrentTimeString(),
 +  };
 +}
+ 
+ function emptyVitalReading() {
+   return {
+     systolic: "",
+     diastolic: "",
+     heartRate: "",
+     time: getCurrentTimeString(),
+   };
+ }
+ 
+ function buildInitialDisposition() {
+   return DISPOSITION_INTERVAL_OPTIONS.map((option) => ({
+     key: option.key,
+     label: option.label,
+     enabled: false,
+     interval: option.defaultInterval,
+     unit: option.defaultUnit,
+     trailingLabel: option.trailingLabel,
+   }));
+ }
  
  function buildInitialFindings() {
    return Object.fromEntries(
      Object.entries(FIELD_OPTIONS).map(([sectionKey, options]) => [
        sectionKey,
-       Object.fromEntries(options.map((option) => [option, emptyAnnotation()])),
-     ]),
-   );
- }
- 
- function prettyLabel(key) {
-   return SECTION_LABELS[key] ?? key;
- }
- 
- export function buildInitialForm(fixture) {
--  const form = {
--    date: getTodayDateString(),
--    patientConcerns: "",
--    patientPresentsForHygieneNoOtherConcerns: false,
--    medicalHistory: "Patient reports no changes",
--    bloodPressure: "",
--    heartRate: "",
--    bloodPressureTakenTime: getCurrentTimeString(),
-+  const form = {
-+    date: getTodayDateString(),
-+    providerName: "",
-+    patientConcerns: "",
-+    patientPresentsForHygieneNoOtherConcerns: false,
-+    medicalHistory: "Patient reports no changes",
-+    vitalsReadings: [emptyVitalsReading()],
-     eoe: "",
-     ioe: "",
+@@ -534,57 +561,56 @@ export function buildInitialForm(fixture) {
      eoeWithinNormalLimits: false,
      ioeWithinNormalLimits: false,
      asymptomaticClickOnOpeningClosing: false,
@@ -105,7 +205,35 @@ index b78d7934b23c1543e4aed46b78ff81dff7dfceb9..4be8e1c1b876cac3018c437b81e5a99b
      treatmentDoneTodayInstrumentationDevices: [],
      treatmentDoneTodayInstrumentationAreas: [],
      treatmentDoneTodayNotes: "",
-@@ -544,60 +552,66 @@ export function buildInitialForm(fixture) {
+     nextAppointment: [],
+     nextAppointmentInstrumentationDevices: [],
+-    nextAppointmentInstrumentationAreas: [],
+-    nextAppointmentNotes: "",
+-    localAnesthesiaNoContraindication: false,
+-    localAnesthesiaBenzocaineApplied: false,
+-    localAnesthesiaNoAdverseReactions: false,
+-    localAnesthesiaAdequateAchieved: false,
+-    localAnesthesiaEntries: [],
++    nextAppointmentInstrumentationAreas: [],
++    nextAppointmentNotes: "",
++    localAnesthesiaNoContraindication: false,
++    localAnesthesiaNoAdverseReactions: false,
++    localAnesthesiaAdequateAchieved: false,
++    localAnesthesiaEntries: [],
+     localAnesthesiaNotes: "",
+     oheTopics: [],
+     oheNotes: "",
+     recommendations: [],
+     recommendationsNotes: "",
+     cariesRiskLevel: "",
+     cariesRiskFactors: [],
+     cariesRiskNotes: "",
+     periodontalStatusActivity: "",
+     periodontalStatusDiseaseType: "",
+     periodontalStatusSeverityStage: "",
+     periodontalStatusGrade: "",
+     periodontalStatusNotes: "",
+     disposition: buildInitialDisposition(),
      otherClinicalFindings: "",
    };
  
@@ -117,1152 +245,720 @@ index b78d7934b23c1543e4aed46b78ff81dff7dfceb9..4be8e1c1b876cac3018c437b81e5a99b
        if (!sectionKey) return;
        if (!(item.finding in form.findings[sectionKey])) return;
  
-       form.findings[sectionKey][item.finding] = {
-         presence: true,
-         extent: item.extent || "generalized",
-         toothNumbers: item.toothNumbers || "",
-         locations: item.locations || [],
-         distributions: item.distributions || [],
-         notes: item.notes || "",
-       };
-     });
-   }
+@@ -752,67 +778,80 @@ export function buildDemoForm(fixture) {
+     "Maxilla",
+     "Mandible",
+   ];
+   form.treatmentDoneTodayNotes =
+     "Completed full periodontal hygiene workflow today.";
+ 
+   form.nextAppointment = [
+     "EOE/IOE",
+     OHE_REINFORCED_OPTION,
+     REVIEWED_HOMECARE_OPTION,
+     "Gingival assessments",
+     "Caries risk",
+     "Periodontal risk assessment",
+     "Spot probing",
+     "Full mouth probing",
+     HAND_POWER_INSTRUMENTATION_OPTION,
+     FLUORIDE_VARNISH_OPTION,
+   ];
+   form.nextAppointmentInstrumentationDevices = ["Piezo"];
+   form.nextAppointmentInstrumentationAreas = [
+     "Full mouth",
+     "Sextant 1",
+     "Sextant 2",
+     "Sextant 3",
+   ];
+-  form.nextAppointmentNotes =
+-    "Reassess inflammation response and home-care adherence.";
+-  form.localAnesthesiaNoContraindication = true;
+-  form.localAnesthesiaBenzocaineApplied = true;
+-  form.localAnesthesiaEntries = [
+-    {
+-      injectionType: "IA/L",
+-      quadrant: "Q3",
+-      anestheticProduct: "Mepivacaine 3% without epinephrine",
+-      amountMl: "1.8",
+-      timeAdministered: "09:25",
+-    },
+-    {
+-      injectionType: "M/I",
+-      quadrant: "Q3",
+-      anestheticProduct: "Mepivacaine 3% without epinephrine",
+-      amountMl: "1.8",
++  form.nextAppointmentNotes =
++    "Reassess inflammation response and home-care adherence.";
++  form.localAnesthesiaNoContraindication = true;
++  form.localAnesthesiaEntries = [
++    {
++      route: "Topical",
++      injectionType: "",
++      applicationType: "Sulcular application",
++      quadrant: "Q3",
++      anestheticProduct:
++        "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
++      amountMl: "1.7",
++      timeAdministered: "09:24",
++    },
++    {
++      route: "Injection",
++      injectionType: "IA/L",
++      applicationType: "",
++      quadrant: "Q3",
++      anestheticProduct: "Mepivacaine 3% without epinephrine",
++      amountMl: "1.8",
++      timeAdministered: "09:25",
++    },
++    {
++      route: "Injection",
++      injectionType: "M/I",
++      applicationType: "",
++      quadrant: "Q3",
++      anestheticProduct: "Mepivacaine 3% without epinephrine",
++      amountMl: "1.8",
+       timeAdministered: "09:27",
+     },
+   ];
+   form.localAnesthesiaNotes =
+     "Patient tolerated injections well and post-op instructions reviewed.";
+ 
+   form.disposition = form.disposition.map((entry) => ({
+     ...entry,
+     enabled: true,
+   }));
+   form.otherClinicalFindings =
+     "Continue monitoring tongue and linea alba findings.";
  
    return form;
  }
  
--export function buildDemoForm(fixture) {
--  const form = buildInitialForm(fixture);
--
--  form.patientConcerns =
--    "Sensitivity around lower anterior and occasional bleeding while flossing.";
--  form.medicalHistory =
--    "Med/dent history updated. No new contraindications reported.";
--  form.bloodPressure = "118/76";
--  form.heartRate = "72";
--  form.bloodPressureTakenTime = "09:15";
-+export function buildDemoForm(fixture) {
-+  const form = buildInitialForm(fixture);
-+
-+  form.providerName = "Dr. Example";
-+  form.patientConcerns =
-+    "Sensitivity around lower anterior and occasional bleeding while flossing.";
-+  form.medicalHistory =
-+    "Med/dent history updated. No new contraindications reported.";
-+  form.vitalsReadings = [
-+    {
-+      systolic: "118",
-+      diastolic: "76",
-+      heartRate: "72",
-+      time: "09:15",
-+    },
-+  ];
+ function collectSelectedFindings(findings) {
+   const entries = [];
  
-   form.eoeWithinNormalLimits = true;
-   form.ioeWithinNormalLimits = true;
-   form.asymptomaticClickOnOpeningClosing = true;
-   form.asymptomaticClickLaterality = "Bilateral";
-   form.palatineTorusAtMidline = true;
-   form.palatineTorusProminence = "Slight";
-   form.bilateralMandibularTori = true;
-   form.bilateralMandibularToriProminence = "Slight";
-   form.ioeFindings = [
-     "Coated tongue",
-     "Scalloped tongue",
-     "Bilateral linea alba",
-   ];
-   form.eoe = "Baseline monitoring only.";
-   form.ioe = "Mild soft tissue variations noted.";
+   Object.entries(findings).forEach(([sectionKey, sectionValues]) => {
+     Object.entries(sectionValues).forEach(([option, annotation]) => {
+       if (!annotation.presence) return;
+       entries.push({
+         section: prettyLabel(sectionKey),
+         finding: option,
+@@ -1353,74 +1392,78 @@ export function buildSummaryText(form, selectedFindings) {
  
-   form.periodontalStatusActivity = "Active";
-   form.periodontalStatusDiseaseType = "Periodontitis";
-   form.periodontalStatusSeverityStage = "Moderate Periodontitis Stage II";
-   form.periodontalStatusGrade = "Grade B moderate rate of progression";
-   form.periodontalStatusNotes =
-     "Reinforced 4-month hygiene interval and home-care compliance.";
+     if (!form.recommendations.length && !notes) return "";
  
-   form.cariesRiskLevel = "Moderate";
-@@ -734,126 +748,159 @@ export function buildSummaryText(form, selectedFindings) {
-       .replace(/[\s\n]+/g, " ");
-   const indentLine = (value) => `   ${value}`;
-   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
-   const capitalizeSentence = (value) =>
-     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
-   const lowerFirst = (value) =>
-     value ? value.charAt(0).toLowerCase() + value.slice(1) : "";
-   const ensurePeriod = (value) => {
-     const normalized = cleanSentence(value);
-     return normalized ? `${capitalizeSentence(normalized)}.` : "";
+     if (!form.recommendations.length) {
+       return `Recommendations: ${ensurePeriod(notes)}`;
+     }
+ 
+     const line = formatLabelList(form.recommendations, lowerFirst);
+     if (!notes) return `Recommendations: ${line}`;
+     return `Recommendations: ${line}. ${ensurePeriod(notes)}`;
    };
-   const joinComma = (items) => items.filter(Boolean).join(", ");
-   const formatClockTime = (value) => {
-     const normalized = clean(value);
-     const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
+   const formatInstrumentationSelections = (items, devices, areas) =>
+     items.map((item) => {
+       let label = item;
  
-     if (!match) return normalized;
- 
-     let hours = Number(match[1]);
-     const minutes = match[2];
-     const period = hours >= 12 ? "PM" : "AM";
-     hours %= 12;
-     if (hours === 0) hours = 12;
-     return `${hours}:${minutes} ${period}`;
-   };
--  const formatLabelList = (items, mapper = (item) => item) =>
--    joinComma(items.map((item) => mapper(item)).filter(Boolean));
-+  const formatLabelList = (items, mapper = (item) => item) =>
-+    joinComma(items.map((item) => mapper(item)).filter(Boolean));
-+  const toNumericValue = (value) => {
-+    const normalized = clean(value);
-+    if (!normalized) return null;
-+    if (!/^\d+$/.test(normalized)) return null;
-+    const parsed = Number(normalized);
-+    return Number.isFinite(parsed) ? parsed : null;
-+  };
-+  const toRoundedAverage = (values) =>
-+    Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
-   const normalizeObservation = (value, withinNormalLimits) => {
-     let normalized = cleanSentence(value);
- 
-     if (!normalized) return "";
- 
-     if (withinNormalLimits) {
-       normalized = normalized.replace(
-         /^within normal limits overall[;,]?\s*/i,
-         "",
-       );
-       normalized = normalized.replace(/^within normal limits[;,]?\s*/i, "");
-     }
- 
-     normalized = normalized.replace(/^observations documented for\s+/i, "");
-     return lowerFirst(cleanSentence(normalized));
-   };
-   const formatPatientConcerns = () => {
-     const parts = [];
- 
-     if (form.patientPresentsForHygieneNoOtherConcerns) {
-       parts.push("Patient presents for hygiene, no other concerns");
-     }
- 
-     if (cleanSentence(form.patientConcerns)) {
-       parts.push(cleanSentence(form.patientConcerns));
-     }
- 
-     if (!parts.length) return "";
-     return `Patient concerns: ${capitalizeSentence(parts.join(". "))}.`;
-   };
-   const formatMedicalHistoryBlock = () => {
-     const lines = [];
-     const medicalHistory = cleanSentence(form.medicalHistory);
-     const shouldHideDefaultMedicalHistory =
-       medicalHistory.toLowerCase() === "patient reports no changes";
--    const vitalSegments = [];
-+    const rawReadings = Array.isArray(form.vitalsReadings)
-+      ? form.vitalsReadings
-+      : [];
-+    const readings = rawReadings
-+      .map((reading) => ({
-+        systolic: toNumericValue(reading?.systolic),
-+        diastolic: toNumericValue(reading?.diastolic),
-+        heartRate: toNumericValue(reading?.heartRate),
-+        time: clean(reading?.time),
-+      }))
-+      .filter(
-+        (reading) =>
-+          reading.systolic != null ||
-+          reading.diastolic != null ||
-+          reading.heartRate != null,
-+      );
- 
--    if (
--      !medicalHistory &&
--      !form.bloodPressure &&
--      !form.heartRate &&
--      !form.bloodPressureTakenTime
--    ) {
--      return "";
--    }
-+    if (!medicalHistory && !readings.length) {
-+      return "";
-+    }
- 
-     lines.push("Medical history update:");
-     if (medicalHistory && !shouldHideDefaultMedicalHistory) {
-       lines.push(indentLine(ensurePeriod(medicalHistory)));
-     }
--    if (form.bloodPressure) {
--      vitalSegments.push(`BP: ${clean(form.bloodPressure)} mmHg`);
--    }
--    if (form.heartRate) {
--      vitalSegments.push(`HR: ${clean(form.heartRate)} bpm`);
--    }
--    if (form.bloodPressureTakenTime) {
--      vitalSegments.push(`Taken at ${formatClockTime(form.bloodPressureTakenTime)}`);
--    }
--    if (vitalSegments.length) {
--      let vitalsLine = "";
--
--      vitalSegments.forEach((segment) => {
--        if (segment.startsWith("Taken at ")) {
--          vitalsLine = vitalsLine
--            ? `${vitalsLine} (${segment.replace(/^Taken /, "").trim()})`
--            : segment;
--          return;
--        }
-+    readings.forEach((reading) => {
-+      const segments = [];
-+      if (reading.systolic != null && reading.diastolic != null) {
-+        segments.push(`BP: ${reading.systolic}/${reading.diastolic} mmHg`);
-+      }
-+      if (reading.heartRate != null) {
-+        segments.push(`HR: ${reading.heartRate} bpm`);
-+      }
-+      if (!segments.length) return;
-+      const timeSegment = reading.time
-+        ? ` (at ${formatClockTime(reading.time)})`
-+        : "";
-+      lines.push(indentLine(`${segments.join(", ")}${timeSegment}`));
-+    });
- 
--        vitalsLine = vitalsLine ? `${vitalsLine}, ${segment}` : segment;
--      });
-+    if (readings.length > 1) {
-+      const systolics = readings
-+        .map((reading) => reading.systolic)
-+        .filter((value) => value != null);
-+      const diastolics = readings
-+        .map((reading) => reading.diastolic)
-+        .filter((value) => value != null);
-+      const heartRates = readings
-+        .map((reading) => reading.heartRate)
-+        .filter((value) => value != null);
-+      const averageSegments = [];
- 
--      lines.push(indentLine(vitalsLine));
-+      if (systolics.length && diastolics.length) {
-+        averageSegments.push(
-+          `Average BP: ${toRoundedAverage(systolics)}/${toRoundedAverage(diastolics)} mmHg`,
-+        );
-+      }
-+      if (heartRates.length) {
-+        averageSegments.push(`HR: ${toRoundedAverage(heartRates)} bpm`);
-+      }
-+      if (averageSegments.length) {
-+        lines.push(indentLine(averageSegments.join(", ")));
-+      }
-     }
- 
-     return lines.join("\n");
-   };
-   const formatEoeLine = () => {
-     const findings = [];
- 
-     if (form.asymptomaticClickOnOpeningClosing) {
-       const laterality = clean(form.asymptomaticClickLaterality).toLowerCase();
-       const status = form.tmjClickingStatus.length
-         ? form.tmjClickingStatus.map((item) => clean(item).toLowerCase()).join("/")
-         : "asymptomatic";
-       const phase = form.tmjClickingPhase.length
-         ? form.tmjClickingPhase.map((item) => clean(item).toLowerCase()).join("/")
-         : "on open";
-       findings.push(
-         `${laterality ? `${laterality} ` : ""}tmj clicking (${status}, ${phase})`,
-       );
-     }
- 
-     if (form.asymptomaticLymphNodes) {
-       const segments = [];
-       if (form.palpableLymphNodeLaterality) {
-         segments.push(clean(form.palpableLymphNodeLaterality).toLowerCase());
+       if (item === HAND_POWER_INSTRUMENTATION_OPTION && devices.length) {
+         label = `${item} (${joinComma(devices)})`;
        }
-@@ -1266,81 +1313,89 @@ export function buildSummaryText(form, selectedFindings) {
+ 
+       if (item === HAND_POWER_INSTRUMENTATION_OPTION && areas.length) {
+         return `${joinComma(areas)} ${label}`;
+       }
+ 
+       return label;
+     });
+-  const formatLocalAnesthesia = () => {
+-    const detailLines = [];
+-    let heading = "";
++  const formatLocalAnesthesia = () => {
++    const detailLines = [];
++    let heading = "";
+ 
+     if (form.localAnesthesiaNoContraindication) {
+       heading = "Local anesthetic administered: No C/I to LA";
+     }
+-    if (form.localAnesthesiaBenzocaineApplied) {
+-      detailLines.push("Benzocaine 20% applied to the injection site");
+-    }
+-
+-    const totals = new Map();
+-    form.localAnesthesiaEntries.forEach((entry) => {
+-      const injectionType = clean(entry.injectionType);
+-      const quadrant = clean(entry.quadrant);
+-      const product = clean(entry.anestheticProduct);
+-      const amountMlRaw = clean(entry.amountMl);
+-      if (!injectionType || !quadrant || !product || !amountMlRaw) return;
+-
+-      const amount = Number(amountMlRaw);
+-      const time = clean(entry.timeAdministered);
+-      detailLines.push(
+-        `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
+-      );
++    const totals = new Map();
++    form.localAnesthesiaEntries.forEach((entry) => {
++      const route = clean(entry.route) || (clean(entry.injectionType) ? "Injection" : "");
++      const injectionType = clean(entry.injectionType);
++      const applicationType = clean(entry.applicationType);
++      const quadrant = clean(entry.quadrant);
++      const product = clean(entry.anestheticProduct);
++      const amountMlRaw = clean(entry.amountMl);
++      if (!route || !quadrant || !product || !amountMlRaw) return;
++      if (route === "Injection" && !injectionType) return;
++      if (route === "Topical" && !applicationType) return;
++
++      const amount = Number(amountMlRaw);
++      const time = clean(entry.timeAdministered);
++      const routeLabel =
++        route === "Topical"
++          ? `${applicationType} ${quadrant}`
++          : `${injectionType} ${quadrant}`;
++      detailLines.push(
++        `${routeLabel}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
++      );
+ 
+       if (Number.isFinite(amount)) {
+         totals.set(product, (totals.get(product) ?? 0) + amount);
+       }
+     });
+ 
+     totals.forEach((amount, product) => {
+       detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+     });
+ 
+     if (form.localAnesthesiaNoAdverseReactions) {
+       detailLines.push("No adverse reactions noted");
+     }
+     if (form.localAnesthesiaAdequateAchieved) {
+       detailLines.push("Adequate anesthesia achieved");
+     }
+     if (clean(form.localAnesthesiaNotes)) {
+       detailLines.push(cleanSentence(form.localAnesthesiaNotes));
      }
  
-     const line = `Next Appointment: ${joinComma(
-       formatInstrumentationSelections(
-         form.nextAppointment,
-         form.nextAppointmentInstrumentationDevices,
-         form.nextAppointmentInstrumentationAreas,
+     if (!heading && !detailLines.length) return "";
+     if (!heading) heading = "Local anesthetic administered:";
+ 
+     return [heading, ...detailLines.map(indentLine)].join("\n");
+   };
+@@ -2157,54 +2200,53 @@ export function GingivalDescriptionWebformImportedTemplate({
+           sectionKey,
+           nextOpen,
+         ]),
        ),
-     )}`;
- 
-     if (!notes) return line;
-     return `${line}. ${ensurePeriod(notes)}`;
-   };
-   const formatOtherClinicalFindings = () => {
-     const notes = cleanSentence(form.otherClinicalFindings);
- 
-     if (!notes) return "";
-     return `Other clinical findings: ${ensurePeriod(notes)}`;
-   };
-   const formatContinuityOfCare = () => {
-     if (!form.disposition.length) return "";
- 
-     return ["Continuity of Care", ...form.disposition.map(indentLine)].join("\n");
+     );
    };
  
--  const blocks = [
-+  const headerBlocks = [];
-+  if (clean(form.date)) {
-+    headerBlocks.push(`Date: ${clean(form.date)}`);
-+  }
-+  if (clean(form.providerName)) {
-+    headerBlocks.push(`Provider: ${clean(form.providerName)}`);
-+  }
-+
-+  const blocks = [
-     formatPatientConcerns(),
-     formatMedicalHistoryBlock(),
-     formatEoeLine(),
-     formatIoeLine(),
-     formatGingivalDescription(),
-     formatDepositLine("Calculus", form.calculus),
-     formatDepositLine("Plaque", form.plaque),
-     formatDepositLine("Extrinsic Stain", form.extrinsicStain),
-     formatPeriodontalDiagnosis(),
-     formatCariesRisk(),
-     formatOhe(),
-     formatRecommendations(),
-   ].filter(Boolean);
+   const jumpToSection = (sectionKey) => {
+     const target = document.getElementById(getSectionId(sectionKey));
+     if (!target) return;
  
-   const treatmentLine = formatCompletedTreatments();
-   if (treatmentLine) blocks.push(treatmentLine);
- 
-   const nextAppointmentLine = formatNextAppointment();
-   if (nextAppointmentLine) blocks.push(nextAppointmentLine);
- 
-   const localAnesthesiaLine = formatLocalAnesthesia();
-   if (localAnesthesiaLine) blocks.push(localAnesthesiaLine);
- 
-   const otherClinicalFindingsLine = formatOtherClinicalFindings();
-   if (otherClinicalFindingsLine) blocks.push(otherClinicalFindingsLine);
- 
-   const continuityOfCareLine = formatContinuityOfCare();
-   if (continuityOfCareLine) blocks.push(continuityOfCareLine);
- 
--  return blocks.join("\n\n");
-+  return [...headerBlocks, ...blocks].join("\n\n");
- }
- 
- export const SUMMARY_TEST_CASES = [
-   {
-     name: "joins summary lines with headings and indentation",
-     input: (() => {
-       const form = buildInitialForm();
-       form.date = "2026-03-08";
-       form.patientConcerns = "Bleeding gums";
-       return { form, selectedFindings: [] };
-     })(),
-     expectedIncludes: [
-       "Visit Details:\n  Date: 2026-03-08\n\nHistory and Exam:\n  Patient concerns:\n    Bleeding gums.",
-     ],
-   },
-   {
-     name: "groups EOE and IOE summary lines by exam scope",
-     input: (() => {
-       const form = buildInitialForm();
-       form.eoeWithinNormalLimits = true;
-       form.asymptomaticClickOnOpeningClosing = true;
-       form.asymptomaticClickLaterality = "Left";
-       form.eoe = "No swelling noted";
-       form.ioeWithinNormalLimits = true;
-       form.ioeFindings = ["Coated tongue"];
-@@ -1839,56 +1894,82 @@ export function GingivalDescriptionWebformImportedTemplate({
-     if (typeof window === "undefined") return undefined;
- 
-     const handleBeforeUnload = (event) => {
-       event.preventDefault();
-       event.returnValue = warningMessage;
-       return warningMessage;
-     };
- 
-     window.addEventListener("beforeunload", handleBeforeUnload);
- 
-     return () => {
-       window.removeEventListener("beforeunload", handleBeforeUnload);
-     };
-   }, []);
- 
-   const resetForm = () => {
-     if (!confirmReplaceForm()) return;
-     setForm(buildInitialForm(fixture));
-   };
- 
-   const loadDemo = () => {
-     if (!confirmReplaceForm()) return;
-     setForm(buildDemoForm(fixture));
-   };
- 
--  const setBloodPressureTimeToCurrent = () => {
--    setForm((current) => ({
--      ...current,
--      bloodPressureTakenTime: getCurrentTimeString(),
--    }));
--  };
-+  const setVitalsReadingTimeToCurrent = (readingIndex) => {
-+    setForm((current) => ({
-+      ...current,
-+      vitalsReadings: current.vitalsReadings.map((reading, index) =>
-+        index === readingIndex
-+          ? { ...reading, time: getCurrentTimeString() }
-+          : reading,
-+      ),
-+    }));
-+  };
-+
-+  const addVitalsReading = () => {
-+    setForm((current) => ({
-+      ...current,
-+      vitalsReadings: [...current.vitalsReadings, emptyVitalsReading()],
-+    }));
-+  };
-+
-+  const removeVitalsReading = (readingIndex) => {
-+    setForm((current) => {
-+      const nextReadings = current.vitalsReadings.filter(
-+        (_, index) => index !== readingIndex,
-+      );
-+
-+      return {
-+        ...current,
-+        vitalsReadings: nextReadings.length
-+          ? nextReadings
-+          : [emptyVitalsReading()],
-+      };
-+    });
-+  };
- 
-   const setLocalAnesthesiaEntryTimeToCurrent = (entryIndex) => {
-     setForm((current) => ({
+     setOpenSections((current) => ({
        ...current,
-       localAnesthesiaEntries: current.localAnesthesiaEntries.map((row, rowIndex) =>
-         rowIndex === entryIndex
-           ? { ...row, timeAdministered: getCurrentTimeString() }
-           : row,
-       ),
+       [sectionKey]: true,
      }));
+     target.scrollIntoView({ behavior: "smooth", block: "start" });
    };
  
-   const copySummary = async () => {
-     let copied = false;
+   const treatmentHasHandInstrumentation = form.treatmentDoneToday.includes(
+     HAND_POWER_INSTRUMENTATION_OPTION,
+   );
+   const treatmentHasAnyInstrumentation = treatmentHasHandInstrumentation;
+   const nextAppointmentHasHandInstrumentation = form.nextAppointment.includes(
+     HAND_POWER_INSTRUMENTATION_OPTION,
+   );
+-  const nextAppointmentHasAnyInstrumentation = nextAppointmentHasHandInstrumentation;
+-  const hasLocalAnesthesiaActivity =
+-    form.localAnesthesiaBenzocaineApplied ||
+-    form.localAnesthesiaEntries.length > 0;
++  const nextAppointmentHasAnyInstrumentation = nextAppointmentHasHandInstrumentation;
++  const hasLocalAnesthesiaActivity =
++    form.localAnesthesiaEntries.length > 0;
+   const isLocalAnesthesiaAssessmentIncomplete =
+     !form.localAnesthesiaNoAdverseReactions &&
+     !form.localAnesthesiaAdequateAchieved;
+   const shouldHighlightLocalAnesthesiaAssessment =
+     form.localAnesthesiaNoContraindication &&
+     hasLocalAnesthesiaActivity &&
+     isLocalAnesthesiaAssessmentIncomplete;
  
-     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-       try {
-         await navigator.clipboard.writeText(summaryText);
-         copied = true;
-       } catch {
-         copied = false;
-       }
-     }
- 
-     if (!copied && typeof document !== "undefined") {
-@@ -2181,164 +2262,259 @@ export function GingivalDescriptionWebformImportedTemplate({
-                     variant="outline"
-                     className="rounded-2xl px-3 py-1.5 text-xs"
-                     onClick={() => setAllSectionsOpen(false)}
-                   >
-                     Collapse all sections
-                   </Button>
-                 </div>
-                 <div className="space-y-2">
-                   <Label>Quick jump</Label>
-                   <div className="flex flex-wrap gap-2">
-                     {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
-                       <Button
-                         key={sectionKey}
-                         type="button"
-                         variant="outline"
-                         className="rounded-2xl px-3 py-1.5 text-xs"
-                         onClick={() => jumpToSection(sectionKey)}
-                       >
-                         {label}
-                       </Button>
-                     ))}
-                   </div>
-                 </div>
-               </div>
-             ) : null}
--            <div className="grid gap-4 md:grid-cols-3">
--              <div className="space-y-2">
--                <Label htmlFor="exam-date">Date</Label>
--                <Input
-+            <div className="grid gap-4 md:grid-cols-2">
-+              <div className="space-y-2">
-+                <Label htmlFor="exam-date">Date</Label>
-+                <Input
-                   id="exam-date"
-                   type="date"
-                   className="rounded-xl"
-                   value={form.date}
-                   onChange={(e) =>
-                     setForm((current) => ({ ...current, date: e.target.value }))
--                  }
--                />
--              </div>
--            </div>
-+                  }
-+                />
-+              </div>
-+              <div className="space-y-2">
-+                <Label htmlFor="provider-name">Provider Name</Label>
-+                <Input
-+                  id="provider-name"
-+                  placeholder="e.g. Dr. Example"
-+                  className="rounded-xl"
-+                  value={form.providerName}
-+                  onChange={(e) =>
-+                    setForm((current) => ({
-+                      ...current,
-+                      providerName: e.target.value,
-+                    }))
-+                  }
-+                />
-+              </div>
-+            </div>
- 
-             <Separator />
- 
-             <SectionCard
-               id={getSectionId("historyAndExam")}
-               title="History and Exam"
-               open={!isVeryShort || openSections.historyAndExam}
-               onToggle={isVeryShort ? () => toggleSection("historyAndExam") : undefined}
-               contentClassName="space-y-4"
-             >
-                 <div className="flex items-center gap-3">
-                   <Checkbox
-                     id="patient-presents-for-hygiene-no-other-concerns"
-                     checked={form.patientPresentsForHygieneNoOtherConcerns}
-                     onCheckedChange={(next) =>
-                       setForm((current) => ({
-                         ...current,
-                         patientPresentsForHygieneNoOtherConcerns: Boolean(next),
-                       }))
-                     }
-                   />
-                   <Label htmlFor="patient-presents-for-hygiene-no-other-concerns">
-                     Patient presents for hygiene, no other concerns
-                   </Label>
-                 </div>
-                 <div className="grid gap-4 md:grid-cols-2">
-                   <SectionTextarea
-                     id="patient-concerns"
-                     label="Patient concerns"
-                     placeholder="Document the chief complaint or concerns in the patient’s own words."
-                     value={form.patientConcerns}
-                     onChange={(patientConcerns) =>
-                       setForm((current) => ({ ...current, patientConcerns }))
-                     }
-                   />
-                   <SectionTextarea
-                     id="medical-history"
-                     label="Medical history"
-                     placeholder="Review and update medications, allergies, surgeries, conditions, or note no changes."
-                     value={form.medicalHistory}
-                     onChange={(medicalHistory) =>
-                       setForm((current) => ({ ...current, medicalHistory }))
-                     }
-                   />
-                 </div>
--                <div className="grid gap-4 md:grid-cols-3">
--                  <div className="space-y-2">
--                    <Label htmlFor="blood-pressure">BP</Label>
--                    <Input
--                      id="blood-pressure"
--                      placeholder="e.g. 120/80"
--                      value={form.bloodPressure}
--                      onChange={(e) =>
--                        setForm((current) => ({
--                          ...current,
--                          bloodPressure: e.target.value,
--                        }))
--                      }
--                    />
--                  </div>
--                  <div className="space-y-2">
--                    <Label htmlFor="heart-rate">HR</Label>
--                    <Input
--                      id="heart-rate"
--                      placeholder="e.g. 72"
--                      value={form.heartRate}
--                      onChange={(e) =>
--                        setForm((current) => ({
--                          ...current,
--                          heartRate: e.target.value,
--                        }))
--                      }
--                    />
--                  </div>
--                  <div className="space-y-2">
--                    <Label htmlFor="blood-pressure-time">BP taken time</Label>
--                    <div className="flex items-center gap-2">
--                      <Button
--                        type="button"
--                        variant="outline"
--                        className="shrink-0 rounded-xl px-3 py-2 text-xs"
--                        onClick={setBloodPressureTimeToCurrent}
--                      >
--                        Set to now
--                      </Button>
--                      <Input
--                        id="blood-pressure-time"
--                        type="time"
--                        value={form.bloodPressureTakenTime}
--                        onChange={(e) =>
--                          setForm((current) => ({
--                            ...current,
--                            bloodPressureTakenTime: e.target.value,
--                          }))
--                        }
--                      />
--                    </div>
--                  </div>
--                </div>
--            </SectionCard>
-+                <div className="space-y-3">
-+                  <div className="flex items-center justify-between gap-3">
-+                    <Label>Vitals Readings</Label>
-+                    <Button
-+                      type="button"
-+                      variant="outline"
-+                      className="rounded-xl px-3 py-2 text-xs"
-+                      onClick={addVitalsReading}
-+                    >
-+                      Add reading
-+                    </Button>
-+                  </div>
-+                  <div className="space-y-3">
-+                    {form.vitalsReadings.map((reading, readingIndex) => (
-+                      <div
-+                        key={`vitals-reading-${readingIndex}`}
-+                        className="space-y-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"
-+                      >
-+                        <div className="grid gap-3 md:grid-cols-4">
-+                          <div className="space-y-2">
-+                            <Label htmlFor={`vitals-systolic-${readingIndex}`}>Systolic</Label>
-+                            <Input
-+                              id={`vitals-systolic-${readingIndex}`}
-+                              inputMode="numeric"
-+                              placeholder="e.g. 118"
-+                              value={reading.systolic}
-+                              onChange={(e) =>
-+                                setForm((current) => ({
-+                                  ...current,
-+                                  vitalsReadings: current.vitalsReadings.map((row, index) =>
-+                                    index === readingIndex
-+                                      ? { ...row, systolic: e.target.value.replace(/[^\d]/g, "") }
-+                                      : row,
-+                                  ),
-+                                }))
-+                              }
-+                            />
-+                          </div>
-+                          <div className="space-y-2">
-+                            <Label htmlFor={`vitals-diastolic-${readingIndex}`}>Diastolic</Label>
-+                            <Input
-+                              id={`vitals-diastolic-${readingIndex}`}
-+                              inputMode="numeric"
-+                              placeholder="e.g. 76"
-+                              value={reading.diastolic}
-+                              onChange={(e) =>
-+                                setForm((current) => ({
-+                                  ...current,
-+                                  vitalsReadings: current.vitalsReadings.map((row, index) =>
-+                                    index === readingIndex
-+                                      ? { ...row, diastolic: e.target.value.replace(/[^\d]/g, "") }
-+                                      : row,
-+                                  ),
-+                                }))
-+                              }
-+                            />
-+                          </div>
-+                          <div className="space-y-2">
-+                            <Label htmlFor={`vitals-heart-rate-${readingIndex}`}>Heart Rate</Label>
-+                            <Input
-+                              id={`vitals-heart-rate-${readingIndex}`}
-+                              inputMode="numeric"
-+                              placeholder="e.g. 72"
-+                              value={reading.heartRate}
-+                              onChange={(e) =>
-+                                setForm((current) => ({
-+                                  ...current,
-+                                  vitalsReadings: current.vitalsReadings.map((row, index) =>
-+                                    index === readingIndex
-+                                      ? { ...row, heartRate: e.target.value.replace(/[^\d]/g, "") }
-+                                      : row,
-+                                  ),
-+                                }))
-+                              }
-+                            />
-+                          </div>
-+                          <div className="space-y-2">
-+                            <Label htmlFor={`vitals-time-${readingIndex}`}>Time</Label>
-+                            <Input
-+                              id={`vitals-time-${readingIndex}`}
-+                              type="time"
-+                              value={reading.time}
-+                              onChange={(e) =>
-+                                setForm((current) => ({
-+                                  ...current,
-+                                  vitalsReadings: current.vitalsReadings.map((row, index) =>
-+                                    index === readingIndex
-+                                      ? { ...row, time: e.target.value }
-+                                      : row,
-+                                  ),
-+                                }))
-+                              }
-+                            />
-+                          </div>
-+                        </div>
-+                        <div className="flex flex-wrap items-center justify-end gap-2">
-+                          <Button
-+                            type="button"
-+                            variant="outline"
-+                            className="rounded-xl px-3 py-2 text-xs"
-+                            onClick={() => setVitalsReadingTimeToCurrent(readingIndex)}
-+                          >
-+                            Set to now
-+                          </Button>
-+                          <Button
-+                            type="button"
-+                            variant="outline"
-+                            className="rounded-xl px-3 py-2 text-xs"
-+                            onClick={() =>
-+                              setForm((current) => ({
-+                                ...current,
-+                                vitalsReadings: current.vitalsReadings.map((row, index) =>
-+                                  index === readingIndex ? { ...row, time: "" } : row,
-+                                ),
-+                              }))
-+                            }
-+                          >
-+                            Clear time
-+                          </Button>
-+                          {form.vitalsReadings.length > 1 ? (
-+                            <Button
-+                              type="button"
-+                              variant="outline"
-+                              className="rounded-xl px-3 py-2 text-xs"
-+                              onClick={() => removeVitalsReading(readingIndex)}
-+                            >
-+                              Remove
-+                            </Button>
-+                          ) : null}
-+                        </div>
-+                      </div>
-+                    ))}
-+                  </div>
-+                </div>
-+            </SectionCard>
- 
-             <SectionCard
-               id={getSectionId("eoeIoe")}
-               title="EOE / IOE"
-               open={!isVeryShort || openSections.eoeIoe}
-               onToggle={isVeryShort ? () => toggleSection("eoeIoe") : undefined}
-               contentClassName="space-y-6"
-             >
-                 <div className="space-y-4 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
-                   <div className="flex flex-wrap items-center justify-between gap-3">
-                     <div>
-                       <div className="text-lg font-semibold text-slate-900 dark:text-white">
-                         EOE
-                       </div>
-                       <div className="text-sm text-slate-600 dark:text-slate-400">
-                         Extraoral exam findings and observations.
-                       </div>
-                     </div>
-                     <Button
-                       type="button"
-                       variant={
-                         form.eoeWithinNormalLimits ? "default" : "outline"
+   const actionButtons = (
+     <div className="flex flex-wrap gap-3">
+       <Button
+         type="button"
+         className="rounded-2xl transition-all"
+         onClick={copySummary}
+         disabled={isCopied}
+       >
+         {isCopied ? "✓ Copied!" : "Copy summary"}
+       </Button>
+       <Button
+         type="button"
+         className="rounded-2xl"
+         onClick={loadDemo}
+         variant="outline"
+       >
+         Load demo
+@@ -3523,200 +3565,292 @@ export function GingivalDescriptionWebformImportedTemplate({
+                           ...current,
+                           nextAppointmentInstrumentationAreas,
+                         }))
                        }
-                       className="rounded-2xl"
-                       onClick={() =>
-@@ -3423,52 +3599,52 @@ export function GingivalDescriptionWebformImportedTemplate({
-                             ),
-                             localAnesthesiaAdequateAchieved: selected.includes(
-                               "Adequate anesthesia achieved",
-                             ),
-                           }))
-                         }
-                       />
-                       <SectionTextarea
-                         id="local-anesthesia-notes"
-                         label="Anesthesia notes"
-                         placeholder="Add anesthesia assessment notes."
-                         value={form.localAnesthesiaNotes}
-                         onChange={(localAnesthesiaNotes) =>
-                           setForm((current) => ({
-                             ...current,
-                             localAnesthesiaNotes,
-                           }))
-                         }
-                       />
-                     </div>
-                   </div>
+                     />
+                   </>
                  ) : null}
+                 <SectionTextarea
+                   id="next-appointment-notes"
+                   label="Next appointment notes"
+                   placeholder="Add details for next appointment."
+                   value={form.nextAppointmentNotes}
+                   onChange={(nextAppointmentNotes) =>
+                     setForm((current) => ({ ...current, nextAppointmentNotes }))
+                   }
+                 />
              </SectionCard>
  
              <SectionCard
--              id={getSectionId("disposition")}
--              title="Disposition"
-+              id={getSectionId("disposition")}
-+              title="Continuity of Care"
-               open={!isVeryShort || openSections.disposition}
-               onToggle={isVeryShort ? () => toggleSection("disposition") : undefined}
-               contentClassName="space-y-2"
+               id={getSectionId("localAnesthesia")}
+               title="Local Anesthesia"
+               open={!isVeryShort || openSections.localAnesthesia}
+               onToggle={isVeryShort ? () => toggleSection("localAnesthesia") : undefined}
+               contentClassName="space-y-4"
              >
-                 <Label>Hygiene follow-up interval</Label>
-                 <div className="space-y-3">
-                   {DISPOSITION_OPTIONS.map((option) => {
-                     const checked = form.disposition.includes(option);
-                     const optionId = `disposition-${option.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-                     return (
-                       <div key={option} className="flex items-center gap-3">
-                         <Checkbox
-                           id={optionId}
-                           checked={checked}
-                           onCheckedChange={(next) =>
-                             setForm((current) => ({
-                               ...current,
-                               disposition: next
-                                 ? current.disposition.includes(option)
-                                   ? current.disposition
-                                   : [...current.disposition, option]
-                                 : current.disposition.filter(
-                                     (item) => item !== option,
+-                <MultiToggle
+-                  label="Local anesthesia toggles"
+-                  options={
+-                    form.localAnesthesiaNoContraindication
+-                      ? [
+-                          "No C/I to LA",
+-                          "Benzocaine 20% applied to the injection site",
+-                        ]
+-                      : ["No C/I to LA"]
+-                  }
+-                  selected={[
+-                    form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
+-                    form.localAnesthesiaBenzocaineApplied
+-                      ? "Benzocaine 20% applied to the injection site"
+-                      : "",
+-                  ].filter(Boolean)}
+-                  onChange={(selected) => {
+-                    const hasNoContraindication = selected.includes("No C/I to LA");
+-
+-                    setForm((current) => ({
+-                      ...current,
+-                      localAnesthesiaNoContraindication: hasNoContraindication,
+-                      localAnesthesiaBenzocaineApplied: hasNoContraindication
+-                        ? selected.includes(
+-                            "Benzocaine 20% applied to the injection site",
+-                          )
+-                        : false,
+-                      localAnesthesiaNoAdverseReactions: hasNoContraindication
+-                        ? current.localAnesthesiaNoAdverseReactions
+-                        : false,
++                <MultiToggle
++                  label="Local anesthesia toggles"
++                  options={["No C/I to LA"]}
++                  selected={[
++                    form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
++                  ].filter(Boolean)}
++                  onChange={(selected) => {
++                    const hasNoContraindication = selected.includes("No C/I to LA");
++
++                    setForm((current) => ({
++                      ...current,
++                      localAnesthesiaNoContraindication: hasNoContraindication,
++                      localAnesthesiaNoAdverseReactions: hasNoContraindication
++                        ? current.localAnesthesiaNoAdverseReactions
++                        : false,
+                       localAnesthesiaAdequateAchieved: hasNoContraindication
+                         ? current.localAnesthesiaAdequateAchieved
+                         : false,
+                       localAnesthesiaEntries: hasNoContraindication
+                         ? current.localAnesthesiaEntries
+                         : [],
+                       localAnesthesiaNotes: hasNoContraindication
+                         ? current.localAnesthesiaNotes
+                         : "",
+                     }));
+                   }}
+                 />
+-
+-                {form.localAnesthesiaNoContraindication ? (
+-                  <div className="space-y-3">
+-                    <Label className="block">Injection entries</Label>
+-                    {form.localAnesthesiaEntries.map((entry, index) => (
+-                      <Card
+-                        key={`la-${index}`}
++
++                {form.localAnesthesiaNoContraindication ? (
++                  <div className="space-y-3">
++                    <Label className="block">Local anesthesia entries</Label>
++                    {form.localAnesthesiaEntries.map((entry, index) => (
++                      <Card
++                        key={`la-${index}`}
+                         id={`local-anesthesia-entry-${index}`}
+                         className="space-y-3 rounded-2xl border-dashed p-4"
+-                      >
+-                        <div className="mb-3 flex items-center justify-between">
+-                          <Label>Injection entry #{index + 1}</Label>
+-                          <Button
+-                            type="button"
+-                            variant="outline"
++                      >
++                        <div className="mb-3 flex items-center justify-between">
++                          <Label>Local anesthesia entry #{index + 1}</Label>
++                          <Button
++                            type="button"
++                            variant="outline"
+                             className="rounded-2xl px-3 py-1.5 text-xs"
+                             onClick={() =>
+                               setForm((current) => ({
+                                 ...current,
+                                 localAnesthesiaEntries: current.localAnesthesiaEntries.filter(
+                                   (_, entryIndex) => entryIndex !== index,
+                                 ),
+                               }))
+                             }
+                           >
+                             Remove
+                           </Button>
+-                        </div>
+-                        <div className="grid gap-3 md:grid-cols-4">
+-                          <div className="space-y-2 md:col-span-2">
+-                            <Label>Injection type</Label>
+-                            <Select
+-                              value={entry.injectionType}
+-                              onValueChange={(injectionType) =>
+-                                setForm((current) => ({
+-                                  ...current,
+-                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+-                                    (row, rowIndex) =>
+-                                      rowIndex === index ? { ...row, injectionType } : row,
+-                                  ),
+-                                }))
+-                              }
+-                            >
+-                              <SelectTrigger className="rounded-xl">
+-                                <SelectValue placeholder="Select injection type" />
+-                              </SelectTrigger>
+-                              <SelectContent>
+-                                <SelectItem value="">None selected</SelectItem>
+-                                {LOCAL_ANESTHESIA_TYPE_OPTIONS.map((option) => (
+-                                  <SelectItem key={option} value={option}>
+-                                    {option}
+-                                  </SelectItem>
++                        </div>
++                        <div className="grid gap-3 md:grid-cols-4">
++                          <div className="space-y-2 md:col-span-2">
++                            <Label>Route</Label>
++                            <Select
++                              value={entry.route}
++                              onValueChange={(route) =>
++                                setForm((current) => ({
++                                  ...current,
++                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
++                                    (row, rowIndex) =>
++                                      rowIndex === index
++                                        ? {
++                                            ...row,
++                                            route,
++                                            injectionType:
++                                              route === "Injection"
++                                                ? row.injectionType
++                                                : "",
++                                            applicationType:
++                                              route === "Topical"
++                                                ? row.applicationType
++                                                : "",
++                                            anestheticProduct: getLocalAnestheticProductOptions(
++                                              route,
++                                            ).includes(row.anestheticProduct)
++                                              ? row.anestheticProduct
++                                              : route === "Topical"
++                                                ? LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS[0] ??
++                                                  ""
++                                                : "",
++                                            amountMl:
++                                              route === "Topical"
++                                                ? row.amountMl ||
++                                                  getDefaultTopicalAmountMl(
++                                                    getLocalAnestheticProductOptions(
++                                                      route,
++                                                    ).includes(row.anestheticProduct)
++                                                      ? row.anestheticProduct
++                                                      : LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS[0] ??
++                                                          "",
++                                                  )
++                                                : row.amountMl || "1.8",
++                                          }
++                                        : row,
++                                  ),
++                                }))
++                              }
++                            >
++                              <SelectTrigger className="rounded-xl">
++                                <SelectValue placeholder="Select route" />
++                              </SelectTrigger>
++                              <SelectContent>
++                                <SelectItem value="">None selected</SelectItem>
++                                {LOCAL_ANESTHESIA_ROUTE_OPTIONS.map((option) => (
++                                  <SelectItem key={option} value={option}>
++                                    {option}
++                                  </SelectItem>
+                                 ))}
+-                              </SelectContent>
+-                            </Select>
+-                          </div>
+-                          <div className="space-y-2 md:col-span-2">
+-                            <Label>Quadrant</Label>
+-                            <Select
++                              </SelectContent>
++                            </Select>
++                          </div>
++                          {entry.route === "Topical" ? (
++                            <div className="space-y-2 md:col-span-2">
++                              <Label>Application type</Label>
++                              <Select
++                                value={entry.applicationType}
++                                onValueChange={(applicationType) =>
++                                  setForm((current) => ({
++                                    ...current,
++                                    localAnesthesiaEntries: current.localAnesthesiaEntries.map(
++                                      (row, rowIndex) =>
++                                        rowIndex === index
++                                          ? { ...row, applicationType }
++                                          : row,
++                                    ),
++                                  }))
++                                }
++                              >
++                                <SelectTrigger className="rounded-xl">
++                                  <SelectValue placeholder="Select application type" />
++                                </SelectTrigger>
++                                <SelectContent>
++                                  <SelectItem value="">None selected</SelectItem>
++                                  {LOCAL_ANESTHESIA_APPLICATION_TYPE_OPTIONS.map((option) => (
++                                    <SelectItem key={option} value={option}>
++                                      {option}
++                                    </SelectItem>
++                                  ))}
++                                </SelectContent>
++                              </Select>
++                            </div>
++                          ) : null}
++                          {entry.route !== "Topical" ? (
++                            <div className="space-y-2 md:col-span-2">
++                              <Label>Injection type</Label>
++                              <Select
++                                value={entry.injectionType}
++                                onValueChange={(injectionType) =>
++                                  setForm((current) => ({
++                                    ...current,
++                                    localAnesthesiaEntries: current.localAnesthesiaEntries.map(
++                                      (row, rowIndex) =>
++                                        rowIndex === index
++                                          ? { ...row, injectionType }
++                                          : row,
++                                    ),
++                                  }))
++                                }
++                              >
++                                <SelectTrigger className="rounded-xl">
++                                  <SelectValue placeholder="Select injection type" />
++                                </SelectTrigger>
++                                <SelectContent>
++                                  <SelectItem value="">None selected</SelectItem>
++                                  {LOCAL_ANESTHESIA_INJECTION_TYPE_OPTIONS.map((option) => (
++                                    <SelectItem key={option} value={option}>
++                                      {option}
++                                    </SelectItem>
++                                  ))}
++                                </SelectContent>
++                              </Select>
++                            </div>
++                          ) : null}
++                          <div className="space-y-2 md:col-span-2">
++                            <Label>Quadrant</Label>
++                            <Select
+                               value={entry.quadrant}
+                               onValueChange={(quadrant) =>
+                                 setForm((current) => ({
+                                   ...current,
+                                   localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                     (row, rowIndex) =>
+                                       rowIndex === index ? { ...row, quadrant } : row,
                                    ),
-                             }))
-diff --git a/tests/playwright/templates.spec.ts b/tests/playwright/templates.spec.ts
-index 2c07373725af6e69e96291da02a272297a50db14..a0108cc1e4916d153a2e930f1029c3767e0899fc 100644
---- a/tests/playwright/templates.spec.ts
-+++ b/tests/playwright/templates.spec.ts
-@@ -11,86 +11,90 @@ test("template index renders", async ({ page }) => {
-     page.locator('a[href="/templates/dental-hygiene-note-webform/"]'),
-   ).toBeVisible();
-   await expect(
-     page.locator('a[href="/templates/short-dental-hygien-note/"]'),
-   ).toBeVisible();
-   await expect(
-     page.locator('a[href="/templates/very-short-template/"]'),
-   ).toBeVisible();
-   await expect(
-     page.locator('a[href="/templates/gingival-description/"]'),
-   ).toHaveCount(0);
- });
+                                 }))
+                               }
+                             >
+                               <SelectTrigger className="rounded-xl">
+                                 <SelectValue placeholder="Select quadrant" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="">None selected</SelectItem>
+                                 {QUADRANT_OPTIONS.map((option) => (
+                                   <SelectItem key={option} value={option}>
+                                     {option}
+                                   </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+                           <div className="space-y-2 md:col-span-2">
+-                            <Label>Anesthetic product</Label>
+-                            <Select
+-                              value={entry.anestheticProduct}
+-                              onValueChange={(anestheticProduct) =>
+-                                setForm((current) => ({
+-                                  ...current,
+-                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+-                                    (row, rowIndex) =>
+-                                      rowIndex === index
+-                                        ? { ...row, anestheticProduct }
+-                                        : row,
+-                                  ),
+-                                }))
++                            <Label>Anesthetic product</Label>
++                            <Select
++                              value={entry.anestheticProduct}
++                              onValueChange={(anestheticProduct) =>
++                                setForm((current) => ({
++                                  ...current,
++                                  localAnesthesiaEntries: current.localAnesthesiaEntries.map(
++                                    (row, rowIndex) =>
++                                      rowIndex === index
++                                        ? {
++                                            ...row,
++                                            anestheticProduct,
++                                            amountMl:
++                                              row.route === "Topical" &&
++                                              !String(row.amountMl ?? "").trim()
++                                                ? getDefaultTopicalAmountMl(
++                                                    anestheticProduct,
++                                                  )
++                                                : row.amountMl,
++                                          }
++                                        : row,
++                                  ),
++                                }))
+                               }
+                             >
+-                              <SelectTrigger className="rounded-xl">
+-                                <SelectValue placeholder="Select anesthetic product" />
+-                              </SelectTrigger>
+-                              <SelectContent>
+-                                <SelectItem value="">None selected</SelectItem>
+-                                {LOCAL_ANESTHETIC_PRODUCT_OPTIONS.map((option) => (
+-                                  <SelectItem key={option} value={option}>
+-                                    {option}
+-                                  </SelectItem>
++                              <SelectTrigger className="rounded-xl">
++                                <SelectValue placeholder="Select anesthetic product" />
++                              </SelectTrigger>
++                              <SelectContent>
++                                <SelectItem value="">None selected</SelectItem>
++                                {getLocalAnestheticProductOptions(
++                                  entry.route || "Injection",
++                                ).map((option) => (
++                                  <SelectItem key={option} value={option}>
++                                    {option}
++                                  </SelectItem>
+                                 ))}
+                               </SelectContent>
+                             </Select>
+                           </div>
+                           <div className="space-y-2">
+                             <Label>Amount (ml)</Label>
+                             <Input
+                               value={entry.amountMl}
+                               onChange={(e) =>
+                                 setForm((current) => ({
+                                   ...current,
+                                   localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+                                     (row, rowIndex) =>
+                                       rowIndex === index ? { ...row, amountMl: e.target.value } : row,
+                                   ),
+                                 }))
+                               }
+                             />
+                           </div>
+                           <div className="space-y-2">
+                             <Label>Time administered</Label>
+                             <Input
+                               id={`local-anesthesia-time-${index}`}
+                               type="time"
+                               value={entry.timeAdministered}
+@@ -3755,53 +3889,69 @@ export function GingivalDescriptionWebformImportedTemplate({
+                                     rowIndex === index
+                                       ? { ...row, timeAdministered: "" }
+                                       : row,
+                                 ),
+                               }))
+                             }
+                           >
+                             Clear time
+                           </Button>
+                         </div>
+                       </Card>
+                     ))}
+                     <Button
+                       type="button"
+                       variant="outline"
+                       className="rounded-2xl"
+                       onClick={() =>
+                         setForm((current) => ({
+                           ...current,
+                           localAnesthesiaEntries: [
+                             ...current.localAnesthesiaEntries,
+                             emptyLocalAnesthesiaEntry(),
+                           ],
+                         }))
+                       }
+-                    >
+-                      Add injection entry
+-                    </Button>
++                    >
++                      Add injection entry
++                    </Button>
++                    <Button
++                      type="button"
++                      variant="outline"
++                      className="rounded-2xl"
++                      onClick={() =>
++                        setForm((current) => ({
++                          ...current,
++                          localAnesthesiaEntries: [
++                            ...current.localAnesthesiaEntries,
++                            emptyLocalAnesthesiaEntry("Topical"),
++                          ],
++                        }))
++                      }
++                    >
++                      Add topical entry
++                    </Button>
  
- test("imported webform preview renders summary panel and updated EOE/IOE sections", async ({
-   page,
- }) => {
-   await page.goto("/templates/dental-hygiene-note-webform");
- 
-   await expect(
-     page.getByRole("heading", { name: "Dental Hygiene Note Webform Template" }),
-   ).toBeVisible();
-   await expect(page.getByText("Structured Summary")).toBeVisible();
-   await expect(
-     page.getByRole("button", { name: "EOE Within Normal Limits" }),
-   ).toBeVisible();
--  await expect(
--    page.getByRole("button", { name: "IOE Within Normal Limits" }),
--  ).toBeVisible();
--  await expect(page.getByText("EOE observations")).toBeVisible();
--  await expect(page.getByText("IOE observations")).toBeVisible();
--});
--
--test("BP time can be reset to the current time with one click", async ({
--  page,
--}) => {
--  await page.goto("/templates/dental-hygiene-note-webform");
--
--  await page.locator("#blood-pressure-time").fill("00:00");
--  await expect(page.locator("#blood-pressure-time")).toHaveValue("00:00");
-+  await expect(
-+    page.getByRole("button", { name: "IOE Within Normal Limits" }),
-+  ).toBeVisible();
-+  await expect(page.getByText("EOE observations")).toBeVisible();
-+  await expect(page.getByText("IOE observations")).toBeVisible();
-+  await expect(page.getByRole("heading", { name: "Continuity of Care" })).toBeVisible();
-+});
- 
--  await page.getByRole("button", { name: "Set to now" }).click();
--  await expect(page.locator("#blood-pressure-time")).not.toHaveValue("00:00");
--  await expect(page.locator("#blood-pressure-time")).toHaveValue(/\d{2}:\d{2}/);
--});
-+test("vitals reading time can be reset to the current time with one click", async ({
-+  page,
-+}) => {
-+  await page.goto("/templates/dental-hygiene-note-webform");
-+
-+  await page.locator("#vitals-time-0").fill("00:00");
-+  await expect(page.locator("#vitals-time-0")).toHaveValue("00:00");
-+
-+  await page.getByRole("button", { name: "Set to now" }).click();
-+  await expect(page.locator("#vitals-time-0")).not.toHaveValue("00:00");
-+  await expect(page.locator("#vitals-time-0")).toHaveValue(/\d{2}:\d{2}/);
-+});
- 
- test("imported webform summary uses preview a formatting", async ({ page }) => {
-   await page.goto("/templates/dental-hygiene-note-webform");
-   page.once("dialog", (dialog) => dialog.accept());
-   await page.getByRole("button", { name: "Load demo" }).click();
-   await expect(page.locator("#periodontal-status-notes")).toHaveValue(
-     "Reinforced 4-month hygiene interval and home-care compliance.",
-   );
- 
-   const summary = await page.locator("textarea[readonly]").inputValue();
- 
-   expect(summary).toContain(
-     "Patient concerns: Sensitivity around lower anterior and occasional bleeding while flossing.",
-   );
--  expect(summary).toContain(
--    "Medical history update:\nMed/dent history updated. No new contraindications reported.\nBP: 118/76 mmHg\nHR: 72 bpm\nTaken at 9:15 AM",
--  );
-+  expect(summary).toContain(
-+    "Date: 2026-03-09\n\nProvider: Dr. Example\n\nPatient concerns:",
-+  );
-+  expect(summary).toContain(
-+    "Medical history update:\n   Med/dent history updated. No new contraindications reported.\n   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
-+  );
-   expect(summary).toContain(
-     "EOE: bilateral tmj clicking (asymptomatic, on open), baseline monitoring only",
-   );
-   expect(summary).toContain(
-     "IOE: coated tongue, scalloped tongue, bilateral linea alba, slight palatine torus at midline, slight bilateral mandibular tori, mild soft tissue variations noted",
-   );
-   expect(summary).toContain(
-     "Gingival Description: localized marginal papillary redness on #5, #6-8",
-   );
-   expect(summary).toContain(
-     "Periodontal diagnosis: Active Moderate Periodontitis Stage II Grade B moderate rate of progression. Reinforced 4-month hygiene interval and home-care compliance.",
-   );
-   expect(summary).toContain(
-     "Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride, history of active decay in the last 36 months. Diet and home-care factors reviewed.",
-   );
-   expect(summary).toContain(
-     "OHE: Caries theory and risk factors, bass brushing, c-shaped flossing, sulcabrush and interdental brush technique, review benefits of Prevident or Opti-Rinse, periodontitis theory and risk factors, importance of maintaining a 4-month hygiene interval",
-   );
-   expect(summary).toContain(
-     "Treatments completed today: Med/dent history update, EOE/IOE, OHE reinforced, Reviewed homecare, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible Hand and Power Instrumentation (Piezo), Ipana 5% NaF varnish application",
-   );
-   expect(summary).not.toContain("Visit Details:");
-   expect(summary).not.toContain("Other clinical findings:");
- });
- 
-@@ -190,47 +194,47 @@ test("very short template slug renders the sticky-summary variant", async ({
-   ).toBeVisible();
-   await expect(page.locator("#exam-date")).toBeVisible();
- });
- 
- test("very short template desktop shell does not leave trailing space after the summary column", async ({
-   page,
- }) => {
-   await page.setViewportSize({ width: 1664, height: 900 });
-   await page.goto("/templates/very-short-template");
- 
-   const layoutMetrics = await page.locator("main > div.min-h-screen > div").evaluate((root) => {
-     const children = Array.from(root.children);
-     const summary = children[1];
-     const rootRect = root.getBoundingClientRect();
-     const summaryRect = summary?.getBoundingClientRect();
- 
-     return {
-       trailingGap: summaryRect ? rootRect.right - summaryRect.right : null,
-     };
-   });
- 
-   expect(layoutMetrics.trailingGap).not.toBeNull();
-   expect(layoutMetrics.trailingGap ?? Number.POSITIVE_INFINITY).toBeLessThan(2);
- });
- 
--test("imported template date inputs default to today's date and prefill BP time for both slugs", async ({
-+test("imported template date and vitals defaults are prefilled for supported slugs", async ({
-   page,
- }) => {
--  const today = getTodayDateString();
--  const currentTime = getCurrentTimeString();
--
--  await page.goto("/templates/gingival-description");
--  await expect(page.locator("#exam-date")).toHaveValue(today);
--  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
--
--  await page.goto("/templates/dental-hygiene-note-webform");
--  await expect(page.locator("#exam-date")).toHaveValue(today);
--  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
--
-+  const today = getTodayDateString();
-+  const currentTime = getCurrentTimeString();
-+
-+  await page.goto("/templates/gingival-description");
-+  await expect(page.locator("#exam-date")).toHaveValue(today);
-+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
-+
-+  await page.goto("/templates/dental-hygiene-note-webform");
-+  await expect(page.locator("#exam-date")).toHaveValue(today);
-+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
-+
-   await page.goto("/templates/short-dental-hygien-note");
-   await expect(page.locator("#exam-date")).toHaveValue(today);
--  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
-+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
- 
-   await page.goto("/templates/very-short-template");
-   await expect(page.locator("#exam-date")).toHaveValue(today);
--  await expect(page.locator("#blood-pressure-time")).toHaveValue(currentTime);
-+  await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
- });
-diff --git a/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts b/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts
-index bcec8983aea9355bd9b3e573571f9aefbc451178..b0ac5c1568ba0cc88e19f4c14d21b37f94335d95 100644
---- a/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts
-+++ b/tests/vitest/gingivalDescriptionWebformImportedTemplate.test.ts
-@@ -1,42 +1,48 @@
- import { describe, expect, it } from "vitest";
- import {
-   buildDemoForm,
-   buildInitialForm,
-   buildSummaryText,
- } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
- import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
- 
- function buildBaseForm() {
-   return {
-     date: "2026-03-18",
-+    providerName: "",
-     patientConcerns: "",
-     patientPresentsForHygieneNoOtherConcerns: false,
-     medicalHistory: "Patient reports no changes",
--    bloodPressure: "",
--    heartRate: "",
--    bloodPressureTakenTime: "",
-+    vitalsReadings: [
-+      {
-+        systolic: "",
-+        diastolic: "",
-+        heartRate: "",
-+        time: "",
-+      },
-+    ],
-     eoe: "",
-     ioe: "",
-     eoeWithinNormalLimits: false,
-     ioeWithinNormalLimits: false,
-     asymptomaticClickOnOpeningClosing: false,
-     tmjClickingStatus: [],
-     tmjClickingPhase: [],
-     asymptomaticClickLaterality: "",
-     asymptomaticLymphNodes: false,
-     palpableLymphNodeLaterality: "",
-     palpableLymphNodeLocation: [],
-     palpableLymphNodeSwelling: [],
-     ioeFindings: [],
-     palatineTorusAtMidline: false,
-     palatineTorusProminence: "",
-     bilateralMandibularTori: false,
-     bilateralMandibularToriProminence: "",
-     findings: {},
-     plaque: {
-       enabled: false,
-       amount: "None",
-       extent: "Localized",
-       locations: [],
-       types: [],
-       distributions: [],
-@@ -113,68 +119,92 @@ describe("buildSummaryText", () => {
-     expect(form.findings.color.Red.presence).toBe(true);
-     expect(form.patientConcerns).toBeTruthy();
-   });
- 
-   it("includes note-only fields that were previously omitted from the plain-text summary", () => {
-     const form = buildBaseForm();
-     form.oheNotes = "Reviewed brushing modifications";
-     form.recommendationsNotes = "Use Prevident nightly";
-     form.treatmentDoneTodayNotes = "Localized debridement completed";
-     form.nextAppointmentNotes = "Re-evaluate lower anterior tissue response";
-     form.otherClinicalFindings = "Monitor linea alba";
- 
-     const summary = buildSummaryText(form, []);
- 
-     expect(summary).toContain("OHE: Reviewed brushing modifications.");
-     expect(summary).toContain("Recommendations: Use Prevident nightly.");
-     expect(summary).toContain(
-       "Treatments completed today: Localized debridement completed.",
-     );
-     expect(summary).toContain(
-       "Next Appointment: Re-evaluate lower anterior tissue response.",
-     );
-     expect(summary).toContain("Other clinical findings: Monitor linea alba.");
-   });
- 
--  it("formats the medical history block with indented detail lines and combined vitals", () => {
-+  it("formats the medical history block with per-reading vitals and averages", () => {
-     const form = buildBaseForm();
-     form.medicalHistory = "Med/dent history updated. No new contraindications reported.";
--    form.bloodPressure = "118/76";
--    form.heartRate = "72";
--    form.bloodPressureTakenTime = "09:15";
-+    form.vitalsReadings = [
-+      {
-+        systolic: "142",
-+        diastolic: "88",
-+        heartRate: "78",
-+        time: "09:05",
-+      },
-+      {
-+        systolic: "136",
-+        diastolic: "84",
-+        heartRate: "74",
-+        time: "09:15",
-+      },
-+    ];
- 
-     const summary = buildSummaryText(form, []);
- 
-     expect(summary).toContain(
-       [
-         "Medical history update:",
-         "   Med/dent history updated. No new contraindications reported.",
--        "   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
-+        "   BP: 142/88 mmHg, HR: 78 bpm (at 9:05 AM)",
-+        "   BP: 136/84 mmHg, HR: 74 bpm (at 9:15 AM)",
-+        "   Average BP: 139/86 mmHg, HR: 76 bpm",
-       ].join("\n"),
-     );
-   });
- 
-+  it("renders date and provider at the top of the summary when present", () => {
-+    const form = buildBaseForm();
-+    form.providerName = "Dr. Example";
-+
-+    const summary = buildSummaryText(form, []);
-+
-+    expect(summary.startsWith("Date: 2026-03-18\n\nProvider: Dr. Example\n\n")).toBe(
-+      true,
-+    );
-+  });
-+
-   it("formats local anesthesia as a heading with indented detail lines", () => {
-     const form = buildBaseForm();
-     form.localAnesthesiaNoContraindication = true;
-     form.localAnesthesiaBenzocaineApplied = true;
-     form.localAnesthesiaEntries = [
-       {
-         injectionType: "IA/L",
-         quadrant: "Q3",
-         anestheticProduct: "Mepivacaine 3% without epinephrine",
-         amountMl: "1.8",
-         timeAdministered: "09:25",
-       },
-     ];
-     form.localAnesthesiaNoAdverseReactions = true;
-     form.localAnesthesiaAdequateAchieved = true;
-     form.localAnesthesiaNotes =
-       "Patient tolerated injections well and post-op instructions reviewed";
- 
-     const summary = buildSummaryText(form, []);
- 
-     expect(summary).toContain("Local anesthetic administered: No C/I to LA");
-     expect(summary).toContain(
-       "   Benzocaine 20% applied to the injection site",
-     );
-     expect(summary).toContain(
+                     <div
+                       className={cx(
+                         "space-y-4 rounded-2xl border p-4 transition-colors",
+                         shouldHighlightLocalAnesthesiaAssessment
+                           ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+                           : "border-slate-200 dark:border-slate-700",
+                       )}
+                     >
+                       <div className="space-y-1">
+                         <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                           Post-anesthetic assessment
+                         </div>
+                         {shouldHighlightLocalAnesthesiaAssessment ? (
+                           <p className="text-sm text-slate-700 dark:text-slate-300">
+                             Complete the post-anesthetic assessment before finishing the note.
+                           </p>
+                         ) : null}
+                       </div>
+                       <MultiToggle
+                         label="Anesthesia assessment"
+                         options={[
+                           "No adverse reactions noted",
+                           "Adequate anesthesia achieved",
+                         ]}
