@@ -97,7 +97,6 @@ function buildBaseForm() {
     nextAppointmentInstrumentationAreas: [],
     nextAppointmentNotes: "",
     localAnesthesiaNoContraindication: false,
-    localAnesthesiaBenzocaineApplied: false,
     localAnesthesiaNoAdverseReactions: false,
     localAnesthesiaAdequateAchieved: false,
     localAnesthesiaEntries: [],
@@ -268,10 +267,20 @@ describe("buildSummaryText", () => {
   it("formats local anesthesia as a heading with indented detail lines", () => {
     const form = buildBaseForm();
     form.localAnesthesiaNoContraindication = true;
-    form.localAnesthesiaBenzocaineApplied = true;
     form.localAnesthesiaEntries = [
       {
+        route: "Topical",
+        injectionType: "",
+        applicationType: "Mucosal application",
+        quadrant: "Q3",
+        anestheticProduct: "Benzocaine 20% paste",
+        amountMl: "0.5",
+        timeAdministered: "09:24",
+      },
+      {
+        route: "Injection",
         injectionType: "IA/L",
+        applicationType: "",
         quadrant: "Q3",
         anestheticProduct: "Mepivacaine 3% without epinephrine",
         amountMl: "1.8",
@@ -287,10 +296,13 @@ describe("buildSummaryText", () => {
 
     expect(summary).toContain("Local anesthetic administered: No C/I to LA");
     expect(summary).toContain(
-      "   Benzocaine 20% applied to the injection site",
+      "   Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 9:24 AM)",
     );
     expect(summary).toContain(
       "   IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
+    );
+    expect(summary).toContain(
+      "   Total: Benzocaine 20% paste 0.5 ml",
     );
     expect(summary).toContain(
       "   Total: Mepivacaine 3% without epinephrine 1.8 ml",
