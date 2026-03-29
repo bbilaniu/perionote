@@ -792,6 +792,15 @@ export function buildDemoForm(fixture) {
   form.localAnesthesiaNoContraindication = true;
   form.localAnesthesiaEntries = [
     {
+      route: "Topical",
+      injectionType: "",
+      applicationType: "Mucosal application",
+      quadrant: "Q3",
+      anestheticProduct: "Benzocaine 20% paste",
+      amountMl: "0.5",
+      timeAdministered: "09:24",
+    },
+    {
       route: "Injection",
       injectionType: "IA/L",
       applicationType: "",
@@ -800,19 +809,9 @@ export function buildDemoForm(fixture) {
       amountMl: "1.8",
       timeAdministered: "09:25",
     },
-    {
-      route: "Topical",
-      injectionType: "",
-      applicationType: "Sulcular application",
-      quadrant: "Q3",
-      anestheticProduct:
-        "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
-      amountMl: "1.7",
-      timeAdministered: "09:27",
-    },
   ];
   form.localAnesthesiaNotes =
-    "Patient tolerated injections well and post-op instructions reviewed.";
+    "Patient tolerated local anesthesia well and post-op instructions reviewed.";
 
   form.disposition = form.disposition.map((entry) => ({
     ...entry,
@@ -3641,8 +3640,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                             Remove
                           </Button>
                         </div>
-                        <div className="grid gap-3 md:grid-cols-4">
-                          <div className="space-y-2 md:col-span-2">
+                        <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-12">
+                          <div className="space-y-2 md:col-span-2 lg:col-span-4">
                             <Label>Route</Label>
                             <Select
                               value={entry.route}
@@ -3677,7 +3676,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2 md:col-span-2">
+                          <div className="space-y-2 md:col-span-2 lg:col-span-4">
                             <Label>
                               {entry.route === "Topical"
                                 ? "Application type"
@@ -3720,7 +3719,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2 md:col-span-2">
+                          <div className="space-y-2 md:col-span-2 lg:col-span-4">
                             <Label>Quadrant</Label>
                             <Select
                               value={entry.quadrant}
@@ -3741,7 +3740,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2 md:col-span-2">
+                          <div className="space-y-2 md:col-span-2 lg:col-span-6">
                             <Label>Anesthetic product</Label>
                             <Select
                               value={entry.anestheticProduct}
@@ -3769,7 +3768,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-2 lg:col-span-3">
                             <Label>Amount (ml)</Label>
                             <Input
                               value={entry.amountMl}
@@ -3780,7 +3779,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                               }
                             />
                           </div>
-                          <div className="space-y-2">
+                          <div className="space-y-2 lg:col-span-3">
                             <Label>Time administered</Label>
                             <Input
                               id={`local-anesthesia-time-${index}`}
