@@ -340,7 +340,6 @@ const OHE_REINFORCED_OPTION = "OHE reinforced";
 const REVIEWED_HOMECARE_OPTION = "Reviewed homecare";
 const TREATMENT_OPTIONS = [
   HAND_POWER_INSTRUMENTATION_OPTION,
-  PLAQUE_SCORE_DISCLOSING_OPTION,
   FLUORIDE_VARNISH_OPTION,
 ];
 const INSTRUMENTATION_DEVICE_OPTIONS = ["Cavitron", "Piezo"];
@@ -381,15 +380,16 @@ const RECOMMENDATION_OPTIONS = [
 const VISIT_CARE_BASE_OPTIONS = [
   "Med/dent history update",
   "EOE/IOE",
-  OHE_REINFORCED_OPTION,
-  REVIEWED_HOMECARE_OPTION,
+  "Nutrition score",
   "Gingival assessments",
   "Calculus index",
   "Caries risk",
-  "Nutrition score",
   "Periodontal risk assessment",
   "Spot probing",
   "Full mouth probing",
+  PLAQUE_SCORE_DISCLOSING_OPTION,
+  OHE_REINFORCED_OPTION,
+  REVIEWED_HOMECARE_OPTION,
 ];
 const VISIT_CARE_OPTIONS = [...VISIT_CARE_BASE_OPTIONS, ...TREATMENT_OPTIONS];
 const VISIT_CARE_SELECT_CORE_OPTIONS = [
