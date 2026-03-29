@@ -3317,6 +3317,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                   label="OHE topics"
                   options={OHE_TOPIC_OPTIONS}
                   selected={form.oheTopics}
+                  showSelectAll
+                  selectAllLabel="Select All"
                   onChange={(oheTopics) =>
                     setForm((current) => ({ ...current, oheTopics }))
                   }

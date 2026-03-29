@@ -40,6 +40,22 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   await expect(page.getByText("IOE observations")).toBeVisible();
 });
 
+test("OHE section can select all topics with one click", async ({ page }) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  const oheSection = page.locator("#template-section-ohe");
+  const selectAllButton = oheSection.getByRole("button", { name: "Select All" });
+
+  await expect(selectAllButton).toBeVisible();
+  await selectAllButton.click();
+  await expect(selectAllButton).toBeDisabled();
+
+  const summary = await page.locator("textarea[readonly]").inputValue();
+  expect(summary).toContain(
+    "OHE: Caries theory and risk factors, bass brushing, c-shaped flossing, sulcabrush and interdental brush technique, review benefits of Prevident or Opti-Rinse, periodontitis theory and risk factors, importance of maintaining a 4-month hygiene interval",
+  );
+});
+
 test("vitals reading time can be reset to the current time with one click", async ({
   page,
 }) => {
