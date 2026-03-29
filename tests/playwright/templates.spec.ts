@@ -102,24 +102,38 @@ test("local anesthesia entry time can be cleared and reset", async ({ page }) =>
   await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
 });
 
-test("very short template local anesthesia product list includes ORAQIX", async ({
+test("very short template local anesthesia product list filters by route", async ({
   page,
 }) => {
   const oraqixProduct =
     "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%";
+  const benzocaineProduct = "Benzocaine 20% paste";
 
   await page.goto("/templates/very-short-template");
   await page.getByRole("button", { name: "Expand all sections" }).click();
   await page.getByRole("button", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
-  const productSelect = page
+  const injectionProductSelect = page
     .locator("#local-anesthesia-entry-0")
     .locator("select")
-    .nth(2);
+    .nth(3);
+  await injectionProductSelect.selectOption("Mepivacaine 3% without epinephrine");
+  await expect(injectionProductSelect).toHaveValue(
+    "Mepivacaine 3% without epinephrine",
+  );
 
-  await productSelect.selectOption(oraqixProduct);
-  await expect(productSelect).toHaveValue(oraqixProduct);
+  await page.getByRole("button", { name: "Add topical entry" }).click();
+
+  const topicalProductSelect = page
+    .locator("#local-anesthesia-entry-1")
+    .locator("select")
+    .nth(3);
+
+  await topicalProductSelect.selectOption(oraqixProduct);
+  await expect(topicalProductSelect).toHaveValue(oraqixProduct);
+  await topicalProductSelect.selectOption(benzocaineProduct);
+  await expect(topicalProductSelect).toHaveValue(benzocaineProduct);
 });
 
 test("local anesthesia assessment is emphasized when activity is documented without assessment", async ({
@@ -128,7 +142,7 @@ test("local anesthesia assessment is emphasized when activity is documented with
   await page.goto("/templates/dental-hygiene-note-webform");
 
   await page.getByRole("button", { name: "No C/I to LA" }).click();
-  await page.getByRole("button", { name: "Benzocaine 20% applied to the injection site" }).click();
+  await page.getByRole("button", { name: "Add topical entry" }).click();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
@@ -179,6 +193,15 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
   );
   expect(summary).toContain(
     "Treatments completed today: Med/dent history update, EOE/IOE, OHE reinforced, Reviewed homecare, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible Hand and Power Instrumentation (Piezo), Ipana 5% NaF varnish application",
+  );
+  expect(summary).toContain(
+    "IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
+  );
+  expect(summary).toContain(
+    "Sulcular application Q3: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 9:27 AM)",
+  );
+  expect(summary).toContain(
+    "Total: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml",
   );
   expect(summary).not.toContain("Visit Details:");
   expect(summary).not.toContain("Other clinical findings:");
