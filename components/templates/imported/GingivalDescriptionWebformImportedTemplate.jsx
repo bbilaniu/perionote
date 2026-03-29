@@ -3832,6 +3832,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         </div>
                       </Card>
                     ))}
+                     <div className="flex flex-wrap gap-2">
                     <Button
                       type="button"
                       variant="outline"
@@ -3864,7 +3865,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                     >
                       Add topical entry
                     </Button>
-
+                    </div>
                     <div
                       className={cx(
                         "space-y-4 rounded-2xl border p-4 transition-colors",
