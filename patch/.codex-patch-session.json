@@ -3,6 +3,6 @@
   "run": 1,
   "versions": 4,
   "base": "main",
-  "ignoreSpaceChange": false,
+  "ignoreSpaceChange": true,
   "preparedAt": "2026-03-29T14:37:10.451Z"
 }
