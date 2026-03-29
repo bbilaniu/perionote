@@ -97,7 +97,6 @@ function buildBaseForm() {
     nextAppointmentInstrumentationAreas: [],
     nextAppointmentNotes: "",
     localAnesthesiaNoContraindication: false,
-    localAnesthesiaBenzocaineApplied: false,
     localAnesthesiaNoAdverseReactions: false,
     localAnesthesiaAdequateAchieved: false,
     localAnesthesiaEntries: [],
@@ -268,14 +267,25 @@ describe("buildSummaryText", () => {
   it("formats local anesthesia as a heading with indented detail lines", () => {
     const form = buildBaseForm();
     form.localAnesthesiaNoContraindication = true;
-    form.localAnesthesiaBenzocaineApplied = true;
     form.localAnesthesiaEntries = [
       {
+        route: "Injection",
         injectionType: "IA/L",
+        applicationType: "",
         quadrant: "Q3",
         anestheticProduct: "Mepivacaine 3% without epinephrine",
         amountMl: "1.8",
         timeAdministered: "09:25",
+      },
+      {
+        route: "Topical",
+        injectionType: "",
+        applicationType: "Sulcular application",
+        quadrant: "Q3",
+        anestheticProduct:
+          "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+        amountMl: "1.7",
+        timeAdministered: "09:27",
       },
     ];
     form.localAnesthesiaNoAdverseReactions = true;
@@ -287,13 +297,16 @@ describe("buildSummaryText", () => {
 
     expect(summary).toContain("Local anesthetic administered: No C/I to LA");
     expect(summary).toContain(
-      "   Benzocaine 20% applied to the injection site",
-    );
-    expect(summary).toContain(
       "   IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
     );
     expect(summary).toContain(
+      "   Sulcular application Q3: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 9:27 AM)",
+    );
+    expect(summary).toContain(
       "   Total: Mepivacaine 3% without epinephrine 1.8 ml",
+    );
+    expect(summary).toContain(
+      "   Total: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml",
     );
     expect(summary).toContain("   No adverse reactions noted");
     expect(summary).toContain("   Adequate anesthesia achieved");

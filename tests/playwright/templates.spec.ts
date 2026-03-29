@@ -102,7 +102,7 @@ test("local anesthesia entry time can be cleared and reset", async ({ page }) =>
   await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
 });
 
-test("very short template local anesthesia product list includes ORAQIX", async ({
+test("very short template local anesthesia route-specific products include ORAQIX only for topical", async ({
   page,
 }) => {
   const oraqixProduct =
@@ -113,13 +113,23 @@ test("very short template local anesthesia product list includes ORAQIX", async 
   await page.getByRole("button", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
-  const productSelect = page
+  const injectionProductSelect = page
     .locator("#local-anesthesia-entry-0")
     .locator("select")
-    .nth(2);
+    .nth(3);
 
-  await productSelect.selectOption(oraqixProduct);
-  await expect(productSelect).toHaveValue(oraqixProduct);
+  await expect(injectionProductSelect.locator("option")).not.toContainText(
+    oraqixProduct,
+  );
+
+  await page.getByRole("button", { name: "Add topical entry" }).click();
+
+  const topicalProductSelect = page
+    .locator("#local-anesthesia-entry-1")
+    .locator("select")
+    .nth(3);
+  await topicalProductSelect.selectOption(oraqixProduct);
+  await expect(topicalProductSelect).toHaveValue(oraqixProduct);
 });
 
 test("local anesthesia assessment is emphasized when activity is documented without assessment", async ({
@@ -128,7 +138,7 @@ test("local anesthesia assessment is emphasized when activity is documented with
   await page.goto("/templates/dental-hygiene-note-webform");
 
   await page.getByRole("button", { name: "No C/I to LA" }).click();
-  await page.getByRole("button", { name: "Benzocaine 20% applied to the injection site" }).click();
+  await page.getByRole("button", { name: "Add topical entry" }).click();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
@@ -139,6 +149,33 @@ test("local anesthesia assessment is emphasized when activity is documented with
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
   ).toHaveCount(0);
+});
+
+test("topical local anesthesia uses route-specific defaults and summary phrasing", async ({
+  page,
+}) => {
+  const oraqixProduct =
+    "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%";
+
+  await page.goto("/templates/dental-hygiene-note-webform");
+  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("button", { name: "Add topical entry" }).click();
+
+  const entry = page.locator("#local-anesthesia-entry-0");
+  const applicationSelect = entry.locator("select").nth(1);
+  const quadrantSelect = entry.locator("select").nth(2);
+  const productSelect = entry.locator("select").nth(3);
+  const amountInput = entry.locator("input").nth(0);
+
+  await applicationSelect.selectOption("Sulcular application");
+  await quadrantSelect.selectOption("Q3");
+  await productSelect.selectOption(oraqixProduct);
+  await expect(amountInput).toHaveValue("1.7");
+
+  const summary = await page.locator("textarea[readonly]").inputValue();
+  expect(summary).toContain(
+    "Sulcular application Q3: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml",
+  );
 });
 
 test("imported webform summary uses preview a formatting", async ({ page }) => {
