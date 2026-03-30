@@ -573,6 +573,7 @@ export function buildInitialForm(fixture) {
     nextAppointmentInstrumentationAreas: [],
     nextAppointmentNotes: "",
     localAnesthesiaNoContraindication: false,
+    localAnesthesiaBenzocaineApplied: false,
     localAnesthesiaNoAdverseReactions: false,
     localAnesthesiaAdequateAchieved: false,
     localAnesthesiaEntries: [],
@@ -1398,9 +1399,12 @@ export function buildSummaryText(form, selectedFindings) {
     if (form.localAnesthesiaNoContraindication) {
       heading = "Local anesthetic administered: No C/I to LA";
     }
+    if (form.localAnesthesiaBenzocaineApplied) {
+      detailLines.push("Benzocaine 20% applied to the injection site");
+    }
     const totals = new Map();
     form.localAnesthesiaEntries.forEach((entry) => {
-      const route = clean(entry.route);
+      const route = clean(entry.route) || (clean(entry.injectionType) ? "Injection" : "");
       const injectionType = clean(entry.injectionType);
       const applicationType = clean(entry.applicationType);
       const quadrant = clean(entry.quadrant);
