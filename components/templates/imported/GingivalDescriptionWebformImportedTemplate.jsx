@@ -285,12 +285,12 @@ const FIELD_OPTIONS = {
 };
 
 const LOCATION_OPTIONS = [
-  "Sextant 1 (Upper right)",
-  "Sextant 2 (Upper anterior)",
-  "Sextant 3 (Upper left)",
-  "Sextant 4 (Lower left)",
-  "Sextant 5 (Lower anterior)",
-  "Sextant 6 (Lower right)",
+  "Sextant 1",
+  "Sextant 2",
+  "Sextant 3",
+  "Sextant 4",
+  "Sextant 5",
+  "Sextant 6",
 ];
 
 const DISTRIBUTION_OPTIONS = ["Diffuse", "Marginal", "Papillary"];
@@ -652,7 +652,7 @@ export function buildDemoForm(fixture) {
     presence: true,
     extent: "generalized",
     toothNumbers: "",
-    locations: ["Sextant 1 (Upper right)", "Sextant 3 (Upper left)"],
+    locations: ["Sextant 1", "Sextant 3"],
     distributions: ["Marginal"],
     notes: "Inflammation most notable posteriorly",
   };
@@ -660,7 +660,7 @@ export function buildDemoForm(fixture) {
     presence: true,
     extent: "localized",
     toothNumbers: "#23-26",
-    locations: ["Sextant 5 (Lower anterior)"],
+    locations: ["Sextant 5"],
     distributions: ["Papillary"],
     notes: "Correlates with plaque retention areas",
   };
@@ -668,7 +668,7 @@ export function buildDemoForm(fixture) {
     presence: true,
     extent: "localized",
     toothNumbers: "#14-16",
-    locations: ["Sextant 4 (Lower left)"],
+    locations: ["Sextant 4"],
     distributions: ["Marginal"],
     notes: "",
   };
@@ -677,9 +677,9 @@ export function buildDemoForm(fixture) {
     amount: "Heavy",
     extent: "Generalized",
     locations: [
-      "Sextant 1 (Upper right)",
-      "Sextant 5 (Lower anterior)",
-      "Sextant 6 (Lower right)",
+      "Sextant 1",
+      "Sextant 5",
+      "Sextant 6",
     ],
     types: [],
     distributions: ["Facial", "At gingival margin"],
@@ -689,7 +689,7 @@ export function buildDemoForm(fixture) {
     enabled: true,
     amount: "Moderate",
     extent: "Localized",
-    locations: ["Sextant 5 (Lower anterior)"],
+    locations: ["Sextant 5"],
     types: ["Supragingival", "Subgingival"],
     distributions: ["Lingual", "Interproximal"],
     details: "",
@@ -698,7 +698,7 @@ export function buildDemoForm(fixture) {
     enabled: true,
     amount: "Light",
     extent: "Localized",
-    locations: ["Sextant 1 (Upper right)", "Sextant 3 (Upper left)"],
+    locations: ["Sextant 1", "Sextant 3"],
     types: [],
     distributions: [],
     details: "Tea and coffee staining on posterior facial surfaces",
@@ -1618,7 +1618,7 @@ export const SUMMARY_TEST_CASES = [
       form.plaque.enabled = true;
       form.plaque.amount = "Light";
       form.plaque.extent = "Localized";
-      form.plaque.locations = ["Sextant 1 (Upper right)"];
+      form.plaque.locations = ["Sextant 1"];
       form.plaque.distributions = ["Facial"];
       return { form, selectedFindings: [] };
     })(),
