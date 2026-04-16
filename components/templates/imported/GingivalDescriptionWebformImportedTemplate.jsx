@@ -430,6 +430,15 @@ const LOCAL_ANESTHETIC_DEFAULT_AMOUNTS_BY_PRODUCT = {
   "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%": "1.7",
 };
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
+const ARCH_ROW_LABELS = ["Upper", "Lower"];
+const QUADRANT_GRID_ROWS = [
+  ["Q1", "Q2"],
+  ["Q4", "Q3"],
+];
+const SEXTANT_GRID_ROWS = [
+  ["Sextant 1", "Sextant 2", "Sextant 3"],
+  ["Sextant 6", "Sextant 5", "Sextant 4"],
+];
 const DISPOSITION_INTERVAL_OPTIONS = [
   {
     key: "reEval",
@@ -1645,6 +1654,110 @@ export const SUMMARY_TEST_CASES = [
   },
 ];
 
+function includesAllOptions(options, requiredOptions) {
+  return requiredOptions.every((option) => options.includes(option));
+}
+
+function getDentalRegionButtonLabel(option) {
+  const sextantMatch = option.match(/^Sextant\s+(\d+)$/);
+  if (sextantMatch) return sextantMatch[1];
+  return option;
+}
+
+function getDentalRegionGroups(options) {
+  const groups = [];
+  const recognizedOptions = new Set();
+
+  if (includesAllOptions(options, QUADRANT_OPTIONS)) {
+    groups.push({
+      key: "quadrants",
+      title: "Quadrants",
+      rows: QUADRANT_GRID_ROWS,
+    });
+    QUADRANT_OPTIONS.forEach((option) => recognizedOptions.add(option));
+  }
+
+  if (includesAllOptions(options, LOCATION_OPTIONS)) {
+    groups.push({
+      key: "sextants",
+      title: "Sextants",
+      rows: SEXTANT_GRID_ROWS,
+    });
+    LOCATION_OPTIONS.forEach((option) => recognizedOptions.add(option));
+  }
+
+  return {
+    groups,
+    remainingOptions: options.filter((option) => !recognizedOptions.has(option)),
+  };
+}
+
+function DentalRegionGrid({
+  title,
+  rows,
+  selected,
+  onChange,
+  singleSelect = false,
+}) {
+  const selectedSet = new Set(selected);
+
+  return (
+    <div className="space-y-2">
+      {title ? (
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+          {title}
+        </p>
+      ) : null}
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 dark:border-slate-700 dark:bg-slate-900/50">
+        <div className="space-y-2">
+          {rows.map((row, rowIndex) => (
+            <div
+              key={`${title || "dental-region"}-${rowIndex}`}
+              className="grid gap-2"
+              style={{
+                gridTemplateColumns: `3.75rem repeat(${row.length}, minmax(0, 1fr))`,
+              }}
+            >
+              <div className="flex items-center justify-center rounded-xl bg-white/70 px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:bg-slate-800/80 dark:text-slate-400">
+                {ARCH_ROW_LABELS[rowIndex] || ""}
+              </div>
+              {row.map((option) => {
+                const isActive = selectedSet.has(option);
+
+                return (
+                  <Button
+                    key={option}
+                    type="button"
+                    variant={isActive ? "default" : "outline"}
+                    className="h-14 rounded-2xl px-3 text-base font-semibold"
+                    aria-pressed={isActive}
+                    aria-label={option}
+                    onClick={() => {
+                      if (singleSelect) {
+                        onChange(isActive ? [] : [option]);
+                        return;
+                      }
+
+                      if (isActive) {
+                        onChange(selected.filter((item) => item !== option));
+                        return;
+                      }
+
+                      onChange([...selected, option]);
+                    }}
+                  >
+                    {getDentalRegionButtonLabel(option)}
+                  </Button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MultiToggle({
   label,
   options,
@@ -1653,7 +1766,10 @@ function MultiToggle({
   showSelectAll = false,
   selectAllLabel = "Select Core",
   onSelectAll,
+  singleSelect = false,
 }) {
+  const { groups: dentalRegionGroups, remainingOptions } =
+    getDentalRegionGroups(options);
   const selectedSet = new Set(selected);
   const allSelected = options.length > 0 && selected.length === options.length;
 
@@ -1679,28 +1795,56 @@ function MultiToggle({
           </Button>
         ) : null}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {options.map((option) => {
-          const isActive = selectedSet.has(option);
-          return (
-            <Button
-              key={option}
-              type="button"
-              variant={isActive ? "default" : "outline"}
-              className="rounded-2xl"
-              onClick={() => {
-                if (isActive) {
-                  onChange(selected.filter((item) => item !== option));
-                } else {
-                  onChange([...selected, option]);
-                }
-              }}
-            >
-              {option}
-            </Button>
-          );
-        })}
-      </div>
+      {dentalRegionGroups.length ? (
+        <div className="space-y-3">
+          {dentalRegionGroups.map((group) => (
+            <DentalRegionGrid
+              key={group.key}
+              title={group.title}
+              rows={group.rows}
+              selected={selected}
+              onChange={onChange}
+              singleSelect={singleSelect}
+            />
+          ))}
+        </div>
+      ) : null}
+      {remainingOptions.length ? (
+        <div className="space-y-2">
+          {dentalRegionGroups.length ? (
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+              Other Areas
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {remainingOptions.map((option) => {
+              const isActive = selectedSet.has(option);
+              return (
+                <Button
+                  key={option}
+                  type="button"
+                  variant={isActive ? "default" : "outline"}
+                  className="rounded-2xl"
+                  onClick={() => {
+                    if (singleSelect) {
+                      onChange(isActive ? [] : [option]);
+                      return;
+                    }
+
+                    if (isActive) {
+                      onChange(selected.filter((item) => item !== option));
+                    } else {
+                      onChange([...selected, option]);
+                    }
+                  }}
+                >
+                  {option}
+                </Button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -3725,24 +3869,16 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
                           <div className="space-y-2 md:col-span-2 lg:col-span-4">
                             <Label>Quadrant</Label>
-                            <Select
-                              value={entry.quadrant}
-                              onValueChange={(quadrant) =>
-                                updateLocalAnesthesiaEntry(index, { quadrant })
+                            <DentalRegionGrid
+                              rows={QUADRANT_GRID_ROWS}
+                              selected={entry.quadrant ? [entry.quadrant] : []}
+                              singleSelect
+                              onChange={(selectedQuadrants) =>
+                                updateLocalAnesthesiaEntry(index, {
+                                  quadrant: selectedQuadrants[0] || "",
+                                })
                               }
-                            >
-                              <SelectTrigger className="rounded-xl">
-                                <SelectValue placeholder="Select quadrant" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="">None selected</SelectItem>
-                                {QUADRANT_OPTIONS.map((option) => (
-                                  <SelectItem key={option} value={option}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            />
                           </div>
                           <div className="space-y-2 md:col-span-2 lg:col-span-6">
                             <Label>Anesthetic product</Label>
