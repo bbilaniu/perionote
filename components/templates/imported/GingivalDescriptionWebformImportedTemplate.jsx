@@ -3770,7 +3770,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         id={`local-anesthesia-entry-${index}`}
                         className="space-y-3 rounded-2xl border-dashed p-4"
                       >
-                        <div className="mb-3 flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                           <Label>Local anesthesia entry #{index + 1}</Label>
                           <Button
                             type="button"
@@ -3788,8 +3788,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                             Remove
                           </Button>
                         </div>
-                        <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-12">
-                          <div className="space-y-2 md:col-span-2 lg:col-span-4">
+
+                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-12">
+                          <div className="space-y-2 lg:col-span-3">
                             <Label>Route</Label>
                             <Select
                               value={entry.route}
@@ -3824,7 +3825,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2 md:col-span-2 lg:col-span-4">
+
+                          <div className="space-y-2 lg:col-span-5">
                             <Label>
                               {entry.route === "Topical"
                                 ? "Application type"
@@ -3867,20 +3869,35 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
+
                           <div className="space-y-2 md:col-span-2 lg:col-span-4">
                             <Label>Quadrant</Label>
-                            <DentalRegionGrid
-                              rows={QUADRANT_GRID_ROWS}
-                              selected={entry.quadrant ? [entry.quadrant] : []}
-                              singleSelect
-                              onChange={(selectedQuadrants) =>
-                                updateLocalAnesthesiaEntry(index, {
-                                  quadrant: selectedQuadrants[0] || "",
-                                })
-                              }
-                            />
+                            <div className="flex flex-wrap gap-2">
+                              {QUADRANT_OPTIONS.map((option) => {
+                                const isActive = entry.quadrant === option;
+
+                                return (
+                                  <Button
+                                    key={`local-anesthesia-${index}-${option}`}
+                                    type="button"
+                                    variant={isActive ? "default" : "outline"}
+                                    className="rounded-2xl px-4 py-2 text-sm"
+                                    onClick={() =>
+                                      updateLocalAnesthesiaEntry(index, {
+                                        quadrant: isActive ? "" : option,
+                                      })
+                                    }
+                                  >
+                                    {option}
+                                  </Button>
+                                );
+                              })}
+                            </div>
                           </div>
-                          <div className="space-y-2 md:col-span-2 lg:col-span-6">
+                        </div>
+
+                        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_7rem_19rem]">
+                          <div className="space-y-2 md:col-span-2 lg:col-span-1">
                             <Label>Anesthetic product</Label>
                             <Select
                               value={entry.anestheticProduct}
@@ -3908,9 +3925,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="space-y-2 lg:col-span-3">
+
+                          <div className="space-y-2">
                             <Label>Amount (ml)</Label>
                             <Input
+                              className="w-full max-w-[7rem]"
                               value={entry.amountMl}
                               onChange={(e) =>
                                 updateLocalAnesthesiaEntry(index, {
@@ -3919,73 +3938,83 @@ export function GingivalDescriptionWebformImportedTemplate({
                               }
                             />
                           </div>
-                          <div className="space-y-2 lg:col-span-3">
-                            <Label>Time administered</Label>
-                            <Input
-                              id={`local-anesthesia-time-${index}`}
-                              type="time"
-                              value={entry.timeAdministered}
-                              onChange={(e) =>
-                                updateLocalAnesthesiaEntry(index, {
-                                  timeAdministered: e.target.value,
-                                })
-                              }
-                            />
+
+                          <div className="space-y-2 md:col-span-2 lg:col-span-1">
+                            <Label htmlFor={`local-anesthesia-time-${index}`}>
+                              Time administered
+                            </Label>
+                            <div className="flex flex-nowrap items-center gap-2">
+                              <Input
+                                id={`local-anesthesia-time-${index}`}
+                                type="time"
+                                className="min-w-0 max-w-[9rem] flex-1"
+                                value={entry.timeAdministered}
+                                onChange={(e) =>
+                                  updateLocalAnesthesiaEntry(index, {
+                                    timeAdministered: e.target.value,
+                                  })
+                                }
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="shrink-0 rounded-xl px-3 py-1.5 text-xs"
+                                onClick={() =>
+                                  setLocalAnesthesiaEntryTimeToCurrent(index)
+                                }
+                              >
+                                Now
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="shrink-0 rounded-xl px-3 py-1.5 text-xs"
+                                onClick={() =>
+                                  updateLocalAnesthesiaEntry(index, {
+                                    timeAdministered: "",
+                                  })
+                                }
+                              >
+                                Clear
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-xl px-3 py-2 text-xs"
-                            onClick={() => setLocalAnesthesiaEntryTimeToCurrent(index)}
-                          >
-                            Set to now
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="rounded-xl px-3 py-2 text-xs"
-                            onClick={() => updateLocalAnesthesiaEntry(index, { timeAdministered: "" })}
-                          >
-                            Clear time
-                          </Button>
                         </div>
                       </Card>
                     ))}
-                     <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          localAnesthesiaEntries: [
-                            ...current.localAnesthesiaEntries,
-                            createLocalAnesthesiaEntry("Injection"),
-                          ],
-                        }))
-                      }
-                    >
-                      Add injection entry
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="rounded-2xl"
-                      onClick={() =>
-                        setForm((current) => ({
-                          ...current,
-                          localAnesthesiaEntries: [
-                            ...current.localAnesthesiaEntries,
-                            createLocalAnesthesiaEntry("Topical"),
-                          ],
-                        }))
-                      }
-                    >
-                      Add topical entry
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaEntries: [
+                              ...current.localAnesthesiaEntries,
+                              createLocalAnesthesiaEntry("Injection"),
+                            ],
+                          }))
+                        }
+                      >
+                        Add injection entry
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="rounded-2xl"
+                        onClick={() =>
+                          setForm((current) => ({
+                            ...current,
+                            localAnesthesiaEntries: [
+                              ...current.localAnesthesiaEntries,
+                              createLocalAnesthesiaEntry("Topical"),
+                            ],
+                          }))
+                        }
+                      >
+                        Add topical entry
+                      </Button>
                     </div>
 
                     <div
