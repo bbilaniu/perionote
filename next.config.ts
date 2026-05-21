@@ -8,8 +8,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   output: "export",
   trailingSlash: true,
-  basePath: repoBasePath,
-  assetPrefix: repoBasePath
+  //basePath: repoBasePath,
+  //assetPrefix: repoBasePath
 };
 
 export default nextConfig;
