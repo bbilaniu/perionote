@@ -18,6 +18,10 @@
       "label": "Check project",
       "type": "shell",
       "command": "npm run lint && npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": []
     }
   ]
