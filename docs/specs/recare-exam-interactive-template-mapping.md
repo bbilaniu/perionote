@@ -23,8 +23,8 @@ user-requested Patient ID and note-start timestamp extensions, which are not
 present in the source template.
 
 Functional approval advances the conversion to lifecycle status `pilot`. Pilot
-production inclusion remains an explicit build decision under ADR 0003; this
-approval does not advance the conversion to `ready`.
+conversions are included in production and remain visibly labelled under ADR
+0003; this approval does not advance the conversion to `ready`.
 
 ## Scope
 

@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
+import packageInfo from "@/package.json";
 
 test("template library index separates clinic and interactive templates", async ({
   page,
@@ -15,6 +16,10 @@ test("template library index separates clinic and interactive templates", async 
   await expect(
     page.locator('main a[href="/templates/interactive/"]'),
   ).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toContainText("HygieneNote");
+  await expect(page.getByRole("contentinfo")).toContainText(
+    `Version ${packageInfo.version}`,
+  );
 });
 
 test("standalone interactive index excludes clinical conversions", async ({

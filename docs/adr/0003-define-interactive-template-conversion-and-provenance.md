@@ -94,9 +94,9 @@ Interactive conversions will use a small lifecycle:
 - `pilot`: functionally complete and undergoing structured clinical review; and
 - `ready`: reviewed and suitable for the public interactive-template library.
 
-Pilot inclusion in a production build must be intentional and visibly labelled.
-Draft exclusion must occur at build or registration time; removing a navigation
-link is insufficient.
+Pilot conversions are included in production builds and must remain visibly
+labelled. Draft exclusion must occur at build or registration time; removing a
+navigation link is insufficient.
 
 Lifecycle status communicates conversion maturity, not regulatory approval,
 privacy compliance, or a clinical recommendation.
