@@ -266,11 +266,11 @@ Freezing Method: [SELECT/INSERT: Freezing Method]
 Patient tolerated well. No adverse reactions`,
   },
   {
-    slug: "susanne-part-1",
-    title: "Susanne — Part 1",
-    sourceTitle: "SUSANNE PART 1",
+    slug: "split-adult-hygiene-part-1",
+    title: "Split Adult Hygiene — Part 1",
+    sourceTitle: "Split Adult Hygiene Part 1",
     category: "adult-hygiene",
-    description: "First part of the split Susanne adult hygiene workflow.",
+    description: "First part of the split adult hygiene workflow.",
     content: `Last Recall Date: [AUTO: Last Recall Date]
 
 DENTIST: [SELECT/INSERT: Dentists]
@@ -301,11 +301,11 @@ EOE/IOE:
 Gingival Assessment:`,
   },
   {
-    slug: "susanne-part-2",
-    title: "Susanne — Part 2",
-    sourceTitle: "SUSANNE PART 2",
+    slug: "split-adult-hygiene-part-2",
+    title: "Split Adult Hygiene — Part 2",
+    sourceTitle: "Split Adult Hygiene Part 2",
     category: "adult-hygiene",
-    description: "Second part of the split Susanne adult hygiene workflow.",
+    description: "Second part of the split adult hygiene workflow.",
     content: `Hygiene Area of Concern:
 
 Plaque:  [SELECT/INSERT: PLAQUE]
