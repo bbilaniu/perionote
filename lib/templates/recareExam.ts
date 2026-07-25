@@ -48,7 +48,10 @@ export interface RecareExamForm {
   intraoralStatus: ExamStatus;
   intraoralFindings: string;
   oralHabits: string;
-  molarOcclusion: string;
+  rightMolarOcclusion: string;
+  rightMolarOcclusionNotApplicable: boolean;
+  leftMolarOcclusion: string;
+  leftMolarOcclusionNotApplicable: boolean;
   skeletalOcclusion: string;
   skeletalOcclusionNotApplicable: boolean;
   overjetMm: string;
@@ -58,7 +61,7 @@ export interface RecareExamForm {
   occlusalSplintUseStatus: DocumentationStatus;
   orthodonticHistoryStatus: DocumentationStatus;
   retainerStatus: RetainerStatus;
-  partialDenturesStatus: DocumentationStatus;
+  removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
   treatmentOptionsHygieneMaintenance: boolean;
@@ -99,7 +102,10 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     intraoralStatus: "not-assessed",
     intraoralFindings: "",
     oralHabits: "",
-    molarOcclusion: "",
+    rightMolarOcclusion: "",
+    rightMolarOcclusionNotApplicable: false,
+    leftMolarOcclusion: "",
+    leftMolarOcclusionNotApplicable: false,
     skeletalOcclusion: "",
     skeletalOcclusionNotApplicable: false,
     overjetMm: "",
@@ -109,7 +115,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     occlusalSplintUseStatus: "not-documented",
     orthodonticHistoryStatus: "not-documented",
     retainerStatus: "not-documented",
-    partialDenturesStatus: "not-documented",
+    removableDenturesStatus: "not-documented",
     improvementRequest: "",
     additionalComments: "",
     treatmentOptionsHygieneMaintenance: false,

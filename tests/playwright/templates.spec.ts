@@ -47,6 +47,9 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/templates/recare-exam");
+  await expect(page.locator("#recare-form-started")).toHaveValue(
+    /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
+  );
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
 
   await page.getByRole("button", { name: "Copy note" }).click();
@@ -76,6 +79,9 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
   expect(copiedNote).toMatch(/^DATE: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/);
   expect(copiedNote).toContain("PATIENT ID: TEST-3003");
+  expect(copiedNote).toMatch(
+    /\nFORM STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/,
+  );
   expect(copiedNote).toContain("RDH: Example RDH");
 });
 
@@ -85,11 +91,23 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/templates/recare-exam");
+  await expect(page.locator("#recare-form-started")).toHaveValue(
+    /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
+  );
+  const initialStartedAt = await page
+    .locator("#recare-form-started")
+    .inputValue();
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue("TEST-1001");
+  await expect(
+    page.getByLabel("Partial/complete removable dentures"),
+  ).toHaveValue("no");
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Occlusal splint: Yes; uses\./,
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Molar occlusion—right: Synthetic Class I\.\nMolar occlusion—left: N\/A\./,
   );
 
   await page.getByRole("button", { name: "Copy note" }).click();
@@ -104,13 +122,27 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
 
   await page.reload();
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
-  await expect(page.locator("#recare-summary")).toHaveValue("");
+  await expect(page.locator("#recare-form-started")).toHaveValue(
+    /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /^FORM STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+  );
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  const reloadedStartedAt = await page
+    .locator("#recare-form-started")
+    .inputValue();
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Reset form" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
-  await expect(page.locator("#recare-summary")).toHaveValue("");
+  await expect(page.locator("#recare-form-started")).toHaveValue(
+    reloadedStartedAt,
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    `FORM STARTED: ${reloadedStartedAt}`,
+  );
+  expect(initialStartedAt).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/);
 });
 
 test("clinic template library follows the clinical menu and opens a template", async ({

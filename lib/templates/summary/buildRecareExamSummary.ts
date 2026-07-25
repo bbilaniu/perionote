@@ -7,6 +7,7 @@ import type {
 
 type BuildRecareExamSummaryOptions = {
   copiedAt?: Date;
+  startedAt?: Date;
 };
 
 function trimmed(value: string): string {
@@ -75,7 +76,7 @@ function treatmentBlock(
   return [heading, ...entries.map((entry) => `  - ${entry}`)];
 }
 
-export function formatRecareExamCopyTimestamp(date: Date): string {
+export function formatRecareExamLocalTimestamp(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
@@ -91,9 +92,12 @@ export function buildRecareExamSummary(
 ): string {
   const patientAndTeam = [
     options.copiedAt
-      ? `DATE: ${formatRecareExamCopyTimestamp(options.copiedAt)}`
+      ? `DATE: ${formatRecareExamLocalTimestamp(options.copiedAt)}`
       : "",
     trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
+    options.startedAt
+      ? `FORM STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
+      : "",
     trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
     trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
     trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
@@ -166,9 +170,16 @@ export function buildRecareExamSummary(
     trimmed(form.oralHabits)
       ? `Oral habits: ${withTerminalPunctuation(form.oralHabits)}`
       : "",
-    trimmed(form.molarOcclusion)
-      ? `Molar occlusion: ${withTerminalPunctuation(form.molarOcclusion)}`
-      : "",
+    form.rightMolarOcclusionNotApplicable
+      ? "Molar occlusion—right: N/A."
+      : trimmed(form.rightMolarOcclusion)
+        ? `Molar occlusion—right: ${withTerminalPunctuation(form.rightMolarOcclusion)}`
+        : "",
+    form.leftMolarOcclusionNotApplicable
+      ? "Molar occlusion—left: N/A."
+      : trimmed(form.leftMolarOcclusion)
+        ? `Molar occlusion—left: ${withTerminalPunctuation(form.leftMolarOcclusion)}`
+        : "",
     form.skeletalOcclusionNotApplicable
       ? "Skeletal occlusion: N/A."
       : trimmed(form.skeletalOcclusion)
@@ -196,7 +207,10 @@ export function buildRecareExamSummary(
     occlusalSplint,
     yesNoLine("Orthodontic history", form.orthodonticHistoryStatus),
     retainerLine(form.retainerStatus),
-    yesNoLine("Partial dentures", form.partialDenturesStatus),
+    yesNoLine(
+      "Partial/complete removable dentures",
+      form.removableDenturesStatus,
+    ),
   ];
 
   const patientRequests = [

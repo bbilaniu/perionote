@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -17,7 +18,10 @@ import {
   createEmptyRecareExamForm,
   hasRequiredRecareExamFields,
 } from "@/lib/templates/recareExam";
-import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
+import {
+  buildRecareExamSummary,
+  formatRecareExamLocalTimestamp,
+} from "@/lib/templates/summary/buildRecareExamSummary";
 
 const inputClass =
   "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900";
@@ -72,6 +76,7 @@ function TextField({
   type = "text",
   inputMode,
   disabled,
+  readOnly,
   placeholder,
 }: {
   id: string;
@@ -84,6 +89,7 @@ function TextField({
   type?: "text" | "date";
   inputMode?: "decimal";
   disabled?: boolean;
+  readOnly?: boolean;
   placeholder?: string;
 }) {
   const errorId = `${id}-error`;
@@ -102,6 +108,7 @@ function TextField({
         inputMode={inputMode}
         value={value}
         disabled={disabled}
+        readOnly={readOnly}
         placeholder={placeholder}
         autoComplete="off"
         aria-invalid={Boolean(error)}
@@ -284,13 +291,24 @@ export function RecareExamTemplate({
   const [form, setForm] = useState<RecareExamForm>(() =>
     createEmptyRecareExamForm(),
   );
+  const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
 
-  const summary = useMemo(() => buildRecareExamSummary(form), [form]);
+  useEffect(() => {
+    setStartedAt(new Date());
+  }, []);
+
+  const summary = useMemo(
+    () =>
+      buildRecareExamSummary(form, {
+        ...(startedAt ? { startedAt } : {}),
+      }),
+    [form, startedAt],
+  );
   const isDirty = JSON.stringify(form) !== JSON.stringify(emptyForm);
 
   function updateField<TKey extends keyof RecareExamForm>(
@@ -331,7 +349,14 @@ export function RecareExamTemplate({
       return;
     }
 
-    const copiedNote = buildRecareExamSummary(form, { copiedAt: new Date() });
+    const formStartedAt = startedAt ?? new Date();
+    if (!startedAt) {
+      setStartedAt(formStartedAt);
+    }
+    const copiedNote = buildRecareExamSummary(form, {
+      copiedAt: new Date(),
+      startedAt: formStartedAt,
+    });
     const copied = await writeClipboard(copiedNote);
     setCopyMessage(
       copied
@@ -369,6 +394,8 @@ export function RecareExamTemplate({
       RecareExamForm,
       | "consentObtained"
       | "class5IndicatorsChecked"
+      | "rightMolarOcclusionNotApplicable"
+      | "leftMolarOcclusionNotApplicable"
       | "skeletalOcclusionNotApplicable"
       | "treatmentOptionsHygieneMaintenance"
       | "treatmentPlanHygieneMaintenance"
@@ -404,16 +431,27 @@ export function RecareExamTemplate({
         }}
       >
         <div className="space-y-6">
-          <Section title="Patient Context">
-            <TextField
-              id="recare-patient-id"
-              label="Patient ID"
-              value={form.patientId}
-              onChange={(value) => updateField("patientId", value)}
-              required
-              error={patientIdError}
-              inputRef={patientIdRef}
-            />
+          <Section title="Patient and Visit Context">
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextField
+                id="recare-patient-id"
+                label="Patient ID"
+                value={form.patientId}
+                onChange={(value) => updateField("patientId", value)}
+                required
+                error={patientIdError}
+                inputRef={patientIdRef}
+              />
+              <TextField
+                id="recare-form-started"
+                label="Form started (page loaded)"
+                value={
+                  startedAt ? formatRecareExamLocalTimestamp(startedAt) : ""
+                }
+                onChange={() => undefined}
+                readOnly
+              />
+            </div>
           </Section>
 
           <Section
@@ -634,19 +672,72 @@ export function RecareExamTemplate({
               }
             />
 
+            <TextField
+              id="recare-oral-habits"
+              label="Oral habits"
+              value={form.oralHabits}
+              onChange={(value) => updateField("oralHabits", value)}
+            />
+
             <div className="grid gap-4 md:grid-cols-2">
-              <TextField
-                id="recare-oral-habits"
-                label="Oral habits"
-                value={form.oralHabits}
-                onChange={(value) => updateField("oralHabits", value)}
-              />
-              <TextField
-                id="recare-molar-occlusion"
-                label="Molar occlusion"
-                value={form.molarOcclusion}
-                onChange={(value) => updateField("molarOcclusion", value)}
-              />
+              <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
+                <TextField
+                  id="recare-right-molar-occlusion"
+                  label="Right molar occlusion"
+                  value={form.rightMolarOcclusion}
+                  onChange={(value) =>
+                    updateField("rightMolarOcclusion", value)
+                  }
+                  disabled={form.rightMolarOcclusionNotApplicable}
+                />
+                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">
+                  <input
+                    id="recare-right-molar-na"
+                    type="checkbox"
+                    className="h-4 w-4 accent-sky-700"
+                    checked={form.rightMolarOcclusionNotApplicable}
+                    onChange={(event) => {
+                      updateField(
+                        "rightMolarOcclusionNotApplicable",
+                        event.target.checked,
+                      );
+                      if (event.target.checked) {
+                        updateField("rightMolarOcclusion", "");
+                      }
+                    }}
+                  />
+                  N/A
+                </label>
+              </div>
+              <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
+                <TextField
+                  id="recare-left-molar-occlusion"
+                  label="Left molar occlusion"
+                  value={form.leftMolarOcclusion}
+                  onChange={(value) =>
+                    updateField("leftMolarOcclusion", value)
+                  }
+                  disabled={form.leftMolarOcclusionNotApplicable}
+                />
+                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">
+                  <input
+                    id="recare-left-molar-na"
+                    type="checkbox"
+                    className="h-4 w-4 accent-sky-700"
+                    checked={form.leftMolarOcclusionNotApplicable}
+                    onChange={(event) => {
+                      updateField(
+                        "leftMolarOcclusionNotApplicable",
+                        event.target.checked,
+                      );
+                      if (event.target.checked) {
+                        updateField("leftMolarOcclusion", "");
+                      }
+                    }}
+                  />
+                  N/A
+                </label>
+              </div>
             </div>
 
             <div className="grid items-end gap-4 md:grid-cols-[1fr_auto]">
@@ -756,12 +847,12 @@ export function RecareExamTemplate({
                 onChange={(value) => updateField("retainerStatus", value)}
               />
               <SelectField
-                id="recare-partial-dentures"
-                label="Partial dentures"
-                value={form.partialDenturesStatus}
+                id="recare-removable-dentures"
+                label="Partial/complete removable dentures"
+                value={form.removableDenturesStatus}
                 options={statusOptions}
                 onChange={(value) =>
-                  updateField("partialDenturesStatus", value)
+                  updateField("removableDenturesStatus", value)
                 }
               />
             </div>

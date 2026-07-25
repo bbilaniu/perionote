@@ -7,7 +7,7 @@ import {
 } from "@/lib/templates/recareExam";
 import {
   buildRecareExamSummary,
-  formatRecareExamCopyTimestamp,
+  formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
 
 describe("buildRecareExamSummary", () => {
@@ -20,10 +20,15 @@ describe("buildRecareExamSummary", () => {
 
   it("builds the accepted output in mapped order with one blank line between groups", () => {
     const copiedAt = new Date(2026, 6, 25, 14, 5);
-    const summary = buildRecareExamSummary(recareExamFixture, { copiedAt });
+    const startedAt = new Date(2026, 6, 25, 13, 45);
+    const summary = buildRecareExamSummary(recareExamFixture, {
+      copiedAt,
+      startedAt,
+    });
 
     expect(summary).toBe(`DATE: 2026-07-25 14:05
 PATIENT ID: TEST-1001
+FORM STARTED: 2026-07-25 13:45
 DENTIST: Dr. Example
 RDH: Example RDH
 
@@ -44,7 +49,8 @@ Load TMJ joint test: WNL.
 
 Intraoral: WNL.
 Oral habits: Synthetic clenching history.
-Molar occlusion: Synthetic Class I.
+Molar occlusion—right: Synthetic Class I.
+Molar occlusion—left: N/A.
 Skeletal occlusion: N/A.
 Overjet: 2 mm.
 Overbite: 30%.
@@ -53,7 +59,7 @@ CPAP use: No.
 Occlusal splint: Yes; uses.
 Orthodontic history: Yes.
 Retainers: Fixed.
-Partial dentures: No.
+Partial/complete removable dentures: No.
 
 Patient would like to improve: Synthetic request to discuss whitening.
 Additional comments: Synthetic demonstration data only.
@@ -92,7 +98,7 @@ Retainers: None.`);
   });
 
   it("uses browser-local timestamp components", () => {
-    expect(formatRecareExamCopyTimestamp(new Date(2026, 0, 2, 3, 4))).toBe(
+    expect(formatRecareExamLocalTimestamp(new Date(2026, 0, 2, 3, 4))).toBe(
       "2026-01-02 03:04",
     );
   });
