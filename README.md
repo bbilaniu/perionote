@@ -76,6 +76,7 @@ HygieneNote/
     playwright/
 
   docs/
+    adr/
     codex-workflow.md
     contributor-workflow.md
     migration-checklist.md
@@ -85,6 +86,15 @@ HygieneNote/
 ```
 
 ## Template Types
+
+The preview app separates templates into two user-facing libraries:
+
+- `/templates/clinic` contains copyable versions of the clinic's existing EMR
+  progress-note templates
+- `/templates/interactive` contains runnable HygieneNote webforms
+
+The individual interactive routes remain at `/templates/<slug>` for backward
+compatibility.
 
 ### Native templates
 These are templates written directly for HygieneNote in TSX.

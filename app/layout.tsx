@@ -69,15 +69,24 @@ export default function RootLayout({
               <span className="text-lg font-semibold tracking-tight">
                 HygieneNote
               </span>
-              <ThemeToggle />
-              <Link
-                className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
-                href="/templates"
-                target="_blank"
-                rel="noopener noreferrer"
+              <nav
+                aria-label="Template navigation"
+                className="ml-auto flex items-center gap-4"
               >
-                Browse Templates
-              </Link>
+                <Link
+                  className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
+                  href="/templates/clinic"
+                >
+                  Clinic templates
+                </Link>
+                <Link
+                  className="hidden text-sm font-medium text-chart-accent hover:underline sm:inline dark:text-sky-300 dark:hover:text-sky-200"
+                  href="/templates/interactive"
+                >
+                  Interactive templates
+                </Link>
+              </nav>
+              <ThemeToggle />
             </div>
           </header>
           <main className="mx-auto w-full max-w-[112rem] px-6 py-10">{children}</main>
