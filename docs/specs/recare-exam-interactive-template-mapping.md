@@ -17,7 +17,7 @@
 This accepted specification maps every line of the approved public
 [Recare Exam source template](../../lib/clinic-templates/registry.ts) to a
 reviewed interactive control and generated-note behavior. It also includes the
-user-requested Patient ID and form-start timestamp extensions, which are not
+user-requested Patient ID and note-start timestamp extensions, which are not
 present in the source template.
 
 Acceptance authorizes implementation with lifecycle status `draft`; it does not
@@ -73,12 +73,12 @@ preselected.
 7. Treatment and Next Visit
 8. Generated Note
 
-A required **Patient ID** field and a read-only **Form started** timestamp are
+A required **Patient ID** field and a read-only **Note started** timestamp are
 included as user-requested extensions. The timestamp records the browser-local
-date and time when the page loads. Patient names are not collected. Like all
-form data, these values remain only in memory until the generated note is
-explicitly copied. At least one Visit Team field—Dentist, RDA, or RDH—is also
-required before copying.
+date and time when the page loads or the form is reset after confirmation.
+Patient names are not collected. Like all form data, these values remain only
+in memory until the generated note is explicitly copied. At least one Visit
+Team field—Dentist, RDA, or RDH—is also required before copying.
 
 ## Field Mapping
 
@@ -87,7 +87,7 @@ required before copying.
 | ID  | Source                                               | Control                                                        | Classification     | Generated output                      |
 | --- | ---------------------------------------------------- | -------------------------------------------------------------- | ------------------ | ------------------------------------- |
 | R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                         | `patient-specific` | `PATIENT ID: {text}`                  |
-| R35 | User-requested extension; not in the source template | Read-only browser-local **Form started** timestamp at page load | `administrative`   | `FORM STARTED: {YYYY-MM-DD HH:mm}`    |
+| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `NOTE STARTED: {YYYY-MM-DD HH:mm}`    |
 
 ### Visit Team
 
@@ -201,7 +201,7 @@ by the template, including Date Booked, use `YYYY-MM-DD`.
 ## Generated-Note Order
 
 The note should preserve the source order, preceded by the user-requested
-Patient ID and form-start timestamp extensions:
+Patient ID and note-start timestamp extensions:
 
 1. Patient ID
 2. Form-start timestamp
@@ -232,7 +232,7 @@ The following uses tokens rather than real clinical or staff information:
 
 ```text
 PATIENT ID: {entered patient ID}
-FORM STARTED: {YYYY-MM-DD HH:mm when the page loaded}
+NOTE STARTED: {YYYY-MM-DD HH:mm when the page loaded or reset was confirmed}
 DENTIST: {entered dentist}
 RDA: {entered RDA}
 RDH: {entered RDH}
@@ -284,8 +284,9 @@ does not leave extra blank lines when an entire group is omitted.
 ## Interaction and Privacy Rules
 
 - Form values live only in React component memory.
-- The browser-local **Form started** timestamp is captured once when the page
-  loads and is not refreshed by loading demo data, resetting, or copying.
+- The browser-local **Note started** timestamp is captured once when the page
+  loads. Loading demo data or copying does not refresh it. A confirmed reset
+  replaces it with the current browser-local date and time.
 - Reloading or leaving the route discards the form.
 - No form value is written to browser storage, URLs, analytics, telemetry,
   error reporting, an API, fixtures, or source files.
@@ -296,8 +297,11 @@ does not leave extra blank lines when an entire group is omitted.
   provider-group requirement, and moves focus to the first unresolved error.
 - A successful copy attempt writes the visible preview unchanged and does not
   generate or append a copy-time timestamp.
-- A visible **Reset form** action should require confirmation when the form has
-  entered values.
+- The visible **Reset form** action always requires confirmation, including
+  when all editable fields are empty.
+- Cancelling reset leaves the fields and Note started timestamp unchanged.
+- Confirming reset clears all editable fields and refreshes Note started to the
+  current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
 - Provider fields are not remembered until a later ADR 0001 implementation
@@ -333,7 +337,7 @@ contract are genuinely the same, not only because two fields look similar.
 
 ## Acceptance Criteria
 
-- All 36 mapping IDs—34 source mappings plus the Patient ID and form-start
+- All 36 mapping IDs—34 source mappings plus the Patient ID and note-start
   timestamp extensions—are
   implemented or explicitly removed through an approved revision of this
   specification.
@@ -342,12 +346,12 @@ contract are genuinely the same, not only because two fields look similar.
 - Patient names are not collected.
 - Patient ID is required before copying, remains in memory only, and appears in
   copied output.
-- A read-only browser-local Form started timestamp is captured at page load,
-  remains in memory only, and appears next to Patient ID in the form and copied
-  output.
+- A read-only browser-local Note started timestamp is captured at page load or
+  confirmed reset, remains in memory only, and appears next to Patient ID in
+  the form and copied output.
 - At least one of Dentist, RDA, or RDH is required before copying.
 - No clipboard write occurs when either copy prerequisite is unmet.
-- The visible preview includes the Form started timestamp, and successful copy
+- The visible preview includes the Note started timestamp, and successful copy
   output matches that preview exactly.
 - Date Booked output uses `YYYY-MM-DD`.
 - WNL and negative findings require explicit user selection.
@@ -366,9 +370,9 @@ contract are genuinely the same, not only because two fields look similar.
 - Reloading the page restores an empty form, not prior form data.
 - No form-state storage or network submission is introduced.
 - Generated-note tests use synthetic values.
-- Browser tests cover the main workflow, reset behavior, copy prerequisites,
-  preview/copy parity, form-start timestamp, paragraph spacing, and
-  non-persistence.
+- Browser tests cover the main workflow, mandatory reset confirmation,
+  reset-time refresh, copy prerequisites, preview/copy parity, note-start
+  timestamp, paragraph spacing, and non-persistence.
 - Registry metadata identifies source `recare-exam`, source baseline
   `7d3d21c`, and lifecycle status.
 - The template remains `draft` during implementation. It may advance to

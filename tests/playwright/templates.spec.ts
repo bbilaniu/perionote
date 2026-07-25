@@ -47,7 +47,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/templates/recare-exam");
-  await expect(page.locator("#recare-form-started")).toHaveValue(
+  await expect(page.locator("#recare-note-started")).toHaveValue(
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
   );
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
@@ -79,7 +79,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   expect(copiedNote).toBe(visiblePreview);
   expect(copiedNote).toMatch(/^PATIENT ID: TEST-3003\n/);
   expect(copiedNote).toMatch(
-    /\nFORM STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/,
+    /\nNOTE STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/,
   );
   expect(copiedNote).not.toContain("DATE:");
   expect(copiedNote).toContain("RDH: Example RDH");
@@ -90,12 +90,13 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.clock.install({ time: new Date(2026, 6, 25, 9, 10) });
   await page.goto("/templates/recare-exam");
-  await expect(page.locator("#recare-form-started")).toHaveValue(
+  await expect(page.locator("#recare-note-started")).toHaveValue(
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
   );
   const initialStartedAt = await page
-    .locator("#recare-form-started")
+    .locator("#recare-note-started")
     .inputValue();
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
@@ -124,25 +125,41 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
 
   await page.reload();
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
-  await expect(page.locator("#recare-form-started")).toHaveValue(
+  await expect(page.locator("#recare-note-started")).toHaveValue(
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
   );
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /^FORM STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+    /^NOTE STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
   );
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
   const reloadedStartedAt = await page
-    .locator("#recare-form-started")
+    .locator("#recare-note-started")
     .inputValue();
-  page.once("dialog", (dialog) => dialog.accept());
+  await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all entered Recare Exam values and start a new note?",
+    );
+    await dialog.accept();
+  });
   await page.getByRole("button", { name: "Reset form" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
-  await expect(page.locator("#recare-form-started")).toHaveValue(
-    reloadedStartedAt,
-  );
+  const resetStartedAt = await page
+    .locator("#recare-note-started")
+    .inputValue();
+  expect(resetStartedAt).not.toBe(reloadedStartedAt);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    `FORM STARTED: ${reloadedStartedAt}`,
+    `NOTE STARTED: ${resetStartedAt}`,
+  );
+
+  await page.clock.setSystemTime(new Date(2026, 6, 25, 11, 40));
+  page.once("dialog", async (dialog) => {
+    await dialog.dismiss();
+  });
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await expect(page.locator("#recare-note-started")).toHaveValue(
+    resetStartedAt,
   );
   expect(initialStartedAt).toMatch(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/);
 });

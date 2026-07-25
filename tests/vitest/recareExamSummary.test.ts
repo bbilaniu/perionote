@@ -25,7 +25,7 @@ describe("buildRecareExamSummary", () => {
     });
 
     expect(summary).toBe(`PATIENT ID: TEST-1001
-FORM STARTED: 2026-07-25 13:45
+NOTE STARTED: 2026-07-25 13:45
 DENTIST: Dr. Example
 RDH: Example RDH
 

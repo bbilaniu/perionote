@@ -287,7 +287,6 @@ export function RecareExamTemplate({
   fixture: RecareExamForm;
   summary: string;
 }) {
-  const emptyForm = useMemo(() => createEmptyRecareExamForm(), []);
   const [form, setForm] = useState<RecareExamForm>(() =>
     createEmptyRecareExamForm(),
   );
@@ -309,8 +308,6 @@ export function RecareExamTemplate({
       }),
     [form, startedAt],
   );
-  const isDirty = JSON.stringify(form) !== JSON.stringify(emptyForm);
-
   function updateField<TKey extends keyof RecareExamForm>(
     key: TKey,
     value: RecareExamForm[TKey],
@@ -366,15 +363,15 @@ export function RecareExamTemplate({
 
   function resetForm() {
     if (
-      isDirty &&
       !window.confirm(
-        "Clear all entered Recare Exam values? This cannot be undone.",
+        "Clear all entered Recare Exam values and start a new note? This cannot be undone.",
       )
     ) {
       return;
     }
 
     setForm(createEmptyRecareExamForm());
+    setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
@@ -435,8 +432,8 @@ export function RecareExamTemplate({
                 inputRef={patientIdRef}
               />
               <TextField
-                id="recare-form-started"
-                label="Form started (page loaded)"
+                id="recare-note-started"
+                label="Note started"
                 value={
                   startedAt ? formatRecareExamLocalTimestamp(startedAt) : ""
                 }

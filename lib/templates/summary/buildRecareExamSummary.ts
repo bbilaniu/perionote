@@ -92,7 +92,7 @@ export function buildRecareExamSummary(
   const patientAndTeam = [
     trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
     options.startedAt
-      ? `FORM STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
+      ? `NOTE STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
       : "",
     trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
     trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
