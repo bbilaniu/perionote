@@ -349,18 +349,10 @@ export function RecareExamTemplate({
       return;
     }
 
-    const formStartedAt = startedAt ?? new Date();
-    if (!startedAt) {
-      setStartedAt(formStartedAt);
-    }
-    const copiedNote = buildRecareExamSummary(form, {
-      copiedAt: new Date(),
-      startedAt: formStartedAt,
-    });
-    const copied = await writeClipboard(copiedNote);
+    const copied = await writeClipboard(summary);
     setCopyMessage(
       copied
-        ? "Note copied. The copy-time timestamp was added."
+        ? "Note copied."
         : "The note could not be copied. Select the preview and copy it manually.",
     );
   }
@@ -939,7 +931,7 @@ export function RecareExamTemplate({
           <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
             <h2 className="text-lg font-semibold">Generated Note</h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The browser-local copy time is added only when Copy note succeeds.
+              The visible preview is copied unchanged.
             </p>
             <label className="sr-only" htmlFor="recare-summary">
               Generated Recare Exam note
@@ -956,6 +948,7 @@ export function RecareExamTemplate({
               <button
                 type="submit"
                 className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
+                disabled={!startedAt}
               >
                 Copy note
               </button>

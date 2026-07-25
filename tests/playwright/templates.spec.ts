@@ -71,17 +71,17 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   ).resolves.toBe("sentinel");
 
   await page.locator("#recare-rdh").fill("Example RDH");
+  const visiblePreview = await page.locator("#recare-summary").inputValue();
   await page.getByRole("button", { name: "Copy note" }).click();
 
-  await expect(
-    page.getByText("Note copied. The copy-time timestamp was added."),
-  ).toBeVisible();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copiedNote).toMatch(/^DATE: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/);
-  expect(copiedNote).toContain("PATIENT ID: TEST-3003");
+  expect(copiedNote).toBe(visiblePreview);
+  expect(copiedNote).toMatch(/^PATIENT ID: TEST-3003\n/);
   expect(copiedNote).toMatch(
     /\nFORM STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/,
   );
+  expect(copiedNote).not.toContain("DATE:");
   expect(copiedNote).toContain("RDH: Example RDH");
 });
 
@@ -110,8 +110,10 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
     /Molar occlusion—right: Synthetic Class I\.\nMolar occlusion—left: N\/A\./,
   );
 
+  const demoPreview = await page.locator("#recare-summary").inputValue();
   await page.getByRole("button", { name: "Copy note" }).click();
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copiedNote).toBe(demoPreview);
   expect(copiedNote).toContain(
     "Intraoral photos: No.\nPatient's chief concern:",
   );

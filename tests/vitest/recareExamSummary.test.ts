@@ -19,15 +19,12 @@ describe("buildRecareExamSummary", () => {
   });
 
   it("builds the accepted output in mapped order with one blank line between groups", () => {
-    const copiedAt = new Date(2026, 6, 25, 14, 5);
     const startedAt = new Date(2026, 6, 25, 13, 45);
     const summary = buildRecareExamSummary(recareExamFixture, {
-      copiedAt,
       startedAt,
     });
 
-    expect(summary).toBe(`DATE: 2026-07-25 14:05
-PATIENT ID: TEST-1001
+    expect(summary).toBe(`PATIENT ID: TEST-1001
 FORM STARTED: 2026-07-25 13:45
 DENTIST: Dr. Example
 RDH: Example RDH

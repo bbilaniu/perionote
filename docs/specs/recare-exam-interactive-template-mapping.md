@@ -17,8 +17,8 @@
 This accepted specification maps every line of the approved public
 [Recare Exam source template](../../lib/clinic-templates/registry.ts) to a
 reviewed interactive control and generated-note behavior. It also includes the
-user-requested Patient ID, form-start timestamp, and copy-time timestamp
-extensions, which are not present in the source template.
+user-requested Patient ID and form-start timestamp extensions, which are not
+present in the source template.
 
 Acceptance authorizes implementation with lifecycle status `draft`; it does not
 authorize publishing the interactive template as `pilot` or `ready`.
@@ -201,40 +201,36 @@ by the template, including Date Booked, use `YYYY-MM-DD`.
 ## Generated-Note Order
 
 The note should preserve the source order, preceded by the user-requested
-copy-time timestamp, Patient ID, and form-start timestamp extensions:
+Patient ID and form-start timestamp extensions:
 
-1. Copy-time timestamp
-2. Patient ID
-3. Form-start timestamp
-4. Visit team
-5. Consent
-6. Medical history and premedication
-7. Sterilization documentation
-8. Radiographs and intraoral photos
-9. Chief concern
-10. Clinical exam
-11. Appliances and relevant history
-12. Patient improvement request and additional comments
-13. Treatment options
-14. Treatment plan
-15. Next visit and date booked
+1. Patient ID
+2. Form-start timestamp
+3. Visit team
+4. Consent
+5. Medical history and premedication
+6. Sterilization documentation
+7. Radiographs and intraoral photos
+8. Chief concern
+9. Clinical exam
+10. Appliances and relevant history
+11. Patient improvement request and additional comments
+12. Treatment options
+13. Treatment plan
+14. Next visit and date booked
 
 Unanswered fields are omitted. Section headings with no output are also
 omitted. The generated note must not contain placeholder labels such as
 `undefined`, `Not assessed`, or `[UNRESOLVED PLACEHOLDER: ...]`.
 
-When the user successfully invokes **Copy note**, the application prepends a
-fresh timestamp using the browser's local date and time in 24-hour
-`YYYY-MM-DD HH:mm` format. The timestamp records the copy action, not the
-appointment time or Date Booked. It is generated for the clipboard payload and
-is not persisted.
+The visible preview contains the complete generated note. A successful
+**Copy note** action writes that preview to the clipboard unchanged and does
+not add a separate copy-time timestamp.
 
 ### Illustrative Output Shape
 
 The following uses tokens rather than real clinical or staff information:
 
 ```text
-DATE: {YYYY-MM-DD HH:mm at the moment of copying}
 PATIENT ID: {entered patient ID}
 FORM STARTED: {YYYY-MM-DD HH:mm when the page loaded}
 DENTIST: {entered dentist}
@@ -298,8 +294,8 @@ does not leave extra blank lines when an entire group is omitted.
   one of Dentist, RDA, or RDH contain non-whitespace text.
 - A failed copy attempt shows visible field-level validation, explains the
   provider-group requirement, and moves focus to the first unresolved error.
-- A successful copy attempt generates the current browser-local timestamp and
-  includes it only in the copied note.
+- A successful copy attempt writes the visible preview unchanged and does not
+  generate or append a copy-time timestamp.
 - A visible **Reset form** action should require confirmation when the form has
   entered values.
 - Demo data, if offered, must be clearly synthetic and require an explicit
@@ -351,8 +347,8 @@ contract are genuinely the same, not only because two fields look similar.
   output.
 - At least one of Dentist, RDA, or RDH is required before copying.
 - No clipboard write occurs when either copy prerequisite is unmet.
-- Successful copy output begins with the copy-time timestamp in
-  `YYYY-MM-DD HH:mm` browser-local time.
+- The visible preview includes the Form started timestamp, and successful copy
+  output matches that preview exactly.
 - Date Booked output uses `YYYY-MM-DD`.
 - WNL and negative findings require explicit user selection.
 - Right and left molar occlusion are documented independently, and each has an
@@ -371,7 +367,8 @@ contract are genuinely the same, not only because two fields look similar.
 - No form-state storage or network submission is introduced.
 - Generated-note tests use synthetic values.
 - Browser tests cover the main workflow, reset behavior, copy prerequisites,
-  copy-time timestamp, paragraph spacing, and non-persistence.
+  preview/copy parity, form-start timestamp, paragraph spacing, and
+  non-persistence.
 - Registry metadata identifies source `recare-exam`, source baseline
   `7d3d21c`, and lifecycle status.
 - The template remains `draft` during implementation. It may advance to

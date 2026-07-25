@@ -6,7 +6,6 @@ import type {
 } from "@/lib/templates/recareExam";
 
 type BuildRecareExamSummaryOptions = {
-  copiedAt?: Date;
   startedAt?: Date;
 };
 
@@ -91,9 +90,6 @@ export function buildRecareExamSummary(
   options: BuildRecareExamSummaryOptions = {},
 ): string {
   const patientAndTeam = [
-    options.copiedAt
-      ? `DATE: ${formatRecareExamLocalTimestamp(options.copiedAt)}`
-      : "",
     trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
     options.startedAt
       ? `FORM STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
