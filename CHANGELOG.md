@@ -1,5 +1,13 @@
 # hygienenote
 
+## 0.2.1
+
+### Patch Changes
+
+- 09dd484: Include visibly labelled pilot templates in public builds while keeping draft
+  templates excluded.
+- 09dd484: Display the current application version in a site-wide footer.
+
 ## 0.2.0
 
 ### Minor Changes
