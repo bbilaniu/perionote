@@ -28,7 +28,7 @@ export default function InteractiveTemplatesPage() {
             className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
           >
             <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Interactive
+              Interactive · {template.lifecycle}
             </p>
             <h2 className="mt-1 text-lg font-semibold">{template.title}</h2>
             <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">

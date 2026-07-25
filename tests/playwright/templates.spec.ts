@@ -33,8 +33,84 @@ test("interactive template index renders current webforms", async ({ page }) => 
     page.locator('a[href="/templates/very-short-template/"]'),
   ).toBeVisible();
   await expect(
+    page.locator('a[href="/templates/recare-exam/"]'),
+  ).toBeVisible();
+  await expect(page.getByText("Interactive · draft")).toBeVisible();
+  await expect(
     page.locator('a[href="/templates/gingival-description/"]'),
   ).toHaveCount(0);
+});
+
+test("recare exam blocks copying until Patient ID and a provider are entered", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/templates/recare-exam");
+  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
+
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await expect(page.getByText("Enter a Patient ID.")).toBeVisible();
+  await expect(
+    page.getByText("Enter at least one of Dentist, RDA, or RDH."),
+  ).toBeVisible();
+  await expect(page.locator("#recare-patient-id")).toBeFocused();
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText()),
+  ).resolves.toBe("sentinel");
+
+  await page.locator("#recare-patient-id").fill("TEST-3003");
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await expect(page.locator("#recare-dentist")).toBeFocused();
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText()),
+  ).resolves.toBe("sentinel");
+
+  await page.locator("#recare-rdh").fill("Example RDH");
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await expect(
+    page.getByText("Note copied. The copy-time timestamp was added."),
+  ).toBeVisible();
+  const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copiedNote).toMatch(/^DATE: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/);
+  expect(copiedNote).toContain("PATIENT ID: TEST-3003");
+  expect(copiedNote).toContain("RDH: Example RDH");
+});
+
+test("recare exam demo preserves paragraph spacing and form values do not persist", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/templates/recare-exam");
+
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  await expect(page.locator("#recare-patient-id")).toHaveValue("TEST-1001");
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Occlusal splint: Yes; uses\./,
+  );
+
+  await page.getByRole("button", { name: "Copy note" }).click();
+  const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copiedNote).toContain(
+    "Intraoral photos: No.\nPatient's chief concern:",
+  );
+  expect(copiedNote).toContain(
+    "Treatment Options:\n  - Hygiene maintenance\n  - Synthetic restorative consultation",
+  );
+  expect(copiedNote).not.toContain("\n\n\n");
+
+  await page.reload();
+  await expect(page.locator("#recare-patient-id")).toHaveValue("");
+  await expect(page.locator("#recare-summary")).toHaveValue("");
+
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await expect(page.locator("#recare-patient-id")).toHaveValue("");
+  await expect(page.locator("#recare-summary")).toHaveValue("");
 });
 
 test("clinic template library follows the clinical menu and opens a template", async ({

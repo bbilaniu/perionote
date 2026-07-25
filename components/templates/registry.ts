@@ -1,8 +1,12 @@
 import { GingivalDescriptionWebformImportedTemplate } from "@/components/templates/imported/GingivalDescriptionWebformImportedTemplate";
 import { ShortDentalHygienNoteImportedTemplate } from "@/components/templates/imported/ShortDentalHygienNoteImportedTemplate";
 import { VeryShortDentalHygienNoteImportedTemplate } from "@/components/templates/imported/VeryShortDentalHygienNoteImportedTemplate";
+import { RecareExamTemplate } from "@/components/templates/native/RecareExamTemplate";
 import { gingivalDescriptionWebformFixture } from "@/lib/templates/fixtures/gingivalDescriptionWebform.fixture";
+import { recareExamFixture } from "@/lib/templates/fixtures/recareExam.fixture";
+import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { buildGingivalDescriptionWebformSummary } from "@/lib/templates/summary/buildGingivalDescriptionWebformSummary";
+import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
 import type { TemplateDefinition } from "@/lib/templates/types";
 
 function defineTemplate<TFixture>(
@@ -11,13 +15,14 @@ function defineTemplate<TFixture>(
   return template;
 }
 
-export const templateRegistry = [
+const allTemplates = [
   defineTemplate({
     slug: "gingival-description",
     title: "Gingival Description",
     description:
       "Hidden legacy alias that reuses the imported dental hygiene webform template.",
     kind: "native",
+    lifecycle: "ready",
     hidden: true,
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
@@ -32,6 +37,7 @@ export const templateRegistry = [
     description:
       "Imported wrapper for a legacy dental hygiene webform template.",
     kind: "imported",
+    lifecycle: "ready",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
       gingivalDescriptionWebformFixture,
@@ -45,6 +51,7 @@ export const templateRegistry = [
     description:
       "Copied from the dental hygiene note webform template for a shorter hygiene-note workflow.",
     kind: "imported",
+    lifecycle: "ready",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
       gingivalDescriptionWebformFixture,
@@ -58,6 +65,7 @@ export const templateRegistry = [
     description:
       "Minimal hygiene-note workflow with a sticky summary panel and collapsible sections.",
     kind: "imported",
+    lifecycle: "ready",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
       gingivalDescriptionWebformFixture,
@@ -65,7 +73,35 @@ export const templateRegistry = [
     buildSummary: buildGingivalDescriptionWebformSummary,
     component: VeryShortDentalHygienNoteImportedTemplate,
   }),
+  defineTemplate({
+    slug: "recare-exam",
+    title: "Recare Exam",
+    description:
+      "Interactive conversion of the clinic Recare Exam note for local implementation review.",
+    kind: "native",
+    lifecycle: "draft",
+    provenance: {
+      sourceClinicTemplateSlug: "recare-exam",
+      sourceRevision: "7d3d21c",
+      clinicalReviewDate: "2026-07-25",
+    },
+    fixture: recareExamFixture,
+    summary: buildRecareExamSummary(recareExamFixture),
+    buildSummary: buildRecareExamSummary,
+    component: RecareExamTemplate,
+  }),
 ] as const;
+
+const includePilotTemplates =
+  process.env.NEXT_PUBLIC_INCLUDE_PILOT_TEMPLATES === "true";
+
+export const templateRegistry = allTemplates.filter((template) =>
+  isTemplateAvailableForBuild(
+    template.lifecycle,
+    process.env.NODE_ENV,
+    includePilotTemplates,
+  ),
+);
 
 export type RegisteredTemplate = (typeof templateRegistry)[number];
 

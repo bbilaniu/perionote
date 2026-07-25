@@ -1,0 +1,241 @@
+import type {
+  DocumentationStatus,
+  ExamStatus,
+  RecareExamForm,
+  RetainerStatus,
+} from "@/lib/templates/recareExam";
+
+type BuildRecareExamSummaryOptions = {
+  copiedAt?: Date;
+};
+
+function trimmed(value: string): string {
+  return value.trim();
+}
+
+function withTerminalPunctuation(value: string): string {
+  const cleanValue = trimmed(value);
+  if (!cleanValue) return "";
+  return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
+}
+
+function appendDetails(base: string, details: string): string {
+  const cleanDetails = trimmed(details);
+  return cleanDetails
+    ? withTerminalPunctuation(`${base}—${cleanDetails}`)
+    : `${base}.`;
+}
+
+function yesNoLine(
+  label: string,
+  status: DocumentationStatus,
+  details = "",
+): string {
+  if (status === "not-documented") return "";
+  return appendDetails(`${label}: ${status === "yes" ? "Yes" : "No"}`, details);
+}
+
+function examLine(
+  label: string,
+  status: ExamStatus,
+  findings: string,
+): string {
+  if (status === "wnl") return `${label}: WNL.`;
+  if (status === "findings" && trimmed(findings)) {
+    return `${label}: ${withTerminalPunctuation(findings)}`;
+  }
+  return "";
+}
+
+function retainerLine(status: RetainerStatus): string {
+  const labels: Record<Exclude<RetainerStatus, "not-documented">, string> = {
+    none: "None",
+    fixed: "Fixed",
+    removable: "Removable",
+    "fixed-and-removable": "Fixed and removable",
+  };
+
+  return status === "not-documented" ? "" : `Retainers: ${labels[status]}.`;
+}
+
+function treatmentBlock(
+  heading: string,
+  hygieneMaintenance: boolean,
+  otherValues: string,
+): string[] {
+  const entries = [
+    ...(hygieneMaintenance ? ["Hygiene maintenance"] : []),
+    ...otherValues
+      .split(/\r?\n/)
+      .map(trimmed)
+      .filter(Boolean),
+  ];
+
+  if (entries.length === 0) return [];
+  return [heading, ...entries.map((entry) => `  - ${entry}`)];
+}
+
+export function formatRecareExamCopyTimestamp(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+export function buildRecareExamSummary(
+  form: RecareExamForm,
+  options: BuildRecareExamSummaryOptions = {},
+): string {
+  const patientAndTeam = [
+    options.copiedAt
+      ? `DATE: ${formatRecareExamCopyTimestamp(options.copiedAt)}`
+      : "",
+    trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
+    trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
+    trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
+    trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
+  ];
+
+  const consentHistoryAndSterilization = [
+    form.consentObtained
+      ? [
+          "Informed verbal consent obtained for treatment today.",
+          trimmed(form.consentDetails)
+            ? withTerminalPunctuation(form.consentDetails)
+            : "",
+        ]
+          .filter(Boolean)
+          .join(" ")
+      : "",
+    form.medicalHistoryStatus === "reviewed-no-changes"
+      ? "Medical history reviewed: no changes reported."
+      : form.medicalHistoryStatus === "reviewed-updated"
+        ? trimmed(form.medicalHistoryDetails)
+          ? `Medical history reviewed: ${withTerminalPunctuation(form.medicalHistoryDetails)}`
+          : "Medical history reviewed: updated."
+        : "",
+    form.premedicationStatus === "not-required"
+      ? "Premedication required: No."
+      : form.premedicationStatus === "required"
+        ? appendDetails("Premedication required: Yes", form.premedicationDetails)
+        : "",
+    form.class5IndicatorsChecked
+      ? "Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments."
+      : "",
+    trimmed(form.mieleCodes)
+      ? `Miele Sterilization codes scanned: ${trimmed(form.mieleCodes)}`
+      : "",
+  ];
+
+  const recordsAndConcern = [
+    yesNoLine(
+      "Radiographs",
+      form.radiographsStatus,
+      form.radiographsDetails,
+    ),
+    yesNoLine(
+      "Intraoral photos",
+      form.intraoralPhotosStatus,
+      form.intraoralPhotosDetails,
+    ),
+    trimmed(form.chiefConcern)
+      ? `Patient's chief concern: ${withTerminalPunctuation(form.chiefConcern)}`
+      : "",
+  ];
+
+  const extraoralAndTmj = [
+    examLine("Extraoral", form.extraoralStatus, form.extraoralFindings),
+    examLine("TMJ", form.tmjStatus, form.tmjFindings),
+    examLine(
+      "Palpation of the masseter test",
+      form.masseterStatus,
+      form.masseterFindings,
+    ),
+    examLine(
+      "Load TMJ joint test",
+      form.tmjLoadStatus,
+      form.tmjLoadFindings,
+    ),
+  ];
+
+  const intraoralAndOcclusion = [
+    examLine("Intraoral", form.intraoralStatus, form.intraoralFindings),
+    trimmed(form.oralHabits)
+      ? `Oral habits: ${withTerminalPunctuation(form.oralHabits)}`
+      : "",
+    trimmed(form.molarOcclusion)
+      ? `Molar occlusion: ${withTerminalPunctuation(form.molarOcclusion)}`
+      : "",
+    form.skeletalOcclusionNotApplicable
+      ? "Skeletal occlusion: N/A."
+      : trimmed(form.skeletalOcclusion)
+        ? `Skeletal occlusion: ${withTerminalPunctuation(form.skeletalOcclusion)}`
+        : "",
+    trimmed(form.overjetMm) ? `Overjet: ${trimmed(form.overjetMm)} mm.` : "",
+    trimmed(form.overbitePercent)
+      ? `Overbite: ${trimmed(form.overbitePercent)}%.`
+      : "",
+  ];
+
+  const occlusalSplint =
+    form.occlusalSplintStatus === "no"
+      ? "Occlusal splint: No."
+      : form.occlusalSplintStatus === "yes"
+        ? form.occlusalSplintUseStatus === "yes"
+          ? "Occlusal splint: Yes; uses."
+          : form.occlusalSplintUseStatus === "no"
+            ? "Occlusal splint: Yes; does not use."
+            : "Occlusal splint: Yes; use not documented."
+        : "";
+
+  const appliancesAndHistory = [
+    yesNoLine("CPAP use", form.cpapStatus),
+    occlusalSplint,
+    yesNoLine("Orthodontic history", form.orthodonticHistoryStatus),
+    retainerLine(form.retainerStatus),
+    yesNoLine("Partial dentures", form.partialDenturesStatus),
+  ];
+
+  const patientRequests = [
+    trimmed(form.improvementRequest)
+      ? `Patient would like to improve: ${withTerminalPunctuation(form.improvementRequest)}`
+      : "",
+    trimmed(form.additionalComments)
+      ? `Additional comments: ${withTerminalPunctuation(form.additionalComments)}`
+      : "",
+  ];
+
+  const nextVisit = [
+    trimmed(form.nextVisit) ? `Next Visit: ${trimmed(form.nextVisit)}` : "",
+    trimmed(form.dateBooked) ? `Date Booked: ${trimmed(form.dateBooked)}` : "",
+  ];
+
+  const groups = [
+    patientAndTeam,
+    consentHistoryAndSterilization,
+    recordsAndConcern,
+    extraoralAndTmj,
+    intraoralAndOcclusion,
+    appliancesAndHistory,
+    patientRequests,
+    treatmentBlock(
+      "Treatment Options:",
+      form.treatmentOptionsHygieneMaintenance,
+      form.otherTreatmentOptions,
+    ),
+    treatmentBlock(
+      "Treatment Plan:",
+      form.treatmentPlanHygieneMaintenance,
+      form.otherTreatmentPlan,
+    ),
+    nextVisit,
+  ]
+    .map((group) => group.filter(Boolean))
+    .filter((group) => group.length > 0)
+    .map((group) => group.join("\n"));
+
+  return groups.join("\n\n");
+}
