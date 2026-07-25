@@ -11,13 +11,14 @@ function defineTemplate<TFixture>(
   return template;
 }
 
-export const templateRegistry = [
+export const standaloneInteractiveRegistry = [
   defineTemplate({
     slug: "gingival-description",
     title: "Gingival Description",
     description:
       "Hidden legacy alias that reuses the imported dental hygiene webform template.",
     kind: "native",
+    lifecycle: "ready",
     hidden: true,
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
@@ -32,6 +33,7 @@ export const templateRegistry = [
     description:
       "Imported wrapper for a legacy dental hygiene webform template.",
     kind: "imported",
+    lifecycle: "ready",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
       gingivalDescriptionWebformFixture,
@@ -45,6 +47,7 @@ export const templateRegistry = [
     description:
       "Copied from the dental hygiene note webform template for a shorter hygiene-note workflow.",
     kind: "imported",
+    lifecycle: "ready",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
       gingivalDescriptionWebformFixture,
@@ -58,6 +61,7 @@ export const templateRegistry = [
     description:
       "Minimal hygiene-note workflow with a sticky summary panel and collapsible sections.",
     kind: "imported",
+    lifecycle: "ready",
     fixture: gingivalDescriptionWebformFixture,
     summary: buildGingivalDescriptionWebformSummary(
       gingivalDescriptionWebformFixture,
@@ -67,14 +71,18 @@ export const templateRegistry = [
   }),
 ] as const;
 
-export type RegisteredTemplate = (typeof templateRegistry)[number];
+export type RegisteredStandaloneInteractive =
+  (typeof standaloneInteractiveRegistry)[number];
 
-export const templateBrowserRegistry = templateRegistry.filter(
-  (template) => !template.hidden,
-);
+export const standaloneInteractiveBrowserRegistry =
+  standaloneInteractiveRegistry.filter(
+    (template) => !template.hidden,
+  );
 
-export function getTemplateBySlug(
+export function getStandaloneInteractiveBySlug(
   slug: string,
-): RegisteredTemplate | undefined {
-  return templateRegistry.find((template) => template.slug === slug);
+): RegisteredStandaloneInteractive | undefined {
+  return standaloneInteractiveRegistry.find(
+    (template) => template.slug === slug,
+  );
 }

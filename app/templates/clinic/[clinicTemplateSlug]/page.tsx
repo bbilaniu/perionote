@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FullPageLink } from "@/components/FullPageLink";
 import { notFound } from "next/navigation";
 import CopyTemplateButton from "@/components/clinic-templates/CopyTemplateButton";
+import { getClinicConversionBySourceSlug } from "@/components/clinic-templates/conversionRegistry";
 import {
   clinicTemplateRegistry,
   getClinicCategoryTitle,
@@ -35,6 +37,7 @@ export default async function ClinicTemplatePage({
 }) {
   const { clinicTemplateSlug } = await params;
   const template = getClinicTemplateBySlug(clinicTemplateSlug);
+  const conversion = getClinicConversionBySourceSlug(clinicTemplateSlug);
 
   if (!template) {
     notFound();
@@ -47,7 +50,7 @@ export default async function ClinicTemplatePage({
           href="/templates/clinic"
           className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300"
         >
-          ← Clinic EMR Templates
+          ← Clinical Templates
         </Link>
         <p className="mt-5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {getClinicCategoryTitle(template.category)}
@@ -61,7 +64,17 @@ export default async function ClinicTemplatePage({
               {template.description}
             </p>
           </div>
-          <CopyTemplateButton content={template.content} />
+          <div className="flex flex-wrap gap-3">
+            {conversion ? (
+              <FullPageLink
+                href={`/templates/clinic/${template.slug}/interactive/`}
+                className="inline-flex items-center justify-center rounded-md border border-chart-accent px-4 py-2 text-sm font-medium text-chart-accent transition hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950"
+              >
+                Open interactive version · {conversion.lifecycle}
+              </FullPageLink>
+            ) : null}
+            <CopyTemplateButton content={template.content} />
+          </div>
         </div>
       </header>
 

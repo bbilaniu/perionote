@@ -5,23 +5,26 @@
 - Clinical review status: Accepted 2026-07-25
 - Source template: `recare-exam`
 - Interactive slug: `recare-exam`
+- Interactive route: `/templates/clinic/recare-exam/interactive`
 - Source baseline commit: `7d3d21c`
-- Initial lifecycle status: `draft`
+- Lifecycle status: `pilot`
 - Governing decisions:
   - [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)
   - [ADR 0002: Separate Clinic and Interactive Template Libraries](../adr/0002-separate-clinic-and-interactive-template-libraries.md)
   - [ADR 0003: Define Interactive Template Conversion and Provenance](../adr/0003-define-interactive-template-conversion-and-provenance.md)
+  - [ADR 0004: Colocate Clinical Conversions with Source Templates](../adr/0004-colocate-clinical-conversions-with-source-templates.md)
 
 ## Purpose
 
 This accepted specification maps every line of the approved public
 [Recare Exam source template](../../lib/clinic-templates/registry.ts) to a
 reviewed interactive control and generated-note behavior. It also includes the
-user-requested Patient ID and copy-time timestamp extensions, which are not
+user-requested Patient ID and note-start timestamp extensions, which are not
 present in the source template.
 
-Acceptance authorizes implementation with lifecycle status `draft`; it does not
-authorize publishing the interactive template as `pilot` or `ready`.
+Functional approval advances the conversion to lifecycle status `pilot`. Pilot
+production inclusion remains an explicit build decision under ADR 0003; this
+approval does not advance the conversion to `ready`.
 
 ## Scope
 
@@ -64,7 +67,7 @@ preselected.
 
 ## Screen Structure
 
-1. Patient Context
+1. Patient and Visit Context
 2. Visit Team
 3. Consent, Medical History, and Sterilization
 4. Records and Chief Concern
@@ -73,19 +76,21 @@ preselected.
 7. Treatment and Next Visit
 8. Generated Note
 
-A required **Patient ID** field is included as a user-requested extension.
-Patient names are not collected. Like all patient-specific form data, the
-Patient ID remains only in memory until the generated note is explicitly
-copied. At least one Visit Team field—Dentist, RDA, or RDH—is also required
-before copying.
+A required **Patient ID** field and a read-only **Note started** timestamp are
+included as user-requested extensions. The timestamp records the browser-local
+date and time when the page loads or the form is reset after confirmation.
+Patient names are not collected. Like all form data, these values remain only
+in memory until the generated note is explicitly copied. At least one Visit
+Team field—Dentist, RDA, or RDH—is also required before copying.
 
 ## Field Mapping
 
-### Patient Context
+### Patient and Visit Context
 
-| ID  | Source                                               | Control                                  | Classification     | Generated output      |
-| --- | ---------------------------------------------------- | ---------------------------------------- | ------------------ | --------------------- |
-| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**   | `patient-specific` | `PATIENT ID: {text}`  |
+| ID  | Source                                               | Control                                                        | Classification     | Generated output                      |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------- | ------------------ | ------------------------------------- |
+| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                         | `patient-specific` | `PATIENT ID: {text}`                  |
+| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `NOTE STARTED: {YYYY-MM-DD HH:mm}`    |
 
 ### Visit Team
 
@@ -140,7 +145,7 @@ statuses are omitted.
 | R16 | `Load TMJ joint Test: WNL`            | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `Load TMJ joint test: WNL.` or the entered findings            |
 | R17 | `d) Intraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `Intraoral: WNL.` or `Intraoral: {findings}`                   |
 | R18 | `Oral Habits-`                        | Editable text: **Oral habits**                                        | `patient-specific`                               | `Oral habits: {text}`                                          |
-| R19 | `Molar Occlusion-`                    | Editable text: **Molar occlusion**                                    | `patient-specific`                               | `Molar occlusion: {text}`                                      |
+| R19 | `Molar Occlusion-`                    | Separate editable **Right** and **Left molar occlusion** fields, each with an explicit **N/A** action | Text: `patient-specific`; N/A: `appCore` | `Molar occlusion—right: {text or N/A}` and `Molar occlusion—left: {text or N/A}` |
 | R20 | `Skeletal Occlusion- N/A`             | Editable text: **Skeletal occlusion** with an explicit **N/A** action | Text: `patient-specific`; N/A: `appCore`         | `Skeletal occlusion: N/A.` or `Skeletal occlusion: {text}`     |
 | R21 | `Overjet- mm`                         | Optional numeric input: **Overjet (mm)**                              | Measurement: `patient-specific`; unit: `appCore` | `Overjet: {number} mm.`                                        |
 | R22 | `Overbite- %`                         | Optional numeric input: **Overbite (%)**                              | Measurement: `patient-specific`; unit: `appCore` | `Overbite: {number}%.`                                         |
@@ -155,6 +160,8 @@ output, but clinical ranges require a sourced decision.
 
 Masseter palpation and TMJ load testing remain separate controls. The source's
 skeletal-occlusion `N/A` value is an explicit action and is not preselected.
+Right and left molar occlusion likewise have independent explicit N/A actions;
+neither is preselected.
 
 ### Appliances and Relevant History
 
@@ -165,16 +172,16 @@ skeletal-occlusion `N/A` value is an explicit action and is not preselected.
 | R25 | `Do they use Splint?`                         | Status: **Not documented / No / Yes** labelled **Uses the occlusal splint**, shown when ownership is Yes       | `appCore`          | `Occlusal splint: Yes; {uses/does not use/use not documented}.`                |
 | R26 | `Have they had orthodontics?`                 | Status: **Not documented / No / Yes**                                                                           | `appCore`          | `Orthodontic history: No.` or `Orthodontic history: Yes.`                      |
 | R27 | `Do they wear Retainers? Fixed or removable?` | Status: **Not documented / None / Fixed / Removable / Fixed and removable**                                     | `appCore`          | `Retainers: {selected status}.`                                                |
-| R28 | `Do they have Partial Dentures`               | Status: **Not documented / No / Yes**                                                                           | `appCore`          | `Partial dentures: No.` or `Partial dentures: Yes.`                            |
+| R28 | `Do they have Partial Dentures`               | Status: **Not documented / No / Yes** labelled **Partial/complete removable dentures**                          | `appCore`          | `Partial/complete removable dentures: No.` or `Partial/complete removable dentures: Yes.` |
 | R29 | Smile or teeth improvement question           | Textarea: **What would the patient like to improve about their smile or teeth?**                                | `patient-specific` | `Patient would like to improve: {text}`                                        |
 | R30 | `Additional Comments-`                        | Textarea: **Additional comments**                                                                               | `patient-specific` | `Additional comments: {text}`                                                  |
 
 R27 remains available regardless of the orthodontic-history answer. The form
 will not assume that a negative or undocumented orthodontic history makes a
-retainer value impossible. The UI and generated note use **Occlusal splint**.
-Every documented negative, affirmative, or selected-status answer appears in
-the generated note for CPAP, occlusal splint, orthodontic history, retainers,
-and partial dentures.
+retainer value impossible. The UI and generated note use **Occlusal splint**
+and **Partial/complete removable dentures**. Every documented negative,
+affirmative, or selected-status answer appears in the generated note for CPAP,
+occlusal splint, orthodontic history, retainers, and removable dentures.
 
 ### Treatment and Next Visit
 
@@ -197,10 +204,10 @@ by the template, including Date Booked, use `YYYY-MM-DD`.
 ## Generated-Note Order
 
 The note should preserve the source order, preceded by the user-requested
-copy-time timestamp and Patient ID extensions:
+Patient ID and note-start timestamp extensions:
 
-1. Copy-time timestamp
-2. Patient ID
+1. Patient ID
+2. Form-start timestamp
 3. Visit team
 4. Consent
 5. Medical history and premedication
@@ -218,19 +225,17 @@ Unanswered fields are omitted. Section headings with no output are also
 omitted. The generated note must not contain placeholder labels such as
 `undefined`, `Not assessed`, or `[UNRESOLVED PLACEHOLDER: ...]`.
 
-When the user successfully invokes **Copy note**, the application prepends a
-fresh timestamp using the browser's local date and time in 24-hour
-`YYYY-MM-DD HH:mm` format. The timestamp records the copy action, not the
-appointment time or Date Booked. It is generated for the clipboard payload and
-is not persisted.
+The visible preview contains the complete generated note. A successful
+**Copy note** action writes that preview to the clipboard unchanged and does
+not add a separate copy-time timestamp.
 
 ### Illustrative Output Shape
 
 The following uses tokens rather than real clinical or staff information:
 
 ```text
-DATE: {YYYY-MM-DD HH:mm at the moment of copying}
 PATIENT ID: {entered patient ID}
+NOTE STARTED: {YYYY-MM-DD HH:mm when the page loaded or reset was confirmed}
 DENTIST: {entered dentist}
 RDA: {entered RDA}
 RDH: {entered RDH}
@@ -250,7 +255,8 @@ Load TMJ joint test: {WNL or findings}
 
 Intraoral: {WNL or findings}
 Oral habits: {entered text}
-Molar occlusion: {entered text}
+Molar occlusion—right: {entered text or N/A}
+Molar occlusion—left: {entered text or N/A}
 Skeletal occlusion: {entered text or N/A}
 Overjet: {number} mm.
 Overbite: {number}%.
@@ -259,7 +265,7 @@ CPAP use: {documented answer}
 Occlusal splint: {documented ownership and use}
 Orthodontic history: {documented answer}
 Retainers: {documented answer}
-Partial dentures: {documented answer}
+Partial/complete removable dentures: {documented answer}
 
 Patient would like to improve: {entered text}
 Additional comments: {entered text}
@@ -281,6 +287,9 @@ does not leave extra blank lines when an entire group is omitted.
 ## Interaction and Privacy Rules
 
 - Form values live only in React component memory.
+- The browser-local **Note started** timestamp is captured once when the page
+  loads. Loading demo data or copying does not refresh it. A confirmed reset
+  replaces it with the current browser-local date and time.
 - Reloading or leaving the route discards the form.
 - No form value is written to browser storage, URLs, analytics, telemetry,
   error reporting, an API, fixtures, or source files.
@@ -289,10 +298,13 @@ does not leave extra blank lines when an entire group is omitted.
   one of Dentist, RDA, or RDH contain non-whitespace text.
 - A failed copy attempt shows visible field-level validation, explains the
   provider-group requirement, and moves focus to the first unresolved error.
-- A successful copy attempt generates the current browser-local timestamp and
-  includes it only in the copied note.
-- A visible **Reset form** action should require confirmation when the form has
-  entered values.
+- A successful copy attempt writes the visible preview unchanged and does not
+  generate or append a copy-time timestamp.
+- The visible **Reset form** action always requires confirmation, including
+  when all editable fields are empty.
+- Cancelling reset leaves the fields and Note started timestamp unchanged.
+- Confirming reset clears all editable fields and refreshes Note started to the
+  current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
 - Provider fields are not remembered until a later ADR 0001 implementation
@@ -328,7 +340,8 @@ contract are genuinely the same, not only because two fields look similar.
 
 ## Acceptance Criteria
 
-- All 35 mapping IDs—34 source mappings plus the Patient ID extension—are
+- All 36 mapping IDs—34 source mappings plus the Patient ID and note-start
+  timestamp extensions—are
   implemented or explicitly removed through an approved revision of this
   specification.
 - The source consent duplication is resolved and produces no accidental
@@ -336,17 +349,23 @@ contract are genuinely the same, not only because two fields look similar.
 - Patient names are not collected.
 - Patient ID is required before copying, remains in memory only, and appears in
   copied output.
+- A read-only browser-local Note started timestamp is captured at page load or
+  confirmed reset, remains in memory only, and appears next to Patient ID in
+  the form and copied output.
 - At least one of Dentist, RDA, or RDH is required before copying.
 - No clipboard write occurs when either copy prerequisite is unmet.
-- Successful copy output begins with the copy-time timestamp in
-  `YYYY-MM-DD HH:mm` browser-local time.
+- The visible preview includes the Note started timestamp, and successful copy
+  output matches that preview exactly.
 - Date Booked output uses `YYYY-MM-DD`.
 - WNL and negative findings require explicit user selection.
+- Right and left molar occlusion are documented independently, and each has an
+  explicit, non-preselected N/A action.
 - Radiographs and intraoral photos use explicit Yes/No statuses with editable
   details, and documented Yes and No answers appear in the generated note.
 - The UI and generated note use **Occlusal splint**, and every documented
   negative, affirmative, or selected-status appliance/history answer appears
   in the generated note.
+- The UI and generated note use **Partial/complete removable dentures**.
 - Treatment options and plans are never preselected.
 - Unknown editable values render and appear unchanged in generated output.
 - Blank fields and empty headings are omitted cleanly.
@@ -354,13 +373,14 @@ contract are genuinely the same, not only because two fields look similar.
 - Reloading the page restores an empty form, not prior form data.
 - No form-state storage or network submission is introduced.
 - Generated-note tests use synthetic values.
-- Browser tests cover the main workflow, reset behavior, copy prerequisites,
-  copy-time timestamp, paragraph spacing, and non-persistence.
+- Browser tests cover the main workflow, mandatory reset confirmation,
+  reset-time refresh, copy prerequisites, preview/copy parity, note-start
+  timestamp, paragraph spacing, and non-persistence.
 - Registry metadata identifies source `recare-exam`, source baseline
   `7d3d21c`, and lifecycle status.
-- The template remains `draft` during implementation. It may advance to
-  `pilot` only after the implementation meets these criteria and its generated
-  output matches the accepted shape.
+- The template is `pilot` after functional approval. It may advance to `ready`
+  only after final clinical review confirms the implemented workflow and
+  generated output.
 
 ## Implementation Sequence
 

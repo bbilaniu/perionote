@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FullPageLink } from "@/components/FullPageLink";
+import { getClinicConversionBySourceSlug } from "@/components/clinic-templates/conversionRegistry";
 import {
   clinicTemplateGroups,
   getClinicTemplatesByCategory,
@@ -15,11 +17,11 @@ export default function ClinicTemplatesPage() {
           ← All template libraries
         </Link>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-          Clinic EMR Templates
+          Clinical Templates
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-          The clinic&apos;s current ClearDent progress-note templates, grouped
-          by clinical workflow. Open any template to review or copy its text.
+          Browse the clinic&apos;s current ClearDent source notes and open
+          interactive conversions when available.
         </p>
       </header>
 
@@ -81,21 +83,47 @@ export default function ClinicTemplatesPage() {
 
                   {templates.length > 0 ? (
                     <div className="grid gap-3 md:grid-cols-2">
-                      {templates.map((template) => (
-                        <Link
-                          key={template.slug}
-                          href={`/templates/clinic/${template.slug}`}
-                          className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
-                        >
-                          <h4 className="font-semibold">{template.title}</h4>
-                          <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                            {template.description}
-                          </p>
-                          <p className="mt-3 text-sm font-medium text-chart-accent dark:text-sky-300">
-                            View template
-                          </p>
-                        </Link>
-                      ))}
+                      {templates.map((template) => {
+                        const conversion =
+                          getClinicConversionBySourceSlug(template.slug);
+
+                        return (
+                          <article
+                            key={template.slug}
+                            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                              <h4 className="font-semibold">
+                                {template.title}
+                              </h4>
+                              {conversion ? (
+                                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                                  Interactive · {conversion.lifecycle}
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                              {template.description}
+                            </p>
+                            <div className="mt-4 flex flex-wrap gap-4 text-sm font-medium">
+                              <Link
+                                href={`/templates/clinic/${template.slug}`}
+                                className="text-chart-accent hover:underline dark:text-sky-300"
+                              >
+                                View original template
+                              </Link>
+                              {conversion ? (
+                                <FullPageLink
+                                  href={`/templates/clinic/${template.slug}/interactive/`}
+                                  className="text-chart-accent hover:underline dark:text-sky-300"
+                                >
+                                  Open interactive version
+                                </FullPageLink>
+                              ) : null}
+                            </div>
+                          </article>
+                        );
+                      })}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed border-slate-300 px-5 py-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">

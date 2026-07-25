@@ -1,12 +1,21 @@
 import type { ComponentType } from "react";
 
 export type TemplateKind = "native" | "imported";
+export type TemplateLifecycleStatus = "draft" | "pilot" | "ready";
+
+export interface TemplateProvenance {
+  sourceClinicTemplateSlug: string;
+  sourceRevision: string;
+  clinicalReviewDate: string;
+}
 
 export interface TemplateDefinition<TFixture = unknown> {
   slug: string;
   title: string;
   description: string;
   kind: TemplateKind;
+  lifecycle: TemplateLifecycleStatus;
+  provenance?: TemplateProvenance;
   hidden?: boolean;
   fixture: TFixture;
   summary: string;

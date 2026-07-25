@@ -1,6 +1,7 @@
 # ADR 0002: Separate Clinic and Interactive Template Libraries
 
-- Status: Accepted
+- Status: Accepted; clinical-conversion placement superseded by
+  [ADR 0004](0004-colocate-clinical-conversions-with-source-templates.md)
 - Date: 2026-07-24
 
 ## Context
