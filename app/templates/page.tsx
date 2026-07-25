@@ -8,8 +8,8 @@ export default function TemplatesIndexPage() {
           Template Libraries
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-          Choose between the clinic&apos;s existing ClearDent notes and
-          HygieneNote&apos;s interactive webforms.
+          Browse clinical source templates and their conversions, or open
+          HygieneNote&apos;s standalone interactive forms.
         </p>
       </header>
 
@@ -19,15 +19,15 @@ export default function TemplatesIndexPage() {
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
         >
           <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Reference library
+            Clinical library
           </p>
-          <h2 className="mt-1 text-lg font-semibold">Clinic EMR Templates</h2>
+          <h2 className="mt-1 text-lg font-semibold">Clinical Templates</h2>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-            Review and copy the clinic&apos;s current ClearDent progress-note
-            templates, organized by clinical workflow.
+            Review the clinic&apos;s ClearDent source notes and open their
+            interactive conversions when available.
           </p>
           <p className="mt-4 text-sm font-medium text-chart-accent dark:text-sky-300">
-            Browse clinic templates
+            Browse clinical templates
           </p>
         </Link>
 
@@ -36,15 +36,17 @@ export default function TemplatesIndexPage() {
           className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
         >
           <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            Working forms
+            Original webforms
           </p>
-          <h2 className="mt-1 text-lg font-semibold">Interactive Templates</h2>
+          <h2 className="mt-1 text-lg font-semibold">
+            Standalone Interactive Forms
+          </h2>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-            Open the current HygieneNote webforms and generate structured
-            clinical summaries.
+            Open HygieneNote forms that are not conversions of a clinic EMR
+            template.
           </p>
           <p className="mt-4 text-sm font-medium text-chart-accent dark:text-sky-300">
-            Browse interactive templates
+            Browse standalone forms
           </p>
         </Link>
       </div>

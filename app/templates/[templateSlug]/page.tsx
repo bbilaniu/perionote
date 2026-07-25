@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
-import { getTemplateBySlug, templateRegistry } from "@/components/templates/registry";
+import {
+  getStandaloneInteractiveBySlug,
+  standaloneInteractiveRegistry,
+} from "@/components/templates/registry";
 import type { ComponentType } from "react";
 
 export function generateStaticParams() {
-  return templateRegistry.map((template) => ({ templateSlug: template.slug }));
+  return standaloneInteractiveRegistry.map((template) => ({
+    templateSlug: template.slug,
+  }));
 }
 
 export default async function TemplatePreviewPage({
@@ -12,7 +17,7 @@ export default async function TemplatePreviewPage({
   params: Promise<{ templateSlug: string }>;
 }) {
   const { templateSlug } = await params;
-  const template = getTemplateBySlug(templateSlug);
+  const template = getStandaloneInteractiveBySlug(templateSlug);
 
   if (!template) {
     notFound();

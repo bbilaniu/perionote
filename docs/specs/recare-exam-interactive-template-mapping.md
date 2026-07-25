@@ -5,12 +5,14 @@
 - Clinical review status: Accepted 2026-07-25
 - Source template: `recare-exam`
 - Interactive slug: `recare-exam`
+- Interactive route: `/templates/clinic/recare-exam/interactive`
 - Source baseline commit: `7d3d21c`
 - Initial lifecycle status: `draft`
 - Governing decisions:
   - [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)
   - [ADR 0002: Separate Clinic and Interactive Template Libraries](../adr/0002-separate-clinic-and-interactive-template-libraries.md)
   - [ADR 0003: Define Interactive Template Conversion and Provenance](../adr/0003-define-interactive-template-conversion-and-provenance.md)
+  - [ADR 0004: Colocate Clinical Conversions with Source Templates](../adr/0004-colocate-clinical-conversions-with-source-templates.md)
 
 ## Purpose
 

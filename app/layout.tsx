@@ -77,13 +77,13 @@ export default function RootLayout({
                   className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
                   href="/templates/clinic"
                 >
-                  Clinic templates
+                  Clinical templates
                 </Link>
                 <Link
                   className="hidden text-sm font-medium text-chart-accent hover:underline sm:inline dark:text-sky-300 dark:hover:text-sky-200"
                   href="/templates/interactive"
                 >
-                  Interactive templates
+                  Standalone forms
                 </Link>
               </nav>
               <ThemeToggle />

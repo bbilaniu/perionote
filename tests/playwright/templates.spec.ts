@@ -17,11 +17,13 @@ test("template library index separates clinic and interactive templates", async 
   ).toBeVisible();
 });
 
-test("interactive template index renders current webforms", async ({ page }) => {
+test("standalone interactive index excludes clinical conversions", async ({
+  page,
+}) => {
   await page.goto("/templates/interactive");
 
   await expect(
-    page.getByRole("heading", { name: "Interactive Templates" }),
+    page.getByRole("heading", { name: "Standalone Interactive Forms" }),
   ).toBeVisible();
   await expect(
     page.locator('a[href="/templates/dental-hygiene-note-webform/"]'),
@@ -34,11 +36,43 @@ test("interactive template index renders current webforms", async ({ page }) => 
   ).toBeVisible();
   await expect(
     page.locator('a[href="/templates/recare-exam/"]'),
-  ).toBeVisible();
-  await expect(page.getByText("Interactive · draft")).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.locator('a[href="/templates/gingival-description/"]'),
   ).toHaveCount(0);
+});
+
+test("clinical catalogue colocates the Recare Exam source and conversion", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic");
+
+  await expect(
+    page.getByRole("heading", { name: "Clinical Templates" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('a[href="/templates/clinic/recare-exam/"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator(
+      'a[href="/templates/clinic/recare-exam/interactive/"]',
+    ),
+  ).toBeVisible();
+  await expect(page.getByText("Interactive · draft")).toBeVisible();
+
+  await Promise.all([
+    page.waitForURL("**/templates/clinic/recare-exam/"),
+    page.locator('a[href="/templates/clinic/recare-exam/"]').click(),
+  ]);
+  await expect(
+    page.getByRole("heading", { name: "Recare Exam", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Open interactive version · draft" }),
+  ).toHaveAttribute(
+    "href",
+    "/templates/clinic/recare-exam/interactive/",
+  );
 });
 
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
@@ -46,7 +80,10 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/templates/recare-exam");
+  await page.goto("/templates/clinic/recare-exam/interactive");
+  await expect(
+    page.getByRole("link", { name: "Original Recare Exam template" }),
+  ).toHaveAttribute("href", "/templates/clinic/recare-exam/");
   await expect(page.locator("#recare-note-started")).toHaveValue(
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
   );
@@ -91,7 +128,7 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.clock.install({ time: new Date(2026, 6, 25, 9, 10) });
-  await page.goto("/templates/recare-exam");
+  await page.goto("/templates/clinic/recare-exam/interactive");
   await expect(page.locator("#recare-note-started")).toHaveValue(
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
   );
@@ -170,7 +207,7 @@ test("clinic template library follows the clinical menu and opens a template", a
   await page.goto("/templates/clinic");
 
   await expect(
-    page.getByRole("heading", { name: "Clinic EMR Templates" }),
+    page.getByRole("heading", { name: "Clinical Templates" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Hygiene", exact: true }),

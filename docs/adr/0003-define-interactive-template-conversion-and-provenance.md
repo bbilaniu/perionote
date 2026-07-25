@@ -6,6 +6,12 @@
 
 Proposed
 
+The placement of clinical conversions in the general interactive library is
+superseded by
+[ADR 0004](0004-colocate-clinical-conversions-with-source-templates.md).
+The provenance, lifecycle, mapping, privacy, output, testing, and review
+decisions in this ADR remain governing.
+
 ## Context
 
 Hygienenote now has two public template libraries:
