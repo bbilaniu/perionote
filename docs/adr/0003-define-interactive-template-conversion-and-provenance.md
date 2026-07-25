@@ -309,7 +309,8 @@ and preview deployments are the appropriate place for draft conversion work.
 
 ## Follow-Up
 
-1. Create the Recare Exam field-mapping and output specification.
+1. Implement the accepted
+   [Recare Exam field-mapping and output specification](../specs/recare-exam-interactive-template-mapping.md).
 2. Define the minimal provenance and lifecycle additions to the interactive
    template registry.
 3. Choose a source revision or content-hash convention.
