@@ -1,11 +1,27 @@
 import { test, expect } from "@playwright/test";
 import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
 
-test("template index renders", async ({ page }) => {
+test("template library index separates clinic and interactive templates", async ({
+  page,
+}) => {
   await page.goto("/templates");
 
   await expect(
-    page.getByRole("heading", { name: "Template Browser" }),
+    page.getByRole("heading", { name: "Template Libraries" }),
+  ).toBeVisible();
+  await expect(
+    page.locator('main a[href="/templates/clinic/"]'),
+  ).toBeVisible();
+  await expect(
+    page.locator('main a[href="/templates/interactive/"]'),
+  ).toBeVisible();
+});
+
+test("interactive template index renders current webforms", async ({ page }) => {
+  await page.goto("/templates/interactive");
+
+  await expect(
+    page.getByRole("heading", { name: "Interactive Templates" }),
   ).toBeVisible();
   await expect(
     page.locator('a[href="/templates/dental-hygiene-note-webform/"]'),
@@ -19,6 +35,44 @@ test("template index renders", async ({ page }) => {
   await expect(
     page.locator('a[href="/templates/gingival-description/"]'),
   ).toHaveCount(0);
+});
+
+test("clinic template library follows the clinical menu and opens a template", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic");
+
+  await expect(
+    page.getByRole("heading", { name: "Clinic EMR Templates" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Hygiene", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Exams and adjuncts", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Periodontal Maintenance/Re-evaluation",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "This category is ready for the clinic's next treatment or referral addendum.",
+    ),
+  ).toBeVisible();
+
+  await page
+    .getByRole("link", { name: /2021 Adult Hygiene/ })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "2021 Adult Hygiene" }),
+  ).toBeVisible();
+  await expect(page.getByText("Patient Chief Concern:")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy template" }),
+  ).toBeVisible();
 });
 
 test("imported webform preview renders summary panel and updated EOE/IOE sections", async ({
