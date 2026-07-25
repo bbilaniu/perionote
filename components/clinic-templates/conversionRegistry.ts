@@ -22,9 +22,9 @@ const allClinicConversions = [
     slug: "recare-exam",
     title: "Recare Exam",
     description:
-      "Interactive conversion of the clinic Recare Exam note for local implementation review.",
+      "Pilot interactive conversion of the clinic Recare Exam note.",
     kind: "native",
-    lifecycle: "draft",
+    lifecycle: "pilot",
     provenance: {
       sourceClinicTemplateSlug: "recare-exam",
       sourceRevision: "7d3d21c",
@@ -39,6 +39,10 @@ const allClinicConversions = [
 
 const includePilotTemplates =
   process.env.NEXT_PUBLIC_INCLUDE_PILOT_TEMPLATES === "true";
+
+export const clinicConversionSourceSlugs = allClinicConversions.map(
+  (conversion) => conversion.provenance.sourceClinicTemplateSlug,
+);
 
 export const clinicConversionRegistry = allClinicConversions.filter(
   (conversion) =>

@@ -7,7 +7,7 @@
 - Interactive slug: `recare-exam`
 - Interactive route: `/templates/clinic/recare-exam/interactive`
 - Source baseline commit: `7d3d21c`
-- Initial lifecycle status: `draft`
+- Lifecycle status: `pilot`
 - Governing decisions:
   - [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)
   - [ADR 0002: Separate Clinic and Interactive Template Libraries](../adr/0002-separate-clinic-and-interactive-template-libraries.md)
@@ -22,8 +22,9 @@ reviewed interactive control and generated-note behavior. It also includes the
 user-requested Patient ID and note-start timestamp extensions, which are not
 present in the source template.
 
-Acceptance authorizes implementation with lifecycle status `draft`; it does not
-authorize publishing the interactive template as `pilot` or `ready`.
+Functional approval advances the conversion to lifecycle status `pilot`. Pilot
+production inclusion remains an explicit build decision under ADR 0003; this
+approval does not advance the conversion to `ready`.
 
 ## Scope
 
@@ -377,9 +378,9 @@ contract are genuinely the same, not only because two fields look similar.
   timestamp, paragraph spacing, and non-persistence.
 - Registry metadata identifies source `recare-exam`, source baseline
   `7d3d21c`, and lifecycle status.
-- The template remains `draft` during implementation. It may advance to
-  `pilot` only after the implementation meets these criteria and its generated
-  output matches the accepted shape.
+- The template is `pilot` after functional approval. It may advance to `ready`
+  only after final clinical review confirms the implemented workflow and
+  generated output.
 
 ## Implementation Sequence
 

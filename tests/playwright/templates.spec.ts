@@ -58,7 +58,7 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
       'a[href="/templates/clinic/recare-exam/interactive/"]',
     ),
   ).toBeVisible();
-  await expect(page.getByText("Interactive · draft")).toBeVisible();
+  await expect(page.getByText("Interactive · pilot")).toBeVisible();
 
   await Promise.all([
     page.waitForURL("**/templates/clinic/recare-exam/"),
@@ -68,7 +68,7 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
     page.getByRole("heading", { name: "Recare Exam", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Open interactive version · draft" }),
+    page.getByRole("link", { name: "Open interactive version · pilot" }),
   ).toHaveAttribute(
     "href",
     "/templates/clinic/recare-exam/interactive/",
@@ -160,7 +160,12 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   );
   expect(copiedNote).not.toContain("\n\n\n");
 
-  await page.reload();
+  const reloadDialogPromise = page.waitForEvent("dialog");
+  const reloadPromise = page.reload();
+  const reloadDialog = await reloadDialogPromise;
+  expect(reloadDialog.type()).toBe("beforeunload");
+  await reloadDialog.accept();
+  await reloadPromise;
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
   await expect(page.locator("#recare-note-started")).toHaveValue(
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,

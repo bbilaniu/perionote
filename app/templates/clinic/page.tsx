@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FullPageLink } from "@/components/FullPageLink";
 import { getClinicConversionBySourceSlug } from "@/components/clinic-templates/conversionRegistry";
 import {
   clinicTemplateGroups,
@@ -112,12 +113,12 @@ export default function ClinicTemplatesPage() {
                                 View original template
                               </Link>
                               {conversion ? (
-                                <Link
-                                  href={`/templates/clinic/${template.slug}/interactive`}
+                                <FullPageLink
+                                  href={`/templates/clinic/${template.slug}/interactive/`}
                                   className="text-chart-accent hover:underline dark:text-sky-300"
                                 >
                                   Open interactive version
-                                </Link>
+                                </FullPageLink>
                               ) : null}
                             </div>
                           </article>

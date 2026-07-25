@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import type { ComponentType } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FullPageLink } from "@/components/FullPageLink";
 import {
-  clinicConversionRegistry,
+  clinicConversionSourceSlugs,
   getClinicConversionBySourceSlug,
 } from "@/components/clinic-templates/conversionRegistry";
 import { getClinicTemplateBySlug } from "@/lib/clinic-templates/registry";
 
 export function generateStaticParams() {
-  return clinicConversionRegistry.map((conversion) => ({
-    clinicTemplateSlug: conversion.provenance.sourceClinicTemplateSlug,
+  return clinicConversionSourceSlugs.map((clinicTemplateSlug) => ({
+    clinicTemplateSlug,
   }));
 }
 
@@ -50,12 +50,12 @@ export default async function ClinicConversionPage({
 
   return (
     <section className="space-y-5">
-      <Link
-        href={`/templates/clinic/${sourceTemplate.slug}`}
+      <FullPageLink
+        href={`/templates/clinic/${sourceTemplate.slug}/`}
         className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300"
       >
         ← Original {sourceTemplate.title} template
-      </Link>
+      </FullPageLink>
       <ConversionComponent
         fixture={conversion.fixture}
         summary={conversion.summary}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { FullPageLink } from "@/components/FullPageLink";
 import { notFound } from "next/navigation";
 import CopyTemplateButton from "@/components/clinic-templates/CopyTemplateButton";
 import { getClinicConversionBySourceSlug } from "@/components/clinic-templates/conversionRegistry";
@@ -65,12 +66,12 @@ export default async function ClinicTemplatePage({
           </div>
           <div className="flex flex-wrap gap-3">
             {conversion ? (
-              <Link
-                href={`/templates/clinic/${template.slug}/interactive`}
+              <FullPageLink
+                href={`/templates/clinic/${template.slug}/interactive/`}
                 className="inline-flex items-center justify-center rounded-md border border-chart-accent px-4 py-2 text-sm font-medium text-chart-accent transition hover:bg-sky-50 dark:text-sky-300 dark:hover:bg-sky-950"
               >
                 Open interactive version · {conversion.lifecycle}
-              </Link>
+              </FullPageLink>
             ) : null}
             <CopyTemplateButton content={template.content} />
           </div>

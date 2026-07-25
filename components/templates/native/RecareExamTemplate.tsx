@@ -29,6 +29,9 @@ const inputClass =
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 
+const recareNoteDiscardWarning =
+  "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
+
 const statusOptions: Array<{ value: DocumentationStatus; label: string }> = [
   { value: "not-documented", label: "Not documented" },
   { value: "no", label: "No" },
@@ -301,6 +304,19 @@ export function RecareExamTemplate({
     setStartedAt(new Date());
   }, []);
 
+  useEffect(() => {
+    function warnBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = recareNoteDiscardWarning;
+    }
+
+    window.addEventListener("beforeunload", warnBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", warnBeforeUnload);
+    };
+  }, []);
+
   const summary = useMemo(
     () =>
       buildRecareExamSummary(form, {
@@ -362,11 +378,7 @@ export function RecareExamTemplate({
   }
 
   function resetForm() {
-    if (
-      !window.confirm(
-        "Clear all entered Recare Exam values and start a new note? This cannot be undone.",
-      )
-    ) {
+    if (!window.confirm(recareNoteDiscardWarning)) {
       return;
     }
 
@@ -399,7 +411,7 @@ export function RecareExamTemplate({
     <div className="space-y-6">
       <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
         <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-          Draft interactive conversion
+          Pilot interactive conversion
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           Recare Exam

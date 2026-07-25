@@ -4,7 +4,7 @@
 
 ## Status
 
-Proposed
+Accepted
 
 The placement of clinical conversions in the general interactive library is
 superseded by
