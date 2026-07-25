@@ -102,13 +102,10 @@ Retainers: None.`);
 });
 
 describe("interactive template lifecycle", () => {
-  it("excludes drafts from production while keeping them available locally", () => {
+  it("publishes pilots while excluding drafts from production", () => {
     expect(isTemplateAvailableForBuild("draft", "production")).toBe(false);
     expect(isTemplateAvailableForBuild("draft", "development")).toBe(true);
     expect(isTemplateAvailableForBuild("ready", "production")).toBe(true);
-    expect(isTemplateAvailableForBuild("pilot", "production", false)).toBe(
-      false,
-    );
-    expect(isTemplateAvailableForBuild("pilot", "production", true)).toBe(true);
+    expect(isTemplateAvailableForBuild("pilot", "production")).toBe(true);
   });
 });

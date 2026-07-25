@@ -37,9 +37,6 @@ const allClinicConversions = [
   }),
 ] as const;
 
-const includePilotTemplates =
-  process.env.NEXT_PUBLIC_INCLUDE_PILOT_TEMPLATES === "true";
-
 export const clinicConversionSourceSlugs = allClinicConversions.map(
   (conversion) => conversion.provenance.sourceClinicTemplateSlug,
 );
@@ -49,7 +46,6 @@ export const clinicConversionRegistry = allClinicConversions.filter(
     isTemplateAvailableForBuild(
       conversion.lifecycle,
       process.env.NODE_ENV,
-      includePilotTemplates,
     ),
 );
 

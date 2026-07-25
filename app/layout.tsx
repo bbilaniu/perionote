@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import packageInfo from "@/package.json";
 import "./globals.css";
 
 const isGithubActions = process.env.GITHUB_ACTIONS === "true";
 const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
 const repoBasePath = isGithubActions && repositoryName ? `/${repositoryName}` : "";
+const appVersion = packageInfo.version;
 
 export const metadata: Metadata = {
   title: "HygieneNote",
@@ -63,7 +65,7 @@ export default function RootLayout({
 })();`,
           }}
         />
-        <div className="min-h-screen">
+        <div className="flex min-h-screen flex-col">
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
             <div className="mx-auto flex max-w-[112rem] items-center justify-between gap-4 px-6 py-4">
               <span className="text-lg font-semibold tracking-tight">
@@ -89,7 +91,19 @@ export default function RootLayout({
               <ThemeToggle />
             </div>
           </header>
-          <main className="mx-auto w-full max-w-[112rem] px-6 py-10">{children}</main>
+          <main className="mx-auto w-full max-w-[112rem] flex-1 px-6 py-10">
+            {children}
+          </main>
+          <footer className="border-t border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
+            <div className="mx-auto flex max-w-[112rem] items-center justify-between gap-4 px-6 py-4">
+              <span className="text-sm font-semibold tracking-tight">
+                HygieneNote
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Version {appVersion}
+              </span>
+            </div>
+          </footer>
         </div>
       </body>
     </html>
