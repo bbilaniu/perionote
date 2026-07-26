@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.3.0
+
+### Minor Changes
+
+- 3b8ad1e: Add browser-local provider and occlusion catalogues to the Recare Exam pilot, including catalogue management and manual JSON import and export.
+
 ## 0.2.2
 
 ### Patch Changes
