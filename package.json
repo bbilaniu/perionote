@@ -15,6 +15,7 @@
     "test:e2e": "playwright test",
     "changeset": "changeset",
     "version": "changeset version",
+    "catalogue:from-cleardent": "node scripts/transform-cleardent-catalogue.mjs",
     "codex:patches:prepare": "node scripts/codex-patch-branches.mjs prepare",
     "codex:patches:configure": "node scripts/codex-patch-branches.mjs configure",
     "codex:patches:apply": "node scripts/codex-patch-branches.mjs apply"

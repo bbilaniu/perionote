@@ -1,3 +1,6 @@
+import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
+import type { TemplateLifecycleStatus } from "@/lib/templates/types";
+
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
 export const CATALOGUE_EXPORT_FORMAT = "hygienenote-catalogue";
 export const CATALOGUE_EXPORT_FORMAT_VERSION = 1;
@@ -10,10 +13,30 @@ export const CATALOGUE_KEYS = [
   "visit-team.rdh",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
+  "medical-history.review",
+  "periodontal.fmp-done",
+  "periodontal.health-gingivitis",
+  "oral-hygiene.aids-reviewed",
+  "hygiene-treatment.completed",
+  "hygiene-treatment.anesthetic",
+  "hygiene-treatment.desensitizer",
+  "scheduling.next-visit",
 ] as const;
 
 export type CatalogueKey = (typeof CATALOGUE_KEYS)[number];
 export type CatalogueOwner = "seed" | "user";
+
+export const CATALOGUE_SECTIONS = [
+  "Visit Team",
+  "Clinical Exam",
+  "Medical History",
+  "Periodontal Assessment",
+  "Oral Hygiene and Education",
+  "Treatment",
+  "Intervals and Next Visit",
+] as const;
+
+export type CatalogueSection = (typeof CATALOGUE_SECTIONS)[number];
 
 export type CatalogueSeed = {
   id: string;
@@ -22,10 +45,11 @@ export type CatalogueSeed = {
 
 export type CatalogueDefinition = {
   key: CatalogueKey;
-  section: "Visit Team" | "Clinical Exam";
+  section: CatalogueSection;
   title: string;
   fieldLabels: string[];
   seeds: CatalogueSeed[];
+  lifecycle: TemplateLifecycleStatus;
 };
 
 export type UserCatalogueItem = {
@@ -84,6 +108,25 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
 ];
 
+const medicalHistoryReviewSeeds: CatalogueSeed[] = [
+  {
+    id: "seed.medical-history.review.no-changes",
+    label: "YES- NO CHANGES",
+  },
+  {
+    id: "seed.medical-history.review.no-problems-cleared",
+    label: "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
+  },
+  {
+    id: "seed.medical-history.review.updated-no-contraindications",
+    label: "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
+  },
+  {
+    id: "seed.medical-history.review.updated-meds",
+    label: "YES- UPDATED MEDS",
+  },
+];
+
 export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
     key: "visit-team.dentist",
@@ -91,6 +134,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Dentist",
     fieldLabels: ["Dentist"],
     seeds: [],
+    lifecycle: "pilot",
   },
   {
     key: "visit-team.rda",
@@ -98,6 +142,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "RDA",
     fieldLabels: ["RDA"],
     seeds: [],
+    lifecycle: "pilot",
   },
   {
     key: "visit-team.rdh",
@@ -105,6 +150,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "RDH",
     fieldLabels: ["RDH"],
     seeds: [],
+    lifecycle: "pilot",
   },
   {
     key: "clinical-exam.molar-occlusion",
@@ -112,6 +158,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Molar occlusion",
     fieldLabels: ["Left molar occlusion", "Right molar occlusion"],
     seeds: occlusionSeeds("molar"),
+    lifecycle: "pilot",
   },
   {
     key: "clinical-exam.skeletal-occlusion",
@@ -119,8 +166,81 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Skeletal occlusion",
     fieldLabels: ["Skeletal occlusion"],
     seeds: occlusionSeeds("skeletal"),
+    lifecycle: "pilot",
+  },
+  {
+    key: "medical-history.review",
+    section: "Medical History",
+    title: "Medical history reviewed",
+    fieldLabels: ["Medical history reviewed"],
+    seeds: medicalHistoryReviewSeeds,
+    lifecycle: "draft",
+  },
+  {
+    key: "periodontal.fmp-done",
+    section: "Periodontal Assessment",
+    title: "FMP done",
+    fieldLabels: ["FMP done"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "periodontal.health-gingivitis",
+    section: "Periodontal Assessment",
+    title: "Health/Gingivitis",
+    fieldLabels: ["Health/Gingivitis"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "oral-hygiene.aids-reviewed",
+    section: "Oral Hygiene and Education",
+    title: "OH aids reviewed/recommended",
+    fieldLabels: ["OH aids reviewed/recommended"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "hygiene-treatment.completed",
+    section: "Treatment",
+    title: "Treatment completed today",
+    fieldLabels: ["Treatment completed today"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "hygiene-treatment.anesthetic",
+    section: "Treatment",
+    title: "Anesthetic",
+    fieldLabels: ["Anesthetic"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "hygiene-treatment.desensitizer",
+    section: "Treatment",
+    title: "Desensitizer",
+    fieldLabels: ["Desensitizer"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "scheduling.next-visit",
+    section: "Intervals and Next Visit",
+    title: "Next visit",
+    fieldLabels: ["Next visit"],
+    seeds: [],
+    lifecycle: "draft",
   },
 ];
+
+export function getCatalogueDefinitionsForBuild(
+  environment: string | undefined,
+): CatalogueDefinition[] {
+  return CATALOGUE_DEFINITIONS.filter((definition) =>
+    isTemplateAvailableForBuild(definition.lifecycle, environment),
+  );
+}
 
 const catalogueDefinitionsByKey = new Map(
   CATALOGUE_DEFINITIONS.map((definition) => [definition.key, definition]),
@@ -290,6 +410,7 @@ function parseSeedPreference(value: unknown): SeedPreference {
 function assertNoDuplicateStateRecords(
   userItems: UserCatalogueItem[],
   seedPreferences: SeedPreference[],
+  options: { allowSeedDuplicates?: boolean } = {},
 ): void {
   const itemIds = new Set<string>();
   const labels = new Set<string>();
@@ -311,7 +432,7 @@ function assertNoDuplicateStateRecords(
         normalizeCatalogueLabel(seed.label) ===
         normalizeCatalogueLabel(item.label),
     );
-    if (matchingSeed) {
+    if (matchingSeed && !options.allowSeedDuplicates) {
       throw new CatalogueValidationError(
         `Duplicate starter value in ${item.catalogueKey}.`,
       );
@@ -330,6 +451,47 @@ function assertNoDuplicateStateRecords(
   }
 }
 
+function migrateUserItemsMatchingSeeds(
+  userItems: UserCatalogueItem[],
+  seedPreferences: SeedPreference[],
+): {
+  userItems: UserCatalogueItem[];
+  seedPreferences: SeedPreference[];
+} {
+  const retainedUserItems: UserCatalogueItem[] = [];
+  const preferencesBySeedId = new Map(
+    seedPreferences.map((preference) => [
+      preference.seedId,
+      preference,
+    ]),
+  );
+
+  for (const item of userItems) {
+    const matchingSeed = getCatalogueDefinition(item.catalogueKey).seeds.find(
+      (seed) =>
+        normalizeCatalogueLabel(seed.label) ===
+        normalizeCatalogueLabel(item.label),
+    );
+    if (!matchingSeed) {
+      retainedUserItems.push(item);
+      continue;
+    }
+    if (!preferencesBySeedId.has(matchingSeed.id)) {
+      preferencesBySeedId.set(matchingSeed.id, {
+        seedId: matchingSeed.id,
+        hidden: item.hidden,
+        favorite: item.favorite,
+        sortOrder: item.sortOrder,
+      });
+    }
+  }
+
+  return {
+    userItems: retainedUserItems,
+    seedPreferences: [...preferencesBySeedId.values()],
+  };
+}
+
 export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new CatalogueValidationError(
@@ -345,12 +507,22 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
 
   const userItems = value.userItems.map(parseUserItem);
   const seedPreferences = value.seedPreferences.map(parseSeedPreference);
-  assertNoDuplicateStateRecords(userItems, seedPreferences);
+  assertNoDuplicateStateRecords(userItems, seedPreferences, {
+    allowSeedDuplicates: true,
+  });
+  const migrated = migrateUserItemsMatchingSeeds(
+    userItems,
+    seedPreferences,
+  );
+  assertNoDuplicateStateRecords(
+    migrated.userItems,
+    migrated.seedPreferences,
+  );
 
   return {
     schemaVersion: 1,
-    userItems,
-    seedPreferences,
+    userItems: migrated.userItems,
+    seedPreferences: migrated.seedPreferences,
   };
 }
 

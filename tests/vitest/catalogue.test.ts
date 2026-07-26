@@ -3,11 +3,13 @@ import {
   CATALOGUE_DEFINITIONS,
   CATALOGUE_EXPORT_FORMAT,
   CATALOGUE_STORAGE_KEY,
+  type CatalogueKey,
   CatalogueValidationError,
   createEmptyCatalogueState,
   deleteUserCatalogueItem,
   favoriteAndUnhideCatalogueItem,
   findEquivalentCatalogueItem,
+  getCatalogueDefinitionsForBuild,
   listCatalogueItems,
   mergeCatalogueStates,
   moveCatalogueItem,
@@ -25,12 +27,7 @@ import {
 
 function remember(
   state: ReturnType<typeof createEmptyCatalogueState>,
-  catalogueKey:
-    | "visit-team.dentist"
-    | "visit-team.rda"
-    | "visit-team.rdh"
-    | "clinical-exam.molar-occlusion"
-    | "clinical-exam.skeletal-occlusion",
+  catalogueKey: CatalogueKey,
   label: string,
   id: string,
 ) {
@@ -41,7 +38,32 @@ function remember(
 }
 
 describe("local catalogues", () => {
-  it("defines unseeded provider catalogues and separate molar and skeletal seeds", () => {
+  it("allows Adult Hygiene catalogues in development and hides them in production while draft", () => {
+    const adultHygieneKey = "hygiene-treatment.completed";
+    expect(
+      getCatalogueDefinitionsForBuild("development").some(
+        (definition) => definition.key === adultHygieneKey,
+      ),
+    ).toBe(true);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
+        (definition) => definition.key === adultHygieneKey,
+      ),
+    ).toBe(false);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
+        (definition) => definition.key === "visit-team.rdh",
+      ),
+    ).toBe(true);
+    expect(
+      listCatalogueItems(
+        createEmptyCatalogueState(),
+        adultHygieneKey,
+      ),
+    ).toEqual([]);
+  });
+
+  it("defines the approved public seeds without seeding provider catalogues", () => {
     const emptyState = createEmptyCatalogueState();
     expect(
       listCatalogueItems(emptyState, "visit-team.dentist"),
@@ -61,6 +83,16 @@ describe("local catalogues", () => {
         "clinical-exam.skeletal-occlusion",
       ).map((item) => item.label),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
+    expect(
+      listCatalogueItems(emptyState, "medical-history.review").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "YES- NO CHANGES",
+      "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
+      "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
+      "YES- UPDATED MEDS",
+    ]);
 
     const molarDefinition = CATALOGUE_DEFINITIONS.find(
       (definition) =>
@@ -81,6 +113,35 @@ describe("local catalogues", () => {
         "clinical-exam.skeletal-occlusion",
       )[0].id,
     );
+  });
+
+  it("migrates locally imported values that later become public seeds", () => {
+    const migrated = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [
+        {
+          id: "legacy-medical-history",
+          catalogueKey: "medical-history.review",
+          label: "yes- no changes",
+          hidden: true,
+          favorite: true,
+          sortOrder: 2,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+      ],
+      seedPreferences: [],
+    });
+
+    expect(migrated.userItems).toEqual([]);
+    expect(migrated.seedPreferences).toEqual([
+      {
+        seedId: "seed.medical-history.review.no-changes",
+        hidden: true,
+        favorite: true,
+        sortOrder: 2,
+      },
+    ]);
   });
 
   it("remembers only explicit values and deduplicates normalized labels", () => {
