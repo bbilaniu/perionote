@@ -108,6 +108,25 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
 ];
 
+const medicalHistoryReviewSeeds: CatalogueSeed[] = [
+  {
+    id: "seed.medical-history.review.no-changes",
+    label: "YES- NO CHANGES",
+  },
+  {
+    id: "seed.medical-history.review.no-problems-cleared",
+    label: "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
+  },
+  {
+    id: "seed.medical-history.review.updated-no-contraindications",
+    label: "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
+  },
+  {
+    id: "seed.medical-history.review.updated-meds",
+    label: "YES- UPDATED MEDS",
+  },
+];
+
 export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
     key: "visit-team.dentist",
@@ -154,7 +173,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Medical History",
     title: "Medical history reviewed",
     fieldLabels: ["Medical history reviewed"],
-    seeds: [],
+    seeds: medicalHistoryReviewSeeds,
     lifecycle: "draft",
   },
   {
@@ -391,6 +410,7 @@ function parseSeedPreference(value: unknown): SeedPreference {
 function assertNoDuplicateStateRecords(
   userItems: UserCatalogueItem[],
   seedPreferences: SeedPreference[],
+  options: { allowSeedDuplicates?: boolean } = {},
 ): void {
   const itemIds = new Set<string>();
   const labels = new Set<string>();
@@ -412,7 +432,7 @@ function assertNoDuplicateStateRecords(
         normalizeCatalogueLabel(seed.label) ===
         normalizeCatalogueLabel(item.label),
     );
-    if (matchingSeed) {
+    if (matchingSeed && !options.allowSeedDuplicates) {
       throw new CatalogueValidationError(
         `Duplicate starter value in ${item.catalogueKey}.`,
       );
@@ -431,6 +451,47 @@ function assertNoDuplicateStateRecords(
   }
 }
 
+function migrateUserItemsMatchingSeeds(
+  userItems: UserCatalogueItem[],
+  seedPreferences: SeedPreference[],
+): {
+  userItems: UserCatalogueItem[];
+  seedPreferences: SeedPreference[];
+} {
+  const retainedUserItems: UserCatalogueItem[] = [];
+  const preferencesBySeedId = new Map(
+    seedPreferences.map((preference) => [
+      preference.seedId,
+      preference,
+    ]),
+  );
+
+  for (const item of userItems) {
+    const matchingSeed = getCatalogueDefinition(item.catalogueKey).seeds.find(
+      (seed) =>
+        normalizeCatalogueLabel(seed.label) ===
+        normalizeCatalogueLabel(item.label),
+    );
+    if (!matchingSeed) {
+      retainedUserItems.push(item);
+      continue;
+    }
+    if (!preferencesBySeedId.has(matchingSeed.id)) {
+      preferencesBySeedId.set(matchingSeed.id, {
+        seedId: matchingSeed.id,
+        hidden: item.hidden,
+        favorite: item.favorite,
+        sortOrder: item.sortOrder,
+      });
+    }
+  }
+
+  return {
+    userItems: retainedUserItems,
+    seedPreferences: [...preferencesBySeedId.values()],
+  };
+}
+
 export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new CatalogueValidationError(
@@ -446,12 +507,22 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
 
   const userItems = value.userItems.map(parseUserItem);
   const seedPreferences = value.seedPreferences.map(parseSeedPreference);
-  assertNoDuplicateStateRecords(userItems, seedPreferences);
+  assertNoDuplicateStateRecords(userItems, seedPreferences, {
+    allowSeedDuplicates: true,
+  });
+  const migrated = migrateUserItemsMatchingSeeds(
+    userItems,
+    seedPreferences,
+  );
+  assertNoDuplicateStateRecords(
+    migrated.userItems,
+    migrated.seedPreferences,
+  );
 
   return {
     schemaVersion: 1,
-    userItems,
-    seedPreferences,
+    userItems: migrated.userItems,
+    seedPreferences: migrated.seedPreferences,
   };
 }
 

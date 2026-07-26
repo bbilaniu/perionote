@@ -139,6 +139,20 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   const medicalHistory = page.getByRole("combobox", {
     name: "Medical history reviewed",
   });
+  await medicalHistory.focus();
+  for (const label of [
+    "YES- NO CHANGES",
+    "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
+    "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
+    "YES- UPDATED MEDS",
+  ]) {
+    await expect(
+      page.getByRole("option", {
+        name: `${label} Starter`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
   await medicalHistory.fill("Synthetic reusable history phrase");
   await page.getByRole("button", { name: "Remember this value" }).click();
 

@@ -83,18 +83,20 @@ phrases, and clinic product lists may not.
 ## Catalogue Extension
 
 The Adult Hygiene conversion extends the existing catalogue allowlist with
-eight browser-local groups. All eight ship with no public seeds:
+eight browser-local groups. The Medical history reviewed group ships with the
+four reviewed, complete phrases listed below; the other seven ship with no
+public seeds:
 
-| Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Control use |
-| --- | --- | --- | --- | --- |
-| `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | Single value |
-| `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | Single value |
-| `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | Single value |
-| `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | Multiple values |
-| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | Multiple values |
-| `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | Single value |
-| `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | Single value |
-| `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | Single value |
+| Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Public seeds | Control use |
+| --- | --- | --- | --- | --- | --- |
+| `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS` | Single value |
+| `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | None | Single value |
+| `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | None | Single value |
+| `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | None | Multiple values |
+| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | None | Multiple values |
+| `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None | Single value |
+| `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | None | Single value |
+| `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | None | Single value |
 
 The existing provider keys remain shared:
 
@@ -263,8 +265,9 @@ joins them in that order with commas and `and`, for example
 `PATIENT, PARENT and LEGAL GUARDIAN`. Patient names remain omitted because the
 application cannot supply them. Empty sterilization-code text does not imply
 that codes were not scanned. All four visible medical-history phrases are now
-complete in the private extraction and may be imported into a browser-local
-catalogue. They are not public seeds, and free text remains valid.
+complete in the private extraction and are approved as public starter values.
+They are suggestions only, no value is preselected, and free text remains
+valid.
 
 ### Patient Concerns and Hygiene Findings
 
