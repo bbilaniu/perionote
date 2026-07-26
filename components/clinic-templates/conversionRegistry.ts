@@ -1,6 +1,9 @@
+import { AdultHygiene2021Template } from "@/components/templates/native/AdultHygiene2021Template";
 import { RecareExamTemplate } from "@/components/templates/native/RecareExamTemplate";
+import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
 import { recareExamFixture } from "@/lib/templates/fixtures/recareExam.fixture";
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
+import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
 import type {
   TemplateDefinition,
@@ -18,6 +21,23 @@ function defineClinicConversion<TFixture>(
 }
 
 const allClinicConversions = [
+  defineClinicConversion({
+    slug: "adult-hygiene-2021",
+    title: "2021 Adult Hygiene",
+    description:
+      "Draft interactive conversion of the clinic 2021 Adult Hygiene note.",
+    kind: "native",
+    lifecycle: "draft",
+    provenance: {
+      sourceClinicTemplateSlug: "adult-hygiene-2021",
+      sourceRevision: "7d3d21c",
+      clinicalReviewDate: "2026-07-25",
+    },
+    fixture: adultHygiene2021Fixture,
+    summary: buildAdultHygiene2021Summary(adultHygiene2021Fixture),
+    buildSummary: buildAdultHygiene2021Summary,
+    component: AdultHygiene2021Template,
+  }),
   defineClinicConversion({
     slug: "recare-exam",
     title: "Recare Exam",
@@ -37,16 +57,16 @@ const allClinicConversions = [
   }),
 ] as const;
 
-export const clinicConversionSourceSlugs = allClinicConversions.map(
-  (conversion) => conversion.provenance.sourceClinicTemplateSlug,
-);
-
 export const clinicConversionRegistry = allClinicConversions.filter(
   (conversion) =>
     isTemplateAvailableForBuild(
       conversion.lifecycle,
       process.env.NODE_ENV,
     ),
+);
+
+export const clinicConversionSourceSlugs = clinicConversionRegistry.map(
+  (conversion) => conversion.provenance.sourceClinicTemplateSlug,
 );
 
 export type RegisteredClinicConversion =

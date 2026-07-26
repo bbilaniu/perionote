@@ -11,13 +11,14 @@ import {
 } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import {
-  CATALOGUE_DEFINITIONS,
+  CATALOGUE_SECTIONS,
   MAX_CATALOGUE_IMPORT_BYTES,
   CatalogueDefinition,
   CatalogueImportPreview,
   CatalogueItem,
   StoredCatalogueStateV1,
   formatCatalogueExportFilename,
+  getCatalogueDefinitionsForBuild,
   parseCatalogueExport,
   serializeCatalogueExport,
 } from "@/lib/catalogues/catalogue";
@@ -369,8 +370,8 @@ function CatalogueCard({ definition }: { definition: CatalogueDefinition }) {
         </ul>
       ) : (
         <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">
-          No saved suggestions. Add a local value here or remember one from the
-          Recare Exam.
+          No saved suggestions. Add a local value here or remember one from an
+          applicable interactive form.
         </p>
       )}
     </section>
@@ -394,15 +395,19 @@ export function CatalogueManager() {
   const [transferMessage, setTransferMessage] = useState("");
   const [transferError, setTransferError] = useState("");
 
+  const visibleDefinitions = useMemo(
+    () => getCatalogueDefinitionsForBuild(process.env.NODE_ENV),
+    [],
+  );
   const sections = useMemo(
     () =>
-      (["Visit Team", "Clinical Exam"] as const).map((section) => ({
+      CATALOGUE_SECTIONS.map((section) => ({
         section,
-        definitions: CATALOGUE_DEFINITIONS.filter(
+        definitions: visibleDefinitions.filter(
           (definition) => definition.section === section,
         ),
-      })),
-    [],
+      })).filter(({ definitions }) => definitions.length > 0),
+    [visibleDefinitions],
   );
 
   function exportCatalogue() {
@@ -632,7 +637,7 @@ export function CatalogueManager() {
                 {pendingImport.preview.idConflicts} identifier conflicts that
                 merge will leave unchanged
               </li>
-              {CATALOGUE_DEFINITIONS.map((definition) => {
+              {visibleDefinitions.map((definition) => {
                 const count =
                   pendingImport.preview.itemsByCatalogue[definition.key];
                 return count ? (

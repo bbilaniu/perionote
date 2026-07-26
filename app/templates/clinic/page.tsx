@@ -97,7 +97,13 @@ export default function ClinicTemplatesPage() {
                                 {template.title}
                               </h4>
                               {conversion ? (
-                                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium uppercase tracking-wide text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+                                <span
+                                  className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${
+                                    conversion.lifecycle === "draft"
+                                      ? "bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200"
+                                      : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+                                  }`}
+                                >
                                   Interactive · {conversion.lifecycle}
                                 </span>
                               ) : null}

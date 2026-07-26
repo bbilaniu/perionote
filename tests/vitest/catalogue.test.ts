@@ -3,11 +3,13 @@ import {
   CATALOGUE_DEFINITIONS,
   CATALOGUE_EXPORT_FORMAT,
   CATALOGUE_STORAGE_KEY,
+  type CatalogueKey,
   CatalogueValidationError,
   createEmptyCatalogueState,
   deleteUserCatalogueItem,
   favoriteAndUnhideCatalogueItem,
   findEquivalentCatalogueItem,
+  getCatalogueDefinitionsForBuild,
   listCatalogueItems,
   mergeCatalogueStates,
   moveCatalogueItem,
@@ -25,12 +27,7 @@ import {
 
 function remember(
   state: ReturnType<typeof createEmptyCatalogueState>,
-  catalogueKey:
-    | "visit-team.dentist"
-    | "visit-team.rda"
-    | "visit-team.rdh"
-    | "clinical-exam.molar-occlusion"
-    | "clinical-exam.skeletal-occlusion",
+  catalogueKey: CatalogueKey,
   label: string,
   id: string,
 ) {
@@ -41,6 +38,31 @@ function remember(
 }
 
 describe("local catalogues", () => {
+  it("allows Adult Hygiene catalogues in development and hides them in production while draft", () => {
+    const adultHygieneKey = "hygiene-treatment.completed";
+    expect(
+      getCatalogueDefinitionsForBuild("development").some(
+        (definition) => definition.key === adultHygieneKey,
+      ),
+    ).toBe(true);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
+        (definition) => definition.key === adultHygieneKey,
+      ),
+    ).toBe(false);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
+        (definition) => definition.key === "visit-team.rdh",
+      ),
+    ).toBe(true);
+    expect(
+      listCatalogueItems(
+        createEmptyCatalogueState(),
+        adultHygieneKey,
+      ),
+    ).toEqual([]);
+  });
+
   it("defines unseeded provider catalogues and separate molar and skeletal seeds", () => {
     const emptyState = createEmptyCatalogueState();
     expect(

@@ -1,3 +1,6 @@
+import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
+import type { TemplateLifecycleStatus } from "@/lib/templates/types";
+
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
 export const CATALOGUE_EXPORT_FORMAT = "hygienenote-catalogue";
 export const CATALOGUE_EXPORT_FORMAT_VERSION = 1;
@@ -10,10 +13,30 @@ export const CATALOGUE_KEYS = [
   "visit-team.rdh",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
+  "medical-history.review",
+  "periodontal.fmp-done",
+  "periodontal.health-gingivitis",
+  "oral-hygiene.aids-reviewed",
+  "hygiene-treatment.completed",
+  "hygiene-treatment.anesthetic",
+  "hygiene-treatment.desensitizer",
+  "scheduling.next-visit",
 ] as const;
 
 export type CatalogueKey = (typeof CATALOGUE_KEYS)[number];
 export type CatalogueOwner = "seed" | "user";
+
+export const CATALOGUE_SECTIONS = [
+  "Visit Team",
+  "Clinical Exam",
+  "Medical History",
+  "Periodontal Assessment",
+  "Oral Hygiene and Education",
+  "Treatment",
+  "Intervals and Next Visit",
+] as const;
+
+export type CatalogueSection = (typeof CATALOGUE_SECTIONS)[number];
 
 export type CatalogueSeed = {
   id: string;
@@ -22,10 +45,11 @@ export type CatalogueSeed = {
 
 export type CatalogueDefinition = {
   key: CatalogueKey;
-  section: "Visit Team" | "Clinical Exam";
+  section: CatalogueSection;
   title: string;
   fieldLabels: string[];
   seeds: CatalogueSeed[];
+  lifecycle: TemplateLifecycleStatus;
 };
 
 export type UserCatalogueItem = {
@@ -91,6 +115,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Dentist",
     fieldLabels: ["Dentist"],
     seeds: [],
+    lifecycle: "pilot",
   },
   {
     key: "visit-team.rda",
@@ -98,6 +123,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "RDA",
     fieldLabels: ["RDA"],
     seeds: [],
+    lifecycle: "pilot",
   },
   {
     key: "visit-team.rdh",
@@ -105,6 +131,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "RDH",
     fieldLabels: ["RDH"],
     seeds: [],
+    lifecycle: "pilot",
   },
   {
     key: "clinical-exam.molar-occlusion",
@@ -112,6 +139,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Molar occlusion",
     fieldLabels: ["Left molar occlusion", "Right molar occlusion"],
     seeds: occlusionSeeds("molar"),
+    lifecycle: "pilot",
   },
   {
     key: "clinical-exam.skeletal-occlusion",
@@ -119,8 +147,81 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Skeletal occlusion",
     fieldLabels: ["Skeletal occlusion"],
     seeds: occlusionSeeds("skeletal"),
+    lifecycle: "pilot",
+  },
+  {
+    key: "medical-history.review",
+    section: "Medical History",
+    title: "Medical history reviewed",
+    fieldLabels: ["Medical history reviewed"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "periodontal.fmp-done",
+    section: "Periodontal Assessment",
+    title: "FMP done",
+    fieldLabels: ["FMP done"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "periodontal.health-gingivitis",
+    section: "Periodontal Assessment",
+    title: "Health/Gingivitis",
+    fieldLabels: ["Health/Gingivitis"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "oral-hygiene.aids-reviewed",
+    section: "Oral Hygiene and Education",
+    title: "OH aids reviewed/recommended",
+    fieldLabels: ["OH aids reviewed/recommended"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "hygiene-treatment.completed",
+    section: "Treatment",
+    title: "Treatment completed today",
+    fieldLabels: ["Treatment completed today"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "hygiene-treatment.anesthetic",
+    section: "Treatment",
+    title: "Anesthetic",
+    fieldLabels: ["Anesthetic"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "hygiene-treatment.desensitizer",
+    section: "Treatment",
+    title: "Desensitizer",
+    fieldLabels: ["Desensitizer"],
+    seeds: [],
+    lifecycle: "draft",
+  },
+  {
+    key: "scheduling.next-visit",
+    section: "Intervals and Next Visit",
+    title: "Next visit",
+    fieldLabels: ["Next visit"],
+    seeds: [],
+    lifecycle: "draft",
   },
 ];
+
+export function getCatalogueDefinitionsForBuild(
+  environment: string | undefined,
+): CatalogueDefinition[] {
+  return CATALOGUE_DEFINITIONS.filter((definition) =>
+    isTemplateAvailableForBuild(definition.lifecycle, environment),
+  );
+}
 
 const catalogueDefinitionsByKey = new Map(
   CATALOGUE_DEFINITIONS.map((definition) => [definition.key, definition]),
