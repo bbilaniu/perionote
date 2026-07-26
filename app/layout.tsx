@@ -69,13 +69,13 @@ export default function RootLayout({
         <CatalogueProvider>
           <div className="flex min-h-screen flex-col">
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
-            <div className="mx-auto flex max-w-[112rem] items-center justify-between gap-4 px-6 py-4">
+            <div className="mx-auto flex max-w-[112rem] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-4 sm:flex-nowrap sm:px-6">
               <span className="text-lg font-semibold tracking-tight">
                 HygieneNote
               </span>
               <nav
                 aria-label="Primary navigation"
-                className="ml-auto flex items-center gap-4"
+                className="order-3 flex w-full items-center justify-between gap-3 sm:order-none sm:ml-auto sm:w-auto sm:justify-start sm:gap-4"
               >
                 <Link
                   className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"

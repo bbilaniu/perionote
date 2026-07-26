@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 
 type Theme = "light" | "dark" | "system";
 
 const storageKey = "hygienenote-theme";
+const themeOptions: ReadonlyArray<{ value: Theme; label: string }> = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+];
 
 function readStoredTheme(): Theme {
   try {
@@ -62,18 +68,13 @@ export default function ThemeToggle() {
   };
 
   return (
-    <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
-      Theme
-      <select
-        aria-label="Theme"
-        className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-        onChange={(event) => handleChange(event.target.value as Theme)}
-        value={theme}
-      >
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="system">System</option>
-      </select>
-    </label>
+    <FixedChoiceListbox
+      id="theme-selector"
+      label="Theme"
+      value={theme}
+      options={themeOptions}
+      onChange={handleChange}
+      compact
+    />
   );
 }

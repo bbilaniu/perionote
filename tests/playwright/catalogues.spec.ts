@@ -154,7 +154,12 @@ test("catalogue export and import transfer local values without a network reques
   await page.waitForLoadState("networkidle");
   const networkRequests: string[] = [];
   page.on("request", (request) => {
-    if (request.resourceType() === "fetch" || request.resourceType() === "xhr") {
+    const isApplicationRequest =
+      request.resourceType() === "fetch" || request.resourceType() === "xhr";
+    const isDevelopmentTooling = new URL(request.url()).pathname.startsWith(
+      "/_next/",
+    );
+    if (isApplicationRequest && !isDevelopmentTooling) {
       networkRequests.push(request.url());
     }
   });

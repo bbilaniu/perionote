@@ -10,6 +10,9 @@ import {
 } from "react";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
+import { formControlClass } from "@/components/forms/controlStyles";
+import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import {
   type AdultHygiene2021Form,
   bleedingChoices,
@@ -35,8 +38,7 @@ import type {
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 
-const inputClass =
-  "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900";
+const inputClass = `mt-1 ${formControlClass()}`;
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
@@ -87,7 +89,6 @@ function TextField({
   type = "text",
   readOnly,
   placeholder,
-  list,
 }: {
   id: string;
   label: string;
@@ -99,10 +100,8 @@ function TextField({
   type?: "text" | "date";
   readOnly?: boolean;
   placeholder?: string;
-  list?: readonly string[];
 }) {
   const errorId = `${id}-error`;
-  const listId = list ? `${id}-choices` : undefined;
   return (
     <div>
       <label className="text-sm font-medium" htmlFor={id}>
@@ -118,16 +117,10 @@ function TextField({
         readOnly={readOnly}
         placeholder={placeholder}
         autoComplete="off"
-        list={listId}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
       />
-      {listId ? (
-        <datalist id={listId}>
-          {list?.map((choice) => <option key={choice} value={choice} />)}
-        </datalist>
-      ) : null}
       {error ? (
         <p id={errorId} className="mt-1 text-sm text-red-700 dark:text-red-300">
           {error}
@@ -166,40 +159,6 @@ function TextareaField({
   );
 }
 
-function SelectField<TValue extends string>({
-  id,
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: TValue;
-  options: Array<{ value: TValue; label: string }>;
-  onChange: (value: TValue) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium" htmlFor={id}>
-        {label}
-      </label>
-      <select
-        id={id}
-        className={inputClass}
-        value={value}
-        onChange={(event) => onChange(event.target.value as TValue)}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 function ChoiceWithOther({
   id,
   label,
@@ -219,7 +178,7 @@ function ChoiceWithOther({
 }) {
   return (
     <div className="grid gap-3 md:grid-cols-2">
-      <SelectField
+      <FixedChoiceListbox
         id={`${id}-choice`}
         label={label}
         value={choice}
@@ -574,7 +533,7 @@ export function AdultHygiene2021Template({
               />
 
               <div className="space-y-4">
-                <SelectField<PremedicationStatus>
+                <FixedChoiceListbox<PremedicationStatus>
                   id="adult-hygiene-premedication"
                   label="Premedication"
                   value={form.premedicationStatus}
@@ -602,12 +561,12 @@ export function AdultHygiene2021Template({
           </Section>
 
           <Section title="Patient Concerns and Hygiene Findings">
-            <TextField
+            <StaticSuggestionCombobox
               id="adult-hygiene-chief-concern"
               label="Patient chief concern"
               value={form.patientChiefConcern}
               onChange={(value) => updateField("patientChiefConcern", value)}
-              list={patientChiefConcernChoices}
+              suggestions={patientChiefConcernChoices}
             />
             <TextareaField
               id="adult-hygiene-area-of-concern"
@@ -844,7 +803,7 @@ export function AdultHygiene2021Template({
 
           <Section title="Appliances and Relevant History">
             <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
+              <FixedChoiceListbox
                 id="adult-hygiene-night-guard"
                 label="Has a night guard"
                 value={form.nightGuardStatus}
@@ -857,7 +816,7 @@ export function AdultHygiene2021Template({
                 }}
               />
               {form.nightGuardStatus === "yes" ? (
-                <SelectField
+                <FixedChoiceListbox
                   id="adult-hygiene-night-guard-use"
                   label="Uses the night guard"
                   value={form.nightGuardUseStatus}
@@ -867,7 +826,7 @@ export function AdultHygiene2021Template({
                   }
                 />
               ) : null}
-              <SelectField
+              <FixedChoiceListbox
                 id="adult-hygiene-orthodontics"
                 label="Orthodontic history"
                 value={form.orthodonticHistoryStatus}
@@ -876,7 +835,7 @@ export function AdultHygiene2021Template({
                   updateField("orthodonticHistoryStatus", value)
                 }
               />
-              <SelectField<RetainerStatus>
+              <FixedChoiceListbox<RetainerStatus>
                 id="adult-hygiene-retainers"
                 label="Retainers"
                 value={form.retainerStatus}

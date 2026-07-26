@@ -51,7 +51,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     .locator("xpath=ancestor::section[1]");
   await expect(
     consentHistorySection
-      .locator("input, select")
+      .locator('input, button[data-list-control="fixed-listbox"]')
       .evaluateAll((controls) => controls.map((control) => control.id)),
   ).resolves.toEqual([
     "adult-hygiene-class5",
@@ -81,9 +81,13 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page.locator("#adult-hygiene-rdh").fill("Example RDH");
   await page.getByLabel("Patient", { exact: true }).check();
   await page.getByLabel("Parent", { exact: true }).check();
+  await page.locator("#adult-hygiene-plaque-choice").click();
   await page
-    .locator("#adult-hygiene-plaque-choice")
-    .selectOption("Localized moderate interproximal");
+    .getByRole("option", {
+      name: "Localized moderate interproximal",
+      exact: true,
+    })
+    .click();
   await page
     .locator("#adult-hygiene-calculus-other")
     .fill("Imported calculus wording");
@@ -201,7 +205,10 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
 
   const anesthetic = page.locator("#adult-hygiene-anesthetic");
   await anesthetic.focus();
-  await expect(anesthetic).toHaveAttribute("aria-expanded", "false");
+  await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByText("No catalogue suggestions saved yet.", { exact: true }),
+  ).toBeVisible();
 
   await medicalHistory.fill("Synthetic reusable history phrase");
   await page.getByRole("button", { name: "Remember this value" }).click();

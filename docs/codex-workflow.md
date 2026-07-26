@@ -19,7 +19,8 @@ Use Codex for focused, reviewable tasks in HygieneNote.
 
 - run `npm run lint`
 - run `npm run test`
-- run `npm run test:e2e` for preview-impacting changes
+- run the required Chromium suite with `npm run test:e2e` for preview-impacting changes
+- report advisory WebKit findings from `npm run test:e2e:webkit` when available; they do not block the initial compatibility work
 - include screenshots for visible UI changes
 
 ## Legacy import default
