@@ -43,6 +43,25 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 09:10",
   );
+  const consentHistorySection = page
+    .getByRole("heading", {
+      name: "Consent, Medical History, and Sterilization",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  await expect(
+    consentHistorySection
+      .locator("input, select")
+      .evaluateAll((controls) => controls.map((control) => control.id)),
+  ).resolves.toEqual([
+    "adult-hygiene-class5",
+    "adult-hygiene-miele-codes",
+    "adult-hygiene-consent-patient",
+    "adult-hygiene-consent-parent",
+    "adult-hygiene-consent-guardian",
+    "adult-hygiene-medical-history",
+    "adult-hygiene-premedication",
+  ]);
 
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
@@ -153,6 +172,37 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       }),
     ).toBeVisible();
   }
+
+  for (const [controlId, starter] of [
+    [
+      "#adult-hygiene-fmp-done",
+      "YES, ALL FINDINGS DISCUSSED WITH PATIENT",
+    ],
+    [
+      "#adult-hygiene-health-gingivitis",
+      "HEALTH INTACT PERIODONTAL SUPPORT",
+    ],
+    ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
+    [
+      "#adult-hygiene-treatment-completed",
+      "1U scale (cavitron and hand scaling)",
+    ],
+    ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
+    ["#adult-hygiene-next-visit", "FOLLOW-UP HYGIENE"],
+  ]) {
+    await page.locator(controlId).focus();
+    await expect(
+      page.getByRole("option", {
+        name: `${starter} Starter`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+
+  const anesthetic = page.locator("#adult-hygiene-anesthetic");
+  await anesthetic.focus();
+  await expect(anesthetic).toHaveAttribute("aria-expanded", "false");
+
   await medicalHistory.fill("Synthetic reusable history phrase");
   await page.getByRole("button", { name: "Remember this value" }).click();
 

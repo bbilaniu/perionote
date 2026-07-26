@@ -29,7 +29,7 @@ NOTE STARTED: 2026-07-25 13:45
 DENTIST: Dr. Example
 RDH: Example RDH
 
-Informed verbal consent obtained for treatment today.
+Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic medication list reviewed.
 Premedication required: No.
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments.
@@ -71,6 +71,22 @@ Treatment Plan:
 Next Visit: Synthetic hygiene maintenance visit
 Date Booked: 2026-08-15`);
     expect(summary).not.toContain("\n\n\n");
+  });
+
+  it("supports independent consent sources and catalogue-backed medical history text", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      consentPatient: true,
+      consentParent: true,
+      consentLegalGuardian: true,
+      consentDetails: "Synthetic consent detail",
+      medicalHistoryReview: "YES- NO CHANGES",
+    };
+
+    expect(buildRecareExamSummary(form)).toBe(
+      `Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today. Synthetic consent detail.
+Medical history reviewed: YES- NO CHANGES.`,
+    );
   });
 
   it("preserves documented No answers and unknown editable details", () => {

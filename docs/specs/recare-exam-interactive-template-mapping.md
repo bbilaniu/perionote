@@ -112,21 +112,26 @@ the note can be copied.
 
 ### Consent, Medical History, and Sterilization
 
-| ID  | Source                                                                                                     | Control                                                                                                | Classification                                        | Generated output                                                                          |
-| --- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| R04 | First informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Checkbox: **Informed verbal consent obtained for treatment today**; optional **Consent details** text  | Consent state: `appCore`; details: `patient-specific` | `Informed verbal consent obtained for treatment today.` plus entered details              |
-| R05 | `MEDICAL history reviewed & INCLUDES: [SELECT/INSERT: MedHx/DentalHx]`                                     | Status: **Not documented / Reviewed—no changes / Reviewed—updated**; textarea shown for update details | Status: `appCore`; details: `patient-specific`        | `Medical history reviewed: no changes reported.` or `Medical history reviewed: {details}` |
-| R06 | `Premedication Required: [SELECT/INSERT: PREMED]`                                                          | Status: **Not documented / Not required / Required**; optional details when required                   | Status: `appCore`; details: `patient-specific`        | `Premedication required: No.` or `Premedication required: Yes—{details}.`                 |
-| R07 | Class 5 indicator sentence                                                                                 | Checkbox: **Class 5 indicators checked**                                                               | `appCore`                                             | Preserve the source sentence only when explicitly checked                                 |
-| R08 | `Miele Sterilization codes scanned:`                                                                       | Editable text: **Miele sterilization codes**                                                           | `administrative`                                      | `Miele Sterilization codes scanned: {text}` when entered                                  |
-| R09 | Second informed-consent line                                                                               | No second control; merge with R04                                                                      | Source duplicate                                      | No duplicate output                                                                       |
+| ID  | Source                                                                                                     | Control                                                                                                               | Classification                                                  | Generated output                                                                 |
+| --- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| R07 | Class 5 indicator sentence                                                                                 | Unchecked checkbox: **Class 5 indicators checked**                                                                    | `appCore`                                                       | Preserve the source sentence only when explicitly checked                        |
+| R08 | `Miele Sterilization codes scanned:`                                                                       | Editable text: **Miele sterilization codes**, positioned next to Class 5                                              | `administrative`                                                | `Miele Sterilization codes scanned: {text}` when entered                         |
+| R04 | First informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** | Consent sources: `appCore`; details: `patient-specific`         | `Informed verbal consent given by {selected sources} for treatment today.`       |
+| R05 | `MEDICAL history reviewed & INCLUDES: [SELECT/INSERT: MedHx/DentalHx]`                                     | Catalogue-backed editable text: **Medical history reviewed**, positioned next to Premedication                       | Current value: `patient-specific`; reusable phrases: `catalogue` | `Medical history reviewed: {selected or entered text}`                           |
+| R06 | `Premedication Required: [SELECT/INSERT: PREMED]`                                                          | Status: **Not documented / Not required / Required**; optional details when required                                  | Status: `appCore`; details: `patient-specific`                  | `Premedication required: No.` or `Premedication required: Yes—{details}.`        |
+| R09 | Second informed-consent line                                                                               | No second control; merge with R04                                                                                     | Source duplicate                                                | No duplicate output                                                              |
 
-The two consent lines are confirmed duplicates and produce one line. Patient
-first and last names are intentionally omitted from the consent sentence
-because Hygienenote has no EMR integration and does not store patient records.
-The separate required Patient ID extension remains in memory only. The reviewed
-medical-history and premedication statuses use **Not documented** as their
-neutral initial state.
+The on-screen order is Class 5 and Miele, Consent given by, then Medical history
+reviewed and Premedication. The generated note retains its existing source
+order: consent, medical history, premedication, Class 5, then Miele. The two
+source consent lines are confirmed duplicates and produce one line. Consent
+sources are independent because more than one may apply. Patient names are
+intentionally omitted because Hygienenote has no EMR integration and does not
+store patient records. The required Patient ID extension remains in memory
+only. Medical history uses the same four public starter suggestions and
+browser-local catalogue as Adult Hygiene; free text remains valid and no value
+is preselected. Premedication retains **Not documented** as its neutral initial
+state.
 
 ### Records and Chief Concern
 
@@ -245,8 +250,8 @@ DENTIST: {entered dentist}
 RDA: {entered RDA}
 RDH: {entered RDH}
 
-Informed verbal consent obtained for treatment today.
-Medical history reviewed: {documented status or details}
+Informed verbal consent given by {selected sources} for treatment today.
+Medical history reviewed: {selected or entered text}
 Premedication required: {documented answer}
 
 Radiographs: {Yes/No and optional details}

@@ -126,6 +126,57 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   expect(copiedNote).toContain("RDH: Example RDH");
 });
 
+test("recare exam uses the harmonized consent, history, and sterilization controls", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/recare-exam/interactive");
+
+  const section = page
+    .getByRole("heading", {
+      name: "Consent, Medical History, and Sterilization",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  await expect(section).toHaveCount(1);
+  await expect(
+    section.locator("input, select").evaluateAll((controls) =>
+      controls.map((control) => control.id),
+    ),
+  ).resolves.toEqual([
+    "recare-class5",
+    "recare-miele-codes",
+    "recare-consent-patient",
+    "recare-consent-parent",
+    "recare-consent-guardian",
+    "recare-medical-history",
+    "recare-premedication",
+  ]);
+
+  const medicalHistory = page.getByRole("combobox", {
+    name: "Medical history reviewed",
+  });
+  await medicalHistory.focus();
+  for (const label of [
+    "YES- NO CHANGES",
+    "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
+    "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
+    "YES- UPDATED MEDS",
+  ]) {
+    await expect(
+      page.getByRole("option", {
+        name: `${label} Starter`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+
+  await page.getByLabel("Patient", { exact: true }).check();
+  await page.getByLabel("Legal guardian", { exact: true }).check();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Informed verbal consent given by PATIENT and LEGAL GUARDIAN for treatment today\./,
+  );
+});
+
 test("recare exam demo preserves paragraph spacing and form values do not persist", async ({
   page,
   context,

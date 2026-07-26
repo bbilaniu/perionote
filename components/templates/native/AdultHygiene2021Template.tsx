@@ -501,15 +501,19 @@ export function AdultHygiene2021Template({
 
           <Section title="Consent, Medical History, and Sterilization">
             <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
-                id="adult-hygiene-class5"
-                label="Class 5 indicators checked"
-                value={form.class5IndicatorStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("class5IndicatorStatus", value)
-                }
-              />
+              <div className="flex items-center md:pt-6">
+                <CheckboxField
+                  id="adult-hygiene-class5"
+                  label="Class 5 indicators checked"
+                  checked={form.class5IndicatorStatus === "yes"}
+                  onChange={(value) =>
+                    updateField(
+                      "class5IndicatorStatus",
+                      value ? "yes" : "not-documented",
+                    )
+                  }
+                />
+              </div>
               <TextField
                 id="adult-hygiene-miele-codes"
                 label="Miele sterilization codes"
@@ -558,37 +562,42 @@ export function AdultHygiene2021Template({
               ) : null}
             </fieldset>
 
-            <CatalogueCombobox
-              id="adult-hygiene-medical-history"
-              label="Medical history reviewed"
-              catalogueKey="medical-history.review"
-              value={form.medicalHistoryReview}
-              onChange={(value) => updateField("medicalHistoryReview", value)}
-            />
             <div className="grid gap-4 md:grid-cols-2">
-              <SelectField<PremedicationStatus>
-                id="adult-hygiene-premedication"
-                label="Premedication"
-                value={form.premedicationStatus}
-                options={[
-                  { value: "not-documented", label: "Not documented" },
-                  { value: "not-required", label: "Not required" },
-                  { value: "required", label: "Required" },
-                ]}
+              <CatalogueCombobox
+                id="adult-hygiene-medical-history"
+                label="Medical history reviewed"
+                catalogueKey="medical-history.review"
+                value={form.medicalHistoryReview}
                 onChange={(value) =>
-                  updateField("premedicationStatus", value)
+                  updateField("medicalHistoryReview", value)
                 }
               />
-              {form.premedicationStatus === "required" ? (
-                <TextField
-                  id="adult-hygiene-premedication-details"
-                  label="Premedication details"
-                  value={form.premedicationDetails}
+
+              <div className="space-y-4">
+                <SelectField<PremedicationStatus>
+                  id="adult-hygiene-premedication"
+                  label="Premedication"
+                  value={form.premedicationStatus}
+                  options={[
+                    { value: "not-documented", label: "Not documented" },
+                    { value: "not-required", label: "Not required" },
+                    { value: "required", label: "Required" },
+                  ]}
                   onChange={(value) =>
-                    updateField("premedicationDetails", value)
+                    updateField("premedicationStatus", value)
                   }
                 />
-              ) : null}
+                {form.premedicationStatus === "required" ? (
+                  <TextField
+                    id="adult-hygiene-premedication-details"
+                    label="Premedication details"
+                    value={form.premedicationDetails}
+                    onChange={(value) =>
+                      updateField("premedicationDetails", value)
+                    }
+                  />
+                ) : null}
+              </div>
             </div>
           </Section>
 

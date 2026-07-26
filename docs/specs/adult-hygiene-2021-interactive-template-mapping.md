@@ -68,7 +68,7 @@ them according to their evidence and ownership:
 | Complete `closed_vocabulary` | Proposed structured application choices, subject to clinical review | Only reviewed, generic choices may be tracked |
 | `closed_or_template_vocabulary` | Editable catalogue-backed field or structured control after review | Do not assume the visible screenshot list is complete |
 | `clinic_catalog` or `template_catalog` | Browser-local catalogue imported deliberately by the user | No private values or real staff names in source, fixtures, or seeds |
-| `template_phrase_catalog` | Free text or local catalogue only when complete source text is available | Never turn screenshot ellipses into documentation |
+| `template_phrase_catalog` | Free text, reviewed public starters, or a local catalogue only when complete source text is available | Never turn screenshot ellipses into documentation |
 | Any incomplete, scrolling, abbreviated, or truncated list | Evidence for control design, not an authoritative seed list | Preserve free-text entry and flag incomplete coverage |
 
 Provider rosters may be transformed locally into the existing Dentist, RDH,
@@ -76,27 +76,43 @@ and RDA catalogue groups. The transformation output must remain ignored and be
 imported through the catalogue page; the application must never load the
 private extraction directly.
 
-The same approach can later support other clinic templates. Field identifiers
-and generic import logic may be tracked, but extracted staff names, private
-phrases, and clinic product lists may not.
+The same approach can later support other clinic templates. Field identifiers,
+generic import logic, and explicitly reviewed non-identifying options may be
+tracked. Extracted staff names and unreviewed private values may not.
 
 ## Catalogue Extension
 
 The Adult Hygiene conversion extends the existing catalogue allowlist with
-eight browser-local groups. The Medical history reviewed group ships with the
-four reviewed, complete phrases listed below; the other seven ship with no
-public seeds:
+eight browser-local groups. Seven ship with the reviewed, complete starter
+values listed below. Anesthetic remains unseeded pending redesign:
 
 | Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Public seeds | Control use |
 | --- | --- | --- | --- | --- | --- |
-| `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS` | Single value |
-| `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | None | Single value |
-| `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | None | Single value |
-| `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | None | Multiple values |
-| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | None | Multiple values |
-| `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None | Single value |
-| `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | None | Single value |
-| `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | None | Single value |
+| `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | 4 complete options | Single value |
+| `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | 5 complete options | Single value |
+| `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | 4 complete options | Single value |
+| `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | 8 complete options | Multiple values |
+| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | 8 complete options | Multiple values |
+| `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None—rework required | Single value |
+| `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | 4 complete options | Single value |
+| `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | 7 complete options | Single value |
+
+The exact public starter labels are:
+
+- **Medical history reviewed:** `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS`.
+- **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME`.
+- **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
+- **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TB TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ETB`.
+- **Treatment completed today:** `1U scale (cavitron and hand scaling)`; `2U scale (cavitron and hand scaling)`; `3U scale (cavitron and hand scaling)`; `4U scale (cavitron and hand scaling)`; `FMP`; `1U polish`; `Fluoride varnish`; `Crystal X-PUR`.
+- **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
+- **Next visit:** `6 MOS SCALE`; `12 MRC`; `3 MOS SCALE`; `4 MOS SCALE`; `6 MRC`; `9 MRC`; `FOLLOW-UP HYGIENE`.
+
+These starter values are suggestions only and are never preselected. The two
+truncated Health/Gingivitis entries and one truncated OHI-aids entry remain
+excluded. The Anesthetic list must be redesigned before it can receive public
+starter values. The shared Medical history reviewed catalogue is lifecycle
+`pilot` because it is also used by the production-visible Recare Exam pilot;
+the other Adult Hygiene-only catalogue groups remain `draft`.
 
 The existing provider keys remain shared:
 
@@ -253,7 +269,7 @@ suggestions. At least one of the three is proposed as required before copying.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]` | Status: **Not documented / No / Yes** | `appCore`; complete ClearDent vocabulary available | Preserve the complete source sentence followed by `No` or `Yes` |
+| A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]` | Unchecked checkbox: **Class 5 indicators checked**, positioned next to Miele sterilization codes | `appCore` | Preserve the complete source sentence followed by `Yes` only when explicitly checked |
 | A07 | `Miele Sterilization Codes Scanned:` | Editable text: **Miele sterilization codes** | `administrative` | `Miele Sterilization Codes Scanned: {text}` when entered |
 | A08 | Informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** text | Consent sources: `appCore`; details: `patient-specific` | `Informed verbal consent given by {selected sources} for treatment today.` plus entered details |
 | A09 | `Medical history reviewed: [SELECT/INSERT: MedHx/DentalHx]` | Catalogue-backed editable text: **Medical history reviewed** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `Medical history reviewed: {selected or entered text}` |
@@ -317,12 +333,12 @@ captured. No finding is selected by default or saved automatically.
 
 The six PSR/Pocketing inputs preserve the source's six-position shape without
 imposing an undocumented numeric range or automatically calculating a result.
-All five visible FMP phrases are now complete and may be imported privately.
+All five visible FMP phrases are now complete and are public starter values.
 Four of the six visible Health/Gingivitis phrases are complete; the other two
-remain unresolved and must be excluded from import until their full wording is
-known. Stage and grade have complete ClearDent lists, including N/A. They
-remain independent because the source does not define a conditional
-relationship.
+remain unresolved and are excluded until their full wording is known. The four
+complete phrases are public starter values. Stage and grade have complete
+ClearDent lists, including N/A. They remain independent because the source
+does not define a conditional relationship.
 
 ### Oral Hygiene and Education
 
@@ -340,7 +356,8 @@ therefore never included by default. Compliance, flossing, and brushing have
 complete visible ClearDent lists and can be reviewed as structured application
 choices. Eight of nine visible OHI-aids values are complete; one remains
 unresolved, and the scrollbar means additional values may not have been
-captured. Only complete private values may be deliberately imported.
+captured. The eight complete captured values are approved public starter
+values; the unresolved value remains excluded.
 
 ### Treatment
 
@@ -352,11 +369,10 @@ captured. Only complete private values may be deliberately imported.
 | A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]` | Catalogue-backed editable text: **Desensitizer** | Current value: `patient-specific`; reusable options: `catalogue` | `Desensitizer: {text}` |
 
 Hygiene maintenance is an explicit option, not a default or recommendation.
-All eight visible Treatment completed values and all visible Anesthetic and
-Desensitizer values are now complete. They remain clinic catalogues: they may
-be populated through a private local import but must not become public seeds.
-Selecting an item records text only and never infers dose, amount, safety,
-appropriateness, or treatment.
+All eight visible Treatment completed values and all four Desensitizer values
+are approved public starter values. Anesthetic remains unseeded and must be
+reworked before its options are reconsidered. Selecting an item records text
+only and never infers dose, amount, safety, appropriateness, or treatment.
 
 ### Appliances and Relevant History
 
@@ -383,10 +399,10 @@ retainer response impossible.
 | A42 | `Date Booked:` | Optional date input: **Date booked** | `administrative` | `Date Booked: {YYYY-MM-DD}` |
 
 Recall and hygiene intervals have complete visible ClearDent lists and can be
-reviewed as structured choices while retaining **Other**. Next visit is a
-clinic/template catalogue and may be populated only through deliberate private
-local import. These fields document patient-specific clinical or scheduling
-decisions and are never inferred from other fields.
+reviewed as structured choices while retaining **Other**. All seven complete
+Next visit values are approved public starter values. These fields document
+patient-specific clinical or scheduling decisions and are never inferred from
+other fields.
 
 ## Approved Generated-Note Order
 
@@ -449,25 +465,26 @@ Clinical review accepted the complete mapping on 2026-07-25, including:
 
 1. Patient ID, Note started, copy requirements, reset, and navigation behavior.
 2. Manual Last recall date entry and `YYYY-MM-DD` output.
-3. Class 5 Yes/No, independent Patient/Parent/Legal guardian consent
-   checkboxes, omission of patient names, and private medical-history
-   catalogue.
+3. Unchecked Class 5 confirmation, independent Patient/Parent/Legal guardian
+   consent checkboxes, omission of patient names, and public starter values
+   plus browser-local additions for Medical history reviewed.
 4. The approved Plaque, Stain, Calculus, and Bleeding choices plus **Other**.
 5. Six unrestricted short PSR/Pocketing inputs in source order. Partially
    completed values are copied in their original positions without inferring
    missing values.
-6. Private local catalogue placement and generated wording for FMP done and
+6. Public starter values and generated wording for FMP done and
    Health/Gingivitis, excluding unresolved source strings.
 7. Independent approved Periodontitis stage and grade choices with no inferred
    relationship.
 8. Explicit unchecked confirmation for the fixed home-care,
    disease-process-review, and PPE statements.
 9. The approved compliance, flossing, and brushing choices plus **Other**.
-10. Unchecked Hygiene maintenance and private local catalogue placement for
-    Treatment completed, Anesthetic, and Desensitizer.
+10. Unchecked Hygiene maintenance; public starter values for Treatment
+    completed and Desensitizer; and an unseeded Anesthetic field pending
+    redesign.
 11. Conditional night-guard controls and the proposed retainer choices.
-12. Approved recall and hygiene interval choices plus **Other**, and private
-    local catalogue placement for Next visit.
+12. Approved recall and hygiene interval choices plus **Other**, and public
+    starter values for Next visit.
 13. The proposed labels, capitalization, punctuation, generated-note order,
     omission behavior, and date formatting.
 

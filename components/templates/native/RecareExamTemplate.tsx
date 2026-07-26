@@ -191,6 +191,31 @@ function SelectField<TValue extends string>({
   );
 }
 
+function CheckboxField({
+  id,
+  label,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-3 text-sm">
+      <input
+        id={id}
+        type="checkbox"
+        className="mt-1 h-4 w-4 accent-sky-700"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 function YesNoWithDetails({
   id,
   label,
@@ -394,7 +419,6 @@ export function RecareExamTemplate({
   function handleCheckbox(
     key: keyof Pick<
       RecareExamForm,
-      | "consentObtained"
       | "class5IndicatorsChecked"
       | "rightMolarOcclusionNotApplicable"
       | "leftMolarOcclusionNotApplicable"
@@ -501,95 +525,102 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Consent, Medical History, and Sterilization">
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                id="recare-consent"
-                type="checkbox"
-                className="mt-1 h-4 w-4 accent-sky-700"
-                checked={form.consentObtained}
-                onChange={handleCheckbox("consentObtained")}
-              />
-              <span>Informed verbal consent obtained for treatment today</span>
-            </label>
-            {form.consentObtained ? (
-              <TextField
-                id="recare-consent-details"
-                label="Consent details"
-                value={form.consentDetails}
-                onChange={(value) => updateField("consentDetails", value)}
-                placeholder="Optional details"
-              />
-            ) : null}
-
             <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
-                id="recare-medical-history"
-                label="Medical history"
-                value={form.medicalHistoryStatus}
-                options={[
-                  { value: "not-documented", label: "Not documented" },
-                  {
-                    value: "reviewed-no-changes",
-                    label: "Reviewed—no changes",
-                  },
-                  { value: "reviewed-updated", label: "Reviewed—updated" },
-                ]}
-                onChange={(value) =>
-                  updateField("medicalHistoryStatus", value)
-                }
-              />
-              {form.medicalHistoryStatus === "reviewed-updated" ? (
-                <TextField
-                  id="recare-medical-history-details"
-                  label="Medical history update details"
-                  value={form.medicalHistoryDetails}
+              <div className="flex items-center md:pt-6">
+                <CheckboxField
+                  id="recare-class5"
+                  label="Class 5 indicators checked"
+                  checked={form.class5IndicatorsChecked}
                   onChange={(value) =>
-                    updateField("medicalHistoryDetails", value)
+                    updateField("class5IndicatorsChecked", value)
                   }
                 />
-              ) : null}
-
-              <SelectField
-                id="recare-premedication"
-                label="Premedication"
-                value={form.premedicationStatus}
-                options={[
-                  { value: "not-documented", label: "Not documented" },
-                  { value: "not-required", label: "Not required" },
-                  { value: "required", label: "Required" },
-                ]}
-                onChange={(value) =>
-                  updateField("premedicationStatus", value)
-                }
+              </div>
+              <TextField
+                id="recare-miele-codes"
+                label="Miele sterilization codes"
+                value={form.mieleCodes}
+                onChange={(value) => updateField("mieleCodes", value)}
               />
-              {form.premedicationStatus === "required" ? (
-                <TextField
-                  id="recare-premedication-details"
-                  label="Premedication details"
-                  value={form.premedicationDetails}
-                  onChange={(value) =>
-                    updateField("premedicationDetails", value)
-                  }
-                />
-              ) : null}
             </div>
 
-            <label className="flex items-start gap-3 text-sm">
-              <input
-                id="recare-class5"
-                type="checkbox"
-                className="mt-1 h-4 w-4 accent-sky-700"
-                checked={form.class5IndicatorsChecked}
-                onChange={handleCheckbox("class5IndicatorsChecked")}
+            <fieldset className="space-y-3">
+              <legend className="font-semibold">Consent given by</legend>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Select every applicable source.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <CheckboxField
+                  id="recare-consent-patient"
+                  label="Patient"
+                  checked={form.consentPatient}
+                  onChange={(value) => updateField("consentPatient", value)}
+                />
+                <CheckboxField
+                  id="recare-consent-parent"
+                  label="Parent"
+                  checked={form.consentParent}
+                  onChange={(value) => updateField("consentParent", value)}
+                />
+                <CheckboxField
+                  id="recare-consent-guardian"
+                  label="Legal guardian"
+                  checked={form.consentLegalGuardian}
+                  onChange={(value) =>
+                    updateField("consentLegalGuardian", value)
+                  }
+                />
+              </div>
+              {form.consentPatient ||
+              form.consentParent ||
+              form.consentLegalGuardian ? (
+                <TextField
+                  id="recare-consent-details"
+                  label="Consent details"
+                  value={form.consentDetails}
+                  onChange={(value) => updateField("consentDetails", value)}
+                  placeholder="Optional details"
+                />
+              ) : null}
+            </fieldset>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <CatalogueCombobox
+                id="recare-medical-history"
+                label="Medical history reviewed"
+                catalogueKey="medical-history.review"
+                value={form.medicalHistoryReview}
+                onChange={(value) =>
+                  updateField("medicalHistoryReview", value)
+                }
               />
-              <span>Class 5 indicators checked</span>
-            </label>
-            <TextField
-              id="recare-miele-codes"
-              label="Miele sterilization codes"
-              value={form.mieleCodes}
-              onChange={(value) => updateField("mieleCodes", value)}
-            />
+
+              <div className="space-y-4">
+                <SelectField
+                  id="recare-premedication"
+                  label="Premedication"
+                  value={form.premedicationStatus}
+                  options={[
+                    { value: "not-documented", label: "Not documented" },
+                    { value: "not-required", label: "Not required" },
+                    { value: "required", label: "Required" },
+                  ]}
+                  onChange={(value) =>
+                    updateField("premedicationStatus", value)
+                  }
+                />
+                {form.premedicationStatus === "required" ? (
+                  <TextField
+                    id="recare-premedication-details"
+                    label="Premedication details"
+                    value={form.premedicationDetails}
+                    onChange={(value) =>
+                      updateField("premedicationDetails", value)
+                    }
+                  />
+                ) : null}
+              </div>
+            </div>
           </Section>
 
           <Section title="Records and Chief Concern">
