@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.3.1
+
+### Patch Changes
+
+- 46a33c2: Harmonize sterilization, consent, medical-history, and premedication controls across the Recare Exam and 2021 Adult Hygiene forms.
+
 ## 0.3.0
 
 ### Minor Changes
