@@ -241,7 +241,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Medical history reviewed",
     fieldLabels: ["Medical history reviewed"],
     seeds: medicalHistoryReviewSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "periodontal.fmp-done",

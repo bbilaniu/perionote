@@ -110,7 +110,9 @@ The exact public starter labels are:
 These starter values are suggestions only and are never preselected. The two
 truncated Health/Gingivitis entries and one truncated OHI-aids entry remain
 excluded. The Anesthetic list must be redesigned before it can receive public
-starter values.
+starter values. The shared Medical history reviewed catalogue is lifecycle
+`pilot` because it is also used by the production-visible Recare Exam pilot;
+the other Adult Hygiene-only catalogue groups remain `draft`.
 
 The existing provider keys remain shared:
 
@@ -267,7 +269,7 @@ suggestions. At least one of the three is proposed as required before copying.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]` | Status: **Not documented / No / Yes** | `appCore`; complete ClearDent vocabulary available | Preserve the complete source sentence followed by `No` or `Yes` |
+| A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]` | Unchecked checkbox: **Class 5 indicators checked**, positioned next to Miele sterilization codes | `appCore` | Preserve the complete source sentence followed by `Yes` only when explicitly checked |
 | A07 | `Miele Sterilization Codes Scanned:` | Editable text: **Miele sterilization codes** | `administrative` | `Miele Sterilization Codes Scanned: {text}` when entered |
 | A08 | Informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** text | Consent sources: `appCore`; details: `patient-specific` | `Informed verbal consent given by {selected sources} for treatment today.` plus entered details |
 | A09 | `Medical history reviewed: [SELECT/INSERT: MedHx/DentalHx]` | Catalogue-backed editable text: **Medical history reviewed** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `Medical history reviewed: {selected or entered text}` |
@@ -463,25 +465,26 @@ Clinical review accepted the complete mapping on 2026-07-25, including:
 
 1. Patient ID, Note started, copy requirements, reset, and navigation behavior.
 2. Manual Last recall date entry and `YYYY-MM-DD` output.
-3. Class 5 Yes/No, independent Patient/Parent/Legal guardian consent
-   checkboxes, omission of patient names, and private medical-history
-   catalogue.
+3. Unchecked Class 5 confirmation, independent Patient/Parent/Legal guardian
+   consent checkboxes, omission of patient names, and public starter values
+   plus browser-local additions for Medical history reviewed.
 4. The approved Plaque, Stain, Calculus, and Bleeding choices plus **Other**.
 5. Six unrestricted short PSR/Pocketing inputs in source order. Partially
    completed values are copied in their original positions without inferring
    missing values.
-6. Private local catalogue placement and generated wording for FMP done and
+6. Public starter values and generated wording for FMP done and
    Health/Gingivitis, excluding unresolved source strings.
 7. Independent approved Periodontitis stage and grade choices with no inferred
    relationship.
 8. Explicit unchecked confirmation for the fixed home-care,
    disease-process-review, and PPE statements.
 9. The approved compliance, flossing, and brushing choices plus **Other**.
-10. Unchecked Hygiene maintenance and private local catalogue placement for
-    Treatment completed, Anesthetic, and Desensitizer.
+10. Unchecked Hygiene maintenance; public starter values for Treatment
+    completed and Desensitizer; and an unseeded Anesthetic field pending
+    redesign.
 11. Conditional night-guard controls and the proposed retainer choices.
-12. Approved recall and hygiene interval choices plus **Other**, and private
-    local catalogue placement for Next visit.
+12. Approved recall and hygiene interval choices plus **Other**, and public
+    starter values for Next visit.
 13. The proposed labels, capitalization, punctuation, generated-note order,
     omission behavior, and date formatting.
 

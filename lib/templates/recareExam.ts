@@ -1,10 +1,5 @@
 export type DocumentationStatus = "not-documented" | "no" | "yes";
 
-export type MedicalHistoryStatus =
-  | "not-documented"
-  | "reviewed-no-changes"
-  | "reviewed-updated";
-
 export type PremedicationStatus =
   | "not-documented"
   | "not-required"
@@ -24,10 +19,11 @@ export interface RecareExamForm {
   dentist: string;
   rda: string;
   rdh: string;
-  consentObtained: boolean;
+  consentPatient: boolean;
+  consentParent: boolean;
+  consentLegalGuardian: boolean;
   consentDetails: string;
-  medicalHistoryStatus: MedicalHistoryStatus;
-  medicalHistoryDetails: string;
+  medicalHistoryReview: string;
   premedicationStatus: PremedicationStatus;
   premedicationDetails: string;
   class5IndicatorsChecked: boolean;
@@ -78,10 +74,11 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     dentist: "",
     rda: "",
     rdh: "",
-    consentObtained: false,
+    consentPatient: false,
+    consentParent: false,
+    consentLegalGuardian: false,
     consentDetails: "",
-    medicalHistoryStatus: "not-documented",
-    medicalHistoryDetails: "",
+    medicalHistoryReview: "",
     premedicationStatus: "not-documented",
     premedicationDetails: "",
     class5IndicatorsChecked: false,

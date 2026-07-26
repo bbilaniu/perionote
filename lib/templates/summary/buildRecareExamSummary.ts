@@ -26,6 +26,12 @@ function appendDetails(base: string, details: string): string {
     : `${base}.`;
 }
 
+function joinConsentSources(sources: string[]): string {
+  if (sources.length <= 1) return sources[0] ?? "";
+  if (sources.length === 2) return `${sources[0]} and ${sources[1]}`;
+  return `${sources.slice(0, -1).join(", ")} and ${sources.at(-1)}`;
+}
+
 function yesNoLine(
   label: string,
   status: DocumentationStatus,
@@ -99,24 +105,27 @@ export function buildRecareExamSummary(
     trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
   ];
 
+  const consentSources = [
+    ...(form.consentPatient ? ["PATIENT"] : []),
+    ...(form.consentParent ? ["PARENT"] : []),
+    ...(form.consentLegalGuardian ? ["LEGAL GUARDIAN"] : []),
+  ];
+  const consentLine = consentSources.length
+    ? [
+        `Informed verbal consent given by ${joinConsentSources(consentSources)} for treatment today.`,
+        trimmed(form.consentDetails)
+          ? withTerminalPunctuation(form.consentDetails)
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+
   const consentHistoryAndSterilization = [
-    form.consentObtained
-      ? [
-          "Informed verbal consent obtained for treatment today.",
-          trimmed(form.consentDetails)
-            ? withTerminalPunctuation(form.consentDetails)
-            : "",
-        ]
-          .filter(Boolean)
-          .join(" ")
+    consentLine,
+    trimmed(form.medicalHistoryReview)
+      ? `Medical history reviewed: ${withTerminalPunctuation(form.medicalHistoryReview)}`
       : "",
-    form.medicalHistoryStatus === "reviewed-no-changes"
-      ? "Medical history reviewed: no changes reported."
-      : form.medicalHistoryStatus === "reviewed-updated"
-        ? trimmed(form.medicalHistoryDetails)
-          ? `Medical history reviewed: ${withTerminalPunctuation(form.medicalHistoryDetails)}`
-          : "Medical history reviewed: updated."
-        : "",
     form.premedicationStatus === "not-required"
       ? "Premedication required: No."
       : form.premedicationStatus === "required"

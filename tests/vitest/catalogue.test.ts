@@ -55,6 +55,11 @@ describe("local catalogues", () => {
         (definition) => definition.key === "visit-team.rdh",
       ),
     ).toBe(true);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
+        (definition) => definition.key === "medical-history.review",
+      ),
+    ).toBe(true);
   });
 
   it("defines the approved public seeds without seeding provider catalogues", () => {

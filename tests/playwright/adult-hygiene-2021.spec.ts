@@ -43,6 +43,25 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 09:10",
   );
+  const consentHistorySection = page
+    .getByRole("heading", {
+      name: "Consent, Medical History, and Sterilization",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  await expect(
+    consentHistorySection
+      .locator("input, select")
+      .evaluateAll((controls) => controls.map((control) => control.id)),
+  ).resolves.toEqual([
+    "adult-hygiene-class5",
+    "adult-hygiene-miele-codes",
+    "adult-hygiene-consent-patient",
+    "adult-hygiene-consent-parent",
+    "adult-hygiene-consent-guardian",
+    "adult-hygiene-medical-history",
+    "adult-hygiene-premedication",
+  ]);
 
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
