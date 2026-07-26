@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.3.3
+
+### Patch Changes
+
+- c459c0e: Improve interactive note cards and Adult Hygiene periodontal, compliance, and interval controls.
+
 ## 0.3.2
 
 ### Patch Changes
