@@ -63,6 +63,17 @@ export function FixedChoiceListbox<TValue extends string>({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [open]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const activeOption = listboxRef.current?.children[activeIndex];
+    if (activeOption instanceof HTMLElement) {
+      activeOption.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeIndex, open]);
+
   function openList(preferredIndex = selectedIndex) {
     if (disabled || !options.length) {
       return;
