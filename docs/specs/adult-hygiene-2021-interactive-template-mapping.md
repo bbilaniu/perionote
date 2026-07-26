@@ -1,14 +1,16 @@
 # 2021 Adult Hygiene Interactive Template Mapping
 
-- Status: Draft for clinical review
+- Status: Accepted for implementation
 - Date: 2026-07-25
-- Clinical review status: Not yet reviewed
+- Clinical review status: Accepted 2026-07-25
+- Consent control review: Approved 2026-07-25
+- Catalogue extension review: Approved 2026-07-25
 - Source template: `adult-hygiene-2021`
 - Interactive slug: `adult-hygiene-2021`
-- Proposed interactive route:
+- Interactive route:
   `/templates/clinic/adult-hygiene-2021/interactive`
 - Source baseline commit: `7d3d21c`
-- Proposed lifecycle status: `draft`
+- Initial lifecycle status: `draft`
 - Governing decisions:
   - [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)
   - [ADR 0002: Separate Clinic and Interactive Template Libraries](../adr/0002-separate-clinic-and-interactive-template-libraries.md)
@@ -17,13 +19,12 @@
 
 ## Purpose
 
-This draft maps every line of the approved public
+This accepted specification maps every line of the approved public
 [2021 Adult Hygiene source template](../../lib/clinic-templates/registry.ts)
-to a proposed interactive control and generated-note behavior. It is intended
-for clinical review before implementation.
+to an approved interactive control and generated-note behavior.
 
 The source text has been unchanged since baseline commit `7d3d21c`. The
-proposed Patient ID, Note started timestamp, validation, catalogue, reset, and
+approved Patient ID, Note started timestamp, validation, catalogue, reset, and
 navigation behavior follow the accepted Recare Exam pilot. Those behaviors are
 identified as extensions because they are not present in this source template.
 
@@ -79,6 +80,119 @@ The same approach can later support other clinic templates. Field identifiers
 and generic import logic may be tracked, but extracted staff names, private
 phrases, and clinic product lists may not.
 
+## Catalogue Extension
+
+The Adult Hygiene conversion extends the existing catalogue allowlist with
+eight browser-local groups. All eight ship with no public seeds:
+
+| Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Control use |
+| --- | --- | --- | --- | --- |
+| `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | Single value |
+| `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | Single value |
+| `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | Single value |
+| `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | Multiple values |
+| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | Multiple values |
+| `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | Single value |
+| `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | Single value |
+| `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | Single value |
+
+The existing provider keys remain shared:
+
+| Catalogue key | ClearDent extraction field |
+| --- | --- |
+| `visit-team.dentist` | `dentists` |
+| `visit-team.rdh` | `hygienist` |
+| `visit-team.rda` | `rda` |
+
+The new keys expand the `CatalogueKey` allowlist and catalogue-management
+sections. They do not change the stored item shape, so
+`StoredCatalogueStateV1`, the local-storage key, and catalogue export format
+remain version 1. Older application builds may reject exports containing the
+new keys; rejection is safe and must not alter their existing local data.
+
+### Single-value catalogue fields
+
+Single-value fields reuse the accessible editable `CatalogueCombobox`
+interaction:
+
+- selecting a suggestion snapshots its label into the active form;
+- unlisted free text remains valid;
+- typing never saves automatically;
+- **Remember this value** is an explicit browser-local action; and
+- editing, hiding, or deleting a catalogue entry never changes the current
+  form value or previously copied notes.
+
+### Multi-value catalogue fields
+
+OH aids and Treatment completed require a reusable
+`CatalogueMultiCombobox` interaction rather than placing several catalogue
+labels into one opaque string:
+
+- the form stores an ordered in-memory array of snapshotted text values;
+- selecting a suggestion appends it unless an equivalent value is already
+  selected;
+- an editable **Other** entry may be added without saving it;
+- remembering an Other value requires a separate explicit action;
+- each selected value can be removed or reordered without changing the
+  catalogue;
+- comparisons use the catalogue's normalized, case-insensitive equivalence;
+- reset and navigation discard the selected array with the rest of the form;
+  and
+- generated output joins selected values with `; ` in their displayed order.
+
+The catalogue-management page manages the underlying reusable suggestions, not
+the current encounter's selected values.
+
+### Private ClearDent transformation
+
+Implementation will include a local-only transformation command that accepts
+an explicitly supplied ignored input and writes an ignored catalogue import
+file. The production application and static build never read the extraction.
+
+The transformation must:
+
+1. validate the extraction envelope and every mapped field;
+2. use only the allowlisted crosswalk above;
+3. import only options whose `truncated_in_screenshot` value is `false`;
+4. preserve the reviewed normalized label and source ordering;
+5. exclude empty labels and normalized duplicates;
+6. generate opaque stable item identifiers without embedding labels or staff
+   names;
+7. create active, non-favorite user-owned catalogue items;
+8. include no patient, form, note, theme, or unrelated UDF data;
+9. validate its output using the same catalogue-import validator used by the
+   application;
+10. print counts and field identifiers only, never private labels; and
+11. refuse to overwrite an existing output file unless explicitly requested.
+
+For the current extraction, the transform excludes the two unresolved
+Health/Gingivitis entries and one unresolved OHI-aids entry. The three
+unresolved TMJ entries are outside this template and its allowlist.
+
+## Approved Structured Choice Vocabularies
+
+The following reviewed, generic, non-identifying choices may be tracked in the
+public application. They are form choices, not clinical recommendations, and
+none is selected by default.
+
+| Field | Approved choices |
+| --- | --- |
+| Patient chief concern quick choices | Nothing; Sensitivity |
+| Stain | None; Localized slight; Localized moderate; Localized heavy; Generalized slight; Generalized moderate; Generalized heavy |
+| Bleeding | Localized mild; Localized moderate; Localized severe; Generalized mild; Generalized moderate; Generalized severe |
+| Periodontitis stage | Stage I (P1); Stage II (P2); Stage III (P3); Stage IV (P4); N/A |
+| Periodontitis grade | Grade A: slow rate; Grade B: moderate rate; Grade C: rapid rate; N/A |
+| Oral hygiene compliance | Poor; Fair; Good; Excellent; Poor–fair; Fair–good |
+| Flossing frequency | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing |
+| Brushing frequency | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing |
+| Recommended recall interval | 12-month recall; 6-month recall; 9-month recall |
+| Recommended hygiene interval | 3-month scale; 4-month scale; 6-month scale; N/A |
+
+Each applicable control also provides **Other** free text so imported,
+historical, and currently undocumented values remain valid. The Plaque and
+Calculus choices are recorded separately in their field section because their
+two lists are most easily reviewed side by side.
+
 ## Classification Legend
 
 - `appCore`: stable application vocabulary whose meaning affects controls or
@@ -94,7 +208,7 @@ Unless stated otherwise, controls start blank or **Not documented**. Negative
 findings, completed treatment, reviewed instructions, and other clinical facts
 are never preselected.
 
-## Proposed Screen Structure
+## Approved Screen Structure
 
 1. Patient and Visit Context
 2. Visit Team
@@ -139,17 +253,18 @@ suggestions. At least one of the three is proposed as required before copying.
 | --- | --- | --- | --- | --- |
 | A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]` | Status: **Not documented / No / Yes** | `appCore`; complete ClearDent vocabulary available | Preserve the complete source sentence followed by `No` or `Yes` |
 | A07 | `Miele Sterilization Codes Scanned:` | Editable text: **Miele sterilization codes** | `administrative` | `Miele Sterilization Codes Scanned: {text}` when entered |
-| A08 | Informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Status: **Not documented / Patient / Parent / Legal guardian**; optional **Consent details** text | Consent source: `appCore`; details: `patient-specific` | `Informed verbal consent given by {selected source} for treatment today.` plus entered details |
+| A08 | Informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** text | Consent sources: `appCore`; details: `patient-specific` | `Informed verbal consent given by {selected sources} for treatment today.` plus entered details |
 | A09 | `Medical history reviewed: [SELECT/INSERT: MedHx/DentalHx]` | Catalogue-backed editable text: **Medical history reviewed** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `Medical history reviewed: {selected or entered text}` |
 | A10 | `Premedication Required: [SELECT/INSERT: PREMED]` | Status: **Not documented / Not required / Required**; optional details when required | Status: `appCore`; details: `patient-specific` | `Premedication Required: No.` or `Premedication Required: Yes—{details}.` |
 
-The private ClearDent list contains Parent and Legal guardian. Patient is
-proposed as the non-guardian choice because patient names cannot be supplied by
-the application. Clinical review must confirm that interpretation. Empty
-sterilization-code text does not imply that codes were not scanned. All four
-visible medical-history phrases are now complete in the private extraction and
-may be imported into a browser-local catalogue. They are not public seeds, and
-free text remains valid.
+Patient, Parent, and Legal guardian are independent because more than one may
+give consent. None is preselected. When several are checked, generated output
+joins them in that order with commas and `and`, for example
+`PATIENT, PARENT and LEGAL GUARDIAN`. Patient names remain omitted because the
+application cannot supply them. Empty sterilization-code text does not imply
+that codes were not scanned. All four visible medical-history phrases are now
+complete in the private extraction and may be imported into a browser-local
+catalogue. They are not public seeds, and free text remains valid.
 
 ### Patient Concerns and Hygiene Findings
 
@@ -194,8 +309,8 @@ captured. No finding is selected by default or saved automatically.
 | A18 | `Recession:` | Editable text: **Recession** | `patient-specific` | `Recession: {text}` |
 | A19 | `FMP Done: [SELECT/INSERT: FMP DONE]` | Catalogue-backed editable text: **FMP done** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `FMP Done: {selected or entered text}` |
 | A20 | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` | Catalogue-backed editable text: **Health/Gingivitis** | Current value: `patient-specific`; reusable options: `catalogue` | `Health/Gingivitis: {text}` |
-| A21 | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]` | Optional closed choice: **Not documented / Stage I / Stage II / Stage III / Stage IV / N/A** | `appCore`; complete ClearDent vocabulary available | `Periodontitis Stage: {selected stage}.` |
-| A22 | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]` | Optional closed choice: **Not documented / Grade A / Grade B / Grade C / N/A** | `appCore`; complete ClearDent vocabulary available | `Periodontitis Grade: {selected grade}.` |
+| A21 | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]` | Optional structured choice: **Not documented** or an approved Periodontitis stage value | `appCore`; complete ClearDent vocabulary available | `Periodontitis Stage: {selected stage}.` |
+| A22 | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]` | Optional structured choice: **Not documented** or an approved Periodontitis grade value | `appCore`; complete ClearDent vocabulary available | `Periodontitis Grade: {selected grade}.` |
 
 The six PSR/Pocketing inputs preserve the source's six-position shape without
 imposing an undocumented numeric range or automatically calculating a result.
@@ -270,9 +385,9 @@ clinic/template catalogue and may be populated only through deliberate private
 local import. These fields document patient-specific clinical or scheduling
 decisions and are never inferred from other fields.
 
-## Proposed Generated-Note Order
+## Approved Generated-Note Order
 
-The note preserves source order, preceded by the proposed consistency
+The note preserves source order, preceded by the approved consistency
 extensions:
 
 1. Patient ID
@@ -315,63 +430,48 @@ The conversion follows the Recare Exam behavior:
 
 The exact browser warning text is controlled by the browser where required.
 
-## Proposed Copy Requirements
+## Approved Copy Requirements
 
 Before **Copy note** succeeds:
 
 1. Patient ID must contain non-whitespace text; and
 2. at least one of Dentist, RDH, or RDA must contain non-whitespace text.
 
-All clinical fields remain optional unless the clinical review below approves
-additional validation. The form must not treat missing clinical documentation
-as a negative or normal finding.
+All other clinical fields remain optional. The form must not treat missing
+clinical documentation as a negative or normal finding.
 
-## Clinical Review Required
+## Approved Clinical Review
 
-Please review each area below before this draft is accepted for implementation:
+Clinical review accepted the complete mapping on 2026-07-25, including:
 
-1. **Consistency extensions:** Confirm Patient ID, Note started, the reset and
-   navigation warnings, and the proposed copy requirements.
-2. **Last recall date:** Confirm manual date entry and `YYYY-MM-DD` output are
-   appropriate replacements for the unavailable EMR `[AUTO]` value.
-3. **Sterilization, consent, and history:** Confirm the proposed Class 5
-   Yes/No control, consent-source choices, omission of patient names, and use of
-   the four complete medical-history phrases as a private local catalogue.
-4. **Hygiene findings:** Confirm Plaque, Stain, Calculus, and Bleeding should
-   use the extracted non-identifying choices plus **Other**; confirm the fully
-   expanded Plaque and Calculus labels and generated wording listed above.
-5. **PSR/Pocketing:** Confirm six short inputs, their order, permitted values,
-   and whether partially completed sextants should be copied.
-6. **FMP Done:** Confirm the five complete extracted phrases should be imported
-   into an editable local catalogue.
-7. **Health/Gingivitis:** Confirm an editable local catalogue is appropriate,
-   importing only the four complete entries and excluding the two unresolved
-   entries.
-8. **Periodontitis:** Confirm the complete extracted Stage I–IV/N/A and Grade
-   A–C/N/A choices, their generated wording, and whether stage and grade should
-   have any conditional relationship.
-9. **Home care:** Confirm the two fixed education statements require explicit
-   checkboxes and that the source wording should be preserved.
-10. **Compliance and frequencies:** Confirm the complete extracted compliance,
-    flossing, and brushing lists can become structured choices with **Other**,
-    and confirm their generated wording.
-11. **Treatment:** Confirm hygiene maintenance is an unchecked option and the
-    now-complete Treatment completed, Anesthetic, and Desensitizer private
-    lists should be imported as editable local catalogues with no public seeds.
-12. **Night guard and retainers:** Confirm the proposed conditional night-guard
-    controls and retainer choices.
-13. **PPE:** Confirm the fixed PPE statement requires explicit confirmation
-    rather than appearing automatically.
-14. **Intervals:** Confirm recall and hygiene interval use the complete
-    extracted choices plus **Other**, while Next visit uses a private imported
-    local catalogue.
-15. **Output:** Confirm capitalization, punctuation, section order, omission
-    behavior, and date formatting.
+1. Patient ID, Note started, copy requirements, reset, and navigation behavior.
+2. Manual Last recall date entry and `YYYY-MM-DD` output.
+3. Class 5 Yes/No, independent Patient/Parent/Legal guardian consent
+   checkboxes, omission of patient names, and private medical-history
+   catalogue.
+4. The approved Plaque, Stain, Calculus, and Bleeding choices plus **Other**.
+5. Six unrestricted short PSR/Pocketing inputs in source order. Partially
+   completed values are copied in their original positions without inferring
+   missing values.
+6. Private local catalogue placement and generated wording for FMP done and
+   Health/Gingivitis, excluding unresolved source strings.
+7. Independent approved Periodontitis stage and grade choices with no inferred
+   relationship.
+8. Explicit unchecked confirmation for the fixed home-care,
+   disease-process-review, and PPE statements.
+9. The approved compliance, flossing, and brushing choices plus **Other**.
+10. Unchecked Hygiene maintenance and private local catalogue placement for
+    Treatment completed, Anesthetic, and Desensitizer.
+11. Conditional night-guard controls and the proposed retainer choices.
+12. Approved recall and hygiene interval choices plus **Other**, and private
+    local catalogue placement for Next visit.
+13. The proposed labels, capitalization, punctuation, generated-note order,
+    omission behavior, and date formatting.
 
 ## Technical Acceptance After Clinical Approval
 
-Implementation should not advance beyond `draft` until the clinical review
-areas are resolved. A later pilot implementation must include:
+Implementation may now begin at lifecycle status `draft`. Promotion to `pilot`
+requires:
 
 - machine-readable provenance for source `adult-hygiene-2021` at baseline
   `7d3d21c`;
@@ -385,4 +485,6 @@ areas are resolved. A later pilot implementation must include:
   excludes truncated options, and produces catalogue-import data without
   changing the public build;
 - accessible labels, groups, error messages, and keyboard interactions; and
-- a clinical review date recorded before promotion from `draft` to `pilot`.
+- the accepted clinical review date recorded in provenance; and
+- functional acceptance of the implemented workflow before promotion from
+  `draft` to `pilot`.
