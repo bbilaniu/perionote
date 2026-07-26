@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
 import packageInfo from "@/package.json";
 
 test("template library index separates clinic and interactive templates", async ({
@@ -237,8 +236,11 @@ test("clinic template library follows the clinical menu and opens a template", a
     ),
   ).toBeVisible();
 
-  await page
-    .getByRole("link", { name: /2021 Adult Hygiene/ })
+  const adultHygieneCard = page
+    .getByRole("article")
+    .filter({ hasText: "2021 Adult Hygiene" });
+  await adultHygieneCard
+    .getByRole("link", { name: "View original template" })
     .click();
   await expect(
     page.getByRole("heading", { name: "2021 Adult Hygiene" }),
@@ -257,7 +259,9 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   await expect(
     page.getByRole("heading", { name: "Dental Hygiene Note Webform Template" }),
   ).toBeVisible();
-  await expect(page.getByText("Structured Summary")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Summary Preview" }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "EOE Within Normal Limits" }),
   ).toBeVisible();
@@ -323,10 +327,10 @@ test("local anesthesia entry time can be cleared and reset", async ({ page }) =>
   await timeInput.fill("00:00");
   await expect(timeInput).toHaveValue("00:00");
 
-  await entry.getByRole("button", { name: "Clear time" }).click();
+  await entry.getByRole("button", { name: "Clear" }).click();
   await expect(timeInput).toHaveValue("");
 
-  await entry.getByRole("button", { name: "Set to now" }).click();
+  await entry.getByRole("button", { name: "Now" }).click();
   await expect(timeInput).toHaveValue(/\d{2}:\d{2}/);
 });
 
@@ -342,21 +346,21 @@ test("very short template local anesthesia product list filters by route", async
   await page.getByRole("button", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
-  const injectionProductSelect = page
-    .locator("#local-anesthesia-entry-0")
-    .locator("select")
-    .nth(3);
-  await injectionProductSelect.selectOption("Mepivacaine 3% without epinephrine");
+  const injectionEntry = page.locator("#local-anesthesia-entry-0");
+  const injectionProductSelect = injectionEntry
+    .getByRole("combobox")
+    .nth(2);
+  await injectionProductSelect.selectOption(
+    "Mepivacaine 3% without epinephrine",
+  );
   await expect(injectionProductSelect).toHaveValue(
     "Mepivacaine 3% without epinephrine",
   );
 
   await page.getByRole("button", { name: "Add topical entry" }).click();
 
-  const topicalProductSelect = page
-    .locator("#local-anesthesia-entry-1")
-    .locator("select")
-    .nth(3);
+  const topicalEntry = page.locator("#local-anesthesia-entry-1");
+  const topicalProductSelect = topicalEntry.getByRole("combobox").nth(2);
 
   await topicalProductSelect.selectOption(oraqixProduct);
   await expect(topicalProductSelect).toHaveValue(oraqixProduct);
@@ -408,7 +412,7 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "IOE: coated tongue, scalloped tongue, bilateral linea alba, slight palatine torus at midline, slight bilateral mandibular tori, mild soft tissue variations noted",
   );
   expect(summary).toContain(
-    "Gingival Description: localized marginal papillary redness on #5, #6-8",
+    "Gingival Description: generalized marginal dark pink on sextant 1, sextant 3 (Inflammation most notable posteriorly), localized marginal rolled on #14-16, localized papillary spongy on #23-26 (Correlates with plaque retention areas).",
   );
   expect(summary).toContain(
     "Periodontal diagnosis: Active Moderate Periodontitis Stage II Grade B moderate rate of progression. Reinforced 4-month hygiene interval and home-care compliance.",
@@ -426,29 +430,32 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
   );
   expect(summary).toContain(
-    "Sulcular application Q3: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 9:27 AM)",
+    "Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 9:24 AM)",
   );
   expect(summary).toContain(
-    "Total: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml",
+    "Total: Benzocaine 20% paste 0.5 ml",
   );
   expect(summary).not.toContain("Visit Details:");
-  expect(summary).not.toContain("Other clinical findings:");
+  expect(summary).toContain(
+    "Other clinical findings: Continue monitoring tongue and linea alba findings.",
+  );
 });
 
-test("instrumentation controls split hand and power selections", async ({
+test("combined instrumentation control exposes device and area selections", async ({
   page,
 }) => {
   await page.goto("/templates/very-short-template");
+  await page.getByRole("button", { name: "Expand all sections" }).click();
 
-  await page.getByRole("button", { name: "Hand instrumentation" }).click();
+  const treatmentSection = page.locator(
+    "#template-section-treatmentDoneToday-content",
+  );
+  await treatmentSection
+    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .click();
   await expect(
     page.getByText("Instrumentation area (today)", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("Power instrumentation device (today)", { exact: true }),
-  ).toHaveCount(0);
-
-  await page.getByRole("button", { name: "Power instrumentation" }).click();
   await expect(
     page.getByText("Power instrumentation device (today)", { exact: true }),
   ).toBeVisible();
@@ -456,20 +463,40 @@ test("instrumentation controls split hand and power selections", async ({
   await page.getByRole("button", { name: "Q1" }).click();
 
   const summary = await page.locator("textarea[readonly]").inputValue();
-  expect(summary).toContain("Hand instrumentation - Q1");
-  expect(summary).toContain("Power instrumentation (Piezo) - Q1");
+  expect(summary).toContain("Q1 Hand and Power Instrumentation (Piezo)");
 });
 
 test("short and very short templates include Full mouth instrumentation area", async ({
   page,
 }) => {
   await page.goto("/templates/short-dental-hygien-note");
-  await page.getByRole("button", { name: "Hand instrumentation" }).click();
-  await expect(page.getByRole("button", { name: "Full mouth" })).toBeVisible();
+  const shortTreatmentSection = page.locator(
+    "#template-section-treatmentDoneToday-content",
+  );
+  await shortTreatmentSection
+    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .click();
+  await expect(
+    shortTreatmentSection.getByRole("button", {
+      name: "Full mouth",
+      exact: true,
+    }),
+  ).toBeVisible();
 
   await page.goto("/templates/very-short-template");
-  await page.getByRole("button", { name: "Hand instrumentation" }).click();
-  await expect(page.getByRole("button", { name: "Full mouth" })).toBeVisible();
+  await page.getByRole("button", { name: "Expand all sections" }).click();
+  const veryShortTreatmentSection = page.locator(
+    "#template-section-treatmentDoneToday-content",
+  );
+  await veryShortTreatmentSection
+    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .click();
+  await expect(
+    veryShortTreatmentSection.getByRole("button", {
+      name: "Full mouth",
+      exact: true,
+    }),
+  ).toBeVisible();
 });
 
 test("periodontal stage and grade only show for periodontitis", async ({
@@ -527,7 +554,7 @@ test("very short template slug renders the sticky-summary variant", async ({
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Expand all sections" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Structured Summary" }),
+    page.getByRole("heading", { name: "Summary Preview" }),
   ).toBeVisible();
   await expect(page.locator("#exam-date")).toBeVisible();
 });
@@ -553,25 +580,26 @@ test("very short template desktop shell does not leave trailing space after the 
   expect(layoutMetrics.trailingGap ?? Number.POSITIVE_INFINITY).toBeLessThan(2);
 });
 
-test("imported template date inputs default to today's date and prefill vitals time for both slugs", async ({
+test("imported templates retain the synthetic fixture date and prefill vitals time", async ({
   page,
 }) => {
-  const today = getTodayDateString();
-  const currentTime = getCurrentTimeString();
+  await page.clock.install({ time: new Date(2026, 6, 25, 9, 10) });
+  const fixtureDate = "2026-03-09";
+  const currentTime = "09:10";
 
   await page.goto("/templates/gingival-description");
-  await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#exam-date")).toHaveValue(fixtureDate);
   await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 
   await page.goto("/templates/dental-hygiene-note-webform");
-  await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#exam-date")).toHaveValue(fixtureDate);
   await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 
   await page.goto("/templates/short-dental-hygien-note");
-  await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#exam-date")).toHaveValue(fixtureDate);
   await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 
   await page.goto("/templates/very-short-template");
-  await expect(page.locator("#exam-date")).toHaveValue(today);
+  await expect(page.locator("#exam-date")).toHaveValue(fixtureDate);
   await expect(page.locator("#vitals-time-0")).toHaveValue(currentTime);
 });
