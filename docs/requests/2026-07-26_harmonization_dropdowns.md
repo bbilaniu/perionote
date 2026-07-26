@@ -24,10 +24,13 @@ form controls they use. The initial in-scope templates are:
 - Recare Exam; and
 - 2021 Adult Hygiene.
 
-The standalone interactive templates, imported or legacy templates, catalogue
-management page, and theme selector are out of scope unless the investigation
-finds that a small change to a genuinely shared primitive is required. Do not
-expand this work into a repository-wide form-system migration.
+The standalone interactive templates, imported or legacy templates, and
+catalogue management page are out of scope unless the investigation finds that
+a small change to a genuinely shared primitive is required. The theme selector
+is an approved narrow extension: reuse the shared fixed-choice interaction and
+menu presentation in a compact header layout while preserving its separate
+theme persistence. Do not expand this work into a repository-wide form-system
+migration.
 
 Implement this work in a separate branch and pull request created from the
 updated main branch after the current clinical-template work is merged. Give
@@ -72,7 +75,7 @@ Before changing code:
 1. Identify the components and form-field implementations used by these controls.
 2. Determine which controls are:
    - plain text inputs
-   - fixed-choice selects
+   - fixed-choice listboxes
    - editable comboboxes
    - catalogue-backed suggestion fields
    - static editable suggestion fields
@@ -97,17 +100,20 @@ columns:
 | Adult Hygiene: Medical history reviewed, FMP done, Health/Gingivitis, Anesthetic, Desensitizer, Next visit | Catalogue-backed single-value combobox | Yes | Explicit browser-local catalogue | Shared editable-combobox interaction with catalogue adapter |
 | Adult Hygiene: OH aids reviewed/recommended, Treatment completed today | Catalogue-backed multi-value combobox | Yes | Explicit browser-local catalogue only when Remember is used | Shared editable-combobox interaction with catalogue multi-value adapter |
 | Adult Hygiene: Patient chief concern | Text input with native `<datalist>` static suggestions | Yes | None | Shared editable-combobox interaction with static-suggestion adapter |
-| Recare: Premedication, Radiographs, Intraoral photos, exam statuses, CPAP, occlusal-splint statuses, orthodontic history, retainers, removable dentures | Native fixed-choice select | No | Encounter state only | Shared fixed-choice select presentation |
-| Adult Hygiene: Premedication, Choice-with-Other selectors, night-guard statuses, orthodontic history, retainers | Native fixed-choice select | No | Encounter state only | Shared fixed-choice select presentation |
+| Recare: Premedication, Radiographs, Intraoral photos, exam statuses, CPAP, occlusal-splint statuses, orthodontic history, retainers, removable dentures | Native fixed-choice select | No | Encounter state only | Shared application-rendered fixed-choice listbox |
+| Adult Hygiene: Premedication, Choice-with-Other selectors, night-guard statuses, orthodontic history, retainers | Native fixed-choice select | No | Encounter state only | Shared application-rendered fixed-choice listbox |
+| Header: Theme | Native fixed-choice select | No | Browser-local theme preference | Compact shared application-rendered fixed-choice listbox |
 | Patient ID, Miele codes, details, Other fields, dates, and unrestricted text | Plain input or textarea | Yes where applicable | Encounter state only | Shared plain-control visual shell with no dropdown affordance |
 
-This audit found three underlying causes:
+This audit found four underlying causes:
 
 - Recare Exam and Adult Hygiene duplicate their fixed-select and input styling;
 - catalogue single-value and multi-value controls duplicate listbox interaction
   code; and
 - Patient chief concern delegates its popup and theme to the browser through a
-  native `<datalist>`.
+  native `<datalist>`; and
+- the compact theme selector also delegates its popup to the browser through a
+  native select.
 
 The target mechanisms above cover every in-scope list-opening control. They
 preserve each field's clinical meaning, editability, and persistence while
@@ -176,17 +182,17 @@ keeping the static-suggestion and catalogue data sources separate.
 
 ### Browser-native controls
 
-It is acceptable for an opened operating-system picker to retain some platform-specific appearance when a native select is intentionally preserved.
-
-However, the closed-state control should still fit the shared HygieneNote design system as closely as reasonably possible.
+The initial implementation retained native selects and styled their closed
+state, but their opened operating-system pickers remained visually inconsistent
+with the HygieneNote interface. The approved follow-up replaces the in-scope
+native fixed-choice selects with an application-rendered fixed-choice listbox.
+It must remain restricted to its configured values and provide equivalent
+keyboard, pointer, touch, focus, and screen-reader behaviour.
 
 If a native `<datalist>` or similar browser-provided popup prevents the Patient chief concern field from meeting the desired visual and interaction consistency, consider replacing that implementation with the same accessible editable-combobox interaction layer used by catalogue-backed controls. Reuse only the presentation and interaction behaviour, not catalogue persistence or management semantics.
 
-Do not replace native controls unnecessarily when the same result can be achieved through a smaller, maintainable change.
-
-Visual consistency applies primarily to the closed controls and to menus
-rendered by the application. An intentionally native select may retain a
-platform-specific opened menu.
+Native controls outside the newer clinic interactive templates remain out of
+scope. Do not expand this decision into the legacy or imported templates.
 
 ## Shared visual treatment
 
@@ -354,7 +360,7 @@ Use the repository structure to determine the final implementation, but consider
 8. Replace browser-provided suggestion UI only where it is preventing meaningful consistency or accessibility.
 9. Keep behavioural differences explicit:
    - text input
-   - fixed select
+   - fixed-choice listbox
    - editable catalogue combobox
    - editable static-suggestion combobox
 10. Remove duplicated or contradictory styling after the shared implementation is working.
@@ -386,6 +392,9 @@ The work is complete when:
 17. Chromium remains the required compatibility gate. A Playwright WebKit
     project and explicit command exist, with WebKit results treated as
     advisory and non-blocking for the initial pull request.
+18. The compact theme selector uses the shared fixed-choice menu treatment,
+    preserves Light, Dark, and System behaviour and browser-local persistence,
+    and remains usable in the narrow header.
 
 ## Validation
 

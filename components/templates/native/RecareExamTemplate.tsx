@@ -24,7 +24,7 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
-import { SelectField } from "@/components/forms/SelectField";
+import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
@@ -200,7 +200,7 @@ function YesNoWithDetails({
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <SelectField
+      <FixedChoiceListbox
         id={`${id}-status`}
         label={label}
         value={status}
@@ -235,7 +235,7 @@ function ExamFinding({
 }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <SelectField
+      <FixedChoiceListbox
         id={`${id}-status`}
         label={label}
         value={status}
@@ -563,7 +563,7 @@ export function RecareExamTemplate({
               />
 
               <div className="space-y-4">
-                <SelectField
+                <FixedChoiceListbox
                   id="recare-premedication"
                   label="Premedication"
                   value={form.premedicationStatus}
@@ -794,14 +794,14 @@ export function RecareExamTemplate({
 
           <Section title="Appliances and Relevant History">
             <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
+              <FixedChoiceListbox
                 id="recare-cpap"
                 label="CPAP use"
                 value={form.cpapStatus}
                 options={statusOptions}
                 onChange={(value) => updateField("cpapStatus", value)}
               />
-              <SelectField
+              <FixedChoiceListbox
                 id="recare-occlusal-splint"
                 label="Has an occlusal splint"
                 value={form.occlusalSplintStatus}
@@ -817,7 +817,7 @@ export function RecareExamTemplate({
                 }}
               />
               {form.occlusalSplintStatus === "yes" ? (
-                <SelectField
+                <FixedChoiceListbox
                   id="recare-occlusal-splint-use"
                   label="Uses the occlusal splint"
                   value={form.occlusalSplintUseStatus}
@@ -827,7 +827,7 @@ export function RecareExamTemplate({
                   }
                 />
               ) : null}
-              <SelectField
+              <FixedChoiceListbox
                 id="recare-orthodontics"
                 label="Orthodontic history"
                 value={form.orthodonticHistoryStatus}
@@ -836,7 +836,7 @@ export function RecareExamTemplate({
                   updateField("orthodonticHistoryStatus", value)
                 }
               />
-              <SelectField
+              <FixedChoiceListbox
                 id="recare-retainers"
                 label="Retainers"
                 value={form.retainerStatus}
@@ -852,7 +852,7 @@ export function RecareExamTemplate({
                 ]}
                 onChange={(value) => updateField("retainerStatus", value)}
               />
-              <SelectField
+              <FixedChoiceListbox
                 id="recare-removable-dentures"
                 label="Partial/complete removable dentures"
                 value={form.removableDenturesStatus}

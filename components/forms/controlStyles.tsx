@@ -1,20 +1,31 @@
 import type { ReactNode } from "react";
 
 const controlBaseClass =
-  "block min-h-10 w-full rounded-xl border bg-white text-sm text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900 dark:disabled:text-slate-500";
+  "block border bg-white text-sm text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900 dark:disabled:text-slate-500";
 
 export function formControlClass({
   opensList = false,
   invalid = false,
+  compact = false,
 }: {
   opensList?: boolean;
   invalid?: boolean;
+  compact?: boolean;
 } = {}): string {
   const borderClass = invalid
     ? "border-red-600 dark:border-red-500"
     : "border-slate-300 dark:border-slate-700";
-  const paddingClass = opensList ? "pl-3 pr-10" : "px-3";
-  return `${controlBaseClass} ${borderClass} ${paddingClass}`;
+  const sizeClass = compact
+    ? "min-h-9 min-w-24 w-auto rounded-lg"
+    : "min-h-10 w-full rounded-xl";
+  const paddingClass = opensList
+    ? compact
+      ? "pl-2.5 pr-9"
+      : "pl-3 pr-10"
+    : compact
+      ? "px-2.5"
+      : "px-3";
+  return `${controlBaseClass} ${sizeClass} ${borderClass} ${paddingClass}`;
 }
 
 export function DropdownChevron({

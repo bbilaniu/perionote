@@ -11,7 +11,7 @@ import {
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
-import { SelectField } from "@/components/forms/SelectField";
+import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import {
   type AdultHygiene2021Form,
@@ -178,7 +178,7 @@ function ChoiceWithOther({
 }) {
   return (
     <div className="grid gap-3 md:grid-cols-2">
-      <SelectField
+      <FixedChoiceListbox
         id={`${id}-choice`}
         label={label}
         value={choice}
@@ -533,7 +533,7 @@ export function AdultHygiene2021Template({
               />
 
               <div className="space-y-4">
-                <SelectField<PremedicationStatus>
+                <FixedChoiceListbox<PremedicationStatus>
                   id="adult-hygiene-premedication"
                   label="Premedication"
                   value={form.premedicationStatus}
@@ -803,7 +803,7 @@ export function AdultHygiene2021Template({
 
           <Section title="Appliances and Relevant History">
             <div className="grid gap-4 md:grid-cols-2">
-              <SelectField
+              <FixedChoiceListbox
                 id="adult-hygiene-night-guard"
                 label="Has a night guard"
                 value={form.nightGuardStatus}
@@ -816,7 +816,7 @@ export function AdultHygiene2021Template({
                 }}
               />
               {form.nightGuardStatus === "yes" ? (
-                <SelectField
+                <FixedChoiceListbox
                   id="adult-hygiene-night-guard-use"
                   label="Uses the night guard"
                   value={form.nightGuardUseStatus}
@@ -826,7 +826,7 @@ export function AdultHygiene2021Template({
                   }
                 />
               ) : null}
-              <SelectField
+              <FixedChoiceListbox
                 id="adult-hygiene-orthodontics"
                 label="Orthodontic history"
                 value={form.orthodonticHistoryStatus}
@@ -835,7 +835,7 @@ export function AdultHygiene2021Template({
                   updateField("orthodonticHistoryStatus", value)
                 }
               />
-              <SelectField<RetainerStatus>
+              <FixedChoiceListbox<RetainerStatus>
                 id="adult-hygiene-retainers"
                 label="Retainers"
                 value={form.retainerStatus}

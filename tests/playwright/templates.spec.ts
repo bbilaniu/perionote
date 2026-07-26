@@ -139,9 +139,9 @@ test("recare exam uses the harmonized consent, history, and sterilization contro
     .locator("xpath=ancestor::section[1]");
   await expect(section).toHaveCount(1);
   await expect(
-    section.locator("input, select").evaluateAll((controls) =>
-      controls.map((control) => control.id),
-    ),
+    section
+      .locator('input, button[data-list-control="fixed-listbox"]')
+      .evaluateAll((controls) => controls.map((control) => control.id)),
   ).resolves.toEqual([
     "recare-class5",
     "recare-miele-codes",
@@ -195,7 +195,7 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   await expect(page.locator("#recare-patient-id")).toHaveValue("TEST-1001");
   await expect(
     page.getByLabel("Partial/complete removable dentures"),
-  ).toHaveValue("no");
+  ).toHaveAttribute("data-value", "no");
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Occlusal splint: Yes; uses\./,
   );

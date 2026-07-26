@@ -2,4 +2,4 @@
 "hygienenote": patch
 ---
 
-Harmonize fixed selects, catalogue comboboxes, and static suggestion fields across clinic interactive templates.
+Harmonize custom fixed-choice listboxes, catalogue comboboxes, static suggestion fields, and the compact theme selector.

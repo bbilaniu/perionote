@@ -10,15 +10,15 @@ test("clinic interactive list controls use one closed-state affordance without c
 }) => {
   await page.goto(adultHygieneUrl);
 
-  const fixedSelects = page.locator(
-    'select[data-list-control="fixed-select"]',
+  const fixedListboxes = page.locator(
+    'button[data-list-control="fixed-listbox"]',
   );
-  expect(await fixedSelects.count()).toBeGreaterThan(0);
-  for (const select of await fixedSelects.all()) {
-    await expect(select).toHaveClass(/appearance-none/);
-    await expect(
-      select.locator("xpath=..").locator("[data-dropdown-affordance]"),
-    ).toHaveCount(1);
+  expect(await fixedListboxes.count()).toBeGreaterThan(0);
+  await expect(
+    page.locator('select[data-list-control="fixed-select"]'),
+  ).toHaveCount(0);
+  for (const trigger of await fixedListboxes.all()) {
+    await expect(trigger.locator("[data-dropdown-affordance]")).toHaveCount(1);
   }
 
   const editableComboboxes = page.locator(
@@ -75,7 +75,7 @@ test("clinic interactive list controls use one closed-state affordance without c
   ).toBeNull();
 });
 
-test("editable comboboxes support pointer, keyboard, selected, and closing states", async ({
+test("custom list controls support pointer, keyboard, selected, and closing states", async ({
   page,
 }) => {
   await page.goto(recareExamUrl);
@@ -111,14 +111,29 @@ test("editable comboboxes support pointer, keyboard, selected, and closing state
   await rightMolar.press("Escape");
   await expect(rightMolar).toHaveAttribute("aria-expanded", "false");
 
-  const premedication = page.locator("#recare-premedication");
-  await premedication.selectOption("required");
-  await expect(premedication).toHaveValue("required");
+  const premedication = page.getByRole("button", {
+    name: "Premedication",
+  });
+  await premedication.focus();
+  await premedication.press("ArrowDown");
+  const premedicationOptions = page.getByRole("listbox", {
+    name: "Premedication options",
+  });
+  await expect(premedicationOptions).toBeFocused();
+  await premedicationOptions.press("End");
+  await premedicationOptions.press("Enter");
+  await expect(premedication).toHaveAttribute("data-value", "required");
+  await expect(premedication).toContainText("Required");
+  await expect(premedication).toBeFocused();
+
+  await premedication.click();
   await expect(
-    premedication
-      .locator("xpath=..")
-      .locator("[data-dropdown-affordance]"),
-  ).toHaveCount(1);
+    page.getByRole("option", { name: "Required Selected", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page
+    .getByRole("heading", { name: "Visit Team", exact: true })
+    .click();
+  await expect(premedication).toHaveAttribute("aria-expanded", "false");
 });
 
 test("editable suggestion menus remain aligned and usable at a narrow viewport", async ({
@@ -217,6 +232,18 @@ test("editable combobox options remain tappable in a touch-oriented context", as
     .tap();
   await page.getByRole("option", { name: "Sensitivity", exact: true }).tap();
   await expect(chiefConcern).toHaveValue("Sensitivity");
+
+  const nightGuard = page.getByRole("button", {
+    name: "Has a night guard",
+  });
+  await nightGuard.tap();
+  await page
+    .getByRole("option", {
+      name: "Yes",
+      exact: true,
+    })
+    .tap();
+  await expect(nightGuard).toHaveAttribute("data-value", "yes");
 
   await context.close();
 });
