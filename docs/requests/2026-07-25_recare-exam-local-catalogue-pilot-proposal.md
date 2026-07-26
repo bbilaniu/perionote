@@ -1,7 +1,9 @@
 # Request: Recare Exam Local Catalogue Pilot Proposal
 
-- Status: Proposed
+- Status: Implemented
 - Date: 2026-07-25
+- Approved: 2026-07-25
+- Implemented: 2026-07-25
 - Pilot template: `recare-exam`
 - Governing decision:
   [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)

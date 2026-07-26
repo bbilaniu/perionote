@@ -6,6 +6,25 @@ type Theme = "light" | "dark" | "system";
 
 const storageKey = "hygienenote-theme";
 
+function readStoredTheme(): Theme {
+  try {
+    const value = localStorage.getItem(storageKey);
+    return value === "light" || value === "dark" || value === "system"
+      ? value
+      : "system";
+  } catch {
+    return "system";
+  }
+}
+
+function writeStoredTheme(theme: Theme): void {
+  try {
+    localStorage.setItem(storageKey, theme);
+  } catch {
+    // Theme selection still applies for the current page when storage is blocked.
+  }
+}
+
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
   if (theme === "system") {
@@ -21,14 +40,13 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
 
   useEffect(() => {
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null;
-    const initialTheme: Theme = storedTheme ?? "system";
+    const initialTheme = readStoredTheme();
     setTheme(initialTheme);
     applyTheme(initialTheme);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onMediaChange = () => {
-      if ((localStorage.getItem(storageKey) as Theme | null) === "system") {
+      if (readStoredTheme() === "system") {
         applyTheme("system");
       }
     };
@@ -39,7 +57,7 @@ export default function ThemeToggle() {
 
   const handleChange = (nextTheme: Theme) => {
     setTheme(nextTheme);
-    localStorage.setItem(storageKey, nextTheme);
+    writeStoredTheme(nextTheme);
     applyTheme(nextTheme);
   };
 
