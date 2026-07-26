@@ -108,24 +108,91 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
 ];
 
-const medicalHistoryReviewSeeds: CatalogueSeed[] = [
-  {
-    id: "seed.medical-history.review.no-changes",
-    label: "YES- NO CHANGES",
-  },
-  {
-    id: "seed.medical-history.review.no-problems-cleared",
-    label: "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
-  },
-  {
-    id: "seed.medical-history.review.updated-no-contraindications",
-    label: "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
-  },
-  {
-    id: "seed.medical-history.review.updated-meds",
-    label: "YES- UPDATED MEDS",
-  },
-];
+function catalogueSeeds(
+  prefix: string,
+  values: Array<[id: string, label: string]>,
+): CatalogueSeed[] {
+  return values.map(([id, label]) => ({
+    id: `seed.${prefix}.${id}`,
+    label,
+  }));
+}
+
+const medicalHistoryReviewSeeds = catalogueSeeds("medical-history.review", [
+  ["no-changes", "YES- NO CHANGES"],
+  ["no-problems-cleared", "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX"],
+  [
+    "updated-no-contraindications",
+    "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
+  ],
+  ["updated-meds", "YES- UPDATED MEDS"],
+]);
+
+const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
+  ["all-findings-discussed", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
+  ["completed-within-year", "NO, COMPLETED WITHIN A YEAR"],
+  ["in-ortho", "NO, IN ORTHO"],
+  ["not-applicable", "NO, NOT APPLICABLE"],
+  ["ran-out-of-time", "NO, RAN OUT OF TIME"],
+]);
+
+const healthGingivitisSeeds = catalogueSeeds(
+  "periodontal.health-gingivitis",
+  [
+    ["health-intact-support", "HEALTH INTACT PERIODONTAL SUPPORT"],
+    [
+      "gingivitis-intact-support",
+      "GINGIVITIS INTACT PERIODONTAL SUPPORT",
+    ],
+    ["health-reduced-support", "HEALTH- REDUCED PERIODONTAL SUPPORT"],
+    [
+      "gingivitis-reduced-support",
+      "GINGIVITIS- REDUCED PERIODONTAL SUPPORT",
+    ],
+  ],
+);
+
+const ohiAidsReviewedSeeds = catalogueSeeds("oral-hygiene.aids-reviewed", [
+  ["sulcabrush", "SULCABRUSH"],
+  ["superfloss", "SUPERFLOSS"],
+  ["floss-threaders", "FLOSS THREADERS"],
+  ["c-shape-flossing", "C-SHAPE FLOSSING"],
+  ["proper-tb-technique", "PROPER TB TECHNIQUE"],
+  ["interproximal-brush", "INTERPROXIMAL BRUSH"],
+  ["soft-picks", "SOFT PICKS"],
+  ["proper-use-etb", "PROPER USE OF ETB"],
+]);
+
+const treatmentCompletedSeeds = catalogueSeeds(
+  "hygiene-treatment.completed",
+  [
+    ["1u-scale", "1U scale (cavitron and hand scaling)"],
+    ["2u-scale", "2U scale (cavitron and hand scaling)"],
+    ["3u-scale", "3U scale (cavitron and hand scaling)"],
+    ["4u-scale", "4U scale (cavitron and hand scaling)"],
+    ["fmp", "FMP"],
+    ["1u-polish", "1U polish"],
+    ["fluoride-varnish", "Fluoride varnish"],
+    ["crystal-x-pur", "Crystal X-PUR"],
+  ],
+);
+
+const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
+  ["none", "NONE"],
+  ["prevident-fl", "PREVIDENT FL"],
+  ["voco-fl", "VOCO FL"],
+  ["crystal-x-pur", "crystal x-pur"],
+]);
+
+const nextVisitSeeds = catalogueSeeds("scheduling.next-visit", [
+  ["6-mos-scale", "6 MOS SCALE"],
+  ["12-mrc", "12 MRC"],
+  ["3-mos-scale", "3 MOS SCALE"],
+  ["4-mos-scale", "4 MOS SCALE"],
+  ["6-mrc", "6 MRC"],
+  ["9-mrc", "9 MRC"],
+  ["follow-up-hygiene", "FOLLOW-UP HYGIENE"],
+]);
 
 export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
@@ -181,7 +248,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Periodontal Assessment",
     title: "FMP done",
     fieldLabels: ["FMP done"],
-    seeds: [],
+    seeds: fmpDoneSeeds,
     lifecycle: "draft",
   },
   {
@@ -189,7 +256,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Periodontal Assessment",
     title: "Health/Gingivitis",
     fieldLabels: ["Health/Gingivitis"],
-    seeds: [],
+    seeds: healthGingivitisSeeds,
     lifecycle: "draft",
   },
   {
@@ -197,7 +264,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Oral Hygiene and Education",
     title: "OH aids reviewed/recommended",
     fieldLabels: ["OH aids reviewed/recommended"],
-    seeds: [],
+    seeds: ohiAidsReviewedSeeds,
     lifecycle: "draft",
   },
   {
@@ -205,7 +272,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Treatment",
     title: "Treatment completed today",
     fieldLabels: ["Treatment completed today"],
-    seeds: [],
+    seeds: treatmentCompletedSeeds,
     lifecycle: "draft",
   },
   {
@@ -221,7 +288,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Treatment",
     title: "Desensitizer",
     fieldLabels: ["Desensitizer"],
-    seeds: [],
+    seeds: desensitizerSeeds,
     lifecycle: "draft",
   },
   {
@@ -229,7 +296,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     section: "Intervals and Next Visit",
     title: "Next visit",
     fieldLabels: ["Next visit"],
-    seeds: [],
+    seeds: nextVisitSeeds,
     lifecycle: "draft",
   },
 ];

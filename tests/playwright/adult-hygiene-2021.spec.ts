@@ -153,6 +153,37 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       }),
     ).toBeVisible();
   }
+
+  for (const [controlId, starter] of [
+    [
+      "#adult-hygiene-fmp-done",
+      "YES, ALL FINDINGS DISCUSSED WITH PATIENT",
+    ],
+    [
+      "#adult-hygiene-health-gingivitis",
+      "HEALTH INTACT PERIODONTAL SUPPORT",
+    ],
+    ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
+    [
+      "#adult-hygiene-treatment-completed",
+      "1U scale (cavitron and hand scaling)",
+    ],
+    ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
+    ["#adult-hygiene-next-visit", "FOLLOW-UP HYGIENE"],
+  ]) {
+    await page.locator(controlId).focus();
+    await expect(
+      page.getByRole("option", {
+        name: `${starter} Starter`,
+        exact: true,
+      }),
+    ).toBeVisible();
+  }
+
+  const anesthetic = page.locator("#adult-hygiene-anesthetic");
+  await anesthetic.focus();
+  await expect(anesthetic).toHaveAttribute("aria-expanded", "false");
+
   await medicalHistory.fill("Synthetic reusable history phrase");
   await page.getByRole("button", { name: "Remember this value" }).click();
 

@@ -55,12 +55,6 @@ describe("local catalogues", () => {
         (definition) => definition.key === "visit-team.rdh",
       ),
     ).toBe(true);
-    expect(
-      listCatalogueItems(
-        createEmptyCatalogueState(),
-        adultHygieneKey,
-      ),
-    ).toEqual([]);
   });
 
   it("defines the approved public seeds without seeding provider catalogues", () => {
@@ -92,6 +86,77 @@ describe("local catalogues", () => {
       "YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX",
       "YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX",
       "YES- UPDATED MEDS",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "periodontal.fmp-done").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "YES, ALL FINDINGS DISCUSSED WITH PATIENT",
+      "NO, COMPLETED WITHIN A YEAR",
+      "NO, IN ORTHO",
+      "NO, NOT APPLICABLE",
+      "NO, RAN OUT OF TIME",
+    ]);
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "periodontal.health-gingivitis",
+      ).map((item) => item.label),
+    ).toEqual([
+      "HEALTH INTACT PERIODONTAL SUPPORT",
+      "GINGIVITIS INTACT PERIODONTAL SUPPORT",
+      "HEALTH- REDUCED PERIODONTAL SUPPORT",
+      "GINGIVITIS- REDUCED PERIODONTAL SUPPORT",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "oral-hygiene.aids-reviewed").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "SULCABRUSH",
+      "SUPERFLOSS",
+      "FLOSS THREADERS",
+      "C-SHAPE FLOSSING",
+      "PROPER TB TECHNIQUE",
+      "INTERPROXIMAL BRUSH",
+      "SOFT PICKS",
+      "PROPER USE OF ETB",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.completed").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "1U scale (cavitron and hand scaling)",
+      "2U scale (cavitron and hand scaling)",
+      "3U scale (cavitron and hand scaling)",
+      "4U scale (cavitron and hand scaling)",
+      "FMP",
+      "1U polish",
+      "Fluoride varnish",
+      "Crystal X-PUR",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic"),
+    ).toEqual([]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.desensitizer").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["NONE", "PREVIDENT FL", "VOCO FL", "crystal x-pur"]);
+    expect(
+      listCatalogueItems(emptyState, "scheduling.next-visit").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "6 MOS SCALE",
+      "12 MRC",
+      "3 MOS SCALE",
+      "4 MOS SCALE",
+      "6 MRC",
+      "9 MRC",
+      "FOLLOW-UP HYGIENE",
     ]);
 
     const molarDefinition = CATALOGUE_DEFINITIONS.find(
@@ -129,6 +194,16 @@ describe("local catalogues", () => {
           createdAt: "2026-07-25T18:00:00.000Z",
           updatedAt: "2026-07-25T18:00:00.000Z",
         },
+        {
+          id: "legacy-treatment-completed",
+          catalogueKey: "hygiene-treatment.completed",
+          label: "Fluoride varnish",
+          hidden: false,
+          favorite: false,
+          sortOrder: 6,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
       ],
       seedPreferences: [],
     });
@@ -140,6 +215,12 @@ describe("local catalogues", () => {
         hidden: true,
         favorite: true,
         sortOrder: 2,
+      },
+      {
+        seedId: "seed.hygiene-treatment.completed.fluoride-varnish",
+        hidden: false,
+        favorite: false,
+        sortOrder: 6,
       },
     ]);
   });
