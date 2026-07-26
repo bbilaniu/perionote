@@ -21,13 +21,10 @@ import {
   createEmptyAdultHygiene2021Form,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
-  hygieneIntervalChoices,
-  oralHygieneComplianceChoices,
   patientChiefConcernChoices,
   periodontitisGradeChoices,
   periodontitisStageChoices,
   plaqueChoices,
-  recallIntervalChoices,
   stainChoices,
 } from "@/lib/templates/adultHygiene2021";
 import type {
@@ -44,6 +41,7 @@ const buttonClass =
 const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
 const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
+const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
 
 const documentationStatusOptions: Array<{
   value: DocumentationStatus;
@@ -204,6 +202,48 @@ function ChoiceWithOther({
           }
         }}
         placeholder="Optional custom value"
+      />
+    </div>
+  );
+}
+
+function ChoiceWithComment({
+  id,
+  label,
+  choice,
+  comment,
+  commentLabel,
+  choices,
+  onChoiceChange,
+  onCommentChange,
+}: {
+  id: string;
+  label: string;
+  choice: string;
+  comment: string;
+  commentLabel: string;
+  choices: readonly string[];
+  onChoiceChange: (choice: string) => void;
+  onCommentChange: (comment: string) => void;
+}) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      <FixedChoiceListbox
+        id={`${id}-choice`}
+        label={label}
+        value={choice}
+        options={[
+          { value: "", label: "Not documented" },
+          ...choices.map((value) => ({ value, label: value })),
+        ]}
+        onChange={onChoiceChange}
+      />
+      <TextField
+        id={`${id}-comments`}
+        label={commentLabel}
+        value={comment}
+        onChange={onCommentChange}
+        placeholder="Optional comments"
       />
     </div>
   );
@@ -616,23 +656,28 @@ export function AdultHygiene2021Template({
             <fieldset>
               <legend className="font-semibold">PSR/Pocketing</legend>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                Enter the six positions in source order. Blank positions remain
-                visibly unfilled when another position is documented.
+                Enter the six sextants in clockwise order. Blank sextants remain
+                visibly unfilled when another sextant is documented.
               </p>
               <div className="mt-3 grid grid-cols-3 gap-3">
-                {form.psrPocketing.map((value, index) => (
-                  <TextField
-                    key={index}
-                    id={`adult-hygiene-psr-${index + 1}`}
-                    label={`Position ${index + 1}`}
-                    value={value}
-                    onChange={(nextValue) => {
-                      const next = [...form.psrPocketing] as AdultHygiene2021Form["psrPocketing"];
-                      next[index] = nextValue;
-                      updateField("psrPocketing", next);
-                    }}
-                  />
-                ))}
+                {form.psrPocketing.map((value, index) => {
+                  const sextant = psrSextantOrder[index];
+                  return (
+                    <TextField
+                      key={sextant}
+                      id={`adult-hygiene-psr-${sextant}`}
+                      label={`Sextant ${sextant}`}
+                      value={value}
+                      onChange={(nextValue) => {
+                        const next = [
+                          ...form.psrPocketing,
+                        ] as AdultHygiene2021Form["psrPocketing"];
+                        next[index] = nextValue;
+                        updateField("psrPocketing", next);
+                      }}
+                    />
+                  );
+                })}
               </div>
             </fieldset>
             <TextField
@@ -655,48 +700,57 @@ export function AdultHygiene2021Template({
               value={form.healthGingivitis}
               onChange={(value) => updateField("healthGingivitis", value)}
             />
-            <ChoiceWithOther
+            <ChoiceWithComment
               id="adult-hygiene-periodontitis-stage"
               label="Periodontitis stage"
               choice={form.periodontitisStageChoice}
-              other={form.periodontitisStageOther}
+              comment={form.periodontitisStageComments}
+              commentLabel="Periodontitis stage comments"
               choices={periodontitisStageChoices}
               onChoiceChange={(value) =>
                 updateField("periodontitisStageChoice", value)
               }
-              onOtherChange={(value) =>
-                updateField("periodontitisStageOther", value)
+              onCommentChange={(value) =>
+                updateField("periodontitisStageComments", value)
               }
             />
-            <ChoiceWithOther
+            <ChoiceWithComment
               id="adult-hygiene-periodontitis-grade"
               label="Periodontitis grade"
               choice={form.periodontitisGradeChoice}
-              other={form.periodontitisGradeOther}
+              comment={form.periodontitisGradeComments}
+              commentLabel="Periodontitis grade comments"
               choices={periodontitisGradeChoices}
               onChoiceChange={(value) =>
                 updateField("periodontitisGradeChoice", value)
               }
-              onOtherChange={(value) =>
-                updateField("periodontitisGradeOther", value)
+              onCommentChange={(value) =>
+                updateField("periodontitisGradeComments", value)
               }
             />
           </Section>
 
           <Section title="Oral Hygiene and Education">
-            <ChoiceWithOther
-              id="adult-hygiene-compliance"
-              label="Oral hygiene compliance"
-              choice={form.oralHygieneComplianceChoice}
-              other={form.oralHygieneComplianceOther}
-              choices={oralHygieneComplianceChoices}
-              onChoiceChange={(value) =>
-                updateField("oralHygieneComplianceChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("oralHygieneComplianceOther", value)
-              }
-            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <CatalogueCombobox
+                id="adult-hygiene-compliance"
+                label="Oral hygiene compliance"
+                catalogueKey="oral-hygiene.compliance"
+                value={form.oralHygieneCompliance}
+                onChange={(value) =>
+                  updateField("oralHygieneCompliance", value)
+                }
+              />
+              <TextField
+                id="adult-hygiene-compliance-comment"
+                label="Oral hygiene compliance comment"
+                value={form.oralHygieneComplianceComment}
+                onChange={(value) =>
+                  updateField("oralHygieneComplianceComment", value)
+                }
+                placeholder="Optional comment"
+              />
+            </div>
             <CheckboxField
               id="adult-hygiene-home-care-reviewed"
               label="Standard home-care instruction reviewed"
@@ -867,32 +921,42 @@ export function AdultHygiene2021Template({
               checked={form.ppeStatementApplies}
               onChange={(value) => updateField("ppeStatementApplies", value)}
             />
-            <ChoiceWithOther
-              id="adult-hygiene-recall-interval"
-              label="Recommended recall interval"
-              choice={form.recallIntervalChoice}
-              other={form.recallIntervalOther}
-              choices={recallIntervalChoices}
-              onChoiceChange={(value) =>
-                updateField("recallIntervalChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("recallIntervalOther", value)
-              }
-            />
-            <ChoiceWithOther
-              id="adult-hygiene-hygiene-interval"
-              label="Recommended hygiene interval"
-              choice={form.hygieneIntervalChoice}
-              other={form.hygieneIntervalOther}
-              choices={hygieneIntervalChoices}
-              onChoiceChange={(value) =>
-                updateField("hygieneIntervalChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("hygieneIntervalOther", value)
-              }
-            />
+            <div className="grid gap-3 md:grid-cols-2">
+              <CatalogueCombobox
+                id="adult-hygiene-recall-interval"
+                label="Recommended recall interval"
+                catalogueKey="scheduling.recall-interval"
+                value={form.recallInterval}
+                onChange={(value) => updateField("recallInterval", value)}
+              />
+              <TextField
+                id="adult-hygiene-recall-interval-comments"
+                label="Recommended recall interval comments"
+                value={form.recallIntervalComments}
+                onChange={(value) =>
+                  updateField("recallIntervalComments", value)
+                }
+                placeholder="Optional comments"
+              />
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <CatalogueCombobox
+                id="adult-hygiene-hygiene-interval"
+                label="Recommended hygiene interval"
+                catalogueKey="scheduling.hygiene-interval"
+                value={form.hygieneInterval}
+                onChange={(value) => updateField("hygieneInterval", value)}
+              />
+              <TextField
+                id="adult-hygiene-hygiene-interval-comments"
+                label="Recommended hygiene interval comments"
+                value={form.hygieneIntervalComments}
+                onChange={(value) =>
+                  updateField("hygieneIntervalComments", value)
+                }
+                placeholder="Optional comments"
+              />
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <CatalogueCombobox
                 id="adult-hygiene-next-visit"
@@ -913,7 +977,7 @@ export function AdultHygiene2021Template({
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-lg font-semibold">Generated Note</h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               The visible preview is copied unchanged.

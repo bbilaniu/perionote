@@ -16,10 +16,13 @@ export const CATALOGUE_KEYS = [
   "medical-history.review",
   "periodontal.fmp-done",
   "periodontal.health-gingivitis",
+  "oral-hygiene.compliance",
   "oral-hygiene.aids-reviewed",
   "hygiene-treatment.completed",
   "hygiene-treatment.anesthetic",
   "hygiene-treatment.desensitizer",
+  "scheduling.recall-interval",
+  "scheduling.hygiene-interval",
   "scheduling.next-visit",
 ] as const;
 
@@ -163,6 +166,18 @@ const ohiAidsReviewedSeeds = catalogueSeeds("oral-hygiene.aids-reviewed", [
   ["proper-use-etb", "PROPER USE OF ETB"],
 ]);
 
+const oralHygieneComplianceSeeds = catalogueSeeds(
+  "oral-hygiene.compliance",
+  [
+    ["poor", "Poor"],
+    ["fair", "Fair"],
+    ["good", "Good"],
+    ["excellent", "Excellent"],
+    ["poor-fair", "Poor–fair"],
+    ["fair-good", "Fair–good"],
+  ],
+);
+
 const treatmentCompletedSeeds = catalogueSeeds(
   "hygiene-treatment.completed",
   [
@@ -182,6 +197,19 @@ const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
   ["prevident-fl", "PREVIDENT FL"],
   ["voco-fl", "VOCO FL"],
   ["crystal-x-pur", "crystal x-pur"],
+]);
+
+const recallIntervalSeeds = catalogueSeeds("scheduling.recall-interval", [
+  ["12-month", "12-month recall"],
+  ["6-month", "6-month recall"],
+  ["9-month", "9-month recall"],
+]);
+
+const hygieneIntervalSeeds = catalogueSeeds("scheduling.hygiene-interval", [
+  ["3-month", "3-month scale"],
+  ["4-month", "4-month scale"],
+  ["6-month", "6-month scale"],
+  ["not-applicable", "N/A"],
 ]);
 
 const nextVisitSeeds = catalogueSeeds("scheduling.next-visit", [
@@ -260,6 +288,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     lifecycle: "draft",
   },
   {
+    key: "oral-hygiene.compliance",
+    section: "Oral Hygiene and Education",
+    title: "Oral hygiene compliance",
+    fieldLabels: ["Oral hygiene compliance"],
+    seeds: oralHygieneComplianceSeeds,
+    lifecycle: "draft",
+  },
+  {
     key: "oral-hygiene.aids-reviewed",
     section: "Oral Hygiene and Education",
     title: "OH aids reviewed/recommended",
@@ -289,6 +325,22 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Desensitizer",
     fieldLabels: ["Desensitizer"],
     seeds: desensitizerSeeds,
+    lifecycle: "draft",
+  },
+  {
+    key: "scheduling.recall-interval",
+    section: "Intervals and Next Visit",
+    title: "Recommended recall interval",
+    fieldLabels: ["Recommended recall interval"],
+    seeds: recallIntervalSeeds,
+    lifecycle: "draft",
+  },
+  {
+    key: "scheduling.hygiene-interval",
+    section: "Intervals and Next Visit",
+    title: "Recommended hygiene interval",
+    fieldLabels: ["Recommended hygiene interval"],
+    seeds: hygieneIntervalSeeds,
     lifecycle: "draft",
   },
   {

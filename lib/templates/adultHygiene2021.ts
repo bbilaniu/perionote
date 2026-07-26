@@ -67,15 +67,6 @@ export const periodontitisGradeChoices = [
   "N/A",
 ] as const;
 
-export const oralHygieneComplianceChoices = [
-  "Poor",
-  "Fair",
-  "Good",
-  "Excellent",
-  "Poor–fair",
-  "Fair–good",
-] as const;
-
 export const flossingFrequencyChoices = [
   "Flossing 1x/day",
   "Flossing 2x/day",
@@ -91,19 +82,6 @@ export const brushingFrequencyChoices = [
   "Brushing 2x/day",
   "Brushing 3x/day",
   "Never brushing",
-] as const;
-
-export const recallIntervalChoices = [
-  "12-month recall",
-  "6-month recall",
-  "9-month recall",
-] as const;
-
-export const hygieneIntervalChoices = [
-  "3-month scale",
-  "4-month scale",
-  "6-month scale",
-  "N/A",
 ] as const;
 
 export interface AdultHygiene2021Form {
@@ -136,11 +114,11 @@ export interface AdultHygiene2021Form {
   fmpDone: string;
   healthGingivitis: string;
   periodontitisStageChoice: string;
-  periodontitisStageOther: string;
+  periodontitisStageComments: string;
   periodontitisGradeChoice: string;
-  periodontitisGradeOther: string;
-  oralHygieneComplianceChoice: string;
-  oralHygieneComplianceOther: string;
+  periodontitisGradeComments: string;
+  oralHygieneCompliance: string;
+  oralHygieneComplianceComment: string;
   homeCareInstructionReviewed: boolean;
   ohiAidsReviewed: string[];
   diseaseProcessReviewed: boolean;
@@ -160,10 +138,10 @@ export interface AdultHygiene2021Form {
   retainerStatus: RetainerStatus;
   additionalNotes: string;
   ppeStatementApplies: boolean;
-  recallIntervalChoice: string;
-  recallIntervalOther: string;
-  hygieneIntervalChoice: string;
-  hygieneIntervalOther: string;
+  recallInterval: string;
+  recallIntervalComments: string;
+  hygieneInterval: string;
+  hygieneIntervalComments: string;
   nextVisit: string;
   dateBooked: string;
 }
@@ -199,11 +177,11 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     fmpDone: "",
     healthGingivitis: "",
     periodontitisStageChoice: "",
-    periodontitisStageOther: "",
+    periodontitisStageComments: "",
     periodontitisGradeChoice: "",
-    periodontitisGradeOther: "",
-    oralHygieneComplianceChoice: "",
-    oralHygieneComplianceOther: "",
+    periodontitisGradeComments: "",
+    oralHygieneCompliance: "",
+    oralHygieneComplianceComment: "",
     homeCareInstructionReviewed: false,
     ohiAidsReviewed: [],
     diseaseProcessReviewed: false,
@@ -223,10 +201,10 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     retainerStatus: "not-documented",
     additionalNotes: "",
     ppeStatementApplies: false,
-    recallIntervalChoice: "",
-    recallIntervalOther: "",
-    hygieneIntervalChoice: "",
-    hygieneIntervalOther: "",
+    recallInterval: "",
+    recallIntervalComments: "",
+    hygieneInterval: "",
+    hygieneIntervalComments: "",
     nextVisit: "",
     dateBooked: "",
   };

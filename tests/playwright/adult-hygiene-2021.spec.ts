@@ -24,6 +24,22 @@ test("Adult Hygiene draft pill matches the purple draft notice", async ({
   ).toHaveClass(/bg-amber-100/);
 });
 
+test("interactive Generated Note cards match the form card background", async ({
+  page,
+}) => {
+  for (const url of [
+    adultHygieneUrl,
+    "/templates/clinic/recare-exam/interactive",
+  ]) {
+    await page.goto(url);
+    const generatedNoteCard = page
+      .getByRole("heading", { name: "Generated Note", exact: true })
+      .locator("xpath=ancestor::section[1]");
+    await expect(generatedNoteCard).toHaveClass(/bg-white/);
+    await expect(generatedNoteCard).toHaveClass(/dark:bg-slate-900/);
+  }
+});
+
 test("Adult Hygiene enforces copy requirements and supports independent consent sources", async ({
   page,
   context,
@@ -186,12 +202,15 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       "#adult-hygiene-health-gingivitis",
       "HEALTH INTACT PERIODONTAL SUPPORT",
     ],
+    ["#adult-hygiene-compliance", "Good"],
     ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
     [
       "#adult-hygiene-treatment-completed",
       "1U scale (cavitron and hand scaling)",
     ],
     ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
+    ["#adult-hygiene-recall-interval", "6-month recall"],
+    ["#adult-hygiene-hygiene-interval", "4-month scale"],
     ["#adult-hygiene-next-visit", "FOLLOW-UP HYGIENE"],
   ]) {
     await page.locator(controlId).focus();
@@ -213,6 +232,13 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await medicalHistory.fill("Synthetic reusable history phrase");
   await page.getByRole("button", { name: "Remember this value" }).click();
 
+  const compliance = page.locator("#adult-hygiene-compliance");
+  await compliance.fill("Synthetic reusable compliance");
+  await compliance
+    .locator("xpath=../..")
+    .getByRole("button", { name: "Remember this value" })
+    .click();
+
   const ohiAids = page.locator("#adult-hygiene-ohi-aids");
   const ohiControl = ohiAids.locator("xpath=../..");
   await ohiAids.fill("Synthetic reusable OHI aid");
@@ -230,6 +256,13 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     }),
   ).toBeVisible();
 
+  await compliance.focus();
+  await expect(
+    page.getByRole("option", {
+      name: /Synthetic reusable compliance Local/,
+    }),
+  ).toBeVisible();
+
   await expect(
     page.getByText("Synthetic reusable OHI aid", { exact: true }),
   ).toHaveCount(0);
@@ -244,14 +277,83 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   );
 });
 
-test("Adult Hygiene supports position-preserving partial PSR output", async ({
+test("Adult Hygiene uses clockwise sextant labels and output", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
-  await page.locator("#adult-hygiene-psr-1").fill("1");
-  await page.locator("#adult-hygiene-psr-3").fill("3");
-  await page.locator("#adult-hygiene-psr-5").fill("2");
+  const sextantInputs = page
+    .getByRole("group", { name: "PSR/Pocketing" })
+    .getByRole("textbox");
+  await expect(sextantInputs).toHaveCount(6);
+  await expect(
+    sextantInputs.evaluateAll((inputs) =>
+      inputs.map((input) =>
+        document.querySelector(`label[for="${input.id}"]`)?.textContent,
+      ),
+    ),
+  ).resolves.toEqual([
+    "Sextant 1",
+    "Sextant 2",
+    "Sextant 3",
+    "Sextant 6",
+    "Sextant 5",
+    "Sextant 4",
+  ]);
+
+  for (const sextant of [1, 2, 3, 6, 5, 4]) {
+    await page
+      .getByLabel(`Sextant ${sextant}`, { exact: true })
+      .fill(`${sextant}`);
+  }
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /PSR\/Pocketing: 1 _ 3 \/ _ 2 _/,
+    /PSR\/Pocketing: 1 2 3 \/ 6 5 4/,
+  );
+});
+
+test("Adult Hygiene keeps comments independent from their main values", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await page
+    .getByLabel("Periodontitis stage comments", { exact: true })
+    .fill("Synthetic stage context");
+  await page.locator("#adult-hygiene-periodontitis-stage-choice").click();
+  await page
+    .getByRole("option", { name: "Stage II (P2)", exact: true })
+    .click();
+
+  await page
+    .getByLabel("Periodontitis grade comments", { exact: true })
+    .fill("Synthetic grade context");
+  await page.locator("#adult-hygiene-periodontitis-grade-choice").click();
+  await page
+    .getByRole("option", {
+      name: "Grade B: moderate rate",
+      exact: true,
+    })
+    .click();
+
+  await page
+    .getByLabel("Oral hygiene compliance comment", { exact: true })
+    .fill("Synthetic compliance context");
+  await page
+    .getByLabel("Oral hygiene compliance", { exact: true })
+    .fill("Good");
+  await page
+    .getByLabel("Recommended recall interval comments", { exact: true })
+    .fill("Synthetic recall context");
+  await page
+    .getByLabel("Recommended recall interval", { exact: true })
+    .fill("6-month recall");
+  await page
+    .getByLabel("Recommended hygiene interval comments", { exact: true })
+    .fill("Synthetic hygiene context");
+  await page
+    .getByLabel("Recommended hygiene interval", { exact: true })
+    .fill("4-month scale");
+
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontitis Stage: Stage II \(P2\)\.[\s\S]*Periodontitis stage comments: Synthetic stage context\.[\s\S]*Periodontitis Grade: Grade B: moderate rate\.[\s\S]*Periodontitis grade comments: Synthetic grade context\.[\s\S]*Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./,
   );
 });
