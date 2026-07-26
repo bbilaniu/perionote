@@ -208,13 +208,22 @@ npm install
 npm run dev
 npm run test
 npm run test:e2e
+npm run test:e2e:webkit
 npm run lint
 ```
 
-First-time E2E setup:
+First-time required Chromium E2E setup:
 
 ```bash
 npx playwright install chromium
+```
+
+`npm run test:e2e` is the required Chromium validation. WebKit is an advisory,
+non-blocking compatibility check and can be installed and run separately:
+
+```bash
+npx playwright install webkit
+npm run test:e2e:webkit
 ```
 
 ## Preview Deploys

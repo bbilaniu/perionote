@@ -201,7 +201,10 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
 
   const anesthetic = page.locator("#adult-hygiene-anesthetic");
   await anesthetic.focus();
-  await expect(anesthetic).toHaveAttribute("aria-expanded", "false");
+  await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByText("No catalogue suggestions saved yet.", { exact: true }),
+  ).toBeVisible();
 
   await medicalHistory.fill("Synthetic reusable history phrase");
   await page.getByRole("button", { name: "Remember this value" }).click();

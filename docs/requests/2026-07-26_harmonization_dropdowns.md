@@ -92,13 +92,26 @@ columns:
 
 | Control | Current mechanism | Editable | Persistence | Target mechanism |
 | --- | --- | --- | --- | --- |
-| Premedication | Native fixed-choice select | No | None | Fixed-choice select |
-| Dentist | Catalogue-backed combobox | Yes | Explicit browser-local catalogue | Editable catalogue combobox |
-| Patient chief concern | Text input with static suggestions | Yes | None | Editable static-suggestion combobox |
+| Recare and Adult Hygiene: Dentist, RDA, RDH | Catalogue-backed single-value combobox | Yes | Explicit browser-local catalogue | Shared editable-combobox interaction with catalogue adapter |
+| Recare: Medical history reviewed, right and left molar occlusion, skeletal occlusion | Catalogue-backed single-value combobox | Yes | Explicit browser-local catalogue | Shared editable-combobox interaction with catalogue adapter |
+| Adult Hygiene: Medical history reviewed, FMP done, Health/Gingivitis, Anesthetic, Desensitizer, Next visit | Catalogue-backed single-value combobox | Yes | Explicit browser-local catalogue | Shared editable-combobox interaction with catalogue adapter |
+| Adult Hygiene: OH aids reviewed/recommended, Treatment completed today | Catalogue-backed multi-value combobox | Yes | Explicit browser-local catalogue only when Remember is used | Shared editable-combobox interaction with catalogue multi-value adapter |
+| Adult Hygiene: Patient chief concern | Text input with native `<datalist>` static suggestions | Yes | None | Shared editable-combobox interaction with static-suggestion adapter |
+| Recare: Premedication, Radiographs, Intraoral photos, exam statuses, CPAP, occlusal-splint statuses, orthodontic history, retainers, removable dentures | Native fixed-choice select | No | Encounter state only | Shared fixed-choice select presentation |
+| Adult Hygiene: Premedication, Choice-with-Other selectors, night-guard statuses, orthodontic history, retainers | Native fixed-choice select | No | Encounter state only | Shared fixed-choice select presentation |
+| Patient ID, Miele codes, details, Other fields, dates, and unrestricted text | Plain input or textarea | Yes where applicable | Encounter state only | Shared plain-control visual shell with no dropdown affordance |
 
-Extend the table to cover every in-scope list-opening control. Use it to verify
-that visual consolidation does not accidentally change clinical meaning,
-editability, or persistence.
+This audit found three underlying causes:
+
+- Recare Exam and Adult Hygiene duplicate their fixed-select and input styling;
+- catalogue single-value and multi-value controls duplicate listbox interaction
+  code; and
+- Patient chief concern delegates its popup and theme to the browser through a
+  native `<datalist>`.
+
+The target mechanisms above cover every in-scope list-opening control. They
+preserve each field's clinical meaning, editability, and persistence while
+sharing presentation and interaction behaviour.
 
 ## UX rules
 

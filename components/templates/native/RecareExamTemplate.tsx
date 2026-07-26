@@ -23,9 +23,10 @@ import {
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
+import { formControlClass } from "@/components/forms/controlStyles";
+import { SelectField } from "@/components/forms/SelectField";
 
-const inputClass =
-  "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900";
+const inputClass = `mt-1 ${formControlClass()}`;
 
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
@@ -153,40 +154,6 @@ function TextareaField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
       />
-    </div>
-  );
-}
-
-function SelectField<TValue extends string>({
-  id,
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  id: string;
-  label: string;
-  value: TValue;
-  options: Array<{ value: TValue; label: string }>;
-  onChange: (value: TValue) => void;
-}) {
-  return (
-    <div>
-      <label className="text-sm font-medium" htmlFor={id}>
-        {label}
-      </label>
-      <select
-        id={id}
-        className={inputClass}
-        value={value}
-        onChange={(event) => onChange(event.target.value as TValue)}
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
     </div>
   );
 }
@@ -716,7 +683,7 @@ export function RecareExamTemplate({
             />
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
+              <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
                 <CatalogueCombobox
                   id="recare-right-molar-occlusion"
                   label="Right molar occlusion"
@@ -727,7 +694,7 @@ export function RecareExamTemplate({
                   }
                   disabled={form.rightMolarOcclusionNotApplicable}
                 />
-                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">
+                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 sm:mt-6">
                   <input
                     id="recare-right-molar-na"
                     type="checkbox"
@@ -746,7 +713,7 @@ export function RecareExamTemplate({
                   N/A
                 </label>
               </div>
-              <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
+              <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
                 <CatalogueCombobox
                   id="recare-left-molar-occlusion"
                   label="Left molar occlusion"
@@ -757,7 +724,7 @@ export function RecareExamTemplate({
                   }
                   disabled={form.leftMolarOcclusionNotApplicable}
                 />
-                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">
+                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 sm:mt-6">
                   <input
                     id="recare-left-molar-na"
                     type="checkbox"
@@ -778,7 +745,7 @@ export function RecareExamTemplate({
               </div>
             </div>
 
-            <div className="grid items-end gap-4 md:grid-cols-[1fr_auto]">
+            <div className="grid items-start gap-4 md:grid-cols-[1fr_auto]">
               <CatalogueCombobox
                 id="recare-skeletal-occlusion"
                 label="Skeletal occlusion"
@@ -787,7 +754,7 @@ export function RecareExamTemplate({
                 onChange={(value) => updateField("skeletalOcclusion", value)}
                 disabled={form.skeletalOcclusionNotApplicable}
               />
-              <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700">
+              <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 md:mt-6">
                 <input
                   id="recare-skeletal-na"
                   type="checkbox"
