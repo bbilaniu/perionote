@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.3.2
+
+### Patch Changes
+
+- 21e6be1: Harmonize custom fixed-choice listboxes, catalogue comboboxes, static suggestion fields, and the compact theme selector.
+
 ## 0.3.1
 
 ### Patch Changes
