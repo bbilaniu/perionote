@@ -64,19 +64,24 @@ function retainerLine(status: RetainerStatus): string {
   return status === "not-documented" ? "" : `Retainers: ${labels[status]}.`;
 }
 
-function treatmentBlock(
-  heading: string,
-  hygieneMaintenance: boolean,
-  otherValues: string,
-): string[] {
-  const entries = [
-    ...(hygieneMaintenance ? ["Hygiene maintenance"] : []),
-    ...otherValues
-      .split(/\r?\n/)
-      .map(trimmed)
-      .filter(Boolean),
-  ];
+function ownershipUseLine(
+  label: string,
+  ownershipStatus: DocumentationStatus,
+  useStatus: DocumentationStatus,
+): string {
+  return ownershipStatus === "no"
+    ? `${label}: No.`
+    : ownershipStatus === "yes"
+      ? useStatus === "yes"
+        ? `${label}: Yes; uses.`
+        : useStatus === "no"
+          ? `${label}: Yes; does not use.`
+          : `${label}: Yes; use not documented.`
+      : "";
+}
 
+function treatmentBlock(heading: string, values: string[]): string[] {
+  const entries = values.map(trimmed).filter(Boolean);
   if (entries.length === 0) return [];
   return [heading, ...entries.map((entry) => `  - ${entry}`)];
 }
@@ -139,12 +144,11 @@ export function buildRecareExamSummary(
       : "",
   ];
 
+  const radiographs = form.radiographs.map(trimmed).filter(Boolean);
   const recordsAndConcern = [
-    yesNoLine(
-      "Radiographs",
-      form.radiographsStatus,
-      form.radiographsDetails,
-    ),
+    radiographs.length
+      ? `Radiographs: ${radiographs.join("; ")}`
+      : "",
     yesNoLine(
       "Intraoral photos",
       form.intraoralPhotosStatus,
@@ -196,20 +200,13 @@ export function buildRecareExamSummary(
       : "",
   ];
 
-  const occlusalSplint =
-    form.occlusalSplintStatus === "no"
-      ? "Occlusal splint: No."
-      : form.occlusalSplintStatus === "yes"
-        ? form.occlusalSplintUseStatus === "yes"
-          ? "Occlusal splint: Yes; uses."
-          : form.occlusalSplintUseStatus === "no"
-            ? "Occlusal splint: Yes; does not use."
-            : "Occlusal splint: Yes; use not documented."
-        : "";
-
   const appliancesAndHistory = [
-    yesNoLine("CPAP use", form.cpapStatus),
-    occlusalSplint,
+    ownershipUseLine("CPAP", form.cpapStatus, form.cpapUseStatus),
+    ownershipUseLine(
+      "Occlusal splint",
+      form.occlusalSplintStatus,
+      form.occlusalSplintUseStatus,
+    ),
     yesNoLine("Orthodontic history", form.orthodonticHistoryStatus),
     retainerLine(form.retainerStatus),
     yesNoLine(
@@ -240,16 +237,8 @@ export function buildRecareExamSummary(
     intraoralAndOcclusion,
     appliancesAndHistory,
     patientRequests,
-    treatmentBlock(
-      "Treatment Options:",
-      form.treatmentOptionsHygieneMaintenance,
-      form.otherTreatmentOptions,
-    ),
-    treatmentBlock(
-      "Treatment Plan:",
-      form.treatmentPlanHygieneMaintenance,
-      form.otherTreatmentPlan,
-    ),
+    treatmentBlock("Treatment Options:", form.treatmentOptions),
+    treatmentBlock("Treatment Plan:", form.treatmentPlan),
     nextVisit,
   ]
     .map((group) => group.filter(Boolean))

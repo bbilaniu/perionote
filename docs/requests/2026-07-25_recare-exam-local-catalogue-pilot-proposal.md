@@ -52,15 +52,18 @@ ADR 0001 permits selected fields to offer local reusable suggestions when:
 
 The Recare Exam is a suitable pilot because it already identifies its three
 provider fields as `catalogue-later`, and its occlusion fields are editable
-without any application logic depending on their exact text.
+without any application logic depending on their exact text. Issue #41 extends
+the reviewed allowlist to Radiographs and the shared Treatment Options /
+Treatment Plan vocabulary.
 
 ## Proposed Scope
 
 ### In scope
 
-- Catalogue-backed editable fields for the six listed Recare Exam controls.
-- Generic public seeds for the three occlusion fields.
-- Explicitly remembered browser-local provider and occlusion values.
+- Catalogue-backed editable fields for the nine listed Recare Exam controls.
+- Generic public seeds for the occlusion, radiograph, and treatment fields.
+- Explicitly remembered browser-local provider, occlusion, radiograph, and
+  reusable treatment values.
 - A versioned browser-local persistence model for catalogue data only.
 - A catalogue management page.
 - Adding, selecting, editing, hiding, reactivating, deleting, favoriting, and
@@ -88,8 +91,8 @@ without any application logic depending on their exact text.
 
 ## Field Audit and Catalogue Grouping
 
-The six form fields should be allowlisted explicitly. They should be backed by
-five catalogue groups:
+The nine form fields should be allowlisted explicitly. They should be backed by
+seven catalogue groups:
 
 | Catalogue key | Recare Exam fields | Public seeds | Locally remembered values |
 | --- | --- | --- | --- |
@@ -98,16 +101,23 @@ five catalogue groups:
 | `visit-team.rdh` | RDH | None | Yes |
 | `clinical-exam.molar-occlusion` | Left molar occlusion; Right molar occlusion | `Cl I`, `Cl II`, `Cl III` | Yes |
 | `clinical-exam.skeletal-occlusion` | Skeletal occlusion | `Cl I`, `Cl II`, `Cl III` | Yes |
+| `imaging.radiographs` | Radiographs | `PAN`, `1 BW` through `6 BW`, `1 PA`, `2 PA` | Yes |
+| `recare-treatment.items` | Treatment Options; Treatment Plan | `Hygiene maintenance` | Yes |
 
 Dentist, RDA, and RDH remain separate because their suggestions represent
 different roles. The right and left molar fields share one catalogue because
 the requested starter vocabulary is symmetrical and a user should not need to
-save the same molar classification twice. Skeletal occlusion remains a
-separate catalogue even though its first seeds are identical, because it has a
-different clinical meaning and may need different values later.
+save the same molar classification twice. Skeletal occlusion remains a separate
+catalogue even though its first seeds are identical, because it has a different
+clinical meaning and may need different values later. Radiographs uses the
+complete visible generic labels in the reviewed local JSON extraction while
+retaining free entry because the extracted list is partial due to a scrollbar.
+Treatment Options and Treatment Plan share reusable suggestions but keep
+separate ordered encounter selections.
 
-The form fields continue to store plain text. Catalogue keys and item
-identifiers do not become part of the generated note contract.
+Single-value form fields continue to store plain text; the three multi-value
+fields store ordered text arrays. Catalogue keys and item identifiers do not
+become part of the generated note contract.
 
 ## Ownership and Seed Rules
 
@@ -118,6 +128,10 @@ The following non-identifying values may ship in the public application:
 - `Cl I`
 - `Cl II`
 - `Cl III`
+- `PAN`
+- `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`, `6 BW`
+- `1 PA`, `2 PA`
+- `Hygiene maintenance`
 
 They are documentation shortcuts, not findings, defaults, recommendations, or
 claims that a classification applies. No seed is preselected.

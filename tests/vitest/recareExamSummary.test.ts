@@ -35,7 +35,7 @@ Premedication required: No.
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments.
 Miele Sterilization codes scanned: SYNTH-001
 
-Radiographs: Yes—Synthetic bitewings recorded.
+Radiographs: 4 BW; 2 PA
 Intraoral photos: No.
 Patient's chief concern: Synthetic concern for demonstration.
 
@@ -52,7 +52,7 @@ Skeletal occlusion: N/A.
 Overjet: 2 mm.
 Overbite: 30%.
 
-CPAP use: No.
+CPAP: No.
 Occlusal splint: Yes; uses.
 Orthodontic history: Yes.
 Retainers: Fixed.
@@ -89,25 +89,36 @@ Medical history reviewed: YES- NO CHANGES.`,
     );
   });
 
-  it("preserves documented No answers and unknown editable details", () => {
+  it("preserves documented No answers and unknown editable values", () => {
     const form = {
       ...createEmptyRecareExamForm(),
       patientId: " TEST-2002 ",
       rda: " Example RDA ",
-      radiographsStatus: "no" as const,
-      radiographsDetails: "Imported value ZX/7",
+      radiographs: ["Imported value ZX/7"],
+      cpapStatus: "yes" as const,
+      cpapUseStatus: "no" as const,
       occlusalSplintStatus: "no" as const,
       retainerStatus: "none" as const,
+      treatmentOptions: ["Second option", "First option"],
+      treatmentPlan: ["First option"],
     };
 
     expect(hasRequiredRecareExamFields(form)).toBe(true);
     expect(buildRecareExamSummary(form)).toBe(`PATIENT ID: TEST-2002
 RDA: Example RDA
 
-Radiographs: No—Imported value ZX/7.
+Radiographs: Imported value ZX/7
 
+CPAP: Yes; does not use.
 Occlusal splint: No.
-Retainers: None.`);
+Retainers: None.
+
+Treatment Options:
+  - Second option
+  - First option
+
+Treatment Plan:
+  - First option`);
   });
 
   it("uses browser-local timestamp components", () => {

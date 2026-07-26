@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -23,6 +22,7 @@ import {
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
+import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 
@@ -383,22 +383,6 @@ export function RecareExamTemplate({
     patientIdRef.current?.focus();
   }
 
-  function handleCheckbox(
-    key: keyof Pick<
-      RecareExamForm,
-      | "class5IndicatorsChecked"
-      | "rightMolarOcclusionNotApplicable"
-      | "leftMolarOcclusionNotApplicable"
-      | "skeletalOcclusionNotApplicable"
-      | "treatmentOptionsHygieneMaintenance"
-      | "treatmentPlanHygieneMaintenance"
-    >,
-  ) {
-    return (event: ChangeEvent<HTMLInputElement>) => {
-      updateField(key, event.target.checked);
-    };
-  }
-
   return (
     <div className="space-y-6">
       <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
@@ -591,17 +575,12 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Records and Chief Concern">
-            <YesNoWithDetails
+            <CatalogueMultiCombobox
               id="recare-radiographs"
               label="Radiographs"
-              status={form.radiographsStatus}
-              details={form.radiographsDetails}
-              onStatusChange={(value) =>
-                updateField("radiographsStatus", value)
-              }
-              onDetailsChange={(value) =>
-                updateField("radiographsDetails", value)
-              }
+              catalogueKey="imaging.radiographs"
+              values={form.radiographs}
+              onChange={(value) => updateField("radiographs", value)}
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"
@@ -796,11 +775,25 @@ export function RecareExamTemplate({
             <div className="grid gap-4 md:grid-cols-2">
               <FixedChoiceListbox
                 id="recare-cpap"
-                label="CPAP use"
+                label="Has a CPAP?"
                 value={form.cpapStatus}
                 options={statusOptions}
-                onChange={(value) => updateField("cpapStatus", value)}
+                onChange={(value) => {
+                  updateField("cpapStatus", value);
+                  if (value !== "yes") {
+                    updateField("cpapUseStatus", "not-documented");
+                  }
+                }}
               />
+              {form.cpapStatus === "yes" ? (
+                <FixedChoiceListbox
+                  id="recare-cpap-use"
+                  label="Uses the CPAP?"
+                  value={form.cpapUseStatus}
+                  options={statusOptions}
+                  onChange={(value) => updateField("cpapUseStatus", value)}
+                />
+              ) : null}
               <FixedChoiceListbox
                 id="recare-occlusal-splint"
                 label="Has an occlusal splint"
@@ -877,51 +870,35 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Treatment and Next Visit">
-            <fieldset className="space-y-3">
-              <legend className="font-semibold">Treatment Options</legend>
-              <label className="flex items-center gap-3 text-sm">
-                <input
-                  id="recare-treatment-option-hygiene"
-                  type="checkbox"
-                  className="h-4 w-4 accent-sky-700"
-                  checked={form.treatmentOptionsHygieneMaintenance}
-                  onChange={handleCheckbox(
-                    "treatmentOptionsHygieneMaintenance",
-                  )}
-                />
-                Hygiene maintenance
-              </label>
-              <TextareaField
-                id="recare-other-treatment-options"
-                label="Other treatment options"
-                value={form.otherTreatmentOptions}
-                onChange={(value) =>
-                  updateField("otherTreatmentOptions", value)
-                }
-                placeholder="Enter one option per line"
-              />
-            </fieldset>
+            <CatalogueMultiCombobox
+              id="recare-treatment-options"
+              label="Treatment Options"
+              catalogueKey="recare-treatment.items"
+              values={form.treatmentOptions}
+              onChange={(value) => updateField("treatmentOptions", value)}
+            />
 
-            <fieldset className="space-y-3">
-              <legend className="font-semibold">Treatment Plan</legend>
-              <label className="flex items-center gap-3 text-sm">
-                <input
-                  id="recare-treatment-plan-hygiene"
-                  type="checkbox"
-                  className="h-4 w-4 accent-sky-700"
-                  checked={form.treatmentPlanHygieneMaintenance}
-                  onChange={handleCheckbox("treatmentPlanHygieneMaintenance")}
-                />
-                Hygiene maintenance
-              </label>
-              <TextareaField
-                id="recare-other-treatment-plan"
-                label="Other treatment plan"
-                value={form.otherTreatmentPlan}
-                onChange={(value) => updateField("otherTreatmentPlan", value)}
-                placeholder="Enter one plan item per line"
+            <div className="space-y-3">
+              {form.treatmentPlan.length === 0 ? (
+                <button
+                  type="button"
+                  className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+                  disabled={form.treatmentOptions.length === 0}
+                  onClick={() =>
+                    updateField("treatmentPlan", [...form.treatmentOptions])
+                  }
+                >
+                  Copy Treatment Options to Treatment Plan
+                </button>
+              ) : null}
+              <CatalogueMultiCombobox
+                id="recare-treatment-plan"
+                label="Treatment Plan"
+                catalogueKey="recare-treatment.items"
+                values={form.treatmentPlan}
+                onChange={(value) => updateField("treatmentPlan", value)}
               />
-            </fieldset>
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <TextField

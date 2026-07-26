@@ -38,8 +38,8 @@ The pilot will:
 - generate a copyable Recare Exam note;
 - keep all completed and partial form data in memory only;
 - use synthetic fixtures and test values;
-- provide browser-local catalogues for the approved provider and occlusion
-  fields;
+- provide browser-local catalogues for the approved provider, radiograph,
+  occlusion, and reusable treatment-item fields;
 - provide deliberate local catalogue import and export; and
 - establish the provenance, lifecycle, and testing pattern for later
   conversions.
@@ -137,13 +137,16 @@ state.
 
 | ID  | Source                                         | Control                                                              | Classification                                 | Generated output                                            |
 | --- | ---------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------- |
-| R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific` | `Radiographs: {Yes/No}.` or `Radiographs: {Yes/No}—{details}.`      |
+| R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs** | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values}` |
 | R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific` | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
 | R12 | `a) Patients chief concern:`                   | Textarea: **Patient's chief concern**                               | `patient-specific`                             | `Patient's chief concern: {text}`                           |
 
-Radiographs and intraoral photos use explicit Yes/No statuses plus editable
-details. A documented Yes or No is included in the generated note; unanswered
-statuses are omitted.
+Radiographs uses the complete visible options from the reviewed local JSON
+extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
+`6 BW`, `1 PA`, and `2 PA`. The source list has a scrollbar, so free entry and
+explicit browser-local additions remain available. Selected entries can be
+removed and reordered without modifying the catalogue. Intraoral photos
+continues to use an explicit Yes/No status plus editable details.
 
 ### Clinical Exam
 
@@ -177,7 +180,7 @@ neither is preselected.
 
 | ID  | Source                                        | Control                                                                                                         | Classification     | Generated output                                                               |
 | --- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------ |
-| R23 | `Do they use a CPAP?`                         | Status: **Not documented / No / Yes**                                                                           | `appCore`          | `CPAP use: No.` or `CPAP use: Yes.`                                            |
+| R23 | `Do they use a CPAP?` plus approved ownership clarification | Status: **Not documented / No / Yes** labelled **Has a CPAP?**; when Yes, show **Uses the CPAP?** with the same statuses | `appCore` | `CPAP: No.` when No; when Yes, `CPAP: Yes; {uses/does not use/use not documented}.` |
 | R24 | `Does patient have a Splint?`                 | Status: **Not documented / No / Yes** labelled **Has an occlusal splint**                                       | `appCore`          | `Occlusal splint: No.` when No; combined with R25 when Yes                      |
 | R25 | `Do they use Splint?`                         | Status: **Not documented / No / Yes** labelled **Uses the occlusal splint**, shown when ownership is Yes       | `appCore`          | `Occlusal splint: Yes; {uses/does not use/use not documented}.`                |
 | R26 | `Have they had orthodontics?`                 | Status: **Not documented / No / Yes**                                                                           | `appCore`          | `Orthodontic history: No.` or `Orthodontic history: Yes.`                      |
@@ -186,7 +189,9 @@ neither is preselected.
 | R29 | Smile or teeth improvement question           | Textarea: **What would the patient like to improve about their smile or teeth?**                                | `patient-specific` | `Patient would like to improve: {text}`                                        |
 | R30 | `Additional Comments-`                        | Textarea: **Additional comments**                                                                               | `patient-specific` | `Additional comments: {text}`                                                  |
 
-R27 remains available regardless of the orthodontic-history answer. The form
+The CPAP ownership and use controls behave like the occlusal-splint pair.
+Changing ownership away from Yes clears the conditional use status. R27
+remains available regardless of the orthodontic-history answer. The form
 will not assume that a negative or undocumented orthodontic history makes a
 retainer value impossible. The UI and generated note use **Occlusal splint**
 and **Partial/complete removable dentures**. Every documented negative,
@@ -197,17 +202,20 @@ occlusal splint, orthodontic history, retainers, and removable dentures.
 
 | ID  | Source                                             | Control                                                                                               | Classification                                                     | Generated output                                                                  |
 | --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Explicit unchecked option: **Hygiene maintenance** plus editable **Other treatment options** textarea | `patient-specific` clinical decision; never automatically selected | A `Treatment Options:` block containing only explicitly selected or entered items |
-| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Explicit unchecked option: **Hygiene maintenance** plus editable **Other treatment plan** textarea    | `patient-specific` clinical decision; never automatically selected | A `Treatment Plan:` block containing only explicitly selected or entered items    |
+| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered catalogue-backed multi-value control: **Treatment Options** | Current selections: `patient-specific`; reusable values: `catalogue`; never automatically selected | An ordered `Treatment Options:` block containing only explicitly selected or entered items |
+| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered catalogue-backed multi-value control: **Treatment Plan**; while empty, offer **Copy Treatment Options to Treatment Plan** | Current selections: `patient-specific`; reusable values: `catalogue`; never automatically selected | An ordered `Treatment Plan:` block containing only explicitly selected, entered, or explicitly copied items |
 | R33 | `Next Visit: [UNRESOLVED PLACEHOLDER: NEXT VISIT]` | Editable text: **Next visit**                                                                         | `patient-specific`                                                 | `Next Visit: {text}`                                                              |
 | R34 | `Date Booked:`                                     | Optional date input: **Date booked**                                                                  | `administrative`                                                   | `Date Booked: {YYYY-MM-DD}`                                                       |
 
-The source's hygiene-maintenance lines are preserved as explicit options, not
-defaults or recommendations. Selecting a treatment option does not
-automatically select the same treatment plan, and neither field infers the next
-visit.
+The shared treatment catalogue has only one public starter: **Hygiene
+maintenance**. It is an explicit option, not a default or recommendation.
+Both selected lists support adding, removing, and reordering items. Selecting a
+treatment option does not automatically select the same treatment plan. The
+copy action appears only while Treatment Plan is empty and snapshots the
+current ordered Treatment Options after an explicit click. Later edits remain
+independent, and neither field infers the next visit.
 
-Treatment Options and Treatment Plan remain separate sections. The source's
+Treatment Options and Treatment Plan remain separate controls. The source's
 undeclared `NEXT VISIT` placeholder maps to unrestricted text. Dates generated
 by the template, including Date Booked, use `YYYY-MM-DD`.
 
@@ -254,7 +262,7 @@ Informed verbal consent given by {selected sources} for treatment today.
 Medical history reviewed: {selected or entered text}
 Premedication required: {documented answer}
 
-Radiographs: {Yes/No and optional details}
+Radiographs: {ordered selected and entered values}
 Intraoral photos: {Yes/No and optional details}
 Patient's chief concern: {entered text}
 
@@ -271,7 +279,7 @@ Skeletal occlusion: {entered text or N/A}
 Overjet: {number} mm.
 Overbite: {number}%.
 
-CPAP use: {documented answer}
+CPAP: {documented ownership and use}
 Occlusal splint: {documented ownership and use}
 Orthodontic history: {documented answer}
 Retainers: {documented answer}
@@ -317,10 +325,13 @@ does not leave extra blank lines when an entire group is omitted.
   current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
-- Provider and occlusion values are remembered only through the explicit local
-  catalogue interaction approved under ADR 0001. Typing, loading demo data,
-  copying, or resetting the form never saves a catalogue value.
-- Patient-specific, administrative, measurement, findings, treatment, and
+- Provider, radiograph, occlusion, and reusable treatment values are remembered
+  only through the explicit local catalogue interaction approved under ADR
+  0001. Typing, selecting, loading demo data, copying, or resetting the form
+  never saves a catalogue value.
+- Selected radiographs, Treatment Options, and Treatment Plan entries remain
+  encounter-specific arrays even when their text originated in a catalogue.
+- Other patient-specific, administrative, measurement, findings, and
   next-visit values are never catalogue candidates under this mapping.
 
 ## Reuse and Implementation Boundaries
@@ -371,13 +382,16 @@ contract are genuinely the same, not only because two fields look similar.
 - WNL and negative findings require explicit user selection.
 - Right and left molar occlusion are documented independently, and each has an
   explicit, non-preselected N/A action.
-- Radiographs and intraoral photos use explicit Yes/No statuses with editable
-  details, and documented Yes and No answers appear in the generated note.
+- Radiographs uses the reviewed starter vocabulary with ordered add, remove,
+  and reorder behavior; intraoral photos retains explicit Yes/No plus details.
+- CPAP uses independent ownership and conditional use statuses matching the
+  occlusal-splint interaction.
 - The UI and generated note use **Occlusal splint**, and every documented
   negative, affirmative, or selected-status appliance/history answer appears
   in the generated note.
 - The UI and generated note use **Partial/complete removable dentures**.
-- Treatment options and plans are never preselected.
+- Treatment options and plans are never preselected, support ordered catalogue
+  entries, and copy from Options to an empty Plan only after an explicit click.
 - Unknown editable values render and appear unchanged in generated output.
 - Blank fields and empty headings are omitted cleanly.
 - Non-empty output groups are separated by exactly one blank line.

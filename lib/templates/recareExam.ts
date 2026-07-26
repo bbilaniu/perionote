@@ -28,8 +28,7 @@ export interface RecareExamForm {
   premedicationDetails: string;
   class5IndicatorsChecked: boolean;
   mieleCodes: string;
-  radiographsStatus: DocumentationStatus;
-  radiographsDetails: string;
+  radiographs: string[];
   intraoralPhotosStatus: DocumentationStatus;
   intraoralPhotosDetails: string;
   chiefConcern: string;
@@ -53,6 +52,7 @@ export interface RecareExamForm {
   overjetMm: string;
   overbitePercent: string;
   cpapStatus: DocumentationStatus;
+  cpapUseStatus: DocumentationStatus;
   occlusalSplintStatus: DocumentationStatus;
   occlusalSplintUseStatus: DocumentationStatus;
   orthodonticHistoryStatus: DocumentationStatus;
@@ -60,10 +60,8 @@ export interface RecareExamForm {
   removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
-  treatmentOptionsHygieneMaintenance: boolean;
-  otherTreatmentOptions: string;
-  treatmentPlanHygieneMaintenance: boolean;
-  otherTreatmentPlan: string;
+  treatmentOptions: string[];
+  treatmentPlan: string[];
   nextVisit: string;
   dateBooked: string;
 }
@@ -83,8 +81,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     premedicationDetails: "",
     class5IndicatorsChecked: false,
     mieleCodes: "",
-    radiographsStatus: "not-documented",
-    radiographsDetails: "",
+    radiographs: [],
     intraoralPhotosStatus: "not-documented",
     intraoralPhotosDetails: "",
     chiefConcern: "",
@@ -108,6 +105,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     overjetMm: "",
     overbitePercent: "",
     cpapStatus: "not-documented",
+    cpapUseStatus: "not-documented",
     occlusalSplintStatus: "not-documented",
     occlusalSplintUseStatus: "not-documented",
     orthodonticHistoryStatus: "not-documented",
@@ -115,10 +113,8 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     removableDenturesStatus: "not-documented",
     improvementRequest: "",
     additionalComments: "",
-    treatmentOptionsHygieneMaintenance: false,
-    otherTreatmentOptions: "",
-    treatmentPlanHygieneMaintenance: false,
-    otherTreatmentPlan: "",
+    treatmentOptions: [],
+    treatmentPlan: [],
     nextVisit: "",
     dateBooked: "",
   };
