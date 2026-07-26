@@ -22,6 +22,7 @@ import {
   buildRecareExamSummary,
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
+import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 
 const inputClass =
   "mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900";
@@ -465,22 +466,25 @@ export function RecareExamTemplate({
             >
               <legend className="sr-only">Visit team providers</legend>
               <div className="grid gap-4 md:grid-cols-3">
-                <TextField
+                <CatalogueCombobox
                   id="recare-dentist"
                   label="Dentist"
+                  catalogueKey="visit-team.dentist"
                   value={form.dentist}
                   onChange={(value) => updateField("dentist", value)}
                   inputRef={dentistRef}
                 />
-                <TextField
+                <CatalogueCombobox
                   id="recare-rda"
                   label="RDA"
+                  catalogueKey="visit-team.rda"
                   value={form.rda}
                   onChange={(value) => updateField("rda", value)}
                 />
-                <TextField
+                <CatalogueCombobox
                   id="recare-rdh"
                   label="RDH"
+                  catalogueKey="visit-team.rdh"
                   value={form.rdh}
                   onChange={(value) => updateField("rdh", value)}
                 />
@@ -682,9 +686,10 @@ export function RecareExamTemplate({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
-                <TextField
+                <CatalogueCombobox
                   id="recare-right-molar-occlusion"
                   label="Right molar occlusion"
+                  catalogueKey="clinical-exam.molar-occlusion"
                   value={form.rightMolarOcclusion}
                   onChange={(value) =>
                     updateField("rightMolarOcclusion", value)
@@ -711,9 +716,10 @@ export function RecareExamTemplate({
                 </label>
               </div>
               <div className="grid items-end gap-3 sm:grid-cols-[1fr_auto]">
-                <TextField
+                <CatalogueCombobox
                   id="recare-left-molar-occlusion"
                   label="Left molar occlusion"
+                  catalogueKey="clinical-exam.molar-occlusion"
                   value={form.leftMolarOcclusion}
                   onChange={(value) =>
                     updateField("leftMolarOcclusion", value)
@@ -742,9 +748,10 @@ export function RecareExamTemplate({
             </div>
 
             <div className="grid items-end gap-4 md:grid-cols-[1fr_auto]">
-              <TextField
+              <CatalogueCombobox
                 id="recare-skeletal-occlusion"
                 label="Skeletal occlusion"
+                catalogueKey="clinical-exam.skeletal-occlusion"
                 value={form.skeletalOcclusion}
                 onChange={(value) => updateField("skeletalOcclusion", value)}
                 disabled={form.skeletalOcclusionNotApplicable}

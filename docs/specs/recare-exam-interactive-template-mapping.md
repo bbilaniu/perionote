@@ -13,6 +13,8 @@
   - [ADR 0002: Separate Clinic and Interactive Template Libraries](../adr/0002-separate-clinic-and-interactive-template-libraries.md)
   - [ADR 0003: Define Interactive Template Conversion and Provenance](../adr/0003-define-interactive-template-conversion-and-provenance.md)
   - [ADR 0004: Colocate Clinical Conversions with Source Templates](../adr/0004-colocate-clinical-conversions-with-source-templates.md)
+- Catalogue implementation:
+  [Recare Exam Local Catalogue Pilot Proposal](../requests/2026-07-25_recare-exam-local-catalogue-pilot-proposal.md)
 
 ## Purpose
 
@@ -35,7 +37,10 @@ The pilot will:
 - retain free text where the source vocabulary is not known to be closed;
 - generate a copyable Recare Exam note;
 - keep all completed and partial form data in memory only;
-- use synthetic fixtures and test values; and
+- use synthetic fixtures and test values;
+- provide browser-local catalogues for the approved provider and occlusion
+  fields;
+- provide deliberate local catalogue import and export; and
 - establish the provenance, lifecycle, and testing pattern for later
   conversions.
 
@@ -44,7 +49,6 @@ The pilot will not:
 - integrate with ClearDent or another EMR;
 - claim that `[AUTO: ...]` values are automatically available;
 - store completed or partial forms;
-- implement ADR 0001 catalogue persistence;
 - add clinical recommendations or decision support;
 - silently infer WNL findings, treatment, or next-visit decisions; or
 - refactor every existing interactive form before the pilot works.
@@ -53,8 +57,8 @@ The pilot will not:
 
 - `appCore`: stable application vocabulary whose meaning affects controls or
   output.
-- `catalogue-later`: suitable for a future explicitly saved local catalogue,
-  but editable text in this pilot.
+- `catalogue`: an allowlisted editable field that may use explicitly saved
+  browser-local suggestions under ADR 0001.
 - `narrative`: unrestricted documentation text.
 - `patient-specific`: encounter-specific data that must never be saved to a
   reusable catalogue.
@@ -96,14 +100,15 @@ Team field—Dentist, RDA, or RDH—is also required before copying.
 
 | ID  | Source                               | Control                    | Classification    | Generated output               |
 | --- | ------------------------------------ | -------------------------- | ----------------- | ------------------------------ |
-| R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Editable text: **Dentist** | `catalogue-later` | `DENTIST: {text}` when entered |
-| R02 | `RDA: [SELECT/INSERT: RDA]`          | Editable text: **RDA**     | `catalogue-later` | `RDA: {text}` when entered     |
-| R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Editable text: **RDH**     | `catalogue-later` | `RDH: {text}` when entered     |
+| R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` when entered |
+| R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue` | `RDA: {text}` when entered     |
+| R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue` | `RDH: {text}` when entered     |
 
-Provider fields will not ship with real staff values or public suggestions.
-Future locally saved provider values require explicit catalogue behavior under
-ADR 0001. Dentist, RDA, and RDH are individually optional, but at least one of
-the three must contain non-whitespace text before the note can be copied.
+Provider fields do not ship with real staff values or public suggestions. A
+user may deliberately remember a value in the current browser profile under
+the approved catalogue proposal. Dentist, RDA, and RDH are individually
+optional, but at least one of the three must contain non-whitespace text before
+the note can be copied.
 
 ### Consent, Medical History, and Sterilization
 
@@ -145,8 +150,8 @@ statuses are omitted.
 | R16 | `Load TMJ joint Test: WNL`            | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `Load TMJ joint test: WNL.` or the entered findings            |
 | R17 | `d) Intraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `Intraoral: WNL.` or `Intraoral: {findings}`                   |
 | R18 | `Oral Habits-`                        | Editable text: **Oral habits**                                        | `patient-specific`                               | `Oral habits: {text}`                                          |
-| R19 | `Molar Occlusion-`                    | Separate editable **Right** and **Left molar occlusion** fields, each with an explicit **N/A** action | Text: `patient-specific`; N/A: `appCore` | `Molar occlusion—right: {text or N/A}` and `Molar occlusion—left: {text or N/A}` |
-| R20 | `Skeletal Occlusion- N/A`             | Editable text: **Skeletal occlusion** with an explicit **N/A** action | Text: `patient-specific`; N/A: `appCore`         | `Skeletal occlusion: N/A.` or `Skeletal occlusion: {text}`     |
+| R19 | `Molar Occlusion-`                    | Separate catalogue-backed editable **Right** and **Left molar occlusion** fields, each with an explicit **N/A** action | Text: `catalogue`; N/A: `appCore` | `Molar occlusion—right: {text or N/A}` and `Molar occlusion—left: {text or N/A}` |
+| R20 | `Skeletal Occlusion- N/A`             | Catalogue-backed editable text: **Skeletal occlusion** with an explicit **N/A** action | Text: `catalogue`; N/A: `appCore`         | `Skeletal occlusion: N/A.` or `Skeletal occlusion: {text}`     |
 | R21 | `Overjet- mm`                         | Optional numeric input: **Overjet (mm)**                              | Measurement: `patient-specific`; unit: `appCore` | `Overjet: {number} mm.`                                        |
 | R22 | `Overbite- %`                         | Optional numeric input: **Overbite (%)**                              | Measurement: `patient-specific`; unit: `appCore` | `Overbite: {number}%.`                                         |
 
@@ -307,8 +312,9 @@ does not leave extra blank lines when an entire group is omitted.
   current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
-- Provider fields are not remembered until a later ADR 0001 implementation
-  explicitly supports them as local catalogue values.
+- Provider and occlusion values are remembered only through the explicit local
+  catalogue interaction approved under ADR 0001. Typing, loading demo data,
+  copying, or resetting the form never saves a catalogue value.
 - Patient-specific, administrative, measurement, findings, treatment, and
   next-visit values are never catalogue candidates under this mapping.
 

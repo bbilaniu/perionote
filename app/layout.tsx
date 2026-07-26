@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import { CatalogueProvider } from "@/components/catalogues/CatalogueProvider";
 import packageInfo from "@/package.json";
 import "./globals.css";
 
@@ -65,14 +66,15 @@ export default function RootLayout({
 })();`,
           }}
         />
-        <div className="flex min-h-screen flex-col">
+        <CatalogueProvider>
+          <div className="flex min-h-screen flex-col">
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
             <div className="mx-auto flex max-w-[112rem] items-center justify-between gap-4 px-6 py-4">
               <span className="text-lg font-semibold tracking-tight">
                 HygieneNote
               </span>
               <nav
-                aria-label="Template navigation"
+                aria-label="Primary navigation"
                 className="ml-auto flex items-center gap-4"
               >
                 <Link
@@ -86,6 +88,12 @@ export default function RootLayout({
                   href="/templates/interactive"
                 >
                   Standalone forms
+                </Link>
+                <Link
+                  className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
+                  href="/catalogues"
+                >
+                  Catalogues
                 </Link>
               </nav>
               <ThemeToggle />
@@ -104,7 +112,8 @@ export default function RootLayout({
               </span>
             </div>
           </footer>
-        </div>
+          </div>
+        </CatalogueProvider>
       </body>
     </html>
   );

@@ -1,0 +1,388 @@
+import { describe, expect, it } from "vitest";
+import {
+  CATALOGUE_DEFINITIONS,
+  CATALOGUE_EXPORT_FORMAT,
+  CATALOGUE_STORAGE_KEY,
+  CatalogueValidationError,
+  createEmptyCatalogueState,
+  deleteUserCatalogueItem,
+  favoriteAndUnhideCatalogueItem,
+  findEquivalentCatalogueItem,
+  listCatalogueItems,
+  mergeCatalogueStates,
+  moveCatalogueItem,
+  parseCatalogueExport,
+  parseCatalogueState,
+  previewCatalogueImport,
+  readCatalogueState,
+  rememberCatalogueValue,
+  serializeCatalogueExport,
+  setCatalogueItemFavorite,
+  setCatalogueItemHidden,
+  updateUserCatalogueItem,
+  writeCatalogueState,
+} from "@/lib/catalogues/catalogue";
+
+function remember(
+  state: ReturnType<typeof createEmptyCatalogueState>,
+  catalogueKey:
+    | "visit-team.dentist"
+    | "visit-team.rda"
+    | "visit-team.rdh"
+    | "clinical-exam.molar-occlusion"
+    | "clinical-exam.skeletal-occlusion",
+  label: string,
+  id: string,
+) {
+  return rememberCatalogueValue(state, catalogueKey, label, {
+    id,
+    now: new Date("2026-07-25T18:00:00.000Z"),
+  });
+}
+
+describe("local catalogues", () => {
+  it("defines unseeded provider catalogues and separate molar and skeletal seeds", () => {
+    const emptyState = createEmptyCatalogueState();
+    expect(
+      listCatalogueItems(emptyState, "visit-team.dentist"),
+    ).toEqual([]);
+    expect(listCatalogueItems(emptyState, "visit-team.rda")).toEqual([]);
+    expect(listCatalogueItems(emptyState, "visit-team.rdh")).toEqual([]);
+
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.molar-occlusion",
+      ).map((item) => item.label),
+    ).toEqual(["Cl I", "Cl II", "Cl III"]);
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.skeletal-occlusion",
+      ).map((item) => item.label),
+    ).toEqual(["Cl I", "Cl II", "Cl III"]);
+
+    const molarDefinition = CATALOGUE_DEFINITIONS.find(
+      (definition) =>
+        definition.key === "clinical-exam.molar-occlusion",
+    );
+    expect(molarDefinition?.fieldLabels).toEqual([
+      "Left molar occlusion",
+      "Right molar occlusion",
+    ]);
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.molar-occlusion",
+      )[0].id,
+    ).not.toBe(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.skeletal-occlusion",
+      )[0].id,
+    );
+  });
+
+  it("remembers only explicit values and deduplicates normalized labels", () => {
+    const emptyState = createEmptyCatalogueState();
+    const added = remember(
+      emptyState,
+      "visit-team.dentist",
+      "  Example Dentist  ",
+      "dentist-1",
+    );
+
+    expect(added.status).toBe("added");
+    expect(added.item.label).toBe("Example Dentist");
+    expect(emptyState.userItems).toEqual([]);
+    expect(added.state.userItems).toHaveLength(1);
+
+    const duplicate = remember(
+      added.state,
+      "visit-team.dentist",
+      "example dentist",
+      "dentist-2",
+    );
+    expect(duplicate.status).toBe("existing");
+    expect(duplicate.state.userItems).toHaveLength(1);
+  });
+
+  it("reactivates hidden user and seed values rather than creating duplicates", () => {
+    const added = remember(
+      createEmptyCatalogueState(),
+      "visit-team.rdh",
+      "Example RDH",
+      "rdh-1",
+    );
+    const hiddenUserState = setCatalogueItemHidden(
+      added.state,
+      "rdh-1",
+      "user",
+      true,
+    );
+    const reactivatedUser = remember(
+      hiddenUserState,
+      "visit-team.rdh",
+      "example rdh",
+      "rdh-2",
+    );
+    expect(reactivatedUser.status).toBe("reactivated");
+    expect(reactivatedUser.state.userItems).toHaveLength(1);
+    expect(reactivatedUser.state.userItems[0].hidden).toBe(false);
+
+    const seed = listCatalogueItems(
+      createEmptyCatalogueState(),
+      "clinical-exam.molar-occlusion",
+    )[0];
+    const hiddenSeedState = setCatalogueItemHidden(
+      createEmptyCatalogueState(),
+      seed.id,
+      "seed",
+      true,
+    );
+    const reactivatedSeed = remember(
+      hiddenSeedState,
+      "clinical-exam.molar-occlusion",
+      "cl i",
+      "unused",
+    );
+    expect(reactivatedSeed.status).toBe("reactivated");
+    expect(reactivatedSeed.state.userItems).toEqual([]);
+    expect(
+      findEquivalentCatalogueItem(
+        reactivatedSeed.state,
+        "clinical-exam.molar-occlusion",
+        "Cl I",
+      )?.hidden,
+    ).toBe(false);
+  });
+
+  it("favorites and reorders suggestions without changing their labels", () => {
+    const state = createEmptyCatalogueState();
+    const seeds = listCatalogueItems(
+      state,
+      "clinical-exam.molar-occlusion",
+    );
+    const favorited = setCatalogueItemFavorite(
+      state,
+      seeds[2].id,
+      "seed",
+      true,
+    );
+    expect(
+      listCatalogueItems(
+        favorited,
+        "clinical-exam.molar-occlusion",
+      )[0].label,
+    ).toBe("Cl III");
+
+    const reordered = moveCatalogueItem(
+      state,
+      "clinical-exam.molar-occlusion",
+      seeds[2].id,
+      "up",
+    );
+    expect(
+      listCatalogueItems(
+        reordered,
+        "clinical-exam.molar-occlusion",
+      ).map((item) => item.label),
+    ).toEqual(["Cl I", "Cl III", "Cl II"]);
+  });
+
+  it("moves hidden values by list position and unhides them when favorited", () => {
+    const state = createEmptyCatalogueState();
+    const seeds = listCatalogueItems(
+      state,
+      "clinical-exam.molar-occlusion",
+    );
+    const hidden = setCatalogueItemHidden(
+      state,
+      seeds[1].id,
+      "seed",
+      true,
+    );
+    const moved = moveCatalogueItem(
+      hidden,
+      "clinical-exam.molar-occlusion",
+      seeds[1].id,
+      "up",
+    );
+    expect(
+      listCatalogueItems(moved, "clinical-exam.molar-occlusion", {
+        includeHidden: true,
+      }).map((item) => item.label),
+    ).toEqual(["Cl II", "Cl I", "Cl III"]);
+
+    const favorited = favoriteAndUnhideCatalogueItem(
+      hidden,
+      seeds[1].id,
+      "seed",
+    );
+    const item = findEquivalentCatalogueItem(
+      favorited,
+      "clinical-exam.molar-occlusion",
+      "Cl II",
+    );
+    expect(item?.favorite).toBe(true);
+    expect(item?.hidden).toBe(false);
+  });
+
+  it("edits and deletes future suggestions without changing a selected text snapshot", () => {
+    const added = remember(
+      createEmptyCatalogueState(),
+      "visit-team.rda",
+      "Example RDA",
+      "rda-1",
+    );
+    const selectedFormText = added.item.label;
+    const renamedState = updateUserCatalogueItem(
+      added.state,
+      "rda-1",
+      "Updated RDA",
+      new Date("2026-07-25T19:00:00.000Z"),
+    );
+    const deletedState = deleteUserCatalogueItem(renamedState, "rda-1");
+
+    expect(selectedFormText).toBe("Example RDA");
+    expect(renamedState.userItems[0].label).toBe("Updated RDA");
+    expect(deletedState.userItems).toEqual([]);
+  });
+
+  it("stores only a validated versioned catalogue state under the catalogue key", () => {
+    const values = new Map<string, string>();
+    const storage = {
+      getItem: (key: string) => values.get(key) ?? null,
+      setItem: (key: string, value: string) => values.set(key, value),
+    };
+    const state = remember(
+      createEmptyCatalogueState(),
+      "visit-team.dentist",
+      "Example Dentist",
+      "dentist-1",
+    ).state;
+
+    writeCatalogueState(storage, state);
+
+    expect([...values.keys()]).toEqual([CATALOGUE_STORAGE_KEY]);
+    expect(readCatalogueState(storage)).toEqual(state);
+  });
+
+  it("exports and imports only the catalogue envelope", () => {
+    let state = remember(
+      createEmptyCatalogueState(),
+      "visit-team.dentist",
+      "Example Dentist",
+      "dentist-1",
+    ).state;
+    const seed = listCatalogueItems(
+      state,
+      "clinical-exam.skeletal-occlusion",
+    )[0];
+    state = setCatalogueItemFavorite(state, seed.id, "seed", true);
+
+    const raw = serializeCatalogueExport(
+      state,
+      new Date("2026-07-25T20:00:00.000Z"),
+    );
+    const parsedJson = JSON.parse(raw);
+    const parsed = parseCatalogueExport(raw);
+
+    expect(parsedJson.format).toBe(CATALOGUE_EXPORT_FORMAT);
+    expect(parsedJson).not.toHaveProperty("patientId");
+    expect(parsedJson).not.toHaveProperty("form");
+    expect(parsedJson).not.toHaveProperty("theme");
+    expect(parsed.catalogueState).toEqual(state);
+  });
+
+  it("rejects malformed, duplicate, future, and oversized imports", () => {
+    expect(() => parseCatalogueExport("{")).toThrow(
+      "not valid JSON",
+    );
+    expect(() =>
+      parseCatalogueExport(
+        JSON.stringify({
+          format: CATALOGUE_EXPORT_FORMAT,
+          formatVersion: 2,
+          exportedAt: "2026-07-25T20:00:00.000Z",
+          catalogueState: createEmptyCatalogueState(),
+        }),
+      ),
+    ).toThrow("not supported");
+    expect(() => parseCatalogueExport(" ".repeat(1024 * 1024 + 1))).toThrow(
+      "1 MiB",
+    );
+
+    const item = remember(
+      createEmptyCatalogueState(),
+      "visit-team.dentist",
+      "Example Dentist",
+      "dentist-1",
+    ).state.userItems[0];
+    expect(() =>
+      parseCatalogueState({
+        schemaVersion: 1,
+        userItems: [item, { ...item, id: "dentist-2" }],
+        seedPreferences: [],
+      }),
+    ).toThrow("Duplicate value");
+    expect(() =>
+      parseCatalogueState({
+        schemaVersion: 1,
+        userItems: [{ ...item, id: "<invalid id>" }],
+        seedPreferences: [],
+      }),
+    ).toThrow("Invalid id");
+  });
+
+  it("previews and merges imports without overwriting local conflicts", () => {
+    const local = remember(
+      createEmptyCatalogueState(),
+      "visit-team.dentist",
+      "Local Dentist",
+      "shared-id",
+    ).state;
+    let imported = remember(
+      createEmptyCatalogueState(),
+      "visit-team.dentist",
+      "Imported Dentist",
+      "shared-id",
+    ).state;
+    imported = remember(
+      imported,
+      "visit-team.rdh",
+      "Imported RDH",
+      "imported-rdh",
+    ).state;
+
+    const preview = previewCatalogueImport(local, imported);
+    expect(preview.idConflicts).toBe(1);
+    expect(preview.additions).toBe(1);
+    expect(preview.itemsByCatalogue["visit-team.rdh"]).toBe(1);
+
+    const merged = mergeCatalogueStates(local, imported);
+    expect(
+      listCatalogueItems(merged, "visit-team.dentist").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Local Dentist"]);
+    expect(
+      listCatalogueItems(merged, "visit-team.rdh").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Imported RDH"]);
+  });
+
+  it("rejects invalid local values without changing the prior state", () => {
+    const state = createEmptyCatalogueState();
+    expect(() =>
+      remember(
+        state,
+        "visit-team.dentist",
+        "   ",
+        "dentist-1",
+      ),
+    ).toThrow(CatalogueValidationError);
+    expect(state).toEqual(createEmptyCatalogueState());
+  });
+});
