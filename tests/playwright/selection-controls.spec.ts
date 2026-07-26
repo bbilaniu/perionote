@@ -136,6 +136,33 @@ test("custom list controls support pointer, keyboard, selected, and closing stat
   await expect(premedication).toHaveAttribute("aria-expanded", "false");
 });
 
+test("fixed-choice keyboard navigation keeps the active option visible", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const plaque = page.getByRole("button", { name: "Plaque" });
+  await plaque.focus();
+  await plaque.press("ArrowDown");
+
+  const options = page.getByRole("listbox", { name: "Plaque options" });
+  await options.press("End");
+
+  const activeOptionId = await options.getAttribute("aria-activedescendant");
+  expect(activeOptionId).not.toBeNull();
+  const activeOption = page.locator(`[id=${JSON.stringify(activeOptionId)}]`);
+  await expect(activeOption).toBeInViewport();
+
+  const optionBox = await activeOption.boundingBox();
+  const listboxBox = await options.boundingBox();
+  expect(optionBox).not.toBeNull();
+  expect(listboxBox).not.toBeNull();
+  expect(optionBox?.y ?? 0).toBeGreaterThanOrEqual(listboxBox?.y ?? 0);
+  expect((optionBox?.y ?? 0) + (optionBox?.height ?? 0)).toBeLessThanOrEqual(
+    (listboxBox?.y ?? 0) + (listboxBox?.height ?? 0) + 1,
+  );
+});
+
 test("editable suggestion menus remain aligned and usable at a narrow viewport", async ({
   page,
 }) => {
