@@ -6,6 +6,7 @@ import {
   CatalogueValidationError,
   createEmptyCatalogueState,
   deleteUserCatalogueItem,
+  favoriteAndUnhideCatalogueItem,
   findEquivalentCatalogueItem,
   listCatalogueItems,
   mergeCatalogueStates,
@@ -187,6 +188,44 @@ describe("local catalogues", () => {
         "clinical-exam.molar-occlusion",
       ).map((item) => item.label),
     ).toEqual(["Cl I", "Cl III", "Cl II"]);
+  });
+
+  it("moves hidden values by list position and unhides them when favorited", () => {
+    const state = createEmptyCatalogueState();
+    const seeds = listCatalogueItems(
+      state,
+      "clinical-exam.molar-occlusion",
+    );
+    const hidden = setCatalogueItemHidden(
+      state,
+      seeds[1].id,
+      "seed",
+      true,
+    );
+    const moved = moveCatalogueItem(
+      hidden,
+      "clinical-exam.molar-occlusion",
+      seeds[1].id,
+      "up",
+    );
+    expect(
+      listCatalogueItems(moved, "clinical-exam.molar-occlusion", {
+        includeHidden: true,
+      }).map((item) => item.label),
+    ).toEqual(["Cl II", "Cl I", "Cl III"]);
+
+    const favorited = favoriteAndUnhideCatalogueItem(
+      hidden,
+      seeds[1].id,
+      "seed",
+    );
+    const item = findEquivalentCatalogueItem(
+      favorited,
+      "clinical-exam.molar-occlusion",
+      "Cl II",
+    );
+    expect(item?.favorite).toBe(true);
+    expect(item?.hidden).toBe(false);
   });
 
   it("edits and deletes future suggestions without changing a selected text snapshot", () => {

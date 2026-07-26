@@ -18,6 +18,7 @@ import {
   StoredCatalogueStateV1,
   createEmptyCatalogueState,
   deleteUserCatalogueItem,
+  favoriteAndUnhideCatalogueItem,
   findEquivalentCatalogueItem,
   listCatalogueItems,
   mergeCatalogueStates,
@@ -211,7 +212,11 @@ export function CatalogueProvider({
 
   const setFavorite = useCallback(
     (itemId: string, owner: CatalogueOwner, favorite: boolean) => {
-      commit(setCatalogueItemFavorite(state, itemId, owner, favorite));
+      commit(
+        favorite
+          ? favoriteAndUnhideCatalogueItem(state, itemId, owner)
+          : setCatalogueItemFavorite(state, itemId, owner, false),
+      );
     },
     [commit, state],
   );

@@ -62,7 +62,7 @@ export function CatalogueCombobox({
 
   const equivalent = findEquivalent(catalogueKey, value);
   const canRemember = Boolean(value.trim()) && !equivalent;
-  const canReactivate = Boolean(value.trim()) && equivalent?.hidden;
+  const canUnhide = Boolean(value.trim()) && equivalent?.hidden;
   const listboxOpen = open && suggestions.length > 0;
   const describedBy = [helpId, error ? errorId : null, statusId]
     .filter(Boolean)
@@ -110,7 +110,7 @@ export function CatalogueCombobox({
       const result = rememberValue(catalogueKey, value);
       setStatusMessage(
         result === "reactivated"
-          ? `${value.trim()} reactivated in this browser's catalogue.`
+          ? `${value.trim()} unhidden in this browser's catalogue.`
           : result === "existing"
             ? `${value.trim()} is already in this browser's catalogue.`
             : `${value.trim()} remembered in this browser's catalogue.`,
@@ -212,14 +212,14 @@ export function CatalogueCombobox({
       ) : null}
 
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        {canRemember || canReactivate ? (
+        {canRemember || canUnhide ? (
           <button
             type="button"
             className="rounded-lg border border-sky-700 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950"
             disabled={storageStatus !== "ready"}
             onClick={handleRemember}
           >
-            {canReactivate ? "Reactivate this value" : "Remember this value"}
+            {canUnhide ? "Unhide this value" : "Remember this value"}
           </button>
         ) : null}
         <span

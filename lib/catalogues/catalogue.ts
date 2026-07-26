@@ -613,6 +613,19 @@ export function setCatalogueItemFavorite(
   };
 }
 
+export function favoriteAndUnhideCatalogueItem(
+  state: StoredCatalogueStateV1,
+  itemId: string,
+  owner: CatalogueOwner,
+): StoredCatalogueStateV1 {
+  return setCatalogueItemHidden(
+    setCatalogueItemFavorite(state, itemId, owner, true),
+    itemId,
+    owner,
+    false,
+  );
+}
+
 export function deleteUserCatalogueItem(
   state: StoredCatalogueStateV1,
   itemId: string,
@@ -657,8 +670,7 @@ export function moveCatalogueItem(
   }
   const current = items[index];
   const sameGroup = items.filter(
-    (item) =>
-      item.favorite === current.favorite && item.hidden === current.hidden,
+    (item) => item.favorite === current.favorite,
   );
   const groupIndex = sameGroup.findIndex((item) => item.id === itemId);
   const targetIndex = direction === "up" ? groupIndex - 1 : groupIndex + 1;

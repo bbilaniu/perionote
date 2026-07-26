@@ -2,10 +2,12 @@
 
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
   type ChangeEvent,
+  type ReactNode,
 } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import {
@@ -36,12 +38,56 @@ type PendingImport = {
   fileName: string;
 };
 
+function CatalogueActionButton({
+  children,
+  tooltip,
+  className = secondaryButtonClass,
+  disabled,
+  ariaLabel,
+  onClick,
+}: {
+  children: ReactNode;
+  tooltip: string;
+  className?: string;
+  disabled?: boolean;
+  ariaLabel?: string;
+  onClick: () => void;
+}) {
+  const tooltipId = useId();
+
+  return (
+    <span className="group relative inline-flex">
+      <button
+        type="button"
+        className={className}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-describedby={tooltipId}
+        onClick={onClick}
+      >
+        {children}
+      </button>
+      <span
+        id={tooltipId}
+        role="tooltip"
+        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-max max-w-64 -translate-x-1/2 rounded-lg bg-slate-950 px-3 py-2 text-left text-xs font-normal leading-5 text-white shadow-lg group-hover:block group-focus-within:block dark:bg-slate-100 dark:text-slate-950"
+      >
+        {tooltip}
+      </span>
+    </span>
+  );
+}
+
 function CatalogueItemRow({
   item,
   definition,
+  canMoveUp,
+  canMoveDown,
 }: {
   item: CatalogueItem;
   definition: CatalogueDefinition;
+  canMoveUp: boolean;
+  canMoveDown: boolean;
 }) {
   const {
     storageStatus,
@@ -73,13 +119,14 @@ function CatalogueItemRow({
 
   return (
     <li
+      data-catalogue-item-id={item.id}
       className={`rounded-xl border p-3 ${
         item.hidden
-          ? "border-slate-200 bg-slate-100/80 opacity-75 dark:border-slate-800 dark:bg-slate-950/70"
+          ? "border-dashed border-slate-300 bg-slate-100/60 opacity-60 dark:border-slate-700 dark:bg-slate-950/60"
           : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900"
       }`}
     >
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
         <div className="min-w-0 flex-1">
           {item.owner === "user" ? (
             <div className="flex gap-2">
@@ -92,12 +139,10 @@ function CatalogueItemRow({
                 value={draftLabel}
                 onChange={(event) => setDraftLabel(event.target.value)}
               />
-              <button
-                type="button"
-                className={secondaryButtonClass}
+              <CatalogueActionButton
+                tooltip="Save the edited text for this catalogue value."
                 disabled={
-                  draftLabel.trim() === item.label ||
-                  storageStatus !== "ready"
+                  draftLabel.trim() === item.label || storageStatus !== "ready"
                 }
                 onClick={() =>
                   run(
@@ -107,40 +152,58 @@ function CatalogueItemRow({
                 }
               >
                 Save
-              </button>
+              </CatalogueActionButton>
             </div>
           ) : (
             <p className="font-medium">{item.label}</p>
           )}
           <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <span>{item.owner === "seed" ? "Starter suggestion" : "Local value"}</span>
+            <span>
+              {item.owner === "seed"
+                ? "Starter suggestion"
+                : "Saved in this browser"}
+            </span>
             {item.favorite ? <span>Favorite</span> : null}
             {item.hidden ? <span>Hidden</span> : null}
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={secondaryButtonClass}
+          <CatalogueActionButton
+            tooltip={
+              item.hidden
+                ? "Favorite this value and return it to future suggestions."
+                : item.favorite
+                ? "Return this value to its normal position in future suggestions."
+                : "Place this value before non-favorites in future suggestions."
+            }
             disabled={storageStatus !== "ready"}
             onClick={() =>
               run(
                 () =>
-                  setFavorite(item.id, item.owner, !item.favorite),
-                item.favorite
+                  setFavorite(
+                    item.id,
+                    item.owner,
+                    item.hidden ? true : !item.favorite,
+                  ),
+                item.hidden
+                  ? `${item.label} favorited and unhidden.`
+                  : item.favorite
                   ? `${item.label} removed from favorites.`
                   : `${item.label} marked as favorite.`,
               )
             }
           >
-            {item.favorite ? "Unfavorite" : "Favorite"}
-          </button>
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            disabled={storageStatus !== "ready"}
-            aria-label={`Move ${item.label} up`}
+            {item.hidden
+              ? "Favorite"
+              : item.favorite
+                ? "Unfavorite"
+                : "Favorite"}
+          </CatalogueActionButton>
+          <CatalogueActionButton
+            tooltip="Move this value earlier within its current suggestion group."
+            disabled={storageStatus !== "ready" || !canMoveUp}
+            ariaLabel={`Move ${item.label} up`}
             onClick={() =>
               run(
                 () => moveItem(definition.key, item.id, "up"),
@@ -149,12 +212,11 @@ function CatalogueItemRow({
             }
           >
             Move up
-          </button>
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            disabled={storageStatus !== "ready"}
-            aria-label={`Move ${item.label} down`}
+          </CatalogueActionButton>
+          <CatalogueActionButton
+            tooltip="Move this value later within its current suggestion group."
+            disabled={storageStatus !== "ready" || !canMoveDown}
+            ariaLabel={`Move ${item.label} down`}
             onClick={() =>
               run(
                 () => moveItem(definition.key, item.id, "down"),
@@ -163,42 +225,42 @@ function CatalogueItemRow({
             }
           >
             Move down
-          </button>
-          <button
-            type="button"
-            className={secondaryButtonClass}
+          </CatalogueActionButton>
+          <CatalogueActionButton
+            tooltip={
+              item.hidden
+                ? "Return this value to future form suggestions."
+                : "Remove this value from future form suggestions without deleting it."
+            }
             disabled={storageStatus !== "ready"}
             onClick={() =>
               run(
                 () => setHidden(item.id, item.owner, !item.hidden),
                 item.hidden
-                  ? `${item.label} reactivated.`
+                  ? `${item.label} unhidden.`
                   : `${item.label} hidden.`,
               )
             }
           >
-            {item.hidden ? "Reactivate" : "Hide"}
-          </button>
+            {item.hidden ? "Unhide" : "Hide"}
+          </CatalogueActionButton>
           {item.owner === "user" ? (
-            <button
-              type="button"
+            <CatalogueActionButton
+              tooltip="Permanently delete this value from this browser's catalogue."
               className={dangerButtonClass}
               disabled={storageStatus !== "ready"}
               onClick={() => {
                 if (
                   window.confirm(
-                    `Delete “${item.label}” from future suggestions? Existing form and note text will not change.`,
+                    `Delete “${item.label}” permanently from this browser's catalogue? It will no longer appear in future suggestions. Open forms and previously copied notes will not change. This cannot be undone.`,
                   )
                 ) {
-                  run(
-                    () => deleteItem(item.id),
-                    `${item.label} deleted.`,
-                  );
+                  run(() => deleteItem(item.id), `${item.label} deleted.`);
                 }
               }}
             >
               Delete
-            </button>
+            </CatalogueActionButton>
           ) : null}
         </div>
       </div>
@@ -209,11 +271,7 @@ function CatalogueItemRow({
   );
 }
 
-function CatalogueCard({
-  definition,
-}: {
-  definition: CatalogueDefinition;
-}) {
+function CatalogueCard({ definition }: { definition: CatalogueDefinition }) {
   const { storageStatus, getItems, rememberValue } = useCatalogues();
   const [newValue, setNewValue] = useState("");
   const [message, setMessage] = useState("");
@@ -224,10 +282,10 @@ function CatalogueCard({
       const result = rememberValue(definition.key, newValue);
       setMessage(
         result === "reactivated"
-          ? `${newValue.trim()} reactivated.`
+          ? `${newValue.trim()} unhidden.`
           : result === "existing"
-            ? `${newValue.trim()} already exists.`
-            : `${newValue.trim()} added.`,
+          ? `${newValue.trim()} already exists.`
+          : `${newValue.trim()} added.`,
       );
       setNewValue("");
     } catch (addError) {
@@ -288,13 +346,26 @@ function CatalogueCard({
 
       {items.length ? (
         <ul className="mt-4 space-y-3">
-          {items.map((item) => (
-            <CatalogueItemRow
-              key={item.id}
-              item={item}
-              definition={definition}
-            />
-          ))}
+          {items.map((item) => {
+            const orderingGroup = items.filter(
+              (candidate) => candidate.favorite === item.favorite,
+            );
+            const orderingIndex = orderingGroup.findIndex(
+              (candidate) => candidate.id === item.id,
+            );
+            return (
+              <CatalogueItemRow
+                key={item.id}
+                item={item}
+                definition={definition}
+                canMoveUp={orderingIndex > 0}
+                canMoveDown={
+                  orderingIndex >= 0 &&
+                  orderingIndex < orderingGroup.length - 1
+                }
+              />
+            );
+          })}
         </ul>
       ) : (
         <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">
@@ -317,7 +388,9 @@ export function CatalogueManager() {
     applyImport,
   } = useCatalogues();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(
+    null,
+  );
   const [transferMessage, setTransferMessage] = useState("");
   const [transferError, setTransferError] = useState("");
 
@@ -394,8 +467,12 @@ export function CatalogueManager() {
     const currentCount = state.userItems.length;
     const confirmation =
       mode === "replace"
-        ? `Replace ${currentCount} local catalogue value${currentCount === 1 ? "" : "s"} with the validated import? This cannot be undone.`
-        : `Merge ${pendingImport.preview.importedUserItems} imported value${pendingImport.preview.importedUserItems === 1 ? "" : "s"} into this browser's catalogue?`;
+        ? `Replace ${currentCount} local catalogue value${
+            currentCount === 1 ? "" : "s"
+          } with the validated import? This cannot be undone.`
+        : `Merge ${pendingImport.preview.importedUserItems} imported value${
+            pendingImport.preview.importedUserItems === 1 ? "" : "s"
+          } into this browser's catalogue?`;
     if (!window.confirm(confirmation)) {
       return;
     }
@@ -467,7 +544,11 @@ export function CatalogueManager() {
           className="flex items-center justify-between gap-4 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900 dark:border-red-800 dark:bg-red-950 dark:text-red-100"
         >
           <p>{error}</p>
-          <button type="button" className={secondaryButtonClass} onClick={clearError}>
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            onClick={clearError}
+          >
             Dismiss
           </button>
         </div>
@@ -488,9 +569,9 @@ export function CatalogueManager() {
         <h2 className="text-xl font-semibold">Import and export</h2>
         <p className="mt-2 max-w-4xl text-sm text-slate-700 dark:text-slate-300">
           An export is readable JSON and may contain private staff names or
-          clinic-specific shortcuts. Store and transfer it securely, then
-          delete extra copies when they are no longer needed. HygieneNote does
-          not upload the file.
+          clinic-specific shortcuts. Store and transfer it securely, then delete
+          extra copies when they are no longer needed. HygieneNote does not
+          upload the file.
         </p>
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <button
@@ -502,7 +583,10 @@ export function CatalogueManager() {
             Export catalogue
           </button>
           <div>
-            <label className="block text-sm font-medium" htmlFor="catalogue-import">
+            <label
+              className="block text-sm font-medium"
+              htmlFor="catalogue-import"
+            >
               Import catalogue JSON
             </label>
             <input
@@ -590,11 +674,17 @@ export function CatalogueManager() {
         ) : null}
 
         {transferError ? (
-          <p className="mt-3 text-sm text-red-700 dark:text-red-300" role="alert">
+          <p
+            className="mt-3 text-sm text-red-700 dark:text-red-300"
+            role="alert"
+          >
             {transferError}
           </p>
         ) : null}
-        <p className="mt-3 text-sm text-emerald-800 dark:text-emerald-300" aria-live="polite">
+        <p
+          className="mt-3 text-sm text-emerald-800 dark:text-emerald-300"
+          aria-live="polite"
+        >
           {transferMessage}
         </p>
       </section>

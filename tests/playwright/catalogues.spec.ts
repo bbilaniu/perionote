@@ -90,9 +90,38 @@ test("form reset preserves remembered values and catalogue management controls s
   const molarCatalogue = page.locator(
     '[data-catalogue-key="clinical-exam.molar-occlusion"]',
   );
-  const classOneRow = molarCatalogue.locator("li").filter({ hasText: "Cl I" }).first();
+  const classOneRow = molarCatalogue.locator(
+    '[data-catalogue-item-id="seed.molar.cl-i"]',
+  );
+  await expect(
+    classOneRow.getByRole("button", { name: "Move Cl I up" }),
+  ).toBeDisabled();
+  const classThreeRow = molarCatalogue
+    .locator("li")
+    .filter({ hasText: "Cl III" });
+  await expect(
+    classThreeRow.getByRole("button", { name: "Move Cl III down" }),
+  ).toBeDisabled();
+  const classTwoRow = molarCatalogue.locator(
+    '[data-catalogue-item-id="seed.molar.cl-ii"]',
+  );
+  await classTwoRow.getByRole("button", { name: "Hide" }).click();
+  await expect(
+    classTwoRow.getByRole("button", { name: "Move Cl II up" }),
+  ).toBeEnabled();
+  await expect(
+    classTwoRow.getByRole("button", { name: "Move Cl II down" }),
+  ).toBeEnabled();
+  await classTwoRow.getByRole("button", { name: "Unhide" }).click();
+  await classOneRow.getByRole("button", { name: "Hide" }).hover();
+  await expect(
+    classOneRow.getByRole("tooltip", {
+      name: "Remove this value from future form suggestions without deleting it.",
+    }),
+  ).toBeVisible();
   await classOneRow.getByRole("button", { name: "Hide" }).click();
   await expect(classOneRow.getByText("Hidden", { exact: true })).toBeVisible();
+  await expect(classOneRow).toHaveClass(/opacity-60/);
 
   await page.goto(recareExamUrl);
   const rightMolar = page.getByRole("combobox", {
@@ -104,13 +133,18 @@ test("form reset preserves remembered values and catalogue management controls s
 
   await page.goto("/catalogues");
   const hiddenClassOneRow = page
-    .locator('[data-catalogue-key="clinical-exam.molar-occlusion"] li')
-    .filter({ hasText: "Cl I" })
-    .first();
-  await hiddenClassOneRow.getByRole("button", { name: "Reactivate" }).click();
+    .locator('[data-catalogue-key="clinical-exam.molar-occlusion"]')
+    .locator('[data-catalogue-item-id="seed.molar.cl-i"]');
+  await expect(
+    hiddenClassOneRow.getByRole("button", { name: "Unhide" }),
+  ).toBeVisible();
+  await hiddenClassOneRow.getByRole("button", { name: "Favorite" }).click();
   await expect(
     hiddenClassOneRow.getByText("Hidden", { exact: true }),
   ).toHaveCount(0);
+  await expect(
+    hiddenClassOneRow.getByRole("button", { name: "Unfavorite" }),
+  ).toBeVisible();
 });
 
 test("catalogue export and import transfer local values without a network request", async ({
@@ -134,6 +168,23 @@ test("catalogue export and import transfer local values without a network reques
   await dentistCatalogue
     .getByRole("button", { name: "Add local value" })
     .click();
+  const portableDentistRow = dentistCatalogue.locator(
+    'li:has(input[value="Portable Synthetic Dentist"])',
+  );
+  await expect(portableDentistRow).toContainText("Saved in this browser");
+  let deleteConfirmationMessage = "";
+  page.once("dialog", async (dialog) => {
+    deleteConfirmationMessage = dialog.message();
+    await dialog.dismiss();
+  });
+  await portableDentistRow.getByRole("button", { name: "Delete" }).click();
+  expect(deleteConfirmationMessage).toContain(
+    "permanently from this browser's catalogue",
+  );
+  expect(deleteConfirmationMessage).toContain(
+    "Open forms and previously copied notes will not change.",
+  );
+  await expect(portableDentistRow).toBeVisible();
 
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export catalogue" }).click();
