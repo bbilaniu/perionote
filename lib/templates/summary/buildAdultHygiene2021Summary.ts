@@ -151,17 +151,19 @@ export function buildAdultHygiene2021Summary(
     labelledLine("Health/Gingivitis", form.healthGingivitis),
     labelledLine(
       "Periodontitis Stage",
-      selectedValue(
-        form.periodontitisStageChoice,
-        form.periodontitisStageOther,
-      ),
+      form.periodontitisStageChoice,
+    ),
+    labelledLine(
+      "Periodontitis stage comments",
+      form.periodontitisStageComments,
     ),
     labelledLine(
       "Periodontitis Grade",
-      selectedValue(
-        form.periodontitisGradeChoice,
-        form.periodontitisGradeOther,
-      ),
+      form.periodontitisGradeChoice,
+    ),
+    labelledLine(
+      "Periodontitis grade comments",
+      form.periodontitisGradeComments,
     ),
   ];
 
@@ -179,10 +181,11 @@ export function buildAdultHygiene2021Summary(
   const oralHygieneAndEducation = [
     labelledLine(
       "Oral hygiene compliance",
-      selectedValue(
-        form.oralHygieneComplianceChoice,
-        form.oralHygieneComplianceOther,
-      ),
+      form.oralHygieneCompliance,
+    ),
+    labelledLine(
+      "Oral hygiene compliance comment",
+      form.oralHygieneComplianceComment,
     ),
     form.homeCareInstructionReviewed
       ? "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY"
@@ -238,11 +241,19 @@ export function buildAdultHygiene2021Summary(
       : "",
     labelledLine(
       "Recommended Recall Interval",
-      selectedValue(form.recallIntervalChoice, form.recallIntervalOther),
+      form.recallInterval,
+    ),
+    labelledLine(
+      "Recommended recall interval comments",
+      form.recallIntervalComments,
     ),
     labelledLine(
       "Recommended Hygiene Interval",
-      selectedValue(form.hygieneIntervalChoice, form.hygieneIntervalOther),
+      form.hygieneInterval,
+    ),
+    labelledLine(
+      "Recommended hygiene interval comments",
+      form.hygieneIntervalComments,
     ),
     labelledLine("Next visit", form.nextVisit),
     trimmed(form.dateBooked) ? `Date Booked: ${trimmed(form.dateBooked)}` : "",

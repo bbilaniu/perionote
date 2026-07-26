@@ -115,6 +115,18 @@ describe("local catalogues", () => {
       "GINGIVITIS- REDUCED PERIODONTAL SUPPORT",
     ]);
     expect(
+      listCatalogueItems(emptyState, "oral-hygiene.compliance").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "Poor",
+      "Fair",
+      "Good",
+      "Excellent",
+      "Poor–fair",
+      "Fair–good",
+    ]);
+    expect(
       listCatalogueItems(emptyState, "oral-hygiene.aids-reviewed").map(
         (item) => item.label,
       ),
@@ -150,6 +162,21 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual(["NONE", "PREVIDENT FL", "VOCO FL", "crystal x-pur"]);
+    expect(
+      listCatalogueItems(emptyState, "scheduling.recall-interval").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["12-month recall", "6-month recall", "9-month recall"]);
+    expect(
+      listCatalogueItems(emptyState, "scheduling.hygiene-interval").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "3-month scale",
+      "4-month scale",
+      "6-month scale",
+      "N/A",
+    ]);
     expect(
       listCatalogueItems(emptyState, "scheduling.next-visit").map(
         (item) => item.label,

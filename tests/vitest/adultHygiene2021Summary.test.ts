@@ -105,12 +105,39 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
       ...createEmptyAdultHygiene2021Form(),
       plaqueChoice: "Localized mild interproximal",
       plaqueOther: "Imported plaque wording",
-      recallIntervalChoice: "6-month recall",
-      recallIntervalOther: "Imported interval wording",
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`Plaque: Imported plaque wording.
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Plaque: Imported plaque wording.",
+    );
+  });
 
-Recommended Recall Interval: Imported interval wording.`);
+  it("keeps stage, grade, compliance, and interval comments independent", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      periodontitisStageChoice: "Stage II (P2)",
+      periodontitisStageComments: "Synthetic stage context",
+      periodontitisGradeChoice: "Grade B: moderate rate",
+      periodontitisGradeComments: "Synthetic grade context",
+      oralHygieneCompliance: "Good",
+      oralHygieneComplianceComment: "Synthetic compliance context",
+      recallInterval: "6-month recall",
+      recallIntervalComments: "Synthetic recall context",
+      hygieneInterval: "4-month scale",
+      hygieneIntervalComments: "Synthetic hygiene context",
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Periodontitis Stage: Stage II (P2).
+Periodontitis stage comments: Synthetic stage context.
+Periodontitis Grade: Grade B: moderate rate.
+Periodontitis grade comments: Synthetic grade context.
+
+Oral hygiene compliance: Good.
+Oral hygiene compliance comment: Synthetic compliance context.
+
+Recommended Recall Interval: 6-month recall.
+Recommended recall interval comments: Synthetic recall context.
+Recommended Hygiene Interval: 4-month scale.
+Recommended hygiene interval comments: Synthetic hygiene context.`);
   });
 });

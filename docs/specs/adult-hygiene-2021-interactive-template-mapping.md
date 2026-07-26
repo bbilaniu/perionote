@@ -83,7 +83,7 @@ tracked. Extracted staff names and unreviewed private values may not.
 ## Catalogue Extension
 
 The Adult Hygiene conversion extends the existing catalogue allowlist with
-eight browser-local groups. Seven ship with the reviewed, complete starter
+eleven browser-local groups. Ten ship with the reviewed, complete starter
 values listed below. Anesthetic remains unseeded pending redesign:
 
 | Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Public seeds | Control use |
@@ -91,10 +91,13 @@ values listed below. Anesthetic remains unseeded pending redesign:
 | `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | 4 complete options | Single value |
 | `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | 5 complete options | Single value |
 | `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | 4 complete options | Single value |
+| `oral-hygiene.compliance` | Oral Hygiene and Education | Oral hygiene compliance | `ohi-compliance` | 6 complete options | Single value |
 | `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | 8 complete options | Multiple values |
 | `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | 8 complete options | Multiple values |
 | `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None—rework required | Single value |
 | `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | 4 complete options | Single value |
+| `scheduling.recall-interval` | Intervals and Next Visit | Recommended recall interval | `recommended-recall-interval` | 3 complete options | Single value |
+| `scheduling.hygiene-interval` | Intervals and Next Visit | Recommended hygiene interval | `recommended-hygiene-interval` | 4 complete options | Single value |
 | `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | 7 complete options | Single value |
 
 The exact public starter labels are:
@@ -102,9 +105,12 @@ The exact public starter labels are:
 - **Medical history reviewed:** `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS`.
 - **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
+- **Oral hygiene compliance:** `Poor`; `Fair`; `Good`; `Excellent`; `Poor–fair`; `Fair–good`.
 - **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TB TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ETB`.
 - **Treatment completed today:** `1U scale (cavitron and hand scaling)`; `2U scale (cavitron and hand scaling)`; `3U scale (cavitron and hand scaling)`; `4U scale (cavitron and hand scaling)`; `FMP`; `1U polish`; `Fluoride varnish`; `Crystal X-PUR`.
 - **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
+- **Recommended recall interval:** `12-month recall`; `6-month recall`; `9-month recall`.
+- **Recommended hygiene interval:** `3-month scale`; `4-month scale`; `6-month scale`; `N/A`.
 - **Next visit:** `6 MOS SCALE`; `12 MRC`; `3 MOS SCALE`; `4 MOS SCALE`; `6 MRC`; `9 MRC`; `FOLLOW-UP HYGIENE`.
 
 These starter values are suggestions only and are never preselected. The two
@@ -324,27 +330,28 @@ captured. No finding is selected by default or saved automatically.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A17 | `PSR/Pocketing: _ _ _ / _ _ _` | Six optional short text inputs grouped as **PSR/Pocketing**, visually separated after the third value | `patient-specific` | `PSR/Pocketing: {1} {2} {3} / {4} {5} {6}` using entered positions |
+| A17 | `PSR/Pocketing: _ _ _ / _ _ _` | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4** | `patient-specific` | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants |
 | A18 | `Recession:` | Editable text: **Recession** | `patient-specific` | `Recession: {text}` |
 | A19 | `FMP Done: [SELECT/INSERT: FMP DONE]` | Catalogue-backed editable text: **FMP done** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `FMP Done: {selected or entered text}` |
 | A20 | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` | Catalogue-backed editable text: **Health/Gingivitis** | Current value: `patient-specific`; reusable options: `catalogue` | `Health/Gingivitis: {text}` |
-| A21 | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]` | Optional structured choice: **Not documented** or an approved Periodontitis stage value | `appCore`; complete ClearDent vocabulary available | `Periodontitis Stage: {selected stage}.` |
-| A22 | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]` | Optional structured choice: **Not documented** or an approved Periodontitis grade value | `appCore`; complete ClearDent vocabulary available | `Periodontitis Grade: {selected grade}.` |
+| A21 | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]` | Optional structured choice: **Not documented** or an approved Periodontitis stage value, plus independent **Periodontitis stage comments** | Choice: `appCore`; comments: `patient-specific` | Separate `Periodontitis Stage: {selected stage}.` and `Periodontitis stage comments: {comments}.` lines when documented |
+| A22 | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]` | Optional structured choice: **Not documented** or an approved Periodontitis grade value, plus independent **Periodontitis grade comments** | Choice: `appCore`; comments: `patient-specific` | Separate `Periodontitis Grade: {selected grade}.` and `Periodontitis grade comments: {comments}.` lines when documented |
 
-The six PSR/Pocketing inputs preserve the source's six-position shape without
-imposing an undocumented numeric range or automatically calculating a result.
+The six PSR/Pocketing inputs preserve the source's six-position shape and use
+the clinically approved clockwise order `1 2 3 / 6 5 4`, without imposing an
+undocumented numeric range or automatically calculating a result.
 All five visible FMP phrases are now complete and are public starter values.
 Four of the six visible Health/Gingivitis phrases are complete; the other two
 remain unresolved and are excluded until their full wording is known. The four
 complete phrases are public starter values. Stage and grade have complete
-ClearDent lists, including N/A. They remain independent because the source
-does not define a conditional relationship.
+ClearDent lists, including N/A. Stage, grade, and each respective comments
+field remain independent; selecting a structured value never clears comments.
 
 ### Oral Hygiene and Education
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A23 | `Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]` | Structured choice with editable **Other** value: **Oral hygiene compliance** | Choice: `appCore`; Other: `patient-specific` | `Oral hygiene compliance: {selected or entered text}` |
+| A23 | `Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]` | Catalogue-backed editable text: **Oral hygiene compliance**, plus independent **Oral hygiene compliance comment** | Current value and comment: `patient-specific`; reusable compliance values: `catalogue` | Separate `Oral hygiene compliance: {selected or entered text}` and `Oral hygiene compliance comment: {comment}` lines when documented |
 | A24 | Fixed home-care instruction sentence | Unchecked checkbox: **Standard home-care instruction reviewed** | `appCore` | Preserve the source sentence only when checked |
 | A25 | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]` | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended** | Current selections: `patient-specific`; reusable options: `catalogue` | `OH Aids Reviewed/Recommended: {selected and entered values}` |
 | A26 | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY` | Unchecked checkbox: **Disease process reviewed with patient today** | `appCore` | Preserve the source sentence only when checked |
@@ -352,9 +359,10 @@ does not define a conditional relationship.
 | A28 | `Hygiene goal:` | Textarea: **Hygiene goal** | `patient-specific` | `Hygiene goal: {text}` |
 
 The fixed home-care and disease-process statements describe actions and are
-therefore never included by default. Compliance, flossing, and brushing have
-complete visible ClearDent lists and can be reviewed as structured application
-choices. Eight of nine visible OHI-aids values are complete; one remains
+therefore never included by default. Compliance has a complete visible
+ClearDent list whose values are public catalogue starters. Its comment remains
+independent and patient-specific. Flossing and brushing remain structured
+application choices. Eight of nine visible OHI-aids values are complete; one remains
 unresolved, and the scrollbar means additional values may not have been
 captured. The eight complete captured values are approved public starter
 values; the unresolved value remains excluded.
@@ -393,16 +401,16 @@ retainer response impossible.
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
 | A38 | Fixed PPE sentence | Unchecked checkbox: **Standard PPE statement applies** | `appCore` | Preserve the source sentence only when checked |
-| A39 | `Recommended Recall Interval: [SELECT/INSERT: REC RECALL INTERVAL]` | Structured choice with editable **Other** value: **Recommended recall interval** | Choice: `appCore`; Other: `patient-specific` | `Recommended Recall Interval: {selected or entered text}` |
-| A40 | `Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]` | Structured choice with editable **Other** value: **Recommended hygiene interval** | Choice: `appCore`; Other: `patient-specific` | `Recommended Hygiene Interval: {selected or entered text}` |
+| A39 | `Recommended Recall Interval: [SELECT/INSERT: REC RECALL INTERVAL]` | Catalogue-backed editable text: **Recommended recall interval**, plus independent **Recommended recall interval comments** | Current value and comments: `patient-specific`; reusable interval values: `catalogue` | Separate `Recommended Recall Interval: {selected or entered text}` and `Recommended recall interval comments: {comments}` lines when documented |
+| A40 | `Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]` | Catalogue-backed editable text: **Recommended hygiene interval**, plus independent **Recommended hygiene interval comments** | Current value and comments: `patient-specific`; reusable interval values: `catalogue` | Separate `Recommended Hygiene Interval: {selected or entered text}` and `Recommended hygiene interval comments: {comments}` lines when documented |
 | A41 | `Next visit: [SELECT/INSERT: NEXT VISIT]` | Catalogue-backed editable text: **Next visit** | Current value: `patient-specific`; reusable options: `catalogue` | `Next visit: {text}` |
 | A42 | `Date Booked:` | Optional date input: **Date booked** | `administrative` | `Date Booked: {YYYY-MM-DD}` |
 
-Recall and hygiene intervals have complete visible ClearDent lists and can be
-reviewed as structured choices while retaining **Other**. All seven complete
-Next visit values are approved public starter values. These fields document
-patient-specific clinical or scheduling decisions and are never inferred from
-other fields.
+Recall and hygiene intervals have complete visible ClearDent lists whose values
+are public catalogue starters. Their comments remain independent and
+patient-specific. All seven complete Next visit values are approved public
+starter values. These fields document patient-specific clinical or scheduling
+decisions and are never inferred from other fields.
 
 ## Approved Generated-Note Order
 
@@ -469,22 +477,23 @@ Clinical review accepted the complete mapping on 2026-07-25, including:
    consent checkboxes, omission of patient names, and public starter values
    plus browser-local additions for Medical history reviewed.
 4. The approved Plaque, Stain, Calculus, and Bleeding choices plus **Other**.
-5. Six unrestricted short PSR/Pocketing inputs in source order. Partially
-   completed values are copied in their original positions without inferring
-   missing values.
+5. Six unrestricted short PSR/Pocketing inputs labelled and copied clockwise as
+   `1 2 3 / 6 5 4`. Partially completed values retain their sextant positions
+   without inferring missing values.
 6. Public starter values and generated wording for FMP done and
    Health/Gingivitis, excluding unresolved source strings.
-7. Independent approved Periodontitis stage and grade choices with no inferred
-   relationship.
+7. Independent approved Periodontitis stage and grade choices, each with a
+   separately documented comments field and no inferred relationship.
 8. Explicit unchecked confirmation for the fixed home-care,
    disease-process-review, and PPE statements.
-9. The approved compliance, flossing, and brushing choices plus **Other**.
+9. Catalogue-backed Oral hygiene compliance with an independent comment, plus
+   the approved flossing and brushing choices with **Other**.
 10. Unchecked Hygiene maintenance; public starter values for Treatment
     completed and Desensitizer; and an unseeded Anesthetic field pending
     redesign.
 11. Conditional night-guard controls and the proposed retainer choices.
-12. Approved recall and hygiene interval choices plus **Other**, and public
-    starter values for Next visit.
+12. Catalogue-backed recall and hygiene intervals with independent comments,
+    and public starter values for Next visit.
 13. The proposed labels, capitalization, punctuation, generated-note order,
     omission behavior, and date formatting.
 

@@ -942,7 +942,7 @@ export function RecareExamTemplate({
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-lg font-semibold">Generated Note</h2>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               The visible preview is copied unchanged.
