@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.2.2
+
+### Patch Changes
+
+- 21cc575: Update Next.js and development dependencies to patched maintenance releases.
+
 ## 0.2.1
 
 ### Patch Changes
