@@ -43,3 +43,6 @@ next-env.d.ts
 /patch/*.patch
 /patch/.codex-patch-session.json
 /patch/archive/*.patch
+
+# local files with private information
+/private
