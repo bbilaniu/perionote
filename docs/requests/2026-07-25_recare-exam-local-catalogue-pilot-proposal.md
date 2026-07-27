@@ -21,7 +21,7 @@ This proposal turns six currently editable Recare Exam fields into
 catalogue-backed editable fields:
 
 | Section | Field | Initial public seeds |
-| --- | --- | --- |
+| ------------- | --------------------- | ------------------------- |
 | Visit Team | Dentist | None |
 | Visit Team | RDA | None |
 | Visit Team | RDH | None |
@@ -69,6 +69,8 @@ Treatment Plan vocabulary.
 - Adding, selecting, editing, hiding, reactivating, deleting, favoriting, and
   ordering locally remembered values.
 - Hiding, reactivating, favoriting, and ordering public seeds.
+- Recoverable inline hiding from a blank Treatment type suggestion list,
+  without selecting the item or changing encounter rows.
 - Accessible keyboard and screen-reader behavior.
 - Graceful fallback when browser-local storage is unavailable or invalid.
 - Intentional manual export and import for transferring catalogue values to
@@ -95,7 +97,7 @@ The nine form fields should be allowlisted explicitly. They should be backed by
 seven catalogue groups:
 
 | Catalogue key | Recare Exam fields | Public seeds | Locally remembered values |
-| --- | --- | --- | --- |
+| ---------------------------------- | ------------------------------------------- | -------------------------------------------- | ------------------------- |
 | `visit-team.dentist` | Dentist | None | Yes |
 | `visit-team.rda` | RDA | None | Yes |
 | `visit-team.rdh` | RDH | None | Yes |
@@ -112,12 +114,16 @@ catalogue even though its first seeds are identical, because it has a different
 clinical meaning and may need different values later. Radiographs uses the
 complete visible generic labels in the reviewed local JSON extraction while
 retaining free entry because the extracted list is partial due to a scrollbar.
-Treatment Options and Treatment Plan share reusable suggestions but keep
-separate ordered encounter selections.
+Treatment Options and Treatment Plan share reusable treatment-type suggestions
+but keep separate ordered encounter rows. Each row also has an optional
+Tooth/area field that is never offered to or stored in the catalogue. Duplicate
+treatment types are permitted for different teeth or areas.
 
-Single-value form fields continue to store plain text; the three multi-value
-fields store ordered text arrays. Catalogue keys and item identifiers do not
-become part of the generated note contract.
+Single-value form fields continue to store plain text, and Radiographs stores
+an ordered text array. Treatment Options and Treatment Plan store ordered
+structured rows containing an editable treatment-type snapshot and an optional
+encounter-only tooth/area value. Catalogue keys, catalogue item identifiers,
+and row identifiers do not become part of the generated note contract.
 
 ## Ownership and Seed Rules
 

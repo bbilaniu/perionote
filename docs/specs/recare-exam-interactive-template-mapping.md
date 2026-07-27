@@ -92,14 +92,14 @@ Team field—Dentist, RDA, or RDH—is also required before copying.
 ### Patient and Visit Context
 
 | ID  | Source                                               | Control                                                        | Classification     | Generated output                      |
-| --- | ---------------------------------------------------- | -------------------------------------------------------------- | ------------------ | ------------------------------------- |
+| --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ | ---------------------------------- |
 | R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                         | `patient-specific` | `PATIENT ID: {text}`                  |
 | R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `NOTE STARTED: {YYYY-MM-DD HH:mm}`    |
 
 ### Visit Team
 
 | ID  | Source                               | Control                    | Classification    | Generated output               |
-| --- | ------------------------------------ | -------------------------- | ----------------- | ------------------------------ |
+| --- | ------------------------------------ | ------------------------------------------- | -------------- | ------------------------------ |
 | R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` when entered |
 | R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue` | `RDA: {text}` when entered     |
 | R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue` | `RDH: {text}` when entered     |
@@ -113,7 +113,7 @@ the note can be copied.
 ### Consent, Medical History, and Sterilization
 
 | ID  | Source                                                                                                     | Control                                                                                                               | Classification                                                  | Generated output                                                                 |
-| --- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| --- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | R07 | Class 5 indicator sentence                                                                                 | Unchecked checkbox: **Class 5 indicators checked**                                                                    | `appCore`                                                       | Preserve the source sentence only when explicitly checked                        |
 | R08 | `Miele Sterilization codes scanned:`                                                                       | Editable text: **Miele sterilization codes**, positioned next to Class 5                                              | `administrative`                                                | `Miele Sterilization codes scanned: {text}` when entered                         |
 | R04 | First informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** | Consent sources: `appCore`; details: `patient-specific`         | `Informed verbal consent given by {selected sources} for treatment today.`       |
@@ -136,7 +136,7 @@ state.
 ### Records and Chief Concern
 
 | ID  | Source                                         | Control                                                              | Classification                                 | Generated output                                            |
-| --- | ---------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------- |
+| --- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs** | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values}` |
 | R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific` | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
 | R12 | `a) Patients chief concern:`                   | Textarea: **Patient's chief concern**                               | `patient-specific`                             | `Patient's chief concern: {text}`                           |
@@ -151,7 +151,7 @@ continues to use an explicit Yes/No status plus editable details.
 ### Clinical Exam
 
 | ID  | Source                                | Control                                                               | Classification                                   | Generated output                                               |
-| --- | ------------------------------------- | --------------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| --- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | R13 | `b) Extraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `Extraoral: WNL.` or `Extraoral: {findings}`                   |
 | R14 | `c) TMJ- WNL`                         | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `TMJ: WNL.` or `TMJ: {findings}`                               |
 | R15 | `Palpation of the Masseter Test: WNL` | Status: **Not assessed / WNL / Findings**; findings textarea          | Status: `appCore`; findings: `patient-specific`  | `Palpation of the masseter test: WNL.` or the entered findings |
@@ -179,7 +179,7 @@ neither is preselected.
 ### Appliances and Relevant History
 
 | ID  | Source                                        | Control                                                                                                         | Classification     | Generated output                                                               |
-| --- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------ |
+| --- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------- |
 | R23 | `Do they use a CPAP?` plus approved ownership clarification | Status: **Not documented / No / Yes** labelled **Has a CPAP?**; when Yes, show **Uses the CPAP?** with the same statuses | `appCore` | `CPAP: No.` when No; when Yes, `CPAP: Yes; {uses/does not use/use not documented}.` |
 | R24 | `Does patient have a Splint?`                 | Status: **Not documented / No / Yes** labelled **Has an occlusal splint**                                       | `appCore`          | `Occlusal splint: No.` when No; combined with R25 when Yes                      |
 | R25 | `Do they use Splint?`                         | Status: **Not documented / No / Yes** labelled **Uses the occlusal splint**, shown when ownership is Yes       | `appCore`          | `Occlusal splint: Yes; {uses/does not use/use not documented}.`                |
@@ -201,19 +201,26 @@ occlusal splint, orthodontic history, retainers, and removable dentures.
 ### Treatment and Next Visit
 
 | ID  | Source                                             | Control                                                                                               | Classification                                                     | Generated output                                                                  |
-| --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
-| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered catalogue-backed multi-value control: **Treatment Options** | Current selections: `patient-specific`; reusable values: `catalogue`; never automatically selected | An ordered `Treatment Options:` block containing only explicitly selected or entered items |
-| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered catalogue-backed multi-value control: **Treatment Plan**; while empty, offer **Copy Treatment Options to Treatment Plan** | Current selections: `patient-specific`; reusable values: `catalogue`; never automatically selected | An ordered `Treatment Plan:` block containing only explicitly selected, entered, or explicitly copied items |
+| --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered editable rows with a catalogue-backed **Treatment type** and optional encounter-only **Tooth/area**             | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; never automatically selected | An ordered `Treatment Options:` block containing `Treatment type` and, when present, ` — Tooth/area` |
+| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields; while empty, offer **Copy Treatment Options to Treatment Plan** | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; never automatically selected | An ordered `Treatment Plan:` block containing only explicitly entered or explicitly copied rows      |
 | R33 | `Next Visit: [UNRESOLVED PLACEHOLDER: NEXT VISIT]` | Editable text: **Next visit**                                                                         | `patient-specific`                                                 | `Next Visit: {text}`                                                              |
 | R34 | `Date Booked:`                                     | Optional date input: **Date booked**                                                                  | `administrative`                                                   | `Date Booked: {YYYY-MM-DD}`                                                       |
 
-The shared treatment catalogue has only one public starter: **Hygiene
+The shared treatment-type catalogue has only one public starter: **Hygiene
 maintenance**. It is an explicit option, not a default or recommendation.
-Both selected lists support adding, removing, and reordering items. Selecting a
+Each list supports adding, removing, reordering, and editing rows inline.
+Treatment types may be repeated so that the same treatment can document
+different teeth or areas. **Remember treatment type** saves only the type;
+the optional Tooth/area value always remains in the current note. Selecting a
 treatment option does not automatically select the same treatment plan. The
-copy action appears only while Treatment Plan is empty and snapshots the
-current ordered Treatment Options after an explicit click. Later edits remain
-independent, and neither field infers the next visit.
+blank Treatment type suggestion list offers a separate eye-slash action that
+hides a suggestion without selecting it or changing any treatment row. Hidden
+suggestions remain recoverable through **Manage Catalogues**. The
+copy action appears only while Treatment Plan has no documented rows and
+snapshots the current ordered Treatment Options after an explicit click.
+Copied rows receive independent identities, so later edits do not affect the
+source rows. Neither field infers the next visit.
 
 Treatment Options and Treatment Plan remain separate controls. The source's
 undeclared `NEXT VISIT` placeholder maps to unrestricted text. Dates generated
@@ -289,10 +296,10 @@ Patient would like to improve: {entered text}
 Additional comments: {entered text}
 
 Treatment Options:
-  - {explicit selection or entered option}
+  - {treatment type}{ — optional tooth/area}
 
 Treatment Plan:
-  - {explicit selection or entered plan}
+  - {treatment type}{ — optional tooth/area}
 
 Next Visit: {entered text}
 Date Booked: {YYYY-MM-DD}
@@ -325,12 +332,12 @@ does not leave extra blank lines when an entire group is omitted.
   current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
-- Provider, radiograph, occlusion, and reusable treatment values are remembered
-  only through the explicit local catalogue interaction approved under ADR
-  0001. Typing, selecting, loading demo data, copying, or resetting the form
+- Provider, radiograph, occlusion, and reusable treatment-type values are remembered
+  only through the explicit local catalogue interaction approved under ADR 0001. Typing, selecting, loading demo data, copying, or resetting the form
   never saves a catalogue value.
-- Selected radiographs, Treatment Options, and Treatment Plan entries remain
-  encounter-specific arrays even when their text originated in a catalogue.
+- Selected radiographs and structured Treatment Options and Treatment Plan
+  rows remain encounter-specific even when a treatment type originated in a
+  catalogue. Tooth/area values are never catalogue candidates.
 - Other patient-specific, administrative, measurement, findings, and
   next-visit values are never catalogue candidates under this mapping.
 

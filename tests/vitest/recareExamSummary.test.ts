@@ -63,7 +63,7 @@ Additional comments: Synthetic demonstration data only.
 
 Treatment Options:
   - Hygiene maintenance
-  - Synthetic restorative consultation
+  - Synthetic restorative consultation — teeth 14, 15
 
 Treatment Plan:
   - Hygiene maintenance
@@ -99,8 +99,25 @@ Medical history reviewed: YES- NO CHANGES.`,
       cpapUseStatus: "no" as const,
       occlusalSplintStatus: "no" as const,
       retainerStatus: "none" as const,
-      treatmentOptions: ["Second option", "First option"],
-      treatmentPlan: ["First option"],
+      treatmentOptions: [
+        {
+          id: "option-1",
+          treatmentType: "Second option",
+          toothArea: "teeth 14, 15",
+        },
+        {
+          id: "option-2",
+          treatmentType: "First option",
+          toothArea: "",
+        },
+      ],
+      treatmentPlan: [
+        {
+          id: "plan-1",
+          treatmentType: "First option",
+          toothArea: "upper right",
+        },
+      ],
     };
 
     expect(hasRequiredRecareExamFields(form)).toBe(true);
@@ -114,11 +131,11 @@ Occlusal splint: No.
 Retainers: None.
 
 Treatment Options:
-  - Second option
+  - Second option — teeth 14, 15
   - First option
 
 Treatment Plan:
-  - First option`);
+  - First option — upper right`);
   });
 
   it("uses browser-local timestamp components", () => {

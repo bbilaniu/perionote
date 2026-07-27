@@ -2,6 +2,7 @@ import type {
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
+  RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 
@@ -80,8 +81,21 @@ function ownershipUseLine(
       : "";
 }
 
-function treatmentBlock(heading: string, values: string[]): string[] {
-  const entries = values.map(trimmed).filter(Boolean);
+function treatmentBlock(
+  heading: string,
+  values: RecareTreatmentEntry[],
+): string[] {
+  const entries = values
+    .map((entry) => {
+      const treatmentType = trimmed(entry.treatmentType);
+      const toothArea = trimmed(entry.toothArea);
+      return treatmentType
+        ? toothArea
+          ? `${treatmentType} — ${toothArea}`
+          : treatmentType
+        : "";
+    })
+    .filter(Boolean);
   if (entries.length === 0) return [];
   return [heading, ...entries.map((entry) => `  - ${entry}`)];
 }

@@ -14,6 +14,12 @@ export type RetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
+export type RecareTreatmentEntry = {
+  id: string;
+  treatmentType: string;
+  toothArea: string;
+};
+
 export interface RecareExamForm {
   patientId: string;
   dentist: string;
@@ -60,8 +66,8 @@ export interface RecareExamForm {
   removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
-  treatmentOptions: string[];
-  treatmentPlan: string[];
+  treatmentOptions: RecareTreatmentEntry[];
+  treatmentPlan: RecareTreatmentEntry[];
   nextVisit: string;
   dateBooked: string;
 }

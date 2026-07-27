@@ -47,10 +47,24 @@ export const recareExamFixture: RecareExamForm = {
   improvementRequest: "Synthetic request to discuss whitening.",
   additionalComments: "Synthetic demonstration data only.",
   treatmentOptions: [
-    "Hygiene maintenance",
-    "Synthetic restorative consultation",
+    {
+      id: "fixture-treatment-option-1",
+      treatmentType: "Hygiene maintenance",
+      toothArea: "",
+    },
+    {
+      id: "fixture-treatment-option-2",
+      treatmentType: "Synthetic restorative consultation",
+      toothArea: "teeth 14, 15",
+    },
   ],
-  treatmentPlan: ["Hygiene maintenance"],
+  treatmentPlan: [
+    {
+      id: "fixture-treatment-plan-1",
+      treatmentType: "Hygiene maintenance",
+      toothArea: "",
+    },
+  ],
   nextVisit: "Synthetic hygiene maintenance visit",
   dateBooked: "2026-08-15",
 };

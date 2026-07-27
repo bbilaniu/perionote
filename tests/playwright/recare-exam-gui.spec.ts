@@ -37,9 +37,7 @@ test("Recare Exam radiographs use the reviewed catalogue and ordered note values
     ).toBeVisible();
   }
 
-  await page
-    .getByRole("option", { name: "4 BW Starter", exact: true })
-    .click();
+  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
   await radiographs.fill("Synthetic supplemental view");
   await multiControl(page, "Radiographs")
     .getByRole("button", { name: "Remember and add" })
@@ -90,16 +88,25 @@ test("Recare Exam documents CPAP ownership and conditional use", async ({
   await expect(page.locator("#recare-summary")).toHaveValue(/CPAP: No\./);
 });
 
-test("Recare Exam treatment lists reorder and copy options into an empty plan", async ({
+test("Recare Exam treatment rows allow duplicate types, note-only areas, inline edits, and independent plan copies", async ({
   page,
 }) => {
   await page.goto(recareExamUrl);
 
-  const treatmentOptions = page.getByRole("combobox", {
-    name: "Treatment Options",
+  const optionList = page.getByRole("list", {
+    name: "Treatment Options entries",
+  });
+  const optionRows = optionList.locator(":scope > li");
+  const addOption = page.getByRole("button", {
+    name: "Add Treatment Option",
     exact: true,
   });
-  await treatmentOptions.focus();
+
+  await addOption.click();
+  const firstOptionType = optionRows
+    .nth(0)
+    .getByRole("combobox", { name: "Treatment type", exact: true });
+  await firstOptionType.focus();
   await expect(
     page.getByRole("option", {
       name: "Hygiene maintenance Starter",
@@ -113,12 +120,79 @@ test("Recare Exam treatment lists reorder and copy options into an empty plan", 
     })
     .click();
 
-  await treatmentOptions.fill("Synthetic consultation");
-  await multiControl(page, "Treatment Options")
-    .getByRole("button", { name: "Add to note" })
+  await addOption.click();
+  const secondOption = optionRows.nth(1);
+  await secondOption
+    .getByRole("combobox", { name: "Treatment type", exact: true })
+    .fill("Fillings");
+  await secondOption
+    .getByRole("textbox", { name: "Tooth/area", exact: true })
+    .fill("teeth 14, 15");
+  await expect(
+    secondOption.getByText("Not saved. This value stays in this note.", {
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  const [typeBox, areaBox, controlsBox, optionListBox, addOptionBox] =
+    await Promise.all([
+      secondOption
+        .getByRole("combobox", { name: "Treatment type", exact: true })
+        .boundingBox(),
+      secondOption
+        .getByRole("textbox", { name: "Tooth/area", exact: true })
+        .boundingBox(),
+      secondOption
+        .getByRole("button", {
+          name: "Move Treatment Options item 2 earlier",
+          exact: true,
+        })
+        .boundingBox(),
+      optionList.boundingBox(),
+      addOption.boundingBox(),
+    ]);
+  expect(typeBox).not.toBeNull();
+  expect(areaBox).not.toBeNull();
+  expect(controlsBox).not.toBeNull();
+  expect(optionListBox).not.toBeNull();
+  expect(addOptionBox).not.toBeNull();
+  expect(Math.abs((typeBox?.y ?? 0) - (areaBox?.y ?? 0))).toBeLessThan(3);
+  expect(Math.abs((typeBox?.y ?? 0) - (controlsBox?.y ?? 0))).toBeLessThan(8);
+  expect(addOptionBox?.y ?? 0).toBeGreaterThanOrEqual(
+    (optionListBox?.y ?? 0) + (optionListBox?.height ?? 0),
+  );
+
+  await secondOption
+    .getByRole("button", { name: "Remember treatment type", exact: true })
     .click();
+  const savedCatalogueData = await page.evaluate(() =>
+    Object.values(window.localStorage).join("\n"),
+  );
+  expect(savedCatalogueData).toContain("Fillings");
+  expect(savedCatalogueData).not.toContain("teeth 14, 15");
+
+  await addOption.click();
+  const thirdOption = optionRows.nth(2);
+  const thirdOptionType = thirdOption.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await thirdOptionType.focus();
+  await expect(
+    page.getByRole("option", { name: "Fillings Local", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("option", { name: /14, 15/ })).toHaveCount(0);
   await page
-    .getByRole("button", { name: "Move Synthetic consultation earlier" })
+    .getByRole("option", { name: "Fillings Local", exact: true })
+    .click();
+  await thirdOption
+    .getByRole("textbox", { name: "Tooth/area", exact: true })
+    .fill("tooth 36");
+  await thirdOption
+    .getByRole("button", {
+      name: "Move Treatment Options item 3 earlier",
+      exact: true,
+    })
     .click();
 
   const copyButton = page.getByRole("button", {
@@ -129,21 +203,78 @@ test("Recare Exam treatment lists reorder and copy options into an empty plan", 
   await copyButton.click();
   await expect(copyButton).toHaveCount(0);
 
-  await expect(
-    page.getByRole("list", { name: "Treatment Plan selected values" }),
-  ).toContainText("Synthetic consultation");
+  const planList = page.getByRole("list", {
+    name: "Treatment Plan entries",
+  });
+  const planRows = planList.locator(":scope > li");
+  await expect(planRows).toHaveCount(3);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  - Synthetic consultation\n  - Hygiene maintenance\n\nTreatment Plan:\n  - Synthetic consultation\n  - Hygiene maintenance/,
+    /Treatment Options:\n  - Hygiene maintenance\n  - Fillings — tooth 36\n  - Fillings — teeth 14, 15\n\nTreatment Plan:\n  - Hygiene maintenance\n  - Fillings — tooth 36\n  - Fillings — teeth 14, 15/,
   );
 
-  const planValues = page.getByRole("list", {
-    name: "Treatment Plan selected values",
-  });
-  await planValues
-    .getByRole("button", { name: "Remove Synthetic consultation" })
+  await optionRows
+    .nth(1)
+    .getByRole("combobox", { name: "Treatment type", exact: true })
+    .fill("Composite fillings");
+  await expect(
+    planRows
+      .nth(1)
+      .getByRole("combobox", { name: "Treatment type", exact: true }),
+  ).toHaveValue("Fillings");
+
+  await planRows
+    .nth(1)
+    .getByRole("button", {
+      name: "Remove Treatment Plan item 2",
+      exact: true,
+    })
     .click();
   await expect(
-    page.getByRole("list", { name: "Treatment Options selected values" }),
-  ).toContainText("Synthetic consultation");
-  await expect(planValues).not.toContainText("Synthetic consultation");
+    optionRows
+      .nth(1)
+      .getByRole("combobox", { name: "Treatment type", exact: true }),
+  ).toHaveValue("Composite fillings");
+  await expect(planRows).toHaveCount(2);
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Treatment Options:\n  - Hygiene maintenance\n  - Composite fillings — tooth 36\n  - Fillings — teeth 14, 15\n\nTreatment Plan:\n  - Hygiene maintenance\n  - Fillings — teeth 14, 15/,
+  );
+
+  await addOption.click();
+  const fourthOption = optionRows.nth(3);
+  const fourthOptionType = fourthOption.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await fourthOptionType.focus();
+  await fourthOption
+    .getByRole("button", {
+      name: "Hide Fillings from suggestions",
+      exact: true,
+    })
+    .click();
+
+  await expect(fourthOptionType).toBeFocused();
+  await expect(fourthOptionType).toHaveValue("");
+  await expect(
+    page.getByRole("option", { name: "Fillings Local", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    optionRows
+      .nth(2)
+      .getByRole("combobox", { name: "Treatment type", exact: true }),
+  ).toHaveValue("Fillings");
+  await expect(
+    fourthOption.getByText(
+      "Fillings hidden from suggestions. You can unhide it in Manage Catalogues.",
+    ),
+  ).toBeAttached();
+  const fillingsIsHidden = await page.evaluate(() => {
+    const stored = window.localStorage.getItem("hygienenote.catalogues.v1");
+    if (!stored) return false;
+    const state = JSON.parse(stored) as {
+      userItems?: Array<{ label?: string; hidden?: boolean }>;
+    };
+    return state.userItems?.find((item) => item.label === "Fillings")?.hidden;
+  });
+  expect(fillingsIsHidden).toBe(true);
 });
