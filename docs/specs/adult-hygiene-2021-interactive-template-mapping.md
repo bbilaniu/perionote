@@ -121,6 +121,10 @@ starter values. The shared Medical history reviewed catalogue and the Adult
 Hygiene-only catalogue groups are lifecycle `pilot`, matching the
 production-visible Adult Hygiene and Recare Exam pilots.
 
+Every blank catalogue-backed suggestion list offers a separate eye-slash
+action that hides a suggestion without selecting it or changing encounter
+values. Hidden suggestions remain recoverable through **Manage Catalogues**.
+
 The existing provider keys remain shared:
 
 | Catalogue key | ClearDent extraction field |

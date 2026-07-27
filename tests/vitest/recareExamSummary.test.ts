@@ -94,7 +94,7 @@ Medical history reviewed: YES- NO CHANGES.`,
       ...createEmptyRecareExamForm(),
       patientId: " TEST-2002 ",
       rda: " Example RDA ",
-      radiographs: ["Imported value ZX/7"],
+      radiographs: ["Imported value ZX/7", "Imported value ZX/7"],
       cpapStatus: "yes" as const,
       cpapUseStatus: "no" as const,
       occlusalSplintStatus: "no" as const,
@@ -124,7 +124,7 @@ Medical history reviewed: YES- NO CHANGES.`,
     expect(buildRecareExamSummary(form)).toBe(`PATIENT ID: TEST-2002
 RDA: Example RDA
 
-Radiographs: Imported value ZX/7
+Radiographs: Imported value ZX/7; Imported value ZX/7
 
 CPAP: Yes; does not use.
 Occlusal splint: No.

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { HideCatalogueSuggestionIcon } from "@/components/catalogues/HideCatalogueSuggestionIcon";
 import { EditableCombobox } from "@/components/forms/EditableCombobox";
 import {
   type CatalogueKey,
@@ -18,18 +19,21 @@ export function CatalogueMultiCombobox({
   catalogueKey,
   values,
   onChange,
+  allowDuplicateValues = false,
 }: {
   id: string;
   label: string;
   catalogueKey: CatalogueKey;
   values: string[];
   onChange: (values: string[]) => void;
+  allowDuplicateValues?: boolean;
 }) {
   const {
     storageStatus,
     getItems,
     findEquivalent,
     rememberValue,
+    setHidden,
   } = useCatalogues();
   const [draft, setDraft] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -43,10 +47,17 @@ export function CatalogueMultiCombobox({
     const query = normalizeCatalogueLabel(draft);
     return getItems(catalogueKey).filter(
       (item) =>
-        !selectedLabels.has(normalizeCatalogueLabel(item.label)) &&
+        (allowDuplicateValues ||
+          !selectedLabels.has(normalizeCatalogueLabel(item.label))) &&
         (!query || normalizeCatalogueLabel(item.label).includes(query)),
     );
-  }, [catalogueKey, draft, getItems, selectedLabels]);
+  }, [
+    allowDuplicateValues,
+    catalogueKey,
+    draft,
+    getItems,
+    selectedLabels,
+  ]);
   const equivalent = findEquivalent(catalogueKey, draft);
   const canRemember = Boolean(draft.trim()) && !equivalent;
   const canUnhide = Boolean(draft.trim()) && equivalent?.hidden;
@@ -58,7 +69,10 @@ export function CatalogueMultiCombobox({
   function addValue(value: string) {
     try {
       const labelValue = validateCatalogueLabel(value);
-      if (selectedLabels.has(normalizeCatalogueLabel(labelValue))) {
+      if (
+        !allowDuplicateValues &&
+        selectedLabels.has(normalizeCatalogueLabel(labelValue))
+      ) {
         setStatusMessage(`${labelValue} is already selected.`);
         return;
       }
@@ -77,7 +91,10 @@ export function CatalogueMultiCombobox({
     try {
       const labelValue = validateCatalogueLabel(draft);
       const result = rememberValue(catalogueKey, labelValue);
-      if (!selectedLabels.has(normalizeCatalogueLabel(labelValue))) {
+      if (
+        allowDuplicateValues ||
+        !selectedLabels.has(normalizeCatalogueLabel(labelValue))
+      ) {
         onChange([...values, labelValue]);
       }
       setDraft("");
@@ -94,6 +111,21 @@ export function CatalogueMultiCombobox({
         error instanceof Error
           ? error.message
           : "The value could not be remembered.",
+      );
+    }
+  }
+
+  function hideSuggestion(suggestion: (typeof suggestions)[number]) {
+    try {
+      setHidden(suggestion.id, suggestion.owner, true);
+      setStatusMessage(
+        `${suggestion.label} hidden from suggestions. You can unhide it in Manage Catalogues.`,
+      );
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "This suggestion could not be hidden.",
       );
     }
   }
@@ -178,6 +210,17 @@ export function CatalogueMultiCombobox({
           </span>
         </>
       )}
+      suggestionAction={
+        !draft.trim()
+          ? {
+              label: (suggestion) =>
+                `Hide ${suggestion.label} from suggestions`,
+              icon: <HideCatalogueSuggestionIcon />,
+              onAction: hideSuggestion,
+              disabled: storageStatus !== "ready",
+            }
+          : undefined
+      }
       selectedContent={selectedContent}
       actions={
         <>

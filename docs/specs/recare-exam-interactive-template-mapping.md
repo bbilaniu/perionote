@@ -137,7 +137,7 @@ state.
 
 | ID  | Source                                         | Control                                                              | Classification                                                       | Generated output                                                         |
 | --- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**        | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values}`                             |
+| R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values, including repeats}` |
 | R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific`                       | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
 | R12 | `a) Patients chief concern:`                   | Textarea: **Patient's chief concern**                                | `patient-specific`                                                   | `Patient's chief concern: {text}`                                        |
 
@@ -214,9 +214,9 @@ Treatment types may be repeated so that the same treatment can document
 different teeth or areas. **Remember treatment type** saves only the type;
 the optional Tooth/area value always remains in the current note. Selecting a
 treatment option does not automatically select the same treatment plan. The
-blank Treatment type suggestion list offers a separate eye-slash action that
-hides a suggestion without selecting it or changing any treatment row. Hidden
-suggestions remain recoverable through **Manage Catalogues**. The
+blank catalogue-backed suggestion lists offer a separate eye-slash action that
+hides a suggestion without selecting it or changing any encounter value.
+Hidden suggestions remain recoverable through **Manage Catalogues**. The
 copy action appears only while Treatment Plan has no documented rows and
 snapshots the current ordered Treatment Options after an explicit click.
 Copied rows receive independent identities, so later edits do not affect the
@@ -337,7 +337,9 @@ does not leave extra blank lines when an entire group is omitted.
   never saves a catalogue value.
 - Selected radiographs and structured Treatment Options and Treatment Plan
   rows remain encounter-specific even when a treatment type originated in a
-  catalogue. Tooth/area values are never catalogue candidates.
+  catalogue. Repeated Radiographs values remain separate encounter entries and
+  do not create duplicate catalogue suggestions. Tooth/area values are never
+  catalogue candidates.
 - Other patient-specific, administrative, measurement, findings, and
   next-visit values are never catalogue candidates under this mapping.
 

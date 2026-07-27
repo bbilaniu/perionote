@@ -90,6 +90,17 @@ test("Recare Exam offers public occlusion seeds and remembers providers explicit
   await expect(page.getByRole("option", { name: /Cl I Starter/ })).toBeVisible();
   await expect(page.getByRole("option", { name: /Cl II Starter/ })).toBeVisible();
   await expect(page.getByRole("option", { name: /Cl III Starter/ })).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Hide Cl III from suggestions",
+      exact: true,
+    })
+    .click();
+  await expect(rightMolar).toBeFocused();
+  await expect(rightMolar).toHaveValue("");
+  await expect(
+    page.getByRole("option", { name: /Cl III Starter/ }),
+  ).toHaveCount(0);
   await rightMolar.press("ArrowDown");
   await rightMolar.press("ArrowDown");
   await rightMolar.press("Enter");

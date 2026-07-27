@@ -264,7 +264,6 @@ function TreatmentEntryList({
                   }
                   rememberActionLabel="Remember treatment type"
                   unhideActionLabel="Unhide treatment type"
-                  allowHideSuggestionsWhenEmpty
                 />
                 <TextField
                   id={`${id}-${entry.id}-tooth-area`}
@@ -741,6 +740,7 @@ export function RecareExamTemplate({
               catalogueKey="imaging.radiographs"
               values={form.radiographs}
               onChange={(value) => updateField("radiographs", value)}
+              allowDuplicateValues
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"

@@ -36,7 +36,25 @@ test("Recare Exam radiographs use the reviewed catalogue and ordered note values
       }),
     ).toBeVisible();
   }
+  await page
+    .getByRole("button", {
+      name: "Hide 2 PA from suggestions",
+      exact: true,
+    })
+    .click();
+  await expect(radiographs).toBeFocused();
+  await expect(radiographs).toHaveValue("");
+  await expect(
+    page.getByRole("option", { name: "2 PA Starter", exact: true }),
+  ).toHaveCount(0);
 
+  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
+  await multiControl(page, "Radiographs")
+    .getByRole("button", { name: "Show Radiographs suggestions" })
+    .click();
+  await expect(
+    page.getByRole("option", { name: "4 BW Starter", exact: true }),
+  ).toBeVisible();
   await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
   await radiographs.fill("Synthetic supplemental view");
   await multiControl(page, "Radiographs")
@@ -47,13 +65,25 @@ test("Recare Exam radiographs use the reviewed catalogue and ordered note values
       name: "Move Synthetic supplemental view earlier",
     })
     .click();
+  await page
+    .getByRole("button", {
+      name: "Move Synthetic supplemental view earlier",
+    })
+    .click();
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view; 4 BW/,
+    /Radiographs: Synthetic supplemental view; 4 BW; 4 BW/,
   );
-  await page.getByRole("button", { name: "Remove 4 BW" }).click();
+  const selectedRadiographs = page.getByRole("list", {
+    name: "Radiographs selected values",
+  });
+  await expect(selectedRadiographs.locator(":scope > li")).toHaveCount(3);
+  await selectedRadiographs
+    .getByRole("button", { name: "Remove 4 BW" })
+    .first()
+    .click();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view/,
+    /Radiographs: Synthetic supplemental view; 4 BW/,
   );
 });
 

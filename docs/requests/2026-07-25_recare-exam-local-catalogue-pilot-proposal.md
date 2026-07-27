@@ -69,8 +69,8 @@ Treatment Plan vocabulary.
 - Adding, selecting, editing, hiding, reactivating, deleting, favoriting, and
   ordering locally remembered values.
 - Hiding, reactivating, favoriting, and ordering public seeds.
-- Recoverable inline hiding from a blank Treatment type suggestion list,
-  without selecting the item or changing encounter rows.
+- Recoverable inline hiding from every blank catalogue-backed suggestion list,
+  without selecting the item or changing encounter values.
 - Accessible keyboard and screen-reader behavior.
 - Graceful fallback when browser-local storage is unavailable or invalid.
 - Intentional manual export and import for transferring catalogue values to
@@ -120,10 +120,12 @@ Tooth/area field that is never offered to or stored in the catalogue. Duplicate
 treatment types are permitted for different teeth or areas.
 
 Single-value form fields continue to store plain text, and Radiographs stores
-an ordered text array. Treatment Options and Treatment Plan store ordered
-structured rows containing an editable treatment-type snapshot and an optional
-encounter-only tooth/area value. Catalogue keys, catalogue item identifiers,
-and row identifiers do not become part of the generated note contract.
+an ordered text array that permits repeated encounter values without
+duplicating the reusable catalogue item. Treatment Options and Treatment Plan
+store ordered structured rows containing an editable treatment-type snapshot
+and an optional encounter-only tooth/area value. Catalogue keys, catalogue item
+identifiers, and row identifiers do not become part of the generated note
+contract.
 
 ## Ownership and Seed Rules
 
