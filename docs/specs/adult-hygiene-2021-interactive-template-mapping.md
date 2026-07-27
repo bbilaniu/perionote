@@ -186,6 +186,11 @@ selection chips, which are disabled here to keep treatment rows compact.
 Encounter-only custom selections remain visible and deselectable inside the
 open menu. Fixed and custom selections use the same right-aligned sky checkmark
 and blue hover/focus treatment as the application's single-choice menus.
+The fixed choices use a clinician-facing anatomical layout: arch and full-mouth
+choices first, quadrants in two columns as `Q1 Q2 / Q4 Q3`, and sextants in
+three columns as `S1 S2 S3 / S6 S5 S4`. Each grid cell reserves space for its
+selection checkmark. This visual order does not change the canonical generated
+note order.
 
 The catalogue-management page manages the underlying reusable suggestions, not
 the current encounter's selected values.

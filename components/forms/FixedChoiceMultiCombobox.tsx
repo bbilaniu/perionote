@@ -41,10 +41,17 @@ function orderValues(values: string[], choices: readonly string[]) {
   return [...fixedValues, ...customValues];
 }
 
+export type FixedChoiceMultiComboboxGroup = {
+  label?: string;
+  choices: readonly string[];
+  columns?: 1 | 2 | 3;
+};
+
 export function FixedChoiceMultiCombobox({
   id,
   label,
   choices,
+  choiceGroups,
   values,
   onChange,
   customPlaceholder = "Search or add a value",
@@ -54,6 +61,7 @@ export function FixedChoiceMultiCombobox({
   id: string;
   label: string;
   choices: readonly string[];
+  choiceGroups?: readonly FixedChoiceMultiComboboxGroup[];
   values: string[];
   onChange: (values: string[]) => void;
   customPlaceholder?: string;
@@ -78,10 +86,18 @@ export function FixedChoiceMultiCombobox({
     [selectedValues],
   );
   const normalizedDraft = normalizeValue(draft);
-  const matchingChoices = choices.filter(
-    (choice) =>
-      !normalizedDraft || normalizeValue(choice).includes(normalizedDraft),
-  );
+  const visualChoiceGroups = choiceGroups?.length
+    ? choiceGroups
+    : [{ choices, columns: 1 as const }];
+  const matchingChoiceGroups = visualChoiceGroups
+    .map((group) => ({
+      ...group,
+      choices: group.choices.filter(
+        (choice) =>
+          !normalizedDraft || normalizeValue(choice).includes(normalizedDraft),
+      ),
+    }))
+    .filter((group) => group.choices.length);
   const normalizedChoices = new Set(choices.map(normalizeValue));
   const matchingCustomValues = selectedValues.filter(
     (value) =>
@@ -260,32 +276,70 @@ export function FixedChoiceMultiCombobox({
 
             <div className="max-h-64 overflow-y-auto p-1">
               <div role="group" aria-label={`Standard ${label} choices`}>
-                {matchingChoices.length ? (
-                  matchingChoices.map((choice) => {
-                    const checked = selectedLabels.has(normalizeValue(choice));
+                {matchingChoiceGroups.length ? (
+                  matchingChoiceGroups.map((group, groupIndex) => {
+                    const columns = group.columns ?? 1;
+                    const gridClass =
+                      columns === 3
+                        ? "grid-cols-3"
+                        : columns === 2
+                          ? "grid-cols-2"
+                          : "grid-cols-1";
                     return (
-                      <label
-                        key={choice}
-                        className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sky-100 hover:text-sky-950 focus-within:bg-sky-100 focus-within:text-sky-950 dark:hover:bg-sky-900 dark:hover:text-sky-50 dark:focus-within:bg-sky-900 dark:focus-within:text-sky-50"
-                        onPointerDown={(event) => event.preventDefault()}
-                        onClick={(event) => {
-                          event.preventDefault();
-                          toggleChoice(choice);
-                        }}
+                      <div
+                        key={`${group.label ?? "choices"}-${groupIndex}`}
+                        className={
+                          groupIndex
+                            ? "mt-1 border-t border-slate-200 pt-1 dark:border-slate-800"
+                            : ""
+                        }
+                        role="group"
+                        aria-label={
+                          group.label
+                            ? `${group.label} ${label} choices`
+                            : `General ${label} choices`
+                        }
                       >
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={checked}
-                          onChange={() => undefined}
-                        />
-                        <span className="min-w-0">{choice}</span>
-                        {checked ? (
-                          <span aria-hidden="true">
-                            <SelectedIndicator />
-                          </span>
+                        {group.label ? (
+                          <p className="px-2 py-1 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                            {group.label}
+                          </p>
                         ) : null}
-                      </label>
+                        <div className={`grid gap-1 ${gridClass}`}>
+                          {group.choices.map((choice) => {
+                            const checked = selectedLabels.has(
+                              normalizeValue(choice),
+                            );
+                            return (
+                              <label
+                                key={choice}
+                                className="flex min-w-0 cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-2 text-sm hover:bg-sky-100 hover:text-sky-950 focus-within:bg-sky-100 focus-within:text-sky-950 dark:hover:bg-sky-900 dark:hover:text-sky-50 dark:focus-within:bg-sky-900 dark:focus-within:text-sky-50"
+                                onPointerDown={(event) =>
+                                  event.preventDefault()
+                                }
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  toggleChoice(choice);
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="sr-only"
+                                  checked={checked}
+                                  onChange={() => undefined}
+                                />
+                                <span className="min-w-0">{choice}</span>
+                                <span
+                                  aria-hidden="true"
+                                  className="inline-flex h-4 w-4 shrink-0 items-center justify-center"
+                                >
+                                  {checked ? <SelectedIndicator /> : null}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
                     );
                   })
                 ) : (

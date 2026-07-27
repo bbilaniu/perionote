@@ -243,6 +243,34 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     exact: true,
   });
   await expect(toothAreaOptions.getByRole("checkbox")).toHaveCount(13);
+  const quadrantChoices = toothAreaOptions.getByRole("group", {
+    name: "Quadrants Tooth/area choices",
+    exact: true,
+  });
+  await expect(quadrantChoices.locator(":scope > div")).toHaveClass(
+    /grid-cols-2/,
+  );
+  await expect(quadrantChoices.locator("label")).toHaveText([
+    "Q1",
+    "Q2",
+    "Q4",
+    "Q3",
+  ]);
+  const sextantChoices = toothAreaOptions.getByRole("group", {
+    name: "Sextants Tooth/area choices",
+    exact: true,
+  });
+  await expect(sextantChoices.locator(":scope > div")).toHaveClass(
+    /grid-cols-3/,
+  );
+  await expect(sextantChoices.locator("label")).toHaveText([
+    "S1",
+    "S2",
+    "S3",
+    "S6",
+    "S5",
+    "S4",
+  ]);
   const q3ToothArea = toothAreaOptions.getByRole("checkbox", {
     name: "Q3",
     exact: true,

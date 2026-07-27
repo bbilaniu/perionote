@@ -50,6 +50,22 @@ const treatmentRowRemoveButtonClass =
 const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
+const treatmentToothAreaChoiceGroups = [
+  {
+    choices: ["maxilla", "mandible", "full mouth"],
+    columns: 1,
+  },
+  {
+    label: "Quadrants",
+    choices: ["Q1", "Q2", "Q4", "Q3"],
+    columns: 2,
+  },
+  {
+    label: "Sextants",
+    choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
+    columns: 3,
+  },
+] as const;
 
 const documentationStatusOptions: Array<{
   value: DocumentationStatus;
@@ -347,6 +363,7 @@ function TreatmentCompletedList({
                   id={`adult-hygiene-treatment-completed-${entry.id}-tooth-area`}
                   label="Tooth/area"
                   choices={treatmentToothAreaChoices}
+                  choiceGroups={treatmentToothAreaChoiceGroups}
                   values={entry.toothAreas}
                   onChange={(values) =>
                     updateEntry(entry.id, { toothAreas: values })
