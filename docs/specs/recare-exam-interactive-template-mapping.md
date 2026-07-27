@@ -39,7 +39,7 @@ The pilot will:
 - keep all completed and partial form data in memory only;
 - use synthetic fixtures and test values;
 - provide browser-local catalogues for the approved provider, radiograph,
-  occlusion, and reusable treatment-item fields;
+  occlusion, caries-risk-factor, and reusable treatment-item fields;
 - provide deliberate local catalogue import and export; and
 - establish the provenance, lifecycle, and testing pattern for later
   conversions.
@@ -77,8 +77,9 @@ preselected.
 4. Records and Chief Concern
 5. Clinical Exam
 6. Appliances and Relevant History
-7. Treatment and Next Visit
-8. Generated Note
+7. Odontogram and Caries Risk
+8. Treatment and Next Visit
+9. Generated Note
 
 A required **Patient ID** field and a read-only **Note started** timestamp are
 included as user-requested extensions. The timestamp records the browser-local
@@ -200,6 +201,25 @@ and **Partial/complete removable dentures**. Every documented negative,
 affirmative, or selected-status answer appears in the generated note for CPAP,
 occlusal splint, orthodontic history, retainers, and removable dentures.
 
+### Odontogram and Caries Risk
+
+| ID  | Source | Control | Classification | Generated output |
+| --- | --- | --- | --- | --- |
+| R36 | User-requested extension based on frequently entered Additional Comments text | Unchecked checkbox: **Odontogram up to date** | `appCore` | `ODONTOGRAM UP TO DATE` only when explicitly checked |
+| R37 | Caries Risk card reused from the Very Short template | Fixed **Caries risk level**: None selected / Low / Moderate / High | `appCore` | `{level} caries risk` when selected |
+| R38 | Caries Risk card reused from the Very Short template | Ordered catalogue-backed multi-value **Caries risk factors** | Current selections: `patient-specific`; reusable factors: `catalogue` | Append `due to {ordered factors}` |
+| R39 | Caries Risk card reused from the Very Short template | Textarea: **Caries risk notes** | `patient-specific` | Append the entered rationale |
+
+The odontogram checkbox and all Caries Risk controls start empty. The factor
+catalogue uses the seven factors already present in the Very Short template as
+public starters: **High frequency of sugar intake**, **Inadequate oral
+hygiene**, **Insufficient exposure to fluoride**, **Heavily restored
+dentition**, **Hyposalivation**, **History of caries in the last 36 months**,
+and **Symptomatically driven dental visits**. Factors may be selected, entered,
+removed, and reordered. Only an explicit **Remember and add** action stores a
+new factor in the browser-local catalogue. Risk level, current factor
+selections, and notes remain encounter-specific.
+
 ### Treatment and Next Visit
 
 | ID  | Source                                             | Control                                                                                                                 | Classification                                                                                                                    | Generated output                                                                                     |
@@ -244,9 +264,10 @@ note-start timestamp and Patient ID extensions:
 9. Clinical exam
 10. Appliances and relevant history
 11. Patient improvement request and additional comments
-12. Treatment options
-13. Treatment plan
-14. Next visit and date booked
+12. Odontogram status and caries risk
+13. Treatment options
+14. Treatment plan
+15. Next visit and date booked
 
 Unanswered fields are omitted, except that the Patient ID and all three Visit
 Team labels remain visible in the standardized header. Section headings with
@@ -299,6 +320,9 @@ Partial/complete removable dentures: {documented answer}
 Patient would like to improve: {entered text}
 Additional comments: {entered text}
 
+ODONTOGRAM UP TO DATE
+Caries risk: {level} caries risk due to {ordered factors}. {entered notes}
+
 Treatment Options:
   - {treatment type}{ — optional tooth/area}
 
@@ -336,14 +360,18 @@ does not leave extra blank lines when an entire group is omitted.
   current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
-- Provider, radiograph, occlusion, and reusable treatment-type values are remembered
-  only through the explicit local catalogue interaction approved under ADR 0001. Typing, selecting, loading demo data, copying, or resetting the form
-  never saves a catalogue value.
+- Provider, radiograph, occlusion, caries-risk-factor, and reusable
+  treatment-type values are remembered only through the explicit local
+  catalogue interaction approved under ADR 0001. Typing, selecting, loading
+  demo data, copying, or resetting the form never saves a catalogue value.
 - Selected radiographs and structured Treatment Options and Treatment Plan
   rows remain encounter-specific even when a treatment type originated in a
   catalogue. Repeated Radiographs values remain separate encounter entries and
   do not create duplicate catalogue suggestions. Tooth/area values are never
   catalogue candidates.
+- Selected caries risk factors remain encounter-specific even when they
+  originated in a catalogue. Caries risk level and notes are never catalogue
+  candidates.
 - Other patient-specific, administrative, measurement, findings, and
   next-visit values are never catalogue candidates under this mapping.
 
@@ -375,8 +403,8 @@ contract are genuinely the same, not only because two fields look similar.
 
 ## Acceptance Criteria
 
-- All 36 mapping IDs—34 source mappings plus the Patient ID and note-start
-  timestamp extensions—are
+- All 40 mapping IDs—34 source mappings plus the Patient ID, note-start,
+  odontogram, and Caries Risk extensions—are
   implemented or explicitly removed through an approved revision of this
   specification.
 - The source consent duplication is resolved and produces no accidental
@@ -403,6 +431,11 @@ contract are genuinely the same, not only because two fields look similar.
   negative, affirmative, or selected-status appliance/history answer appears
   in the generated note.
 - The UI and generated note use **Partial/complete removable dentures**.
+- Odontogram status is not inferred and appears as `ODONTOGRAM UP TO DATE`
+  only when explicitly checked.
+- Caries Risk provides the same fixed levels and notes field as the Very Short
+  template, plus ordered catalogue-backed factors with the seven existing
+  factors as starters.
 - Treatment options and plans are never preselected, support ordered catalogue
   entries, and copy from Options to an empty Plan only after an explicit click.
 - Unknown editable values render and appear unchanged in generated output.

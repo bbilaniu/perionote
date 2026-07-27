@@ -14,6 +14,8 @@ export type RetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
+export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
+
 export type RecareTreatmentEntry = {
   id: string;
   treatmentType: string;
@@ -66,6 +68,10 @@ export interface RecareExamForm {
   removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
+  odontogramUpToDate: boolean;
+  cariesRiskLevel: CariesRiskLevel;
+  cariesRiskFactors: string[];
+  cariesRiskNotes: string;
   treatmentOptions: RecareTreatmentEntry[];
   treatmentPlan: RecareTreatmentEntry[];
   nextVisit: string;
@@ -119,6 +125,10 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     removableDenturesStatus: "not-documented",
     improvementRequest: "",
     additionalComments: "",
+    odontogramUpToDate: false,
+    cariesRiskLevel: "",
+    cariesRiskFactors: [],
+    cariesRiskNotes: "",
     treatmentOptions: [],
     treatmentPlan: [],
     nextVisit: "",

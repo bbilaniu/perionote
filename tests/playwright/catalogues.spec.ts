@@ -124,6 +124,46 @@ test("Recare Exam offers public occlusion seeds and remembers providers explicit
   await expect(dentist).toHaveValue("Synthetic Dentist");
 });
 
+test("Recare Exam documents odontogram status with catalogue-backed caries risk factors", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  await page.getByLabel("Odontogram up to date", { exact: true }).check();
+  await page
+    .getByRole("button", { name: "Caries risk level", exact: true })
+    .click();
+  await page.getByRole("option", { name: "Moderate", exact: true }).click();
+
+  const factors = page.getByRole("combobox", {
+    name: "Caries risk factors",
+    exact: true,
+  });
+  await factors.focus();
+  await page
+    .getByRole("option", {
+      name: /High frequency of sugar intake Starter/,
+    })
+    .click();
+  await factors.fill("Synthetic local dry-mouth factor");
+  await page.getByRole("button", { name: "Remember and add" }).click();
+  await page
+    .getByLabel("Caries risk notes", { exact: true })
+    .fill("Synthetic rationale reviewed");
+
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /ODONTOGRAM UP TO DATE\nCaries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.$/,
+  );
+
+  await reloadDiscardingForm(page);
+  await factors.focus();
+  await expect(
+    page.getByRole("option", {
+      name: /Synthetic local dry-mouth factor Local/,
+    }),
+  ).toBeVisible();
+});
+
 test("typing and demo loading do not silently add catalogue values", async ({
   page,
 }) => {

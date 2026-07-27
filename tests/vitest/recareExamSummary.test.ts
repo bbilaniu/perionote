@@ -63,6 +63,9 @@ Partial/complete removable dentures: No.
 Patient would like to improve: Synthetic request to discuss whitening.
 Additional comments: Synthetic demonstration data only.
 
+ODONTOGRAM UP TO DATE
+Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.
+
 Treatment Options:
   - Hygiene maintenance
   - Synthetic restorative consultation — teeth 14, 15
@@ -140,6 +143,27 @@ Treatment Options:
 
 Treatment Plan:
   - First option — upper right`);
+  });
+
+  it("documents odontogram status and ordered caries risk details without inferring values", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      odontogramUpToDate: true,
+      cariesRiskFactors: [
+        "Imported dry-mouth factor",
+        "History of caries in the last 36 months",
+      ],
+    };
+
+    expect(buildRecareExamSummary(form)).toBe(`ODONTOGRAM UP TO DATE
+Caries risk: Factors include imported dry-mouth factor and history of active decay in the last 36 months`);
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        cariesRiskNotes: "Synthetic rationale only",
+      }),
+    ).toBe("Caries risk: Synthetic rationale only.");
   });
 
   it("uses browser-local timestamp components", () => {

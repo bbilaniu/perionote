@@ -9,6 +9,7 @@ import {
   type RefObject,
 } from "react";
 import type {
+  CariesRiskLevel,
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
@@ -50,6 +51,16 @@ const examStatusOptions: Array<{ value: ExamStatus; label: string }> = [
   { value: "not-assessed", label: "Not assessed" },
   { value: "wnl", label: "WNL" },
   { value: "findings", label: "Findings" },
+];
+
+const cariesRiskLevelOptions: Array<{
+  value: CariesRiskLevel;
+  label: string;
+}> = [
+  { value: "", label: "None selected" },
+  { value: "Low", label: "Low" },
+  { value: "Moderate", label: "Moderate" },
+  { value: "High", label: "High" },
 ];
 
 function Section({
@@ -1025,6 +1036,41 @@ export function RecareExamTemplate({
               value={form.additionalComments}
               onChange={(value) => updateField("additionalComments", value)}
             />
+          </Section>
+
+          <Section title="Odontogram and Caries Risk">
+            <CheckboxField
+              id="recare-odontogram-up-to-date"
+              label="Odontogram up to date"
+              checked={form.odontogramUpToDate}
+              onChange={(value) => updateField("odontogramUpToDate", value)}
+            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <FixedChoiceListbox
+                id="recare-caries-risk-level"
+                label="Caries risk level"
+                value={form.cariesRiskLevel}
+                options={cariesRiskLevelOptions}
+                onChange={(value) => updateField("cariesRiskLevel", value)}
+              />
+              <div className="md:col-span-2">
+                <CatalogueMultiCombobox
+                  id="recare-caries-risk-factors"
+                  label="Caries risk factors"
+                  catalogueKey="clinical-exam.caries-risk-factors"
+                  values={form.cariesRiskFactors}
+                  onChange={(value) => updateField("cariesRiskFactors", value)}
+                  roomySelectionActions
+                />
+              </div>
+              <TextareaField
+                id="recare-caries-risk-notes"
+                label="Caries risk notes"
+                placeholder="Document rationale for the caries risk selection."
+                value={form.cariesRiskNotes}
+                onChange={(value) => updateField("cariesRiskNotes", value)}
+              />
+            </div>
           </Section>
 
           <Section title="Treatment and Next Visit">

@@ -27,10 +27,49 @@ function appendDetails(base: string, details: string): string {
     : `${base}.`;
 }
 
-function joinConsentSources(sources: string[]): string {
-  if (sources.length <= 1) return sources[0] ?? "";
-  if (sources.length === 2) return `${sources[0]} and ${sources[1]}`;
-  return `${sources.slice(0, -1).join(", ")} and ${sources.at(-1)}`;
+function joinNaturalLanguageList(values: string[]): string {
+  if (values.length <= 1) return values[0] ?? "";
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+}
+
+function lowerFirst(value: string): string {
+  return value ? `${value[0].toLocaleLowerCase("en-CA")}${value.slice(1)}` : "";
+}
+
+function cariesRiskFactor(value: string): string {
+  const cleanValue = trimmed(value);
+  return cleanValue === "History of caries in the last 36 months"
+    ? "history of active decay in the last 36 months"
+    : lowerFirst(cleanValue);
+}
+
+function cariesRiskLine(
+  level: RecareExamForm["cariesRiskLevel"],
+  factors: string[],
+  notes: string,
+): string {
+  const cleanFactors = factors.map(trimmed).filter(Boolean);
+  const cleanNotes = trimmed(notes);
+  if (!level && cleanFactors.length === 0 && !cleanNotes) return "";
+
+  let line = level
+    ? `${level} caries risk`
+    : cleanFactors.length
+      ? `Factors include ${joinNaturalLanguageList(
+          cleanFactors.map(cariesRiskFactor),
+        )}`
+      : "";
+
+  if (level && cleanFactors.length) {
+    line += ` due to ${joinNaturalLanguageList(
+      cleanFactors.map(cariesRiskFactor),
+    )}`;
+  }
+
+  if (!line) return `Caries risk: ${withTerminalPunctuation(cleanNotes)}`;
+  if (!cleanNotes) return `Caries risk: ${line}`;
+  return `Caries risk: ${line}. ${withTerminalPunctuation(cleanNotes)}`;
 }
 
 function yesNoLine(
@@ -165,7 +204,7 @@ export function buildRecareExamSummary(
   ];
   const consentLine = consentSources.length
     ? [
-        `Informed verbal consent given by ${joinConsentSources(consentSources)} for treatment today.`,
+        `Informed verbal consent given by ${joinNaturalLanguageList(consentSources)} for treatment today.`,
         trimmed(form.consentDetails)
           ? withTerminalPunctuation(form.consentDetails)
           : "",
@@ -272,6 +311,15 @@ export function buildRecareExamSummary(
       : "",
   ];
 
+  const odontogramAndCariesRisk = [
+    form.odontogramUpToDate ? "ODONTOGRAM UP TO DATE" : "",
+    cariesRiskLine(
+      form.cariesRiskLevel,
+      form.cariesRiskFactors,
+      form.cariesRiskNotes,
+    ),
+  ];
+
   const nextVisit = [
     trimmed(form.nextVisit) ? `Next Visit: ${trimmed(form.nextVisit)}` : "",
     trimmed(form.dateBooked) ? `Date Booked: ${trimmed(form.dateBooked)}` : "",
@@ -285,6 +333,7 @@ export function buildRecareExamSummary(
     intraoralAndOcclusion,
     appliancesAndHistory,
     patientRequests,
+    odontogramAndCariesRisk,
     treatmentBlock("Treatment Options:", form.treatmentOptions),
     treatmentBlock("Treatment Plan:", form.treatmentPlan),
     nextVisit,

@@ -13,6 +13,7 @@ export const CATALOGUE_KEYS = [
   "visit-team.rdh",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
+  "clinical-exam.caries-risk-factors",
   "imaging.radiographs",
   "medical-history.review",
   "periodontal.fmp-done",
@@ -145,6 +146,22 @@ const radiographSeeds = catalogueSeeds("imaging.radiographs", [
   ["1-pa", "1 PA"],
   ["2-pa", "2 PA"],
 ]);
+
+const cariesRiskFactorSeeds = catalogueSeeds(
+  "clinical-exam.caries-risk-factors",
+  [
+    ["high-sugar-frequency", "High frequency of sugar intake"],
+    ["inadequate-oral-hygiene", "Inadequate oral hygiene"],
+    ["insufficient-fluoride", "Insufficient exposure to fluoride"],
+    ["heavily-restored-dentition", "Heavily restored dentition"],
+    ["hyposalivation", "Hyposalivation"],
+    [
+      "caries-history-36-months",
+      "History of caries in the last 36 months",
+    ],
+    ["symptom-driven-visits", "Symptomatically driven dental visits"],
+  ],
+);
 
 const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
   ["all-findings-discussed", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
@@ -280,6 +297,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Skeletal occlusion",
     fieldLabels: ["Skeletal occlusion"],
     seeds: occlusionSeeds("skeletal"),
+    lifecycle: "pilot",
+  },
+  {
+    key: "clinical-exam.caries-risk-factors",
+    section: "Clinical Exam",
+    title: "Caries risk factors",
+    fieldLabels: ["Caries risk factors"],
+    seeds: cariesRiskFactorSeeds,
     lifecycle: "pilot",
   },
   {

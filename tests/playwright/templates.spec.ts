@@ -214,6 +214,9 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   expect(copiedNote).toContain(
     "Treatment Options:\n  - Hygiene maintenance\n  - Synthetic restorative consultation",
   );
+  expect(copiedNote).toContain(
+    "ODONTOGRAM UP TO DATE\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.",
+  );
   expect(copiedNote).not.toContain("\n\n\n");
 
   const reloadDialogPromise = page.waitForEvent("dialog");

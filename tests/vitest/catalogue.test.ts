@@ -70,6 +70,12 @@ describe("local catalogues", () => {
         (definition) => definition.key === "recare-treatment.items",
       ),
     ).toBe(true);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
+        (definition) =>
+          definition.key === "clinical-exam.caries-risk-factors",
+      ),
+    ).toBe(true);
   });
 
   it("defines the approved public seeds without seeding provider catalogues", () => {
@@ -106,6 +112,20 @@ describe("local catalogues", () => {
       "6 BW",
       "1 PA",
       "2 PA",
+    ]);
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.caries-risk-factors",
+      ).map((item) => item.label),
+    ).toEqual([
+      "High frequency of sugar intake",
+      "Inadequate oral hygiene",
+      "Insufficient exposure to fluoride",
+      "Heavily restored dentition",
+      "Hyposalivation",
+      "History of caries in the last 36 months",
+      "Symptomatically driven dental visits",
     ]);
     expect(
       listCatalogueItems(emptyState, "medical-history.review").map(
