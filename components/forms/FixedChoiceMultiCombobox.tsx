@@ -11,6 +11,7 @@ import {
 import {
   DropdownChevron,
   formControlClass,
+  SelectedIndicator,
 } from "@/components/forms/controlStyles";
 
 function normalizeValue(value: string) {
@@ -265,11 +266,7 @@ export function FixedChoiceMultiCombobox({
                     return (
                       <label
                         key={choice}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm ${
-                          checked
-                            ? "bg-emerald-50 text-emerald-950 dark:bg-emerald-950/50 dark:text-emerald-100"
-                            : "hover:bg-slate-100 dark:hover:bg-slate-800"
-                        }`}
+                        className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sky-100 hover:text-sky-950 focus-within:bg-sky-100 focus-within:text-sky-950 dark:hover:bg-sky-900 dark:hover:text-sky-50 dark:focus-within:bg-sky-900 dark:focus-within:text-sky-50"
                         onPointerDown={(event) => event.preventDefault()}
                         onClick={(event) => {
                           event.preventDefault();
@@ -278,35 +275,16 @@ export function FixedChoiceMultiCombobox({
                       >
                         <input
                           type="checkbox"
-                          className="peer sr-only"
+                          className="sr-only"
                           checked={checked}
                           onChange={() => undefined}
                         />
-                        <span
-                          aria-hidden="true"
-                          className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                            checked
-                              ? "border-emerald-600 bg-emerald-600 text-white"
-                              : "border-slate-400 dark:border-slate-600"
-                          }`}
-                        >
-                          {checked ? (
-                            <svg
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              className="h-3 w-3"
-                            >
-                              <path
-                                d="m3 8 3 3 7-7"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          ) : null}
-                        </span>
-                        <span>{choice}</span>
+                        <span className="min-w-0">{choice}</span>
+                        {checked ? (
+                          <span aria-hidden="true">
+                            <SelectedIndicator />
+                          </span>
+                        ) : null}
                       </label>
                     );
                   })
@@ -326,7 +304,7 @@ export function FixedChoiceMultiCombobox({
                   {matchingCustomValues.map((value) => (
                     <label
                       key={normalizeValue(value)}
-                      className="flex cursor-pointer items-center gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-950 dark:bg-emerald-950/50 dark:text-emerald-100"
+                      className="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm hover:bg-sky-100 hover:text-sky-950 focus-within:bg-sky-100 focus-within:text-sky-950 dark:hover:bg-sky-900 dark:hover:text-sky-50 dark:focus-within:bg-sky-900 dark:focus-within:text-sky-50"
                       onPointerDown={(event) => event.preventDefault()}
                       onClick={(event) => {
                         event.preventDefault();
@@ -335,31 +313,18 @@ export function FixedChoiceMultiCombobox({
                     >
                       <input
                         type="checkbox"
-                        className="peer sr-only"
+                        className="sr-only"
                         checked
                         onChange={() => undefined}
                       />
-                      <span
-                        aria-hidden="true"
-                        className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded border border-emerald-600 bg-emerald-600 text-white"
-                      >
-                        <svg
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          className="h-3 w-3"
-                        >
-                          <path
-                            d="m3 8 3 3 7-7"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                      <span className="flex min-w-0 flex-1 items-baseline gap-2">
+                        <span className="min-w-0">{value}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          Custom
+                        </span>
                       </span>
-                      <span className="min-w-0 flex-1">{value}</span>
-                      <span className="text-xs text-emerald-700 dark:text-emerald-300">
-                        Custom
+                      <span aria-hidden="true">
+                        <SelectedIndicator />
                       </span>
                     </label>
                   ))}
@@ -369,7 +334,7 @@ export function FixedChoiceMultiCombobox({
               {normalizedDraft && !canonicalDraftChoice ? (
                 <button
                   type="button"
-                  className="mt-1 flex w-full items-start rounded-lg border-t border-slate-200 px-3 py-2 text-left text-sm hover:bg-slate-100 disabled:cursor-default disabled:opacity-60 dark:border-slate-800 dark:hover:bg-slate-800"
+                  className="mt-1 flex w-full items-start rounded-lg border-t border-slate-200 px-3 py-2 text-left text-sm hover:bg-sky-100 hover:text-sky-950 disabled:cursor-default disabled:opacity-60 dark:border-slate-800 dark:hover:bg-sky-900 dark:hover:text-sky-50"
                   disabled={!canAddCustom}
                   onPointerDown={(event) => event.preventDefault()}
                   onClick={addDraft}

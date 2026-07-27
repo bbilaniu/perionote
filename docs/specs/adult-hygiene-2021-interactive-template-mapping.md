@@ -184,7 +184,8 @@ intentional outside click closes the menu. The closed Tooth/area control shows
 all selected values in full. The reusable control supports optional removable
 selection chips, which are disabled here to keep treatment rows compact.
 Encounter-only custom selections remain visible and deselectable inside the
-open menu.
+open menu. Fixed and custom selections use the same right-aligned sky checkmark
+and blue hover/focus treatment as the application's single-choice menus.
 
 The catalogue-management page manages the underlying reusable suggestions, not
 the current encounter's selected values.

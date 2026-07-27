@@ -256,6 +256,9 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(toothAreaOptions).toBeVisible();
   await toothAreaOptions.getByText("Q2", { exact: true }).click();
   await expect(q2ToothArea).toBeChecked();
+  await expect(
+    toothAreaOptions.locator("[data-selected-indicator]"),
+  ).toHaveCount(2);
   await completedRow
     .getByRole("textbox", {
       name: "Search or add custom Tooth/area",
@@ -276,6 +279,11 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       exact: true,
     }),
   ).toBeChecked();
+  await expect(
+    completedRow
+      .getByRole("dialog", { name: "Tooth/area options", exact: true })
+      .locator("[data-selected-indicator]"),
+  ).toHaveCount(3);
   await expect(
     completedRow.getByRole("button", {
       name: "Q2, Q3, teeth 14–16",
