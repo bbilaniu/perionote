@@ -257,8 +257,11 @@ are never preselected.
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
 | A00 | Proposed consistency extension; not in source | Required editable text: **Patient ID** | `patient-specific` | `PATIENT ID: {text}` |
-| A01 | Proposed consistency extension; not in source | Read-only browser-local **Note started** timestamp set at page load or confirmed reset | `administrative` | `NOTE STARTED: {YYYY-MM-DD HH:mm}` |
+| A01 | Proposed consistency extension; not in source | Read-only browser-local **Note started** timestamp set at page load or confirmed reset | `administrative` | `----- {Month D, YYYY h:mm:ss AM/PM} -----` |
 | A02 | `Last Recall Date: [AUTO: Last Recall Date]` | Optional date input: **Last recall date** | `patient-specific` | `Last Recall Date: {YYYY-MM-DD}` |
+
+The Note started form field displays `YYYY-MM-DD HH:mm`; its generated-note
+output uses the readable dashed header shown in the table.
 
 Patient names are not collected. Patient ID and all encounter state remain
 only in memory. Copying is proposed to require Patient ID and at least one
@@ -268,9 +271,9 @@ Visit Team field, matching the Recare Exam pilot.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A03 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` when entered |
-| A04 | `RDH: [SELECT/INSERT: Hygienist]` | Catalogue-backed editable text: **RDH** | `catalogue` | `RDH: {text}` when entered |
-| A05 | `RDA: [SELECT/INSERT: RDA]` | Catalogue-backed editable text: **RDA** | `catalogue` | `RDA: {text}` when entered |
+| A03 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` |
+| A04 | `RDH: [SELECT/INSERT: Hygienist]` | Catalogue-backed editable text: **RDH** | `catalogue` | `RDH: {text}` |
+| A05 | `RDA: [SELECT/INSERT: RDA]` | Catalogue-backed editable text: **RDA** | `catalogue` | `RDA: {text}` |
 
 These fields reuse the existing `visit-team.dentist`, `visit-team.rdh`, and
 `visit-team.rda` catalogues. They ship with no real staff names or public
@@ -422,10 +425,10 @@ decisions and are never inferred from other fields.
 The note preserves source order, preceded by the approved consistency
 extensions:
 
-1. Patient ID
-2. Note started timestamp
-3. Last recall date
-4. Visit team
+1. Note started timestamp
+2. Patient ID
+3. Visit team
+4. Last recall date
 5. Sterilization
 6. Consent, medical history, and premedication
 7. Patient concerns and hygiene findings
@@ -437,9 +440,10 @@ extensions:
 13. Recommended intervals
 14. Next visit and date booked
 
-Unanswered fields and empty section headings are omitted. The generated note
-must not contain `undefined`, empty placeholder markers, **Not documented**, or
-unresolved `[AUTO]` and `[SELECT/INSERT]` text.
+Unanswered fields and empty section headings are omitted, except that the
+Patient ID and all three Visit Team labels remain visible in the standardized
+header. The generated note must not contain `undefined`, empty placeholder
+markers, **Not documented**, or unresolved `[AUTO]` and `[SELECT/INSERT]` text.
 
 The visible preview contains the complete generated note. **Copy note** writes
 that preview to the clipboard unchanged and does not add a copy-time timestamp.

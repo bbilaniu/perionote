@@ -7,6 +7,7 @@ import {
 } from "@/lib/templates/recareExam";
 import {
   buildRecareExamSummary,
+  formatNoteHeaderLocalTimestamp,
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
 
@@ -19,14 +20,15 @@ describe("buildRecareExamSummary", () => {
   });
 
   it("builds the accepted output in mapped order with one blank line between groups", () => {
-    const startedAt = new Date(2026, 6, 25, 13, 45);
+    const startedAt = new Date(2026, 6, 25, 13, 45, 12);
     const summary = buildRecareExamSummary(recareExamFixture, {
       startedAt,
     });
 
-    expect(summary).toBe(`PATIENT ID: TEST-1001
-NOTE STARTED: 2026-07-25 13:45
+    expect(summary).toBe(`----- July 25, 2026 1:45:12 PM -----
+PATIENT ID: TEST-1001
 DENTIST: Dr. Example
+RDA:
 RDH: Example RDH
 
 Informed verbal consent given by PATIENT for treatment today.
@@ -122,7 +124,9 @@ Medical history reviewed: YES- NO CHANGES.`,
 
     expect(hasRequiredRecareExamFields(form)).toBe(true);
     expect(buildRecareExamSummary(form)).toBe(`PATIENT ID: TEST-2002
+DENTIST:
 RDA: Example RDA
+RDH:
 
 Radiographs: Imported value ZX/7; Imported value ZX/7
 
@@ -139,8 +143,14 @@ Treatment Plan:
   });
 
   it("uses browser-local timestamp components", () => {
-    expect(formatRecareExamLocalTimestamp(new Date(2026, 0, 2, 3, 4))).toBe(
+    expect(formatRecareExamLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
       "2026-01-02 03:04",
+    );
+    expect(formatNoteHeaderLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
+      "----- January 2, 2026 3:04:05 AM -----",
+    );
+    expect(formatNoteHeaderLocalTimestamp(new Date(2026, 6, 24, 10, 21, 44))).toBe(
+      "----- July 24, 2026 10:21:44 AM -----",
     );
   });
 });

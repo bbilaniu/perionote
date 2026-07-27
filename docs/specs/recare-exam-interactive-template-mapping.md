@@ -82,10 +82,12 @@ preselected.
 
 A required **Patient ID** field and a read-only **Note started** timestamp are
 included as user-requested extensions. The timestamp records the browser-local
-date and time when the page loads or the form is reset after confirmation.
-Patient names are not collected. Like all form data, these values remain only
-in memory until the generated note is explicitly copied. At least one Visit
-Team field—Dentist, RDA, or RDH—is also required before copying.
+date and time when the page loads or the form is reset after confirmation. The
+form field displays `YYYY-MM-DD HH:mm`; the generated note uses the readable
+dashed header shown below. Patient names are not collected. Like all form data,
+these values remain only in memory until the generated note is explicitly
+copied. At least one Visit Team field—Dentist, RDA, or RDH—is also required
+before copying.
 
 ## Field Mapping
 
@@ -93,16 +95,16 @@ Team field—Dentist, RDA, or RDH—is also required before copying.
 
 | ID  | Source                                               | Control                                                                            | Classification     | Generated output                   |
 | --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ | ---------------------------------- |
-| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                                             | `patient-specific` | `PATIENT ID: {text}`               |
-| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `NOTE STARTED: {YYYY-MM-DD HH:mm}` |
+| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                                             | `patient-specific` | `PATIENT ID: {text}`                                     |
+| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `----- {Month D, YYYY h:mm:ss AM/PM} -----`              |
 
 ### Visit Team
 
 | ID  | Source                               | Control                                     | Classification | Generated output               |
 | --- | ------------------------------------ | ------------------------------------------- | -------------- | ------------------------------ |
-| R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue`    | `DENTIST: {text}` when entered |
-| R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue`    | `RDA: {text}` when entered     |
-| R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue`    | `RDH: {text}` when entered     |
+| R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue`    | `DENTIST: {text}` |
+| R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue`    | `RDA: {text}`     |
+| R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue`    | `RDH: {text}`     |
 
 Provider fields do not ship with real staff values or public suggestions. A
 user may deliberately remember a value in the current browser profile under
@@ -229,10 +231,10 @@ by the template, including Date Booked, use `YYYY-MM-DD`.
 ## Generated-Note Order
 
 The note should preserve the source order, preceded by the user-requested
-Patient ID and note-start timestamp extensions:
+note-start timestamp and Patient ID extensions:
 
-1. Patient ID
-2. Form-start timestamp
+1. Form-start timestamp
+2. Patient ID
 3. Visit team
 4. Consent
 5. Medical history and premedication
@@ -246,9 +248,11 @@ Patient ID and note-start timestamp extensions:
 13. Treatment plan
 14. Next visit and date booked
 
-Unanswered fields are omitted. Section headings with no output are also
-omitted. The generated note must not contain placeholder labels such as
-`undefined`, `Not assessed`, or `[UNRESOLVED PLACEHOLDER: ...]`.
+Unanswered fields are omitted, except that the Patient ID and all three Visit
+Team labels remain visible in the standardized header. Section headings with
+no output are also omitted. The generated note must not contain placeholder
+labels such as `undefined`, `Not assessed`, or
+`[UNRESOLVED PLACEHOLDER: ...]`.
 
 The visible preview contains the complete generated note. A successful
 **Copy note** action writes that preview to the clipboard unchanged and does
@@ -259,8 +263,8 @@ not add a separate copy-time timestamp.
 The following uses tokens rather than real clinical or staff information:
 
 ```text
+----- {Month D, YYYY h:mm:ss AM/PM when the page loaded or reset was confirmed} -----
 PATIENT ID: {entered patient ID}
-NOTE STARTED: {YYYY-MM-DD HH:mm when the page loaded or reset was confirmed}
 DENTIST: {entered dentist}
 RDA: {entered RDA}
 RDH: {entered RDH}

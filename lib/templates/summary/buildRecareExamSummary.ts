@@ -110,18 +110,52 @@ export function formatRecareExamLocalTimestamp(date: Date): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+export function formatNoteHeaderLocalTimestamp(date: Date): string {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const hours24 = date.getHours();
+  const hours = hours24 % 12 || 12;
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const meridiem = hours24 < 12 ? "AM" : "PM";
+
+  return `----- ${month} ${day}, ${year} ${hours}:${minutes}:${seconds} ${meridiem} -----`;
+}
+
 export function buildRecareExamSummary(
   form: RecareExamForm,
   options: BuildRecareExamSummaryOptions = {},
 ): string {
+  const hasPatientOrTeam = [
+    form.patientId,
+    form.dentist,
+    form.rda,
+    form.rdh,
+  ].some((value) => Boolean(trimmed(value)));
+  const showPatientAndTeam = Boolean(options.startedAt) || hasPatientOrTeam;
   const patientAndTeam = [
-    trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
     options.startedAt
-      ? `NOTE STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
+      ? formatNoteHeaderLocalTimestamp(options.startedAt)
       : "",
-    trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
-    trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
-    trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
+    showPatientAndTeam ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd() : "",
+    showPatientAndTeam ? `DENTIST: ${trimmed(form.dentist)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
   ];
 
   const consentSources = [

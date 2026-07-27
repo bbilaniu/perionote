@@ -16,14 +16,15 @@ describe("buildAdultHygiene2021Summary", () => {
   it("builds the accepted source-ordered note from synthetic data", () => {
     const summary = buildAdultHygiene2021Summary(
       adultHygiene2021Fixture,
-      { startedAt: new Date(2026, 6, 25, 14, 5) },
+      { startedAt: new Date(2026, 6, 25, 14, 5, 6) },
     );
 
-    expect(summary).toBe(`PATIENT ID: TEST-AH-1001
-NOTE STARTED: 2026-07-25 14:05
-Last Recall Date: 2026-01-15
+    expect(summary).toBe(`----- July 25, 2026 2:05:06 PM -----
+PATIENT ID: TEST-AH-1001
 DENTIST: Dr. Example
+RDA:
 RDH: Example RDH
+Last Recall Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
 Miele Sterilization Codes Scanned: SYNTH-AH-001
@@ -93,7 +94,9 @@ Date Booked: 2026-11-15`);
 
     expect(hasRequiredAdultHygiene2021Fields(form)).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(`PATIENT ID: TEST-AH-2002
+DENTIST:
 RDA: Example RDA
+RDH:
 
 Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today.
 

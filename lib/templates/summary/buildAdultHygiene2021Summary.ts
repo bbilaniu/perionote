@@ -5,7 +5,7 @@ import type {
   DocumentationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
-import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 
 type BuildAdultHygiene2021SummaryOptions = {
   startedAt?: Date;
@@ -80,17 +80,24 @@ export function buildAdultHygiene2021Summary(
   form: AdultHygiene2021Form,
   options: BuildAdultHygiene2021SummaryOptions = {},
 ): string {
+  const hasPatientOrTeam = [
+    form.patientId,
+    form.dentist,
+    form.rda,
+    form.rdh,
+  ].some((value) => Boolean(trimmed(value)));
+  const showPatientAndTeam = Boolean(options.startedAt) || hasPatientOrTeam;
   const patientAndTeam = [
-    trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
     options.startedAt
-      ? `NOTE STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
+      ? formatNoteHeaderLocalTimestamp(options.startedAt)
       : "",
+    showPatientAndTeam ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd() : "",
+    showPatientAndTeam ? `DENTIST: ${trimmed(form.dentist)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
     trimmed(form.noteLastRecallDate)
       ? `Last Recall Date: ${trimmed(form.noteLastRecallDate)}`
       : "",
-    trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
-    trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
-    trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
   ];
 
   const consentSources = [

@@ -118,12 +118,13 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
   expect(copiedNote).toBe(visiblePreview);
-  expect(copiedNote).toMatch(/^PATIENT ID: TEST-3003\n/);
   expect(copiedNote).toMatch(
-    /\nNOTE STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}\n/,
+    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\n/,
   );
-  expect(copiedNote).not.toContain("DATE:");
-  expect(copiedNote).toContain("RDH: Example RDH");
+  expect(copiedNote).toMatch(
+    /\nPATIENT ID: TEST-3003\nDENTIST:\nRDA:\nRDH: Example RDH\n/,
+  );
+  expect(copiedNote).not.toContain("NOTE STARTED:");
 });
 
 test("recare exam uses the harmonized consent, history, and sterilization controls", async ({
@@ -226,7 +227,7 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
     /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
   );
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /^NOTE STARTED: \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
   );
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
@@ -247,7 +248,7 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
     .inputValue();
   expect(resetStartedAt).not.toBe(reloadedStartedAt);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    `NOTE STARTED: ${resetStartedAt}`,
+    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
   );
 
   await page.clock.setSystemTime(new Date(2026, 6, 25, 11, 40));
