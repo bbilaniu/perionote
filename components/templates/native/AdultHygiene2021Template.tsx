@@ -399,9 +399,9 @@ export function AdultHygiene2021Template({
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-violet-300 bg-violet-50 p-5 dark:border-violet-800 dark:bg-violet-950/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-violet-800 dark:text-violet-300">
-          Draft interactive conversion
+      <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
+        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+          Pilot interactive conversion
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           2021 Adult Hygiene
@@ -765,6 +765,7 @@ export function AdultHygiene2021Template({
               catalogueKey="oral-hygiene.aids-reviewed"
               values={form.ohiAidsReviewed}
               onChange={(value) => updateField("ohiAidsReviewed", value)}
+              roomySelectionActions
             />
             <CheckboxField
               id="adult-hygiene-disease-process-reviewed"
@@ -838,6 +839,7 @@ export function AdultHygiene2021Template({
               catalogueKey="hygiene-treatment.completed"
               values={form.treatmentCompleted}
               onChange={(value) => updateField("treatmentCompleted", value)}
+              roomySelectionActions
             />
             <CatalogueCombobox
               id="adult-hygiene-anesthetic"

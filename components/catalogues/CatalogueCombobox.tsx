@@ -6,11 +6,17 @@ import {
   type RefObject,
 } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { HideCatalogueSuggestionIcon } from "@/components/catalogues/HideCatalogueSuggestionIcon";
 import { EditableCombobox } from "@/components/forms/EditableCombobox";
 import {
   CatalogueKey,
   normalizeCatalogueLabel,
 } from "@/lib/catalogues/catalogue";
+
+const actionButtonClass =
+  "rounded-lg border border-sky-700 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950";
+const roomyActionButtonClass =
+  "rounded-xl border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950";
 
 export function CatalogueCombobox({
   id,
@@ -23,7 +29,7 @@ export function CatalogueCombobox({
   disabled,
   rememberActionLabel = "Remember this value",
   unhideActionLabel = "Unhide this value",
-  allowHideSuggestionsWhenEmpty = false,
+  roomyActions = false,
 }: {
   id: string;
   label: string;
@@ -35,7 +41,7 @@ export function CatalogueCombobox({
   disabled?: boolean;
   rememberActionLabel?: string;
   unhideActionLabel?: string;
-  allowHideSuggestionsWhenEmpty?: boolean;
+  roomyActions?: boolean;
 }) {
   const {
     storageStatus,
@@ -124,27 +130,11 @@ export function CatalogueCombobox({
         </>
       )}
       suggestionAction={
-        allowHideSuggestionsWhenEmpty && !value.trim()
+        !value.trim()
           ? {
               label: (suggestion) =>
                 `Hide ${suggestion.label} from suggestions`,
-              icon: (
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 3l18 18" />
-                  <path d="M10.6 10.7a2 2 0 0 0 2.7 2.7" />
-                  <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5.5 0 9.5 4.8 10 8a9.8 9.8 0 0 1-2.2 4.3" />
-                  <path d="M6.6 6.6A10.5 10.5 0 0 0 2 12c.5 3.2 4.5 8 10 8a10.7 10.7 0 0 0 5.4-1.5" />
-                </svg>
-              ),
+              icon: <HideCatalogueSuggestionIcon />,
               onAction: handleHideSuggestion,
               disabled: storageStatus !== "ready",
             }
@@ -154,7 +144,9 @@ export function CatalogueCombobox({
         canRemember || canUnhide ? (
           <button
             type="button"
-            className="rounded-lg border border-sky-700 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950"
+            className={
+              roomyActions ? roomyActionButtonClass : actionButtonClass
+            }
             disabled={storageStatus !== "ready"}
             onClick={handleRemember}
           >

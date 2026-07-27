@@ -2,20 +2,22 @@
 
 import {
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
   type ChangeEvent,
+  type KeyboardEvent,
   type ReactNode,
 } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   CATALOGUE_SECTIONS,
   MAX_CATALOGUE_IMPORT_BYTES,
   CatalogueDefinition,
   CatalogueImportPreview,
   CatalogueItem,
+  CatalogueKey,
   StoredCatalogueStateV1,
   formatCatalogueExportFilename,
   getCatalogueDefinitionsForBuild,
@@ -31,6 +33,26 @@ const dangerButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const inputClass =
   "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900";
+
+const catalogueTabGroups: Array<{
+  section: (typeof CATALOGUE_SECTIONS)[number];
+  title: string;
+  keys: CatalogueKey[];
+}> = [
+  {
+    section: "Visit Team",
+    title: "Provider roles",
+    keys: ["visit-team.dentist", "visit-team.rda", "visit-team.rdh"],
+  },
+  {
+    section: "Clinical Exam",
+    title: "Occlusion",
+    keys: [
+      "clinical-exam.molar-occlusion",
+      "clinical-exam.skeletal-occlusion",
+    ],
+  },
+];
 
 type PendingImport = {
   state: StoredCatalogueStateV1;
@@ -54,28 +76,16 @@ function CatalogueActionButton({
   ariaLabel?: string;
   onClick: () => void;
 }) {
-  const tooltipId = useId();
-
   return (
-    <span className="group relative inline-flex">
-      <button
-        type="button"
-        className={className}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        aria-describedby={tooltipId}
-        onClick={onClick}
-      >
-        {children}
-      </button>
-      <span
-        id={tooltipId}
-        role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-max max-w-64 -translate-x-1/2 rounded-lg bg-slate-950 px-3 py-2 text-left text-xs font-normal leading-5 text-white shadow-lg group-hover:block group-focus-within:block dark:bg-slate-100 dark:text-slate-950"
-      >
-        {tooltip}
-      </span>
-    </span>
+    <TooltipActionButton
+      tooltip={tooltip}
+      className={className}
+      disabled={disabled}
+      ariaLabel={ariaLabel}
+      onClick={onClick}
+    >
+      {children}
+    </TooltipActionButton>
   );
 }
 
@@ -272,7 +282,17 @@ function CatalogueItemRow({
   );
 }
 
-function CatalogueCard({ definition }: { definition: CatalogueDefinition }) {
+function CatalogueCard({
+  definition,
+  embeddedPanel,
+}: {
+  definition: CatalogueDefinition;
+  embeddedPanel?: {
+    id: string;
+    labelledBy: string;
+    hidden: boolean;
+  };
+}) {
   const { storageStatus, getItems, rememberValue } = useCatalogues();
   const [newValue, setNewValue] = useState("");
   const [message, setMessage] = useState("");
@@ -298,12 +318,11 @@ function CatalogueCard({ definition }: { definition: CatalogueDefinition }) {
     }
   }
 
-  return (
-    <section
-      data-catalogue-key={definition.key}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-    >
-      <h3 className="text-lg font-semibold">{definition.title}</h3>
+  const content = (
+    <>
+      {!embeddedPanel ? (
+        <h3 className="text-lg font-semibold">{definition.title}</h3>
+      ) : null}
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
         Applies to: {definition.fieldLabels.join(", ")}
       </p>
@@ -374,6 +393,140 @@ function CatalogueCard({ definition }: { definition: CatalogueDefinition }) {
           applicable interactive form.
         </p>
       )}
+    </>
+  );
+
+  if (embeddedPanel) {
+    return (
+      <div
+        id={embeddedPanel.id}
+        role="tabpanel"
+        aria-labelledby={embeddedPanel.labelledBy}
+        hidden={embeddedPanel.hidden}
+        data-catalogue-key={definition.key}
+        className="pt-4"
+      >
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <section
+      data-catalogue-key={definition.key}
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
+      {content}
+    </section>
+  );
+}
+
+function CatalogueTabbedCard({
+  title,
+  definitions,
+}: {
+  title: string;
+  definitions: CatalogueDefinition[];
+}) {
+  const { getItems } = useCatalogues();
+  const [activeKey, setActiveKey] = useState(definitions[0].key);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const groupId = `catalogue-group-${definitions
+    .map((definition) => definition.key)
+    .join("-")
+    .replaceAll(".", "-")}`;
+
+  function selectTab(index: number) {
+    const definition = definitions[index];
+    if (!definition) {
+      return;
+    }
+    setActiveKey(definition.key);
+    tabRefs.current[index]?.focus();
+  }
+
+  function handleTabKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) {
+    let nextIndex: number | undefined;
+    if (event.key === "ArrowRight") {
+      nextIndex = (index + 1) % definitions.length;
+    } else if (event.key === "ArrowLeft") {
+      nextIndex = (index - 1 + definitions.length) % definitions.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = definitions.length - 1;
+    }
+    if (nextIndex === undefined) {
+      return;
+    }
+    event.preventDefault();
+    selectTab(nextIndex);
+  }
+
+  return (
+    <section
+      aria-label={`${title} catalogues`}
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
+      <h3 className="text-lg font-semibold">{title}</h3>
+      <div
+        role="tablist"
+        aria-label={`${title} catalogue`}
+        className="mt-4 flex max-w-full gap-1 overflow-x-auto border-b border-slate-200 dark:border-slate-700"
+      >
+        {definitions.map((definition, index) => {
+          const selected = definition.key === activeKey;
+          const tabId = `${groupId}-tab-${index}`;
+          const panelId = `${groupId}-panel-${index}`;
+          const itemCount = getItems(definition.key, {
+            includeHidden: true,
+          }).length;
+          return (
+            <button
+              ref={(node) => {
+                tabRefs.current[index] = node;
+              }}
+              id={tabId}
+              key={definition.key}
+              type="button"
+              role="tab"
+              aria-selected={selected}
+              aria-controls={panelId}
+              tabIndex={selected ? 0 : -1}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-t-lg border border-b-0 px-4 py-2 text-sm font-semibold transition ${
+                selected
+                  ? "border-slate-300 bg-slate-50 text-sky-900 dark:border-slate-700 dark:bg-slate-950 dark:text-sky-200"
+                  : "border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              }`}
+              onClick={() => setActiveKey(definition.key)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+            >
+              <span>{definition.title}</span>
+              <span
+                className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                aria-label={`${itemCount} ${itemCount === 1 ? "item" : "items"}`}
+              >
+                {itemCount}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {definitions.map((definition, index) => (
+        <CatalogueCard
+          key={definition.key}
+          definition={definition}
+          embeddedPanel={{
+            id: `${groupId}-panel-${index}`,
+            labelledBy: `${groupId}-tab-${index}`,
+            hidden: definition.key !== activeKey,
+          }}
+        />
+      ))}
     </section>
   );
 }
@@ -392,6 +545,7 @@ export function CatalogueManager() {
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(
     null,
   );
+  const [selectedImportFileName, setSelectedImportFileName] = useState("");
   const [transferMessage, setTransferMessage] = useState("");
   const [transferError, setTransferError] = useState("");
 
@@ -441,6 +595,7 @@ export function CatalogueManager() {
     setTransferMessage("");
     setTransferError("");
     const file = event.target.files?.[0];
+    setSelectedImportFileName(file?.name ?? "");
     if (!file) {
       return;
     }
@@ -490,6 +645,7 @@ export function CatalogueManager() {
           : "Imported catalogue merged with local catalogues.",
       );
       setPendingImport(null);
+      setSelectedImportFileName("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -559,16 +715,48 @@ export function CatalogueManager() {
         </div>
       ) : null}
 
-      {sections.map(({ section, definitions }) => (
-        <section key={section} className="space-y-4">
-          <h2 className="text-2xl font-semibold">{section}</h2>
-          <div className="grid gap-5">
-            {definitions.map((definition) => (
-              <CatalogueCard key={definition.key} definition={definition} />
-            ))}
-          </div>
-        </section>
-      ))}
+      {sections.map(({ section, definitions }) => {
+        const tabGroups = catalogueTabGroups
+          .filter((group) => group.section === section)
+          .map((group) => ({
+            ...group,
+            definitions: group.keys
+              .map((key) =>
+                definitions.find((definition) => definition.key === key),
+              )
+              .filter(
+                (definition): definition is CatalogueDefinition =>
+                  Boolean(definition),
+              ),
+          }))
+          .filter((group) => group.definitions.length > 1);
+        const groupedKeys = new Set(
+          tabGroups.flatMap((group) =>
+            group.definitions.map((definition) => definition.key),
+          ),
+        );
+        const ungroupedDefinitions = definitions.filter(
+          (definition) => !groupedKeys.has(definition.key),
+        );
+
+        return (
+          <section key={section} className="space-y-4">
+            <h2 className="text-2xl font-semibold">{section}</h2>
+            <div className="grid gap-5">
+              {tabGroups.map((group) => (
+                <CatalogueTabbedCard
+                  key={group.title}
+                  title={group.title}
+                  definitions={group.definitions}
+                />
+              ))}
+              {ungroupedDefinitions.map((definition) => (
+                <CatalogueCard key={definition.key} definition={definition} />
+              ))}
+            </div>
+          </section>
+        );
+      })}
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <h2 className="text-xl font-semibold">Import and export</h2>
@@ -587,21 +775,45 @@ export function CatalogueManager() {
           >
             Export catalogue
           </button>
-          <div>
+          <div className="min-w-0 flex-1 sm:min-w-96 sm:max-w-2xl">
             <label
+              id="catalogue-import-label"
               className="block text-sm font-medium"
               htmlFor="catalogue-import"
             >
               Import catalogue JSON
             </label>
-            <input
-              ref={fileInputRef}
-              id="catalogue-import"
-              className="mt-1 block max-w-full text-sm"
-              type="file"
-              accept="application/json,.json"
-              onChange={(event) => void selectImportFile(event)}
-            />
+            <div className="mt-1 flex min-w-0 flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                aria-controls="catalogue-import"
+                aria-describedby="catalogue-import-file-name"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Choose catalogue file
+              </button>
+              <span
+                id="catalogue-import-file-name"
+                className="flex min-h-10 min-w-0 flex-1 items-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+                title={selectedImportFileName || undefined}
+                aria-live="polite"
+              >
+                <span className="truncate">
+                  {selectedImportFileName || "No file selected"}
+                </span>
+              </span>
+              <input
+                ref={fileInputRef}
+                id="catalogue-import"
+                className="sr-only"
+                type="file"
+                accept="application/json,.json"
+                tabIndex={-1}
+                aria-labelledby="catalogue-import-label"
+                onChange={(event) => void selectImportFile(event)}
+              />
+            </div>
           </div>
         </div>
 
@@ -667,6 +879,7 @@ export function CatalogueManager() {
                 className={secondaryButtonClass}
                 onClick={() => {
                   setPendingImport(null);
+                  setSelectedImportFileName("");
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }

@@ -12,16 +12,14 @@ async function reloadDiscardingForm(page: Page) {
   await reloadPromise;
 }
 
-test("Adult Hygiene draft pill matches the purple draft notice", async ({
+test("Adult Hygiene pilot pill matches the amber pilot notice", async ({
   page,
 }) => {
   await page.goto("/templates/clinic");
-  const draftPill = page.getByText("Interactive · draft", { exact: true });
-  await expect(draftPill).toHaveClass(/bg-violet-100/);
-  await expect(draftPill).toHaveClass(/text-violet-900/);
-  await expect(
-    page.getByText("Interactive · pilot", { exact: true }),
-  ).toHaveClass(/bg-amber-100/);
+  const pilotPills = page.getByText("Interactive · pilot", { exact: true });
+  await expect(pilotPills).toHaveCount(2);
+  await expect(pilotPills.first()).toHaveClass(/bg-amber-100/);
+  await expect(pilotPills.first()).toHaveClass(/text-amber-900/);
 });
 
 test("interactive Generated Note cards match the form card background", async ({
@@ -54,7 +52,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     }),
   ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2021/");
   await expect(
-    page.getByText("Draft interactive conversion", { exact: true }),
+    page.getByText("Pilot interactive conversion", { exact: true }),
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 09:10",
@@ -222,6 +220,37 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     ).toBeVisible();
   }
 
+  const treatmentCompleted = page.locator(
+    "#adult-hygiene-treatment-completed",
+  );
+  await treatmentCompleted.focus();
+  await page
+    .getByRole("option", {
+      name: "1U scale (cavitron and hand scaling) Starter",
+      exact: true,
+    })
+    .click();
+  const completedValues = page.getByRole("list", {
+    name: "Treatment completed today selected values",
+  });
+  const completedRow = completedValues.locator(":scope > li").first();
+  await expect(
+    completedRow.getByRole("button", {
+      name: "Move 1U scale (cavitron and hand scaling) earlier",
+    }),
+  ).toHaveClass(/py-2/);
+  const removeCompleted = completedRow.getByRole("button", {
+    name: "Remove 1U scale (cavitron and hand scaling)",
+  });
+  await expect(removeCompleted).toHaveClass(/border-red-300/);
+  await expect(removeCompleted).toHaveClass(/text-red-800/);
+  await removeCompleted.hover();
+  await expect(
+    completedRow.getByRole("tooltip").filter({
+      hasText: "Remove this value from the note.",
+    }),
+  ).toBeVisible();
+
   const anesthetic = page.locator("#adult-hygiene-anesthetic");
   await anesthetic.focus();
   await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
@@ -246,6 +275,27 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /OH Aids Reviewed\/Recommended: Synthetic reusable OHI aid/,
   );
+  const ohiAidRow = page
+    .getByRole("list", {
+      name: "OH aids reviewed/recommended selected values",
+    })
+    .locator(":scope > li")
+    .first();
+  await expect(
+    ohiAidRow.getByRole("button", {
+      name: "Move Synthetic reusable OHI aid earlier",
+    }),
+  ).toHaveClass(/py-2/);
+  const removeOhiAid = ohiAidRow.getByRole("button", {
+    name: "Remove Synthetic reusable OHI aid",
+  });
+  await expect(removeOhiAid).toHaveClass(/border-red-300/);
+  await removeOhiAid.hover();
+  await expect(
+    ohiAidRow.getByRole("tooltip").filter({
+      hasText: "Remove this value from the note.",
+    }),
+  ).toBeVisible();
 
   await reloadDiscardingForm(page);
   await expect(medicalHistory).toHaveValue("");

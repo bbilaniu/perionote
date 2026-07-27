@@ -26,13 +26,16 @@ import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
-const compactButtonClass =
-  "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const treatmentRowButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const treatmentRowRemoveButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
 const recareNoteDiscardWarning =
   "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
@@ -264,7 +267,7 @@ function TreatmentEntryList({
                   }
                   rememberActionLabel="Remember treatment type"
                   unhideActionLabel="Unhide treatment type"
-                  allowHideSuggestionsWhenEmpty
+                  roomyActions
                 />
                 <TextField
                   id={`${id}-${entry.id}-tooth-area`}
@@ -277,28 +280,28 @@ function TreatmentEntryList({
                   helpText="Not saved. This value stays in this note."
                 />
                 <div className="flex flex-wrap items-start gap-2 md:pt-7">
-                  <button
-                    type="button"
-                    className={compactButtonClass}
+                  <TooltipActionButton
+                    tooltip="Move this treatment line earlier in the note."
+                    className={treatmentRowButtonClass}
                     disabled={index === 0}
-                    aria-label={`Move ${label} item ${index + 1} earlier`}
+                    ariaLabel={`Move ${label} item ${index + 1} earlier`}
                     onClick={() => moveEntry(index, "earlier")}
                   >
                     Earlier
-                  </button>
-                  <button
-                    type="button"
-                    className={compactButtonClass}
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Move this treatment line later in the note."
+                    className={treatmentRowButtonClass}
                     disabled={index === entries.length - 1}
-                    aria-label={`Move ${label} item ${index + 1} later`}
+                    ariaLabel={`Move ${label} item ${index + 1} later`}
                     onClick={() => moveEntry(index, "later")}
                   >
                     Later
-                  </button>
-                  <button
-                    type="button"
-                    className={compactButtonClass}
-                    aria-label={`Remove ${label} item ${index + 1}`}
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Remove this treatment line from the note."
+                    className={treatmentRowRemoveButtonClass}
+                    ariaLabel={`Remove ${label} item ${index + 1}`}
                     onClick={() =>
                       onChange(
                         entries.filter(
@@ -308,7 +311,7 @@ function TreatmentEntryList({
                     }
                   >
                     Remove
-                  </button>
+                  </TooltipActionButton>
                 </div>
               </div>
             </li>
@@ -319,7 +322,7 @@ function TreatmentEntryList({
           No {label.toLocaleLowerCase("en-CA")} added.
         </p>
       )}
-      <button type="button" className={compactButtonClass} onClick={onAdd}>
+      <button type="button" className={treatmentRowButtonClass} onClick={onAdd}>
         {addLabel}
       </button>
     </div>
@@ -492,7 +495,11 @@ export function RecareExamTemplate({
     );
     setCopyMessage("");
 
-    if (missingPatientId || missingProvider || !hasRequiredRecareExamFields(form)) {
+    if (
+      missingPatientId ||
+      missingProvider ||
+      !hasRequiredRecareExamFields(form)
+    ) {
       requestAnimationFrame(() => {
         (missingPatientId ? patientIdRef.current : dentistRef.current)?.focus();
       });
@@ -593,7 +600,9 @@ export function RecareExamTemplate({
           >
             <fieldset
               aria-invalid={Boolean(providerError)}
-              aria-describedby={providerError ? "recare-provider-error" : undefined}
+              aria-describedby={
+                providerError ? "recare-provider-error" : undefined
+              }
             >
               <legend className="sr-only">Visit team providers</legend>
               <div className="grid gap-4 md:grid-cols-3">
@@ -697,9 +706,7 @@ export function RecareExamTemplate({
                 label="Medical history reviewed"
                 catalogueKey="medical-history.review"
                 value={form.medicalHistoryReview}
-                onChange={(value) =>
-                  updateField("medicalHistoryReview", value)
-                }
+                onChange={(value) => updateField("medicalHistoryReview", value)}
               />
 
               <div className="space-y-4">
@@ -737,6 +744,8 @@ export function RecareExamTemplate({
               catalogueKey="imaging.radiographs"
               values={form.radiographs}
               onChange={(value) => updateField("radiographs", value)}
+              allowDuplicateValues
+              roomySelectionActions
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"
@@ -775,9 +784,7 @@ export function RecareExamTemplate({
               status={form.tmjStatus}
               findings={form.tmjFindings}
               onStatusChange={(value) => updateField("tmjStatus", value)}
-              onFindingsChange={(value) =>
-                updateField("tmjFindings", value)
-              }
+              onFindingsChange={(value) => updateField("tmjFindings", value)}
             />
             <ExamFinding
               id="recare-masseter"
@@ -854,9 +861,7 @@ export function RecareExamTemplate({
                   label="Left molar occlusion"
                   catalogueKey="clinical-exam.molar-occlusion"
                   value={form.leftMolarOcclusion}
-                  onChange={(value) =>
-                    updateField("leftMolarOcclusion", value)
-                  }
+                  onChange={(value) => updateField("leftMolarOcclusion", value)}
                   disabled={form.leftMolarOcclusionNotApplicable}
                 />
                 <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 sm:mt-6">
@@ -952,16 +957,13 @@ export function RecareExamTemplate({
               ) : null}
               <FixedChoiceListbox
                 id="recare-occlusal-splint"
-                label="Has an occlusal splint"
+                label="Has an occlusal splint?"
                 value={form.occlusalSplintStatus}
                 options={statusOptions}
                 onChange={(value) => {
                   updateField("occlusalSplintStatus", value);
                   if (value !== "yes") {
-                    updateField(
-                      "occlusalSplintUseStatus",
-                      "not-documented",
-                    );
+                    updateField("occlusalSplintUseStatus", "not-documented");
                   }
                 }}
               />

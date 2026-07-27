@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { HideCatalogueSuggestionIcon } from "@/components/catalogues/HideCatalogueSuggestionIcon";
 import { EditableCombobox } from "@/components/forms/EditableCombobox";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   type CatalogueKey,
   normalizeCatalogueLabel,
@@ -11,6 +13,10 @@ import {
 
 const secondaryButtonClass =
   "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const roomyButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const roomyRemoveButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
 export function CatalogueMultiCombobox({
   id,
@@ -18,18 +24,23 @@ export function CatalogueMultiCombobox({
   catalogueKey,
   values,
   onChange,
+  allowDuplicateValues = false,
+  roomySelectionActions = false,
 }: {
   id: string;
   label: string;
   catalogueKey: CatalogueKey;
   values: string[];
   onChange: (values: string[]) => void;
+  allowDuplicateValues?: boolean;
+  roomySelectionActions?: boolean;
 }) {
   const {
     storageStatus,
     getItems,
     findEquivalent,
     rememberValue,
+    setHidden,
   } = useCatalogues();
   const [draft, setDraft] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
@@ -43,10 +54,17 @@ export function CatalogueMultiCombobox({
     const query = normalizeCatalogueLabel(draft);
     return getItems(catalogueKey).filter(
       (item) =>
-        !selectedLabels.has(normalizeCatalogueLabel(item.label)) &&
+        (allowDuplicateValues ||
+          !selectedLabels.has(normalizeCatalogueLabel(item.label))) &&
         (!query || normalizeCatalogueLabel(item.label).includes(query)),
     );
-  }, [catalogueKey, draft, getItems, selectedLabels]);
+  }, [
+    allowDuplicateValues,
+    catalogueKey,
+    draft,
+    getItems,
+    selectedLabels,
+  ]);
   const equivalent = findEquivalent(catalogueKey, draft);
   const canRemember = Boolean(draft.trim()) && !equivalent;
   const canUnhide = Boolean(draft.trim()) && equivalent?.hidden;
@@ -58,7 +76,10 @@ export function CatalogueMultiCombobox({
   function addValue(value: string) {
     try {
       const labelValue = validateCatalogueLabel(value);
-      if (selectedLabels.has(normalizeCatalogueLabel(labelValue))) {
+      if (
+        !allowDuplicateValues &&
+        selectedLabels.has(normalizeCatalogueLabel(labelValue))
+      ) {
         setStatusMessage(`${labelValue} is already selected.`);
         return;
       }
@@ -77,7 +98,10 @@ export function CatalogueMultiCombobox({
     try {
       const labelValue = validateCatalogueLabel(draft);
       const result = rememberValue(catalogueKey, labelValue);
-      if (!selectedLabels.has(normalizeCatalogueLabel(labelValue))) {
+      if (
+        allowDuplicateValues ||
+        !selectedLabels.has(normalizeCatalogueLabel(labelValue))
+      ) {
         onChange([...values, labelValue]);
       }
       setDraft("");
@@ -94,6 +118,21 @@ export function CatalogueMultiCombobox({
         error instanceof Error
           ? error.message
           : "The value could not be remembered.",
+      );
+    }
+  }
+
+  function hideSuggestion(suggestion: (typeof suggestions)[number]) {
+    try {
+      setHidden(suggestion.id, suggestion.owner, true);
+      setStatusMessage(
+        `${suggestion.label} hidden from suggestions. You can unhide it in Manage Catalogues.`,
+      );
+    } catch (error) {
+      setStatusMessage(
+        error instanceof Error
+          ? error.message
+          : "This suggestion could not be hidden.",
       );
     }
   }
@@ -127,32 +166,44 @@ export function CatalogueMultiCombobox({
         >
           <span>{value}</span>
           <span className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={secondaryButtonClass}
+            <TooltipActionButton
+              tooltip="Move this value earlier in the note."
+              className={
+                roomySelectionActions
+                  ? roomyButtonClass
+                  : secondaryButtonClass
+              }
               disabled={index === 0}
-              aria-label={`Move ${value} earlier`}
+              ariaLabel={`Move ${value} earlier`}
               onClick={() => moveValue(index, "up")}
             >
               Earlier
-            </button>
-            <button
-              type="button"
-              className={secondaryButtonClass}
+            </TooltipActionButton>
+            <TooltipActionButton
+              tooltip="Move this value later in the note."
+              className={
+                roomySelectionActions
+                  ? roomyButtonClass
+                  : secondaryButtonClass
+              }
               disabled={index === values.length - 1}
-              aria-label={`Move ${value} later`}
+              ariaLabel={`Move ${value} later`}
               onClick={() => moveValue(index, "down")}
             >
               Later
-            </button>
-            <button
-              type="button"
-              className={secondaryButtonClass}
-              aria-label={`Remove ${value}`}
+            </TooltipActionButton>
+            <TooltipActionButton
+              tooltip="Remove this value from the note."
+              className={
+                roomySelectionActions
+                  ? roomyRemoveButtonClass
+                  : secondaryButtonClass
+              }
+              ariaLabel={`Remove ${value}`}
               onClick={() => removeValue(index)}
             >
               Remove
-            </button>
+            </TooltipActionButton>
           </span>
         </li>
       ))}
@@ -178,6 +229,17 @@ export function CatalogueMultiCombobox({
           </span>
         </>
       )}
+      suggestionAction={
+        !draft.trim()
+          ? {
+              label: (suggestion) =>
+                `Hide ${suggestion.label} from suggestions`,
+              icon: <HideCatalogueSuggestionIcon />,
+              onAction: hideSuggestion,
+              disabled: storageStatus !== "ready",
+            }
+          : undefined
+      }
       selectedContent={selectedContent}
       actions={
         <>

@@ -36,7 +36,25 @@ test("Recare Exam radiographs use the reviewed catalogue and ordered note values
       }),
     ).toBeVisible();
   }
+  await page
+    .getByRole("button", {
+      name: "Hide 2 PA from suggestions",
+      exact: true,
+    })
+    .click();
+  await expect(radiographs).toBeFocused();
+  await expect(radiographs).toHaveValue("");
+  await expect(
+    page.getByRole("option", { name: "2 PA Starter", exact: true }),
+  ).toHaveCount(0);
 
+  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
+  await multiControl(page, "Radiographs")
+    .getByRole("button", { name: "Show Radiographs suggestions" })
+    .click();
+  await expect(
+    page.getByRole("option", { name: "4 BW Starter", exact: true }),
+  ).toBeVisible();
   await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
   await radiographs.fill("Synthetic supplemental view");
   await multiControl(page, "Radiographs")
@@ -47,13 +65,43 @@ test("Recare Exam radiographs use the reviewed catalogue and ordered note values
       name: "Move Synthetic supplemental view earlier",
     })
     .click();
+  await page
+    .getByRole("button", {
+      name: "Move Synthetic supplemental view earlier",
+    })
+    .click();
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view; 4 BW/,
+    /Radiographs: Synthetic supplemental view; 4 BW; 4 BW/,
   );
-  await page.getByRole("button", { name: "Remove 4 BW" }).click();
+  const selectedRadiographs = page.getByRole("list", {
+    name: "Radiographs selected values",
+  });
+  await expect(selectedRadiographs.locator(":scope > li")).toHaveCount(3);
+  const selectedRadiographRow = selectedRadiographs
+    .locator(":scope > li")
+    .first();
+  await expect(
+    selectedRadiographRow.getByRole("button", {
+      name: "Move Synthetic supplemental view earlier",
+    }),
+  ).toHaveClass(/py-2/);
+  const removeSelectedRadiograph = selectedRadiographRow.getByRole("button", {
+    name: "Remove Synthetic supplemental view",
+  });
+  await expect(removeSelectedRadiograph).toHaveClass(/border-red-300/);
+  await removeSelectedRadiograph.focus();
+  await expect(
+    selectedRadiographRow.getByRole("tooltip").filter({
+      hasText: "Remove this value from the note.",
+    }),
+  ).toBeVisible();
+  await selectedRadiographs
+    .getByRole("button", { name: "Remove 4 BW" })
+    .first()
+    .click();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view/,
+    /Radiographs: Synthetic supplemental view; 4 BW/,
   );
 });
 
@@ -101,6 +149,9 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
     name: "Add Treatment Option",
     exact: true,
   });
+  await expect(addOption).toHaveClass(/rounded-xl/);
+  await expect(addOption).toHaveClass(/py-2/);
+  await expect(addOption).toHaveClass(/text-sm/);
 
   await addOption.click();
   const firstOptionType = optionRows
@@ -161,10 +212,40 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   expect(addOptionBox?.y ?? 0).toBeGreaterThanOrEqual(
     (optionListBox?.y ?? 0) + (optionListBox?.height ?? 0),
   );
+  const earlierButton = secondOption.getByRole("button", {
+    name: "Move Treatment Options item 2 earlier",
+    exact: true,
+  });
+  const removeButton = secondOption.getByRole("button", {
+    name: "Remove Treatment Options item 2",
+    exact: true,
+  });
+  await expect(earlierButton).toHaveClass(/rounded-xl/);
+  await expect(earlierButton).toHaveClass(/py-2/);
+  await expect(earlierButton).toHaveClass(/text-sm/);
+  await expect(removeButton).toHaveClass(/border-red-300/);
+  await expect(removeButton).toHaveClass(/text-red-800/);
+  await earlierButton.hover();
+  await expect(
+    secondOption.getByRole("tooltip").filter({
+      hasText: "Move this treatment line earlier in the note.",
+    }),
+  ).toBeVisible();
+  await removeButton.focus();
+  await expect(
+    secondOption.getByRole("tooltip").filter({
+      hasText: "Remove this treatment line from the note.",
+    }),
+  ).toBeVisible();
 
-  await secondOption
-    .getByRole("button", { name: "Remember treatment type", exact: true })
-    .click();
+  const rememberTreatmentType = secondOption.getByRole("button", {
+    name: "Remember treatment type",
+    exact: true,
+  });
+  await expect(rememberTreatmentType).toHaveClass(/rounded-xl/);
+  await expect(rememberTreatmentType).toHaveClass(/py-2/);
+  await expect(rememberTreatmentType).toHaveClass(/text-sm/);
+  await rememberTreatmentType.click();
   const savedCatalogueData = await page.evaluate(() =>
     Object.values(window.localStorage).join("\n"),
   );
@@ -208,6 +289,13 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   });
   const planRows = planList.locator(":scope > li");
   await expect(planRows).toHaveCount(3);
+  const addPlanItem = page.getByRole("button", {
+    name: "Add Treatment Plan Item",
+    exact: true,
+  });
+  await expect(addPlanItem).toHaveClass(/rounded-xl/);
+  await expect(addPlanItem).toHaveClass(/py-2/);
+  await expect(addPlanItem).toHaveClass(/text-sm/);
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Treatment Options:\n  - Hygiene maintenance\n  - Fillings — tooth 36\n  - Fillings — teeth 14, 15\n\nTreatment Plan:\n  - Hygiene maintenance\n  - Fillings — tooth 36\n  - Fillings — teeth 14, 15/,
   );
