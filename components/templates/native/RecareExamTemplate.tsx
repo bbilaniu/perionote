@@ -1063,13 +1063,15 @@ export function RecareExamTemplate({
                   roomySelectionActions
                 />
               </div>
-              <TextareaField
-                id="recare-caries-risk-notes"
-                label="Caries risk notes"
-                placeholder="Document rationale for the caries risk selection."
-                value={form.cariesRiskNotes}
-                onChange={(value) => updateField("cariesRiskNotes", value)}
-              />
+              <div className="md:col-span-2">
+                <TextareaField
+                  id="recare-caries-risk-notes"
+                  label="Caries risk notes"
+                  placeholder="Document rationale for the caries risk selection."
+                  value={form.cariesRiskNotes}
+                  onChange={(value) => updateField("cariesRiskNotes", value)}
+                />
+              </div>
             </div>
           </Section>
 
