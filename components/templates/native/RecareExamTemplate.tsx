@@ -790,6 +790,12 @@ export function RecareExamTemplate({
               }
               roomySelectionActions
             />
+            <CheckboxField
+              id="recare-chief-concern-list-format"
+              label="List each concern on a separate line in the note"
+              checked={form.listChiefConcerns}
+              onChange={(value) => updateField("listChiefConcerns", value)}
+            />
           </Section>
 
           <Section title="Clinical Exam">
@@ -1103,6 +1109,12 @@ export function RecareExamTemplate({
               }
               onChange={(value) => updateField("treatmentOptions", value)}
             />
+            <CheckboxField
+              id="recare-treatment-options-list-format"
+              label="List each treatment option on a separate line in the note"
+              checked={form.listTreatmentOptions}
+              onChange={(value) => updateField("listTreatmentOptions", value)}
+            />
 
             <div className="space-y-3">
               {form.treatmentPlan.every(
@@ -1141,6 +1153,12 @@ export function RecareExamTemplate({
                   ])
                 }
                 onChange={(value) => updateField("treatmentPlan", value)}
+              />
+              <CheckboxField
+                id="recare-treatment-plan-list-format"
+                label="List each treatment plan item on a separate line in the note"
+                checked={form.listTreatmentPlan}
+                onChange={(value) => updateField("listTreatmentPlan", value)}
               />
             </div>
 

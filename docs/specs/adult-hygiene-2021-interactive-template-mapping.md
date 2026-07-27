@@ -174,7 +174,10 @@ labels into one opaque string:
 For Patient chief concern, `Nothing` is mutually exclusive. Selecting it
 removes every other concern, and selecting or adding another concern removes
 `Nothing`. Custom concerns remain encounter-only unless the user deliberately
-chooses **Remember and add**.
+chooses **Remember and add**. An unchecked
+**List each concern on a separate line in the note** checkbox keeps the default
+semicolon-separated inline output. Checking it renders the same selected
+values as an indented bullet list under the Patient Chief Concern heading.
 
 Treatment completed today uses ordered structured rows. Each row contains a
 catalogue-backed editable treatment type and optional multi-value Tooth/area.
@@ -334,7 +337,7 @@ valid.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive | Current values: `patient-specific`; reusable values: `catalogue` | `Patient Chief Concern: {values joined with "; "}` |
+| A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
 | A12 | `Hygiene Area of Concern:` | Textarea: **Hygiene area of concern** | `patient-specific` | `Hygiene Area of Concern: {text}` |
 | A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Plaque: {extent intensity location}` or entered text |
 | A14 | `Stain: [SELECT/INSERT: STAIN]` | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Stain: {extent intensity}` or entered text |

@@ -41,3 +41,21 @@ export function applyPatientChiefConcernSelectionRules(
 
   return nextValues;
 }
+
+export function formatPatientChiefConcerns(
+  label: string,
+  values: string[],
+  asList: boolean,
+) {
+  const cleanValues = values.map((value) => value.trim()).filter(Boolean);
+  if (cleanValues.length === 0) return "";
+
+  if (asList) {
+    return `${label}:\n${cleanValues
+      .map((value) => `  - ${value}`)
+      .join("\n")}`;
+  }
+
+  const inlineValue = cleanValues.join("; ");
+  return `${label}: ${/[.!?]$/.test(inlineValue) ? inlineValue : `${inlineValue}.`}`;
+}

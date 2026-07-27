@@ -142,7 +142,7 @@ state.
 | --- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values, including repeats}` |
 | R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific`                       | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
-| R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue | `Patient's chief concern: {values joined with "; "}` |
+| R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue; format: `administrative` | Inline `Patient's chief concern: {values joined with "; "}` by default, or heading plus indented bullets |
 
 Radiographs uses the complete visible options from the reviewed local JSON
 extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
@@ -154,7 +154,10 @@ continues to use an explicit Yes/No status plus editable details.
 Patient chief concerns share the same starter and browser-local catalogue as
 Adult Hygiene. Custom values apply only to the current note unless deliberately
 remembered. Selecting `Nothing` removes all other concerns; selecting or adding
-another concern removes `Nothing`.
+another concern removes `Nothing`. The unchecked
+**List each concern on a separate line in the note** checkbox preserves inline
+output by default; checking it lists the selected concerns using an indented
+bullet style.
 
 ### Clinical Exam
 
@@ -229,14 +232,14 @@ selections, and notes remain encounter-specific.
 
 | ID  | Source                                             | Control                                                                                                                 | Classification                                                                                                                    | Generated output                                                                                     |
 | --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered editable rows with a catalogue-backed **Treatment type** and optional encounter-only **Tooth/area**             | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; never automatically selected | An ordered `Treatment Options:` block containing `Treatment type` and, when present, ` — Tooth/area` |
-| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields; while empty, offer **Copy Treatment Options to Treatment Plan** | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; never automatically selected | An ordered `Treatment Plan:` block containing only explicitly entered or explicitly copied rows      |
+| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered editable rows with a catalogue-backed **Treatment type**, optional encounter-only **Tooth/area**, and checked-by-default per-note list-format checkbox | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Options:` list by default, or a semicolon-separated inline line |
+| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields and format checkbox; while empty, offer **Copy Treatment Options to Treatment Plan** | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Plan:` list by default, or a semicolon-separated inline line |
 | R33 | `Next Visit: [UNRESOLVED PLACEHOLDER: NEXT VISIT]` | Editable text: **Next visit**                                                                                           | `patient-specific`                                                                                                                | `Next Visit: {text}`                                                                                 |
 | R34 | `Date Booked:`                                     | Optional date input: **Date booked**                                                                                    | `administrative`                                                                                                                  | `Date Booked: {YYYY-MM-DD}`                                                                          |
 
 The shared treatment-type catalogue has only one public starter: **Hygiene
 maintenance**. It is an explicit option, not a default or recommendation.
-Each list supports adding, removing, reordering, and editing rows inline.
+Each control supports adding, removing, reordering, and editing rows inline.
 Treatment types may be repeated so that the same treatment can document
 different teeth or areas. **Remember treatment type** saves only the type;
 the optional Tooth/area value always remains in the current note. Selecting a
@@ -248,6 +251,12 @@ copy action appears only while Treatment Plan has no documented rows and
 snapshots the current ordered Treatment Options after an explicit click.
 Copied rows receive independent identities, so later edits do not affect the
 source rows. Neither field infers the next visit.
+
+The checked-by-default **List each treatment option on a separate line in the
+note** and **List each treatment plan item on a separate line in the note**
+checkboxes are independent. Checked output numbers entries from `1.` in their
+displayed order. Unchecking a checkbox places that section's entries after its
+heading on one line, separated by semicolons.
 
 Treatment Options and Treatment Plan remain separate controls. The source's
 undeclared `NEXT VISIT` placeholder maps to unrestricted text. Dates generated
@@ -301,7 +310,7 @@ Premedication required: {documented answer}
 
 Radiographs: {ordered selected and entered values}
 Intraoral photos: {Yes/No and optional details}
-Patient's chief concern: {ordered selected and entered values}
+Patient's chief concern: {ordered selected and entered values inline by default, or as indented bullets when list formatting is checked}
 
 Extraoral: {WNL or findings}
 TMJ: {WNL or findings}
@@ -329,10 +338,10 @@ ODONTOGRAM UP TO DATE
 Caries risk: {level} caries risk due to {ordered factors}. {entered notes}
 
 Treatment Options:
-  - {treatment type}{ — optional tooth/area}
+  1. {treatment type}{ — optional tooth/area}
 
 Treatment Plan:
-  - {treatment type}{ — optional tooth/area}
+  1. {treatment type}{ — optional tooth/area}
 
 Next Visit: {entered text}
 Date Booked: {YYYY-MM-DD}

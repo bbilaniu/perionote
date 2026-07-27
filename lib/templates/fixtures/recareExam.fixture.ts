@@ -21,6 +21,7 @@ export const recareExamFixture: RecareExamForm = {
     "Food catches between teeth",
     "Synthetic concern for demonstration",
   ],
+  listChiefConcerns: false,
   extraoralStatus: "wnl",
   extraoralFindings: "",
   tmjStatus: "findings",
@@ -69,6 +70,7 @@ export const recareExamFixture: RecareExamForm = {
       toothArea: "teeth 14, 15",
     },
   ],
+  listTreatmentOptions: true,
   treatmentPlan: [
     {
       id: "fixture-treatment-plan-1",
@@ -76,6 +78,7 @@ export const recareExamFixture: RecareExamForm = {
       toothArea: "",
     },
   ],
+  listTreatmentPlan: true,
   nextVisit: "Synthetic hygiene maintenance visit",
   dateBooked: "2026-08-15",
 };

@@ -129,6 +129,12 @@ test("Recare and Adult Hygiene share the chief concern catalogue and Nothing rul
   await page.getByRole("button", { name: "Remember and add" }).click();
   await expect(selectedRecareConcerns).not.toContainText("Nothing");
   await expect(selectedRecareConcerns).toContainText("Shared custom concern");
+  await page
+    .getByLabel("List each concern on a separate line in the note")
+    .check();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Patient's chief concern:\n  - Shared custom concern/,
+  );
 
   const adultPage = await page.context().newPage();
   await adultPage.goto(adultHygieneUrl);

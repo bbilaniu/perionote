@@ -151,6 +151,7 @@ export interface AdultHygiene2021Form {
   premedicationStatus: PremedicationStatus;
   premedicationDetails: string;
   patientChiefConcern: string[];
+  listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
   plaqueOther: string;
@@ -214,6 +215,7 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     premedicationStatus: "not-documented",
     premedicationDetails: "",
     patientChiefConcern: [],
+    listChiefConcerns: false,
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
     plaqueOther: "",

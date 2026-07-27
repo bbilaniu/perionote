@@ -40,6 +40,7 @@ export interface RecareExamForm {
   intraoralPhotosStatus: DocumentationStatus;
   intraoralPhotosDetails: string;
   chiefConcern: string[];
+  listChiefConcerns: boolean;
   extraoralStatus: ExamStatus;
   extraoralFindings: string;
   tmjStatus: ExamStatus;
@@ -73,7 +74,9 @@ export interface RecareExamForm {
   cariesRiskFactors: string[];
   cariesRiskNotes: string;
   treatmentOptions: RecareTreatmentEntry[];
+  listTreatmentOptions: boolean;
   treatmentPlan: RecareTreatmentEntry[];
+  listTreatmentPlan: boolean;
   nextVisit: string;
   dateBooked: string;
 }
@@ -97,6 +100,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     intraoralPhotosStatus: "not-documented",
     intraoralPhotosDetails: "",
     chiefConcern: [],
+    listChiefConcerns: false,
     extraoralStatus: "not-assessed",
     extraoralFindings: "",
     tmjStatus: "not-assessed",
@@ -130,7 +134,9 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     cariesRiskFactors: [],
     cariesRiskNotes: "",
     treatmentOptions: [],
+    listTreatmentOptions: true,
     treatmentPlan: [],
+    listTreatmentPlan: true,
     nextVisit: "",
     dateBooked: "",
   };

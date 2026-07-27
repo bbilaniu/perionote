@@ -5,6 +5,7 @@ import type {
   RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 
 type BuildRecareExamSummaryOptions = {
   startedAt?: Date;
@@ -121,8 +122,9 @@ function ownershipUseLine(
 }
 
 function treatmentBlock(
-  heading: string,
+  label: string,
   values: RecareTreatmentEntry[],
+  asList: boolean,
 ): string[] {
   const entries = values
     .map((entry) => {
@@ -136,7 +138,12 @@ function treatmentBlock(
     })
     .filter(Boolean);
   if (entries.length === 0) return [];
-  return [heading, ...entries.map((entry) => `  - ${entry}`)];
+  return asList
+    ? [
+        `${label}:`,
+        ...entries.map((entry, index) => `  ${index + 1}. ${entry}`),
+      ]
+    : [`${label}: ${entries.join("; ")}`];
 }
 
 export function formatRecareExamLocalTimestamp(date: Date): string {
@@ -232,7 +239,6 @@ export function buildRecareExamSummary(
   ];
 
   const radiographs = form.radiographs.map(trimmed).filter(Boolean);
-  const chiefConcerns = form.chiefConcern.map(trimmed).filter(Boolean);
   const recordsAndConcern = [
     radiographs.length
       ? `Radiographs: ${radiographs.join("; ")}`
@@ -242,11 +248,11 @@ export function buildRecareExamSummary(
       form.intraoralPhotosStatus,
       form.intraoralPhotosDetails,
     ),
-    chiefConcerns.length
-      ? `Patient's chief concern: ${withTerminalPunctuation(
-          chiefConcerns.join("; "),
-        )}`
-      : "",
+    formatPatientChiefConcerns(
+      "Patient's chief concern",
+      form.chiefConcern,
+      form.listChiefConcerns,
+    ),
   ];
 
   const extraoralAndTmj = [
@@ -337,8 +343,16 @@ export function buildRecareExamSummary(
     appliancesAndHistory,
     patientRequests,
     odontogramAndCariesRisk,
-    treatmentBlock("Treatment Options:", form.treatmentOptions),
-    treatmentBlock("Treatment Plan:", form.treatmentPlan),
+    treatmentBlock(
+      "Treatment Options",
+      form.treatmentOptions,
+      form.listTreatmentOptions,
+    ),
+    treatmentBlock(
+      "Treatment Plan",
+      form.treatmentPlan,
+      form.listTreatmentPlan,
+    ),
     nextVisit,
   ]
     .map((group) => group.filter(Boolean))

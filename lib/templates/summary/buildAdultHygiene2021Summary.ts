@@ -6,6 +6,7 @@ import type {
   DocumentationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 
 type BuildAdultHygiene2021SummaryOptions = {
@@ -138,12 +139,10 @@ export function buildAdultHygiene2021Summary(
   ];
 
   const concernsAndFindings = [
-    labelledLine(
+    formatPatientChiefConcerns(
       "Patient Chief Concern",
-      form.patientChiefConcern
-        .map((value) => trimmed(value))
-        .filter(Boolean)
-        .join("; "),
+      form.patientChiefConcern,
+      form.listChiefConcerns,
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
     labelledLine("Plaque", selectedValue(form.plaqueChoice, form.plaqueOther)),

@@ -212,7 +212,7 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
     "Intraoral photos: No.\nPatient's chief concern:",
   );
   expect(copiedNote).toContain(
-    "Treatment Options:\n  - Hygiene maintenance\n  - Synthetic restorative consultation",
+    "Treatment Options:\n  1. Hygiene maintenance\n  2. Synthetic restorative consultation",
   );
   expect(copiedNote).toContain(
     "ODONTOGRAM UP TO DATE\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.",

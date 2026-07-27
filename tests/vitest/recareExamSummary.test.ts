@@ -67,11 +67,11 @@ ODONTOGRAM UP TO DATE
 Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.
 
 Treatment Options:
-  - Hygiene maintenance
-  - Synthetic restorative consultation — teeth 14, 15
+  1. Hygiene maintenance
+  2. Synthetic restorative consultation — teeth 14, 15
 
 Treatment Plan:
-  - Hygiene maintenance
+  1. Hygiene maintenance
 
 Next Visit: Synthetic hygiene maintenance visit
 Date Booked: 2026-08-15`);
@@ -92,6 +92,21 @@ Date Booked: 2026-08-15`);
       `Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today. Synthetic consent detail.
 Medical history reviewed: YES- NO CHANGES.`,
     );
+  });
+
+  it("can list chief concerns on separate note lines", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      chiefConcern: [
+        "Food catches between teeth",
+        "Sensitivity to hot and cold",
+      ],
+      listChiefConcerns: true,
+    };
+
+    expect(buildRecareExamSummary(form)).toBe(`Patient's chief concern:
+  - Food catches between teeth
+  - Sensitivity to hot and cold`);
   });
 
   it("preserves documented No answers and unknown editable values", () => {
@@ -138,11 +153,42 @@ Occlusal splint: No.
 Retainers: None.
 
 Treatment Options:
-  - Second option — teeth 14, 15
-  - First option
+  1. Second option — teeth 14, 15
+  2. First option
 
 Treatment Plan:
-  - First option — upper right`);
+  1. First option — upper right`);
+  });
+
+  it("can render treatment options and treatment plan inline independently", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      treatmentOptions: [
+        {
+          id: "option-1",
+          treatmentType: "Hygiene maintenance",
+          toothArea: "",
+        },
+        {
+          id: "option-2",
+          treatmentType: "Restorative consultation",
+          toothArea: "tooth 36",
+        },
+      ],
+      listTreatmentOptions: false,
+      treatmentPlan: [
+        {
+          id: "plan-1",
+          treatmentType: "Hygiene maintenance",
+          toothArea: "",
+        },
+      ],
+      listTreatmentPlan: false,
+    };
+
+    expect(buildRecareExamSummary(form)).toBe(`Treatment Options: Hygiene maintenance; Restorative consultation — tooth 36
+
+Treatment Plan: Hygiene maintenance`);
   });
 
   it("documents odontogram status and ordered caries risk details without inferring values", () => {

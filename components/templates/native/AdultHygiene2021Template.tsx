@@ -972,6 +972,12 @@ export function AdultHygiene2021Template({
               }
               roomySelectionActions
             />
+            <CheckboxField
+              id="adult-hygiene-chief-concern-list-format"
+              label="List each concern on a separate line in the note"
+              checked={form.listChiefConcerns}
+              onChange={(value) => updateField("listChiefConcerns", value)}
+            />
             <TextareaField
               id="adult-hygiene-area-of-concern"
               label="Hygiene area of concern"

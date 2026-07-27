@@ -19,6 +19,7 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
     "Sensitivity to hot and cold",
     "Food catches between teeth",
   ],
+  listChiefConcerns: false,
   hygieneAreaOfConcern: "Synthetic lower anterior concern.",
   plaqueChoice: "Localized moderate interproximal",
   plaqueOther: "",

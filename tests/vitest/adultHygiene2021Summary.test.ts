@@ -132,6 +132,21 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
     ).toEqual(["Sore gums upon brushing/flossing"]);
   });
 
+  it("can list chief concerns on separate note lines", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      patientChiefConcern: [
+        "Food catches between teeth",
+        "Sensitivity to hot and cold",
+      ],
+      listChiefConcerns: true,
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Patient Chief Concern:
+  - Food catches between teeth
+  - Sensitivity to hot and cold`);
+  });
+
   it("adds multiple fixed and encounter-only tooth areas to a treatment", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
