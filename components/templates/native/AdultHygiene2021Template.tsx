@@ -11,6 +11,7 @@ import {
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
+import { FixedChoiceMultiCombobox } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
@@ -19,13 +20,10 @@ import {
   type AdultHygiene2021Form,
   bleedingChoices,
   brushingFrequencyChoices,
-  canonicalTreatmentToothArea,
   calculusChoices,
   createEmptyAdultHygiene2021Form,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
-  normalizeTreatmentToothArea,
-  orderTreatmentToothAreas,
   patientChiefConcernChoices,
   periodontitisGradeChoices,
   periodontitisStageChoices,
@@ -284,182 +282,6 @@ function CheckboxField({
   );
 }
 
-function TreatmentToothAreaMultiSelect({
-  id,
-  values,
-  onChange,
-}: {
-  id: string;
-  values: string[];
-  onChange: (values: string[]) => void;
-}) {
-  const [customValue, setCustomValue] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
-  const selectedValues = orderTreatmentToothAreas(values);
-  const selectedLabels = new Set(
-    selectedValues.map(normalizeTreatmentToothArea),
-  );
-
-  function toggleFixedChoice(choice: (typeof treatmentToothAreaChoices)[number]) {
-    const normalizedChoice = normalizeTreatmentToothArea(choice);
-    const isSelected = selectedLabels.has(normalizedChoice);
-    const nextValues = isSelected
-      ? selectedValues.filter(
-          (value) => normalizeTreatmentToothArea(value) !== normalizedChoice,
-        )
-      : [...selectedValues, choice];
-    onChange(orderTreatmentToothAreas(nextValues));
-    setStatusMessage(
-      isSelected
-        ? `${choice} removed from this note.`
-        : `${choice} added to this note.`,
-    );
-  }
-
-  function addCustomValue() {
-    const trimmedValue = customValue.trim();
-    if (!trimmedValue) return;
-
-    const fixedChoice = canonicalTreatmentToothArea(trimmedValue);
-    const valueToAdd = fixedChoice ?? trimmedValue;
-    const normalizedValue = normalizeTreatmentToothArea(valueToAdd);
-    if (selectedLabels.has(normalizedValue)) {
-      setStatusMessage(`${valueToAdd} is already selected.`);
-      return;
-    }
-
-    onChange(orderTreatmentToothAreas([...selectedValues, valueToAdd]));
-    setCustomValue("");
-    setStatusMessage(`${valueToAdd} added to this note.`);
-  }
-
-  function removeValue(value: string) {
-    const normalizedValue = normalizeTreatmentToothArea(value);
-    onChange(
-      selectedValues.filter(
-        (candidate) =>
-          normalizeTreatmentToothArea(candidate) !== normalizedValue,
-      ),
-    );
-    setStatusMessage(`${value} removed from this note.`);
-  }
-
-  return (
-    <fieldset className="min-w-0">
-      <legend className="text-sm font-medium">Tooth/area</legend>
-      <details className="mt-1 rounded-xl border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-950">
-        <summary className="cursor-pointer select-none px-3 py-2 text-sm font-medium">
-          {selectedValues.length
-            ? `${selectedValues.length} selected`
-            : "Select Tooth/area"}
-        </summary>
-        <div className="space-y-3 border-t border-slate-200 p-3 dark:border-slate-800">
-          <div
-            className="grid grid-cols-2 gap-2 sm:grid-cols-3"
-            role="group"
-            aria-label="Standard Tooth/area choices"
-          >
-            {treatmentToothAreaChoices.map((choice) => {
-              const checked = selectedLabels.has(
-                normalizeTreatmentToothArea(choice),
-              );
-              return (
-                <label
-                  key={choice}
-                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-2 py-1.5 text-sm ${
-                    checked
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-900 dark:border-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-100"
-                      : "border-slate-200 dark:border-slate-800"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-emerald-600"
-                    checked={checked}
-                    onChange={() => toggleFixedChoice(choice)}
-                  />
-                  <span aria-hidden="true" className="w-3 text-emerald-700">
-                    {checked ? "✓" : ""}
-                  </span>
-                  <span>{choice}</span>
-                </label>
-              );
-            })}
-          </div>
-          <div>
-            <label
-              htmlFor={`${id}-custom`}
-              className="text-xs font-medium text-slate-700 dark:text-slate-300"
-            >
-              Custom Tooth/area (this note only)
-            </label>
-            <div className="mt-1 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-              <input
-                id={`${id}-custom`}
-                className={formControlClass()}
-                value={customValue}
-                maxLength={200}
-                placeholder="e.g. teeth 14–16"
-                onChange={(event) => {
-                  setCustomValue(event.target.value);
-                  setStatusMessage("");
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    addCustomValue();
-                  }
-                }}
-              />
-              <button
-                type="button"
-                className={treatmentRowButtonClass}
-                disabled={!customValue.trim()}
-                onClick={addCustomValue}
-              >
-                Add to this note
-              </button>
-            </div>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Custom text is discarded with this note and is never saved as a
-              suggestion.
-            </p>
-          </div>
-        </div>
-      </details>
-      {selectedValues.length ? (
-        <ul
-          className="mt-2 flex flex-wrap gap-2"
-          aria-label="Tooth/area selected values"
-        >
-          {selectedValues.map((value) => (
-            <li
-              key={normalizeTreatmentToothArea(value)}
-              className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100"
-            >
-              <span>{value}</span>
-              <button
-                type="button"
-                className="font-bold"
-                aria-label={`Remove ${value} from Tooth/area`}
-                onClick={() => removeValue(value)}
-              >
-                ×
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      <p
-        className="mt-1 min-h-4 text-xs text-slate-600 dark:text-slate-400"
-        aria-live="polite"
-      >
-        {statusMessage}
-      </p>
-    </fieldset>
-  );
-}
-
 function TreatmentCompletedList({
   entries,
   onAdd,
@@ -521,12 +343,16 @@ function TreatmentCompletedList({
                   unhideActionLabel="Unhide treatment type"
                   roomyActions
                 />
-                <TreatmentToothAreaMultiSelect
+                <FixedChoiceMultiCombobox
                   id={`adult-hygiene-treatment-completed-${entry.id}-tooth-area`}
+                  label="Tooth/area"
+                  choices={treatmentToothAreaChoices}
                   values={entry.toothAreas}
                   onChange={(values) =>
                     updateEntry(entry.id, { toothAreas: values })
                   }
+                  customPlaceholder="Search or add a Tooth/area"
+                  showSelectedChips={false}
                 />
                 <div className="flex flex-wrap items-start gap-2 md:col-span-2">
                   <TooltipActionButton

@@ -176,7 +176,15 @@ Treatment types retain the explicit remember behavior above. Tooth/area offers
 note. Custom Tooth/area text cannot be remembered or added to a catalogue.
 Fixed choices are emitted in the order listed here, followed by custom values
 in entry order; normalized duplicates are rejected. Rows and their selected
-values can be added, removed, and reordered independently.
+values can be added, removed, and reordered independently. Tooth/area uses a
+compact multi-combobox: its anchored menu filters the fixed choices, remains
+open while fixed or custom values are selected, and offers non-matching text
+as an encounter-only custom value. **Done**, Escape, the trigger, or an
+intentional outside click closes the menu. The closed Tooth/area control shows
+all selected values in full. The reusable control supports optional removable
+selection chips, which are disabled here to keep treatment rows compact.
+Encounter-only custom selections remain visible and deselectable inside the
+open menu.
 
 The catalogue-management page manages the underlying reusable suggestions, not
 the current encounter's selected values.

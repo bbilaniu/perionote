@@ -243,34 +243,58 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     exact: true,
   });
   await expect(toothAreaOptions.getByRole("checkbox")).toHaveCount(13);
-  await toothAreaOptions
-    .getByRole("checkbox", { name: "Q3", exact: true })
-    .check();
-  await toothAreaOptions
-    .getByRole("checkbox", { name: "Q2", exact: true })
-    .check();
+  const q3ToothArea = toothAreaOptions.getByRole("checkbox", {
+    name: "Q3",
+    exact: true,
+  });
+  const q2ToothArea = toothAreaOptions.getByRole("checkbox", {
+    name: "Q2",
+    exact: true,
+  });
+  await toothAreaOptions.getByText("Q3", { exact: true }).click();
+  await expect(q3ToothArea).toBeChecked();
+  await expect(toothAreaOptions).toBeVisible();
+  await toothAreaOptions.getByText("Q2", { exact: true }).click();
+  await expect(q2ToothArea).toBeChecked();
   await completedRow
     .getByRole("textbox", {
-      name: "Custom Tooth/area (this note only)",
+      name: "Search or add custom Tooth/area",
       exact: true,
     })
     .fill("teeth 14–16");
   await completedRow
-    .getByRole("button", { name: "Add to this note", exact: true })
+    .getByRole("button", {
+      name: "Add “teeth 14–16” to this note",
+      exact: true,
+    })
     .click();
+  await expect(toothAreaOptions).toBeVisible();
 
-  const selectedToothAreas = completedRow.getByRole("list", {
-    name: "Tooth/area selected values",
-    exact: true,
-  });
-  await expect(selectedToothAreas.getByRole("listitem")).toHaveText([
-    "Q2×",
-    "Q3×",
-    "teeth 14–16×",
-  ]);
+  await expect(
+    completedRow.getByRole("checkbox", {
+      name: "teeth 14–16 Custom",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(
+    completedRow.getByRole("button", {
+      name: "Q2, Q3, teeth 14–16",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    completedRow.getByRole("list", {
+      name: "Tooth/area selected values",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/,
   );
+  await completedRow
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+  await expect(toothAreaOptions).toBeHidden();
   await expect(
     completedRow.getByRole("button", {
       name: "Move treatment completed item 1 earlier",
