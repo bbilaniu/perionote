@@ -200,10 +200,8 @@ export interface AdultHygiene2021Form {
   diseaseProcessReviewed: boolean;
   oheTopicsReviewed: string[];
   oheNotes: string;
-  flossingFrequencyChoice: string;
-  flossingFrequencyOther: string;
-  brushingFrequencyChoice: string;
-  brushingFrequencyOther: string;
+  flossingFrequency: string;
+  brushingFrequency: string;
   hygieneGoal: string;
   treatmentRecommendedHygieneMaintenance: boolean;
   otherTreatmentRecommended: string;
@@ -266,10 +264,8 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     diseaseProcessReviewed: false,
     oheTopicsReviewed: [],
     oheNotes: "",
-    flossingFrequencyChoice: "",
-    flossingFrequencyOther: "",
-    brushingFrequencyChoice: "",
-    brushingFrequencyOther: "",
+    flossingFrequency: "",
+    brushingFrequency: "",
     hygieneGoal: "",
     treatmentRecommendedHygieneMaintenance: false,
     otherTreatmentRecommended: "",

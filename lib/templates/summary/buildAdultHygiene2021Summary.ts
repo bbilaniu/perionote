@@ -216,14 +216,8 @@ export function buildAdultHygiene2021Summary(
   ];
 
   const currentHabits = [
-    selectedValue(
-      form.flossingFrequencyChoice,
-      form.flossingFrequencyOther,
-    ),
-    selectedValue(
-      form.brushingFrequencyChoice,
-      form.brushingFrequencyOther,
-    ),
+    trimmed(form.flossingFrequency),
+    trimmed(form.brushingFrequency),
   ].filter(Boolean);
 
   const oralHygieneAndEducation = [

@@ -252,10 +252,12 @@ none is selected by default.
 | Recommended recall interval | 12-month recall; 6-month recall; 9-month recall |
 | Recommended hygiene interval | 3-month scale; 4-month scale; 6-month scale; N/A |
 
-Each applicable control also provides **Other** free text so imported,
-historical, and currently undocumented values remain valid. The Plaque and
-Calculus choices are recorded separately in their field section because their
-two lists are most easily reviewed side by side.
+Fields that retain an explicit **Other** control accept free text so imported,
+historical, and currently undocumented values remain valid. Flossing and
+brushing frequency instead accept custom text directly in their editable
+suggestion boxes. The Plaque and Calculus choices are recorded separately in
+their field section because their two lists are most easily reviewed side by
+side.
 
 ## Classification Legend
 
@@ -410,14 +412,19 @@ field remain independent; selecting a structured value never clears comments.
 | A26 | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY` | Unchecked checkbox: **Disease process reviewed with patient today** | `appCore` | Preserve the source sentence only when checked |
 | A26a | Additive OHE extension | Grouped fixed multi-value control: **Additional OHE topics reviewed** | `appCore`; no value selected by default | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed |
 | A26b | Additive OHE extension | Optional textarea: **OHE notes** | `patient-specific` | `OHE notes: {entered text}` only when entered |
-| A27 | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two optional structured choices with editable **Other** values: **Flossing frequency** and **Brushing frequency** | Choice: `appCore`; Other: `patient-specific` | `Patient is currently: {documented flossing}; {documented brushing}.` |
+| A27 | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two editable suggestion boxes: **Flossing frequency** and **Brushing frequency**; each accepts a standard suggestion or directly entered custom text | Suggestions: `appCore`; current entered values: `patient-specific` | `Patient is currently: {documented flossing}; {documented brushing}.` |
 | A28 | `Hygiene goal:` | Textarea: **Hygiene goal** | `patient-specific` | `Hygiene goal: {text}` |
 
 The fixed home-care and disease-process statements describe actions and are
 therefore never included by default. Compliance has a complete visible
 ClearDent list whose values are public catalogue starters. Its comment remains
-independent and patient-specific. Flossing and brushing remain structured
-application choices. Eight of nine visible OHI-aids values are complete; one remains
+independent and patient-specific. Flossing and brushing retain their reviewed
+application suggestions while allowing custom wording directly in the same
+field; there is no separate Other field and typed values are not saved.
+In the form, these two frequency fields appear immediately beneath the Oral
+hygiene compliance and comment row. Their generated-note position remains in
+the accepted source order.
+Eight of nine visible OHI-aids values are complete; one remains
 unresolved, and the scrollbar means additional values may not have been
 captured. The eight complete captured values are approved public starter
 values; the unresolved value remains excluded.

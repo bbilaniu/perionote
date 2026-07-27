@@ -163,6 +163,20 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page
     .locator("#adult-hygiene-ohe-notes")
     .fill("Demonstrated brushing modifications");
+  const flossingFrequency = page.getByRole("combobox", {
+    name: "Flossing frequency",
+  });
+  const brushingFrequency = page.getByRole("combobox", {
+    name: "Brushing frequency",
+  });
+  await flossingFrequency.fill("Uses floss picks most evenings");
+  await brushingFrequency.fill("Brushes after each meal");
+  await expect(
+    page.getByLabel("Other flossing frequency", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Other brushing frequency", { exact: true }),
+  ).toHaveCount(0);
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Informed verbal consent given by PATIENT and PARENT for treatment today\./,
@@ -175,6 +189,9 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./,
   );
 
   const preview = await page.locator("#adult-hygiene-summary").inputValue();

@@ -169,6 +169,18 @@ OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and ris
 OHE notes: Demonstrated brushing modifications.`);
   });
 
+  it("accepts custom flossing and brushing frequencies directly", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      flossingFrequency: "Uses floss picks most evenings",
+      brushingFrequency: "Brushes after each meal",
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Patient is currently: Uses floss picks most evenings; Brushes after each meal.",
+    );
+  });
+
   it("adds multiple fixed and encounter-only tooth areas to a treatment", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),

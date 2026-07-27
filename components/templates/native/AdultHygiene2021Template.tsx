@@ -16,6 +16,7 @@ import {
   type FixedChoiceMultiComboboxGroup,
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   type AdultHygieneTreatmentCompletedEntry,
@@ -299,56 +300,6 @@ function TextareaField({
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-      />
-    </div>
-  );
-}
-
-function ChoiceWithOther({
-  id,
-  label,
-  choice,
-  other,
-  choices,
-  onChoiceChange,
-  onOtherChange,
-}: {
-  id: string;
-  label: string;
-  choice: string;
-  other: string;
-  choices: readonly string[];
-  onChoiceChange: (choice: string) => void;
-  onOtherChange: (other: string) => void;
-}) {
-  return (
-    <div className="grid gap-3 md:grid-cols-2">
-      <FixedChoiceListbox
-        id={`${id}-choice`}
-        label={label}
-        value={choice}
-        options={[
-          { value: "", label: "Not documented" },
-          ...choices.map((value) => ({ value, label: value })),
-        ]}
-        onChange={(value) => {
-          onChoiceChange(value);
-          if (value) {
-            onOtherChange("");
-          }
-        }}
-      />
-      <TextField
-        id={`${id}-other`}
-        label={`Other ${label.toLocaleLowerCase("en-CA")}`}
-        value={other}
-        onChange={(value) => {
-          onOtherChange(value);
-          if (value.trim()) {
-            onChoiceChange("");
-          }
-        }}
-        placeholder="Optional custom value"
       />
     </div>
   );
@@ -1164,6 +1115,24 @@ export function AdultHygiene2021Template({
                 placeholder="Optional comment"
               />
             </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <StaticSuggestionCombobox
+                id="adult-hygiene-flossing"
+                label="Flossing frequency"
+                value={form.flossingFrequency}
+                suggestions={flossingFrequencyChoices}
+                onChange={(value) => updateField("flossingFrequency", value)}
+                placeholder="Select or enter a flossing frequency"
+              />
+              <StaticSuggestionCombobox
+                id="adult-hygiene-brushing"
+                label="Brushing frequency"
+                value={form.brushingFrequency}
+                suggestions={brushingFrequencyChoices}
+                onChange={(value) => updateField("brushingFrequency", value)}
+                placeholder="Select or enter a brushing frequency"
+              />
+            </div>
             <CheckboxField
               id="adult-hygiene-home-care-reviewed"
               label="Standard home-care instruction reviewed"
@@ -1204,32 +1173,6 @@ export function AdultHygiene2021Template({
               value={form.oheNotes}
               onChange={(value) => updateField("oheNotes", value)}
               placeholder="Optional OHE details discussed today"
-            />
-            <ChoiceWithOther
-              id="adult-hygiene-flossing"
-              label="Flossing frequency"
-              choice={form.flossingFrequencyChoice}
-              other={form.flossingFrequencyOther}
-              choices={flossingFrequencyChoices}
-              onChoiceChange={(value) =>
-                updateField("flossingFrequencyChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("flossingFrequencyOther", value)
-              }
-            />
-            <ChoiceWithOther
-              id="adult-hygiene-brushing"
-              label="Brushing frequency"
-              choice={form.brushingFrequencyChoice}
-              other={form.brushingFrequencyOther}
-              choices={brushingFrequencyChoices}
-              onChoiceChange={(value) =>
-                updateField("brushingFrequencyChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("brushingFrequencyOther", value)
-              }
             />
             <TextareaField
               id="adult-hygiene-goal"
