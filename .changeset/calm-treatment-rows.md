@@ -1,5 +1,5 @@
 ---
-"perionote": patch
+"hygienenote": patch
 ---
 
 Allow duplicate, inline-editable Recare Exam treatment rows with a separately
