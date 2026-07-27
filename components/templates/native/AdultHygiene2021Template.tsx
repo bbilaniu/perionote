@@ -765,6 +765,7 @@ export function AdultHygiene2021Template({
               catalogueKey="oral-hygiene.aids-reviewed"
               values={form.ohiAidsReviewed}
               onChange={(value) => updateField("ohiAidsReviewed", value)}
+              roomySelectionActions
             />
             <CheckboxField
               id="adult-hygiene-disease-process-reviewed"
@@ -838,6 +839,7 @@ export function AdultHygiene2021Template({
               catalogueKey="hygiene-treatment.completed"
               values={form.treatmentCompleted}
               onChange={(value) => updateField("treatmentCompleted", value)}
+              roomySelectionActions
             />
             <CatalogueCombobox
               id="adult-hygiene-anesthetic"

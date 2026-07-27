@@ -220,6 +220,37 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     ).toBeVisible();
   }
 
+  const treatmentCompleted = page.locator(
+    "#adult-hygiene-treatment-completed",
+  );
+  await treatmentCompleted.focus();
+  await page
+    .getByRole("option", {
+      name: "1U scale (cavitron and hand scaling) Starter",
+      exact: true,
+    })
+    .click();
+  const completedValues = page.getByRole("list", {
+    name: "Treatment completed today selected values",
+  });
+  const completedRow = completedValues.locator(":scope > li").first();
+  await expect(
+    completedRow.getByRole("button", {
+      name: "Move 1U scale (cavitron and hand scaling) earlier",
+    }),
+  ).toHaveClass(/py-2/);
+  const removeCompleted = completedRow.getByRole("button", {
+    name: "Remove 1U scale (cavitron and hand scaling)",
+  });
+  await expect(removeCompleted).toHaveClass(/border-red-300/);
+  await expect(removeCompleted).toHaveClass(/text-red-800/);
+  await removeCompleted.hover();
+  await expect(
+    completedRow.getByRole("tooltip").filter({
+      hasText: "Remove this value from the note.",
+    }),
+  ).toBeVisible();
+
   const anesthetic = page.locator("#adult-hygiene-anesthetic");
   await anesthetic.focus();
   await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
@@ -244,6 +275,27 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /OH Aids Reviewed\/Recommended: Synthetic reusable OHI aid/,
   );
+  const ohiAidRow = page
+    .getByRole("list", {
+      name: "OH aids reviewed/recommended selected values",
+    })
+    .locator(":scope > li")
+    .first();
+  await expect(
+    ohiAidRow.getByRole("button", {
+      name: "Move Synthetic reusable OHI aid earlier",
+    }),
+  ).toHaveClass(/py-2/);
+  const removeOhiAid = ohiAidRow.getByRole("button", {
+    name: "Remove Synthetic reusable OHI aid",
+  });
+  await expect(removeOhiAid).toHaveClass(/border-red-300/);
+  await removeOhiAid.hover();
+  await expect(
+    ohiAidRow.getByRole("tooltip").filter({
+      hasText: "Remove this value from the note.",
+    }),
+  ).toBeVisible();
 
   await reloadDiscardingForm(page);
   await expect(medicalHistory).toHaveValue("");

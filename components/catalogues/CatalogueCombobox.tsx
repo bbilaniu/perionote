@@ -13,6 +13,11 @@ import {
   normalizeCatalogueLabel,
 } from "@/lib/catalogues/catalogue";
 
+const actionButtonClass =
+  "rounded-lg border border-sky-700 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950";
+const roomyActionButtonClass =
+  "rounded-xl border border-sky-700 px-3 py-2 text-sm font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950";
+
 export function CatalogueCombobox({
   id,
   label,
@@ -24,6 +29,7 @@ export function CatalogueCombobox({
   disabled,
   rememberActionLabel = "Remember this value",
   unhideActionLabel = "Unhide this value",
+  roomyActions = false,
 }: {
   id: string;
   label: string;
@@ -35,6 +41,7 @@ export function CatalogueCombobox({
   disabled?: boolean;
   rememberActionLabel?: string;
   unhideActionLabel?: string;
+  roomyActions?: boolean;
 }) {
   const {
     storageStatus,
@@ -137,7 +144,9 @@ export function CatalogueCombobox({
         canRemember || canUnhide ? (
           <button
             type="button"
-            className="rounded-lg border border-sky-700 px-3 py-1.5 text-xs font-semibold text-sky-800 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950"
+            className={
+              roomyActions ? roomyActionButtonClass : actionButtonClass
+            }
             disabled={storageStatus !== "ready"}
             onClick={handleRemember}
           >

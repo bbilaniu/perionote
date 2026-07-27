@@ -269,6 +269,13 @@ test("catalogue export and import transfer local values without a network reques
   );
   await expect(portableDentistRow).toBeVisible();
 
+  await expect(
+    page.getByRole("button", { name: "Choose catalogue file" }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("No file selected", { exact: true }),
+  ).toBeVisible();
+
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Export catalogue" }).click();
   const download = await downloadPromise;
@@ -297,12 +304,21 @@ test("catalogue export and import transfer local values without a network reques
     mimeType: "application/json",
     buffer: Buffer.from(exportedJson),
   });
+  const selectedFileName = page.locator("#catalogue-import-file-name");
+  await expect(selectedFileName).toHaveText("portable-catalogue.json");
+  await expect(selectedFileName).toHaveAttribute(
+    "title",
+    "portable-catalogue.json",
+  );
   await expect(page.getByRole("heading", { name: "Import preview" })).toBeVisible();
   await expect(page.getByText("1 local value in file")).toBeVisible();
   page.once("dialog", async (dialog) => dialog.accept());
   await page
     .getByRole("button", { name: "Merge with this catalogue" })
     .click();
+  await expect(
+    page.getByText("No file selected", { exact: true }),
+  ).toBeVisible();
   await expect(
     dentistCatalogue.locator('input[value="Portable Synthetic Dentist"]'),
   ).toBeVisible();
@@ -329,6 +345,9 @@ test("catalogue export and import transfer local values without a network reques
   await page
     .getByRole("button", { name: "Replace this catalogue" })
     .click();
+  await expect(
+    page.getByText("No file selected", { exact: true }),
+  ).toBeVisible();
   await expect(
     rdaCatalogue.locator('input[value="Temporary Synthetic RDA"]'),
   ).toHaveCount(0);

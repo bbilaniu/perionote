@@ -26,13 +26,16 @@ import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
-const compactButtonClass =
-  "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const treatmentRowButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const treatmentRowRemoveButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
 const recareNoteDiscardWarning =
   "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
@@ -264,6 +267,7 @@ function TreatmentEntryList({
                   }
                   rememberActionLabel="Remember treatment type"
                   unhideActionLabel="Unhide treatment type"
+                  roomyActions
                 />
                 <TextField
                   id={`${id}-${entry.id}-tooth-area`}
@@ -276,28 +280,28 @@ function TreatmentEntryList({
                   helpText="Not saved. This value stays in this note."
                 />
                 <div className="flex flex-wrap items-start gap-2 md:pt-7">
-                  <button
-                    type="button"
-                    className={compactButtonClass}
+                  <TooltipActionButton
+                    tooltip="Move this treatment line earlier in the note."
+                    className={treatmentRowButtonClass}
                     disabled={index === 0}
-                    aria-label={`Move ${label} item ${index + 1} earlier`}
+                    ariaLabel={`Move ${label} item ${index + 1} earlier`}
                     onClick={() => moveEntry(index, "earlier")}
                   >
                     Earlier
-                  </button>
-                  <button
-                    type="button"
-                    className={compactButtonClass}
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Move this treatment line later in the note."
+                    className={treatmentRowButtonClass}
                     disabled={index === entries.length - 1}
-                    aria-label={`Move ${label} item ${index + 1} later`}
+                    ariaLabel={`Move ${label} item ${index + 1} later`}
                     onClick={() => moveEntry(index, "later")}
                   >
                     Later
-                  </button>
-                  <button
-                    type="button"
-                    className={compactButtonClass}
-                    aria-label={`Remove ${label} item ${index + 1}`}
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Remove this treatment line from the note."
+                    className={treatmentRowRemoveButtonClass}
+                    ariaLabel={`Remove ${label} item ${index + 1}`}
                     onClick={() =>
                       onChange(
                         entries.filter(
@@ -307,7 +311,7 @@ function TreatmentEntryList({
                     }
                   >
                     Remove
-                  </button>
+                  </TooltipActionButton>
                 </div>
               </div>
             </li>
@@ -318,7 +322,7 @@ function TreatmentEntryList({
           No {label.toLocaleLowerCase("en-CA")} added.
         </p>
       )}
-      <button type="button" className={compactButtonClass} onClick={onAdd}>
+      <button type="button" className={treatmentRowButtonClass} onClick={onAdd}>
         {addLabel}
       </button>
     </div>
@@ -741,6 +745,7 @@ export function RecareExamTemplate({
               values={form.radiographs}
               onChange={(value) => updateField("radiographs", value)}
               allowDuplicateValues
+              roomySelectionActions
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"

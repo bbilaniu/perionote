@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -11,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   CATALOGUE_SECTIONS,
   MAX_CATALOGUE_IMPORT_BYTES,
@@ -76,28 +76,16 @@ function CatalogueActionButton({
   ariaLabel?: string;
   onClick: () => void;
 }) {
-  const tooltipId = useId();
-
   return (
-    <span className="group relative inline-flex">
-      <button
-        type="button"
-        className={className}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        aria-describedby={tooltipId}
-        onClick={onClick}
-      >
-        {children}
-      </button>
-      <span
-        id={tooltipId}
-        role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 hidden w-max max-w-64 -translate-x-1/2 rounded-lg bg-slate-950 px-3 py-2 text-left text-xs font-normal leading-5 text-white shadow-lg group-hover:block group-focus-within:block dark:bg-slate-100 dark:text-slate-950"
-      >
-        {tooltip}
-      </span>
-    </span>
+    <TooltipActionButton
+      tooltip={tooltip}
+      className={className}
+      disabled={disabled}
+      ariaLabel={ariaLabel}
+      onClick={onClick}
+    >
+      {children}
+    </TooltipActionButton>
   );
 }
 
@@ -557,6 +545,7 @@ export function CatalogueManager() {
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(
     null,
   );
+  const [selectedImportFileName, setSelectedImportFileName] = useState("");
   const [transferMessage, setTransferMessage] = useState("");
   const [transferError, setTransferError] = useState("");
 
@@ -606,6 +595,7 @@ export function CatalogueManager() {
     setTransferMessage("");
     setTransferError("");
     const file = event.target.files?.[0];
+    setSelectedImportFileName(file?.name ?? "");
     if (!file) {
       return;
     }
@@ -655,6 +645,7 @@ export function CatalogueManager() {
           : "Imported catalogue merged with local catalogues.",
       );
       setPendingImport(null);
+      setSelectedImportFileName("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -784,21 +775,45 @@ export function CatalogueManager() {
           >
             Export catalogue
           </button>
-          <div>
+          <div className="min-w-0 flex-1 sm:min-w-96 sm:max-w-2xl">
             <label
+              id="catalogue-import-label"
               className="block text-sm font-medium"
               htmlFor="catalogue-import"
             >
               Import catalogue JSON
             </label>
-            <input
-              ref={fileInputRef}
-              id="catalogue-import"
-              className="mt-1 block max-w-full text-sm"
-              type="file"
-              accept="application/json,.json"
-              onChange={(event) => void selectImportFile(event)}
-            />
+            <div className="mt-1 flex min-w-0 flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                className={secondaryButtonClass}
+                aria-controls="catalogue-import"
+                aria-describedby="catalogue-import-file-name"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                Choose catalogue file
+              </button>
+              <span
+                id="catalogue-import-file-name"
+                className="flex min-h-10 min-w-0 flex-1 items-center rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+                title={selectedImportFileName || undefined}
+                aria-live="polite"
+              >
+                <span className="truncate">
+                  {selectedImportFileName || "No file selected"}
+                </span>
+              </span>
+              <input
+                ref={fileInputRef}
+                id="catalogue-import"
+                className="sr-only"
+                type="file"
+                accept="application/json,.json"
+                tabIndex={-1}
+                aria-labelledby="catalogue-import-label"
+                onChange={(event) => void selectImportFile(event)}
+              />
+            </div>
           </div>
         </div>
 
@@ -864,6 +879,7 @@ export function CatalogueManager() {
                 className={secondaryButtonClass}
                 onClick={() => {
                   setPendingImport(null);
+                  setSelectedImportFileName("");
                   if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                   }
