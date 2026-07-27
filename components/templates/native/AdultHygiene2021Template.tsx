@@ -11,24 +11,23 @@ import {
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
-import { FixedChoiceMultiCombobox } from "@/components/forms/FixedChoiceMultiCombobox";
+import {
+  FixedChoiceMultiCombobox,
+  type FixedChoiceMultiComboboxGroup,
+} from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
-  bleedingChoices,
   brushingFrequencyChoices,
-  calculusChoices,
   createEmptyAdultHygiene2021Form,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
   patientChiefConcernChoices,
   periodontitisGradeChoices,
   periodontitisStageChoices,
-  plaqueChoices,
-  stainChoices,
   treatmentToothAreaChoices,
 } from "@/lib/templates/adultHygiene2021";
 import type {
@@ -66,6 +65,112 @@ const treatmentToothAreaChoiceGroups = [
     columns: 3,
   },
 ] as const;
+
+const extentFacetChoices = ["Localized", "Generalized"] as const;
+const mildIntensityFacetChoices = ["mild", "moderate", "heavy"] as const;
+const plaqueLocationFacetChoices = ["marginal", "interproximal"] as const;
+const plaqueFacetChoices = [
+  ...extentFacetChoices,
+  ...mildIntensityFacetChoices,
+  ...plaqueLocationFacetChoices,
+] as const;
+const plaqueFacetGroups = [
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Intensity",
+    choices: mildIntensityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+  {
+    label: "Location",
+    choices: plaqueLocationFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const stainIntensityFacetChoices = ["slight", "moderate", "heavy"] as const;
+const stainFacetChoices = [
+  "None",
+  ...extentFacetChoices,
+  ...stainIntensityFacetChoices,
+] as const;
+const stainFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Intensity",
+    choices: stainIntensityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const calculusLocationFacetChoices = [
+  "marginal",
+  "interproximal",
+] as const;
+const calculusFacetChoices = [
+  ...extentFacetChoices,
+  ...mildIntensityFacetChoices,
+  ...calculusLocationFacetChoices,
+] as const;
+const calculusFacetGroups = [
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Intensity",
+    choices: mildIntensityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+  {
+    label: "Location",
+    choices: calculusLocationFacetChoices,
+    columns: 2,
+    selectionMode: "multiple",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const bleedingSeverityFacetChoices = ["mild", "moderate", "severe"] as const;
+const bleedingFacetChoices = [
+  ...extentFacetChoices,
+  ...bleedingSeverityFacetChoices,
+] as const;
+const bleedingFacetGroups = [
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Severity",
+    choices: bleedingSeverityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
 
 const documentationStatusOptions: Array<{
   value: DocumentationStatus;
@@ -214,6 +319,98 @@ function ChoiceWithOther({
             onOtherChange("");
           }
         }}
+      />
+      <TextField
+        id={`${id}-other`}
+        label={`Other ${label.toLocaleLowerCase("en-CA")}`}
+        value={other}
+        onChange={(value) => {
+          onOtherChange(value);
+          if (value.trim()) {
+            onChoiceChange("");
+          }
+        }}
+        placeholder="Optional custom value"
+      />
+    </div>
+  );
+}
+
+function parseFacetedChoice(
+  choice: string,
+  facetChoices: readonly string[],
+) {
+  const selectedTokens = new Set(
+    choice
+      .normalize("NFKC")
+      .trim()
+      .toLocaleLowerCase("en-CA")
+      .split(/[\s/]+/)
+      .filter(Boolean),
+  );
+  return facetChoices.filter((facet) =>
+    selectedTokens.has(
+      facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA"),
+    ),
+  );
+}
+
+function FacetedChoiceWithOther({
+  id,
+  label,
+  choice,
+  other,
+  facetChoices,
+  facetGroups,
+  onChoiceChange,
+  onOtherChange,
+  formatChoice = (values) => values.join(" "),
+  standaloneValue,
+}: {
+  id: string;
+  label: string;
+  choice: string;
+  other: string;
+  facetChoices: readonly string[];
+  facetGroups: readonly FixedChoiceMultiComboboxGroup[];
+  onChoiceChange: (choice: string) => void;
+  onOtherChange: (other: string) => void;
+  formatChoice?: (values: string[]) => string;
+  standaloneValue?: string;
+}) {
+  const selectedFacets = parseFacetedChoice(choice, facetChoices);
+
+  return (
+    <div className="grid gap-3 md:grid-cols-2">
+      <FixedChoiceMultiCombobox
+        id={`${id}-choice`}
+        label={label}
+        choices={facetChoices}
+        choiceGroups={facetGroups}
+        values={selectedFacets}
+        onChange={(values) => {
+          let nextValues = values;
+          if (standaloneValue) {
+            const hadStandaloneValue = selectedFacets.includes(standaloneValue);
+            const hasStandaloneValue = values.includes(standaloneValue);
+            if (hasStandaloneValue && !hadStandaloneValue) {
+              nextValues = [standaloneValue];
+            } else if (hadStandaloneValue && values.length > 1) {
+              nextValues = values.filter(
+                (value) => value !== standaloneValue,
+              );
+            }
+          }
+          const nextChoice = formatChoice(nextValues);
+          onChoiceChange(nextChoice);
+          if (nextChoice) {
+            onOtherChange("");
+          }
+        }}
+        customPlaceholder={`Search ${label.toLocaleLowerCase("en-CA")} options`}
+        customHelpText="Choose options in each applicable section."
+        showSelectedChips={false}
+        allowCustomValues={false}
       />
       <TextField
         id={`${id}-other`}
@@ -772,39 +969,62 @@ export function AdultHygiene2021Template({
               value={form.hygieneAreaOfConcern}
               onChange={(value) => updateField("hygieneAreaOfConcern", value)}
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-plaque"
               label="Plaque"
               choice={form.plaqueChoice}
               other={form.plaqueOther}
-              choices={plaqueChoices}
+              facetChoices={plaqueFacetChoices}
+              facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
               onOtherChange={(value) => updateField("plaqueOther", value)}
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-stain"
               label="Stain"
               choice={form.stainChoice}
               other={form.stainOther}
-              choices={stainChoices}
+              facetChoices={stainFacetChoices}
+              facetGroups={stainFacetGroups}
               onChoiceChange={(value) => updateField("stainChoice", value)}
               onOtherChange={(value) => updateField("stainOther", value)}
+              standaloneValue="None"
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-calculus"
               label="Calculus"
               choice={form.calculusChoice}
               other={form.calculusOther}
-              choices={calculusChoices}
+              facetChoices={calculusFacetChoices}
+              facetGroups={calculusFacetGroups}
               onChoiceChange={(value) => updateField("calculusChoice", value)}
               onOtherChange={(value) => updateField("calculusOther", value)}
+              formatChoice={(values) => {
+                const locationValues = values.filter((value) =>
+                  calculusLocationFacetChoices.includes(
+                    value as (typeof calculusLocationFacetChoices)[number],
+                  ),
+                );
+                return [
+                  ...values.filter(
+                    (value) =>
+                      !calculusLocationFacetChoices.includes(
+                        value as (typeof calculusLocationFacetChoices)[number],
+                      ),
+                  ),
+                  locationValues.join("/"),
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+              }}
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-bleeding"
               label="Bleeding"
               choice={form.bleedingChoice}
               other={form.bleedingOther}
-              choices={bleedingChoices}
+              facetChoices={bleedingFacetChoices}
+              facetGroups={bleedingFacetGroups}
               onChoiceChange={(value) => updateField("bleedingChoice", value)}
               onOtherChange={(value) => updateField("bleedingOther", value)}
             />

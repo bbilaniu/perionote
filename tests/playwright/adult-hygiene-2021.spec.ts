@@ -96,11 +96,44 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page.getByLabel("Patient", { exact: true }).check();
   await page.getByLabel("Parent", { exact: true }).check();
   await page.locator("#adult-hygiene-plaque-choice").click();
-  await page
-    .getByRole("option", {
-      name: "Localized moderate interproximal",
+  const plaqueOptions = page.getByRole("dialog", {
+    name: "Plaque options",
+    exact: true,
+  });
+  const plaqueExtent = plaqueOptions.getByRole("group", {
+    name: "Extent Plaque choices",
+    exact: true,
+  });
+  await plaqueExtent.getByText("Generalized", { exact: true }).click();
+  await plaqueExtent.getByText("Localized", { exact: true }).click();
+  await expect(
+    plaqueExtent.getByRole("checkbox", {
+      name: "Generalized",
+      exact: true,
+    }),
+  ).not.toBeChecked();
+  await expect(
+    plaqueExtent.getByRole("checkbox", {
+      name: "Localized",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await plaqueOptions
+    .getByRole("group", {
+      name: "Intensity Plaque choices",
       exact: true,
     })
+    .getByText("moderate", { exact: true })
+    .click();
+  await plaqueOptions
+    .getByRole("group", {
+      name: "Location Plaque choices",
+      exact: true,
+    })
+    .getByText("interproximal", { exact: true })
+    .click();
+  await plaqueOptions
+    .getByRole("button", { name: "Done", exact: true })
     .click();
   await page
     .locator("#adult-hygiene-calculus-other")
@@ -165,6 +198,89 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 10:25",
+  );
+});
+
+test("Adult Hygiene composes hygiene findings from grouped facets", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await page.locator("#adult-hygiene-stain-choice").click();
+  const stainOptions = page.getByRole("dialog", {
+    name: "Stain options",
+    exact: true,
+  });
+  await stainOptions.getByText("None", { exact: true }).click();
+  await stainOptions
+    .getByRole("group", { name: "Extent Stain choices", exact: true })
+    .getByText("Localized", { exact: true })
+    .click();
+  await expect(
+    stainOptions.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
+  await stainOptions
+    .getByRole("group", { name: "Intensity Stain choices", exact: true })
+    .getByText("slight", { exact: true })
+    .click();
+  await stainOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+
+  await page.locator("#adult-hygiene-calculus-choice").click();
+  const calculusOptions = page.getByRole("dialog", {
+    name: "Calculus options",
+    exact: true,
+  });
+  await calculusOptions
+    .getByRole("group", { name: "Extent Calculus choices", exact: true })
+    .getByText("Generalized", { exact: true })
+    .click();
+  await calculusOptions
+    .getByRole("group", { name: "Intensity Calculus choices", exact: true })
+    .getByText("moderate", { exact: true })
+    .click();
+  const calculusLocation = calculusOptions.getByRole("group", {
+    name: "Location Calculus choices",
+    exact: true,
+  });
+  await calculusLocation.getByText("marginal", { exact: true }).click();
+  await calculusLocation.getByText("interproximal", { exact: true }).click();
+  await expect(
+    calculusLocation.getByRole("checkbox", {
+      name: "marginal",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(
+    calculusLocation.getByRole("checkbox", {
+      name: "interproximal",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await calculusOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+
+  await page.locator("#adult-hygiene-bleeding-choice").click();
+  const bleedingOptions = page.getByRole("dialog", {
+    name: "Bleeding options",
+    exact: true,
+  });
+  await bleedingOptions
+    .getByRole("group", { name: "Extent Bleeding choices", exact: true })
+    .getByText("Generalized", { exact: true })
+    .click();
+  await bleedingOptions
+    .getByRole("group", { name: "Severity Bleeding choices", exact: true })
+    .getByText("severe", { exact: true })
+    .click();
+  await bleedingOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./,
   );
 });
 

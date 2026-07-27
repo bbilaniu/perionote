@@ -328,10 +328,10 @@ valid.
 | --- | --- | --- | --- | --- |
 | A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Editable text with reviewed generic quick choices: **Patient chief concern** | Entered text: `patient-specific`; quick choices: `appCore` | `Patient Chief Concern: {text}` |
 | A12 | `Hygiene Area of Concern:` | Textarea: **Hygiene area of concern** | `patient-specific` | `Hygiene Area of Concern: {text}` |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Structured choice with editable **Other** value: **Plaque** | Choice: `appCore`; Other: `patient-specific` | `Plaque: {selected or entered text}` |
-| A14 | `Stain: [SELECT/INSERT: STAIN]` | Structured choice with editable **Other** value: **Stain** | Choice: `appCore`; Other: `patient-specific` | `Stain: {selected or entered text}` |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]` | Structured choice with editable **Other** value: **Calculus** | Choice: `appCore`; Other: `patient-specific` | `Calculus: {selected or entered text}` |
-| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]` | Structured choice with editable **Other** value: **Bleeding** | Choice: `appCore`; Other: `patient-specific` | `Bleeding: {selected or entered text}` |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Plaque: {extent intensity location}` or entered text |
+| A14 | `Stain: [SELECT/INSERT: STAIN]` | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Stain: {extent intensity}` or entered text |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]` | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Calculus: {extent intensity location(s)}` or entered text |
+| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]` | Grouped **Extent** and **Severity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Bleeding: {extent severity}` or entered text |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
@@ -356,6 +356,16 @@ The labels above expand the remaining ClearDent shorthand: `LOC` to
 an editable **Other** value because unknown documentation must remain valid and
 the Plaque screenshot scrollbar means additional values may not have been
 captured. No finding is selected by default or saved automatically.
+
+The interactive controls reuse the grouped fixed-choice menu. Extent,
+intensity, and severity sections permit one selection each. Plaque location
+permits one selection; Calculus location permits both **marginal** and
+**interproximal**, emitted as `marginal/interproximal`. This initial
+implementation intentionally permits every cross-section combination instead
+of encoding clinical compatibility rules. Selecting **None** for Stain clears
+its other facets, and selecting another Stain facet clears **None**. Existing
+complete strings are parsed into the same facets when demo or imported values
+are loaded.
 
 ### Periodontal Assessment
 

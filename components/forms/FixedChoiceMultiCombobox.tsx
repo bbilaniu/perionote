@@ -45,6 +45,7 @@ export type FixedChoiceMultiComboboxGroup = {
   label?: string;
   choices: readonly string[];
   columns?: 1 | 2 | 3;
+  selectionMode?: "multiple" | "single";
 };
 
 export function FixedChoiceMultiCombobox({
@@ -57,6 +58,7 @@ export function FixedChoiceMultiCombobox({
   customPlaceholder = "Search or add a value",
   customHelpText = "Custom entries apply to this note only.",
   showSelectedChips = true,
+  allowCustomValues = true,
 }: {
   id: string;
   label: string;
@@ -67,6 +69,7 @@ export function FixedChoiceMultiCombobox({
   customPlaceholder?: string;
   customHelpText?: string;
   showSelectedChips?: boolean;
+  allowCustomValues?: boolean;
 }) {
   const generatedId = useId();
   const menuId = `${id}-${generatedId}-menu`;
@@ -110,7 +113,10 @@ export function FixedChoiceMultiCombobox({
   const draftAlreadySelected =
     Boolean(normalizedDraft) && selectedLabels.has(normalizedDraft);
   const canAddCustom =
-    Boolean(normalizedDraft) && !canonicalDraftChoice && !draftAlreadySelected;
+    allowCustomValues &&
+    Boolean(normalizedDraft) &&
+    !canonicalDraftChoice &&
+    !draftAlreadySelected;
 
   useEffect(() => {
     if (!open) return;
@@ -151,11 +157,25 @@ export function FixedChoiceMultiCombobox({
   function toggleChoice(choice: string) {
     const normalizedChoice = normalizeValue(choice);
     const isSelected = selectedLabels.has(normalizedChoice);
+    const containingGroup = visualChoiceGroups.find((group) =>
+      group.choices.some(
+        (candidate) => normalizeValue(candidate) === normalizedChoice,
+      ),
+    );
+    const groupChoices = new Set(
+      containingGroup?.choices.map(normalizeValue) ?? [],
+    );
+    const retainedValues =
+      containingGroup?.selectionMode === "single"
+        ? selectedValues.filter(
+            (value) => !groupChoices.has(normalizeValue(value)),
+          )
+        : selectedValues;
     const nextValues = isSelected
       ? selectedValues.filter(
           (value) => normalizeValue(value) !== normalizedChoice,
         )
-      : [...selectedValues, choice];
+      : [...retainedValues, choice];
     onChange(orderValues(nextValues, choices));
     setStatusMessage(
       isSelected
@@ -169,11 +189,22 @@ export function FixedChoiceMultiCombobox({
     if (!trimmedDraft) return;
 
     if (draftAlreadySelected) {
-      setStatusMessage(`${canonicalDraftChoice ?? trimmedDraft} is already selected.`);
+      setStatusMessage(
+        `${canonicalDraftChoice ?? trimmedDraft} is already selected.`,
+      );
       return;
     }
 
-    const valueToAdd = canonicalDraftChoice ?? trimmedDraft;
+    if (canonicalDraftChoice) {
+      toggleChoice(canonicalDraftChoice);
+      setDraft("");
+      requestAnimationFrame(() => searchRef.current?.focus());
+      return;
+    }
+
+    if (!allowCustomValues) return;
+
+    const valueToAdd = trimmedDraft;
     onChange(orderValues([...selectedValues, valueToAdd], choices));
     setDraft("");
     setStatusMessage(`${valueToAdd} added to this note.`);
@@ -385,7 +416,9 @@ export function FixedChoiceMultiCombobox({
                 </div>
               ) : null}
 
-              {normalizedDraft && !canonicalDraftChoice ? (
+              {allowCustomValues &&
+              normalizedDraft &&
+              !canonicalDraftChoice ? (
                 <button
                   type="button"
                   className="mt-1 flex w-full items-start rounded-lg border-t border-slate-200 px-3 py-2 text-left text-sm hover:bg-sky-100 hover:text-sky-950 disabled:cursor-default disabled:opacity-60 dark:border-slate-800 dark:hover:bg-sky-900 dark:hover:text-sky-50"
@@ -441,9 +474,11 @@ export function FixedChoiceMultiCombobox({
         </ul>
       ) : null}
 
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-        {customHelpText}
-      </p>
+      {customHelpText ? (
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+          {customHelpText}
+        </p>
+      ) : null}
       <p id={statusId} className="sr-only" aria-live="polite">
         {statusMessage}
       </p>
