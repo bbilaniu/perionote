@@ -4,6 +4,7 @@ import {
   hasRequiredAdultHygiene2021Fields,
 } from "@/lib/templates/adultHygiene2021";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
+import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 
 describe("buildAdultHygiene2021Summary", () => {
@@ -32,7 +33,7 @@ Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic history reviewed with no changes.
 Premedication Required: No.
 
-Patient Chief Concern: Sensitivity.
+Patient Chief Concern: Sensitivity to hot and cold; Food catches between teeth.
 Hygiene Area of Concern: Synthetic lower anterior concern.
 Plaque: Localized moderate interproximal.
 Stain: Localized slight.
@@ -113,6 +114,22 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
     expect(buildAdultHygiene2021Summary(form)).toBe(
       "Plaque: Imported plaque wording.",
     );
+  });
+
+  it("makes Nothing mutually exclusive with other chief concerns", () => {
+    expect(
+      applyPatientChiefConcernSelectionRules(
+        ["Food catches between teeth"],
+        ["Food catches between teeth", "Nothing"],
+      ),
+    ).toEqual(["Nothing"]);
+
+    expect(
+      applyPatientChiefConcernSelectionRules(
+        ["Nothing"],
+        ["Nothing", "Sore gums upon brushing/flossing"],
+      ),
+    ).toEqual(["Sore gums upon brushing/flossing"]);
   });
 
   it("adds multiple fixed and encounter-only tooth areas to a treatment", () => {

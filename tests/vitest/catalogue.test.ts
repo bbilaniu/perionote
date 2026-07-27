@@ -67,6 +67,11 @@ describe("local catalogues", () => {
     ).toBe(true);
     expect(
       getCatalogueDefinitionsForBuild("production").some(
+        (definition) => definition.key === "patient.chief-concerns",
+      ),
+    ).toBe(true);
+    expect(
+      getCatalogueDefinitionsForBuild("production").some(
         (definition) => definition.key === "recare-treatment.items",
       ),
     ).toBe(true);
@@ -85,6 +90,17 @@ describe("local catalogues", () => {
     ).toEqual([]);
     expect(listCatalogueItems(emptyState, "visit-team.rda")).toEqual([]);
     expect(listCatalogueItems(emptyState, "visit-team.rdh")).toEqual([]);
+    expect(
+      listCatalogueItems(emptyState, "patient.chief-concerns").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "Nothing",
+      "Sore gums upon brushing/flossing",
+      "Dissatisfaction with the appearance of teeth due to yellowing/stain",
+      "Food catches between teeth",
+      "Sensitivity to hot and cold",
+    ]);
 
     expect(
       listCatalogueItems(

@@ -16,7 +16,6 @@ import {
   type FixedChoiceMultiComboboxGroup,
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
-import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   type AdultHygieneTreatmentCompletedEntry,
@@ -25,11 +24,11 @@ import {
   createEmptyAdultHygiene2021Form,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
-  patientChiefConcernChoices,
   periodontitisGradeChoices,
   periodontitisStageChoices,
   treatmentToothAreaChoices,
 } from "@/lib/templates/adultHygiene2021";
+import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import type {
   DocumentationStatus,
   PremedicationStatus,
@@ -724,6 +723,7 @@ export function AdultHygiene2021Template({
     setForm({
       ...fixture,
       psrPocketing: [...fixture.psrPocketing],
+      patientChiefConcern: [...fixture.patientChiefConcern],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
         ...entry,
@@ -956,12 +956,21 @@ export function AdultHygiene2021Template({
           </Section>
 
           <Section title="Patient Concerns and Hygiene Findings">
-            <StaticSuggestionCombobox
+            <CatalogueMultiCombobox
               id="adult-hygiene-chief-concern"
               label="Patient chief concern"
-              value={form.patientChiefConcern}
-              onChange={(value) => updateField("patientChiefConcern", value)}
-              suggestions={patientChiefConcernChoices}
+              catalogueKey="patient.chief-concerns"
+              values={form.patientChiefConcern}
+              onChange={(values) =>
+                updateField(
+                  "patientChiefConcern",
+                  applyPatientChiefConcernSelectionRules(
+                    form.patientChiefConcern,
+                    values,
+                  ),
+                )
+              }
+              roomySelectionActions
             />
             <TextareaField
               id="adult-hygiene-area-of-concern"

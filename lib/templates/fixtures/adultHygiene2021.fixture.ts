@@ -15,7 +15,10 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
   medicalHistoryReview: "Synthetic history reviewed with no changes.",
   premedicationStatus: "not-required",
   premedicationDetails: "",
-  patientChiefConcern: "Sensitivity",
+  patientChiefConcern: [
+    "Sensitivity to hot and cold",
+    "Food catches between teeth",
+  ],
   hygieneAreaOfConcern: "Synthetic lower anterior concern.",
   plaqueChoice: "Localized moderate interproximal",
   plaqueOther: "",

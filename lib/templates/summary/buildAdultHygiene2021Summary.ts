@@ -138,7 +138,13 @@ export function buildAdultHygiene2021Summary(
   ];
 
   const concernsAndFindings = [
-    labelledLine("Patient Chief Concern", form.patientChiefConcern),
+    labelledLine(
+      "Patient Chief Concern",
+      form.patientChiefConcern
+        .map((value) => trimmed(value))
+        .filter(Boolean)
+        .join("; "),
+    ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
     labelledLine("Plaque", selectedValue(form.plaqueChoice, form.plaqueOther)),
     labelledLine("Stain", selectedValue(form.stainChoice, form.stainOther)),

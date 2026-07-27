@@ -39,7 +39,7 @@ Miele Sterilization codes scanned: SYNTH-001
 
 Radiographs: 4 BW; 2 PA
 Intraoral photos: No.
-Patient's chief concern: Synthetic concern for demonstration.
+Patient's chief concern: Food catches between teeth; Synthetic concern for demonstration.
 
 Extraoral: WNL.
 TMJ: Synthetic bilateral clicking without discomfort.

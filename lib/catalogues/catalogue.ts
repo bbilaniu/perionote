@@ -1,4 +1,5 @@
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
+import { patientChiefConcernSeedValues } from "@/lib/templates/patientChiefConcern";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
@@ -11,6 +12,7 @@ export const CATALOGUE_KEYS = [
   "visit-team.dentist",
   "visit-team.rda",
   "visit-team.rdh",
+  "patient.chief-concerns",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
   "clinical-exam.caries-risk-factors",
@@ -117,7 +119,7 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
 
 function catalogueSeeds(
   prefix: string,
-  values: Array<[id: string, label: string]>,
+  values: ReadonlyArray<readonly [id: string, label: string]>,
 ): CatalogueSeed[] {
   return values.map(([id, label]) => ({
     id: `seed.${prefix}.${id}`,
@@ -146,6 +148,11 @@ const radiographSeeds = catalogueSeeds("imaging.radiographs", [
   ["1-pa", "1 PA"],
   ["2-pa", "2 PA"],
 ]);
+
+const patientChiefConcernSeeds = catalogueSeeds(
+  "patient.chief-concerns",
+  patientChiefConcernSeedValues,
+);
 
 const cariesRiskFactorSeeds = catalogueSeeds(
   "clinical-exam.caries-risk-factors",
@@ -281,6 +288,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "RDH",
     fieldLabels: ["RDH"],
     seeds: [],
+    lifecycle: "pilot",
+  },
+  {
+    key: "patient.chief-concerns",
+    section: "Records and Chief Concern",
+    title: "Patient chief concerns",
+    fieldLabels: ["Patient chief concern", "Patient's chief concern"],
+    seeds: patientChiefConcernSeeds,
     lifecycle: "pilot",
   },
   {

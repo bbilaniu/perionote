@@ -39,7 +39,7 @@ export interface RecareExamForm {
   radiographs: string[];
   intraoralPhotosStatus: DocumentationStatus;
   intraoralPhotosDetails: string;
-  chiefConcern: string;
+  chiefConcern: string[];
   extraoralStatus: ExamStatus;
   extraoralFindings: string;
   tmjStatus: ExamStatus;
@@ -96,7 +96,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     radiographs: [],
     intraoralPhotosStatus: "not-documented",
     intraoralPhotosDetails: "",
-    chiefConcern: "",
+    chiefConcern: [],
     extraoralStatus: "not-assessed",
     extraoralFindings: "",
     tmjStatus: "not-assessed",

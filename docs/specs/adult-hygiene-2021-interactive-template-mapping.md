@@ -84,11 +84,12 @@ tracked. Extracted staff names and unreviewed private values may not.
 ## Catalogue Extension
 
 The Adult Hygiene conversion extends the existing catalogue allowlist with
-eleven browser-local groups. Ten ship with the reviewed, complete starter
+twelve browser-local groups. Eleven ship with the reviewed, complete starter
 values listed below. Anesthetic remains unseeded pending redesign:
 
 | Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Public seeds | Control use |
 | --- | --- | --- | --- | --- | --- |
+| `patient.chief-concerns` | Records and Chief Concern | Patient chief concern | Not imported | 5 reviewed options | Multiple values; `Nothing` is mutually exclusive |
 | `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | 4 complete options | Single value |
 | `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | 5 complete options | Single value |
 | `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | 4 complete options | Single value |
@@ -103,6 +104,7 @@ values listed below. Anesthetic remains unseeded pending redesign:
 
 The exact public starter labels are:
 
+- **Patient chief concern:** `Nothing`; `Sore gums upon brushing/flossing`; `Dissatisfaction with the appearance of teeth due to yellowing/stain`; `Food catches between teeth`; `Sensitivity to hot and cold`.
 - **Medical history reviewed:** `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS`.
 - **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
@@ -153,8 +155,9 @@ interaction:
 
 ### Ordered catalogue fields
 
-OH aids uses a reusable `CatalogueMultiCombobox` interaction rather than
-placing several catalogue labels into one opaque string:
+Patient chief concerns and OH aids use a reusable
+`CatalogueMultiCombobox` interaction rather than placing several catalogue
+labels into one opaque string:
 
 - the form stores an ordered in-memory array of snapshotted text values;
 - selecting a suggestion appends it unless an equivalent value is already
@@ -167,6 +170,11 @@ placing several catalogue labels into one opaque string:
 - reset and navigation discard the selected array with the rest of the form;
   and
 - generated output joins selected values with `; ` in their displayed order.
+
+For Patient chief concern, `Nothing` is mutually exclusive. Selecting it
+removes every other concern, and selecting or adding another concern removes
+`Nothing`. Custom concerns remain encounter-only unless the user deliberately
+chooses **Remember and add**.
 
 Treatment completed today uses ordered structured rows. Each row contains a
 catalogue-backed editable treatment type and optional multi-value Tooth/area.
@@ -229,7 +237,7 @@ none is selected by default.
 
 | Field | Approved choices |
 | --- | --- |
-| Patient chief concern quick choices | Nothing; Sensitivity |
+| Patient chief concern catalogue seeds | Nothing; Sore gums upon brushing/flossing; Dissatisfaction with the appearance of teeth due to yellowing/stain; Food catches between teeth; Sensitivity to hot and cold |
 | Stain | None; Localized slight; Localized moderate; Localized heavy; Generalized slight; Generalized moderate; Generalized heavy |
 | Bleeding | Localized mild; Localized moderate; Localized severe; Generalized mild; Generalized moderate; Generalized severe |
 | Periodontitis stage | Stage I (P1); Stage II (P2); Stage III (P3); Stage IV (P4); N/A |
@@ -326,7 +334,7 @@ valid.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Editable text with reviewed generic quick choices: **Patient chief concern** | Entered text: `patient-specific`; quick choices: `appCore` | `Patient Chief Concern: {text}` |
+| A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive | Current values: `patient-specific`; reusable values: `catalogue` | `Patient Chief Concern: {values joined with "; "}` |
 | A12 | `Hygiene Area of Concern:` | Textarea: **Hygiene area of concern** | `patient-specific` | `Hygiene Area of Concern: {text}` |
 | A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Plaque: {extent intensity location}` or entered text |
 | A14 | `Stain: [SELECT/INSERT: STAIN]` | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Stain: {extent intensity}` or entered text |

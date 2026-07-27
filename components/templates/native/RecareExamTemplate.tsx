@@ -19,6 +19,7 @@ import {
   createEmptyRecareExamForm,
   hasRequiredRecareExamFields,
 } from "@/lib/templates/recareExam";
+import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import {
   buildRecareExamSummary,
   formatRecareExamLocalTimestamp,
@@ -526,7 +527,10 @@ export function RecareExamTemplate({
   }
 
   function loadDemo() {
-    setForm({ ...fixture });
+    setForm({
+      ...fixture,
+      chiefConcern: [...fixture.chiefConcern],
+    });
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("Synthetic demo data loaded.");
@@ -770,11 +774,21 @@ export function RecareExamTemplate({
                 updateField("intraoralPhotosDetails", value)
               }
             />
-            <TextareaField
+            <CatalogueMultiCombobox
               id="recare-chief-concern"
               label="Patient's chief concern"
-              value={form.chiefConcern}
-              onChange={(value) => updateField("chiefConcern", value)}
+              catalogueKey="patient.chief-concerns"
+              values={form.chiefConcern}
+              onChange={(values) =>
+                updateField(
+                  "chiefConcern",
+                  applyPatientChiefConcernSelectionRules(
+                    form.chiefConcern,
+                    values,
+                  ),
+                )
+              }
+              roomySelectionActions
             />
           </Section>
 

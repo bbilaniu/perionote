@@ -142,7 +142,7 @@ state.
 | --- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values, including repeats}` |
 | R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific`                       | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
-| R12 | `a) Patients chief concern:`                   | Textarea: **Patient's chief concern**                                | `patient-specific`                                                   | `Patient's chief concern: {text}`                                        |
+| R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue | `Patient's chief concern: {values joined with "; "}` |
 
 Radiographs uses the complete visible options from the reviewed local JSON
 extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
@@ -150,6 +150,11 @@ extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
 explicit browser-local additions remain available. Selected entries can be
 removed and reordered without modifying the catalogue. Intraoral photos
 continues to use an explicit Yes/No status plus editable details.
+
+Patient chief concerns share the same starter and browser-local catalogue as
+Adult Hygiene. Custom values apply only to the current note unless deliberately
+remembered. Selecting `Nothing` removes all other concerns; selecting or adding
+another concern removes `Nothing`.
 
 ### Clinical Exam
 
@@ -296,7 +301,7 @@ Premedication required: {documented answer}
 
 Radiographs: {ordered selected and entered values}
 Intraoral photos: {Yes/No and optional details}
-Patient's chief concern: {entered text}
+Patient's chief concern: {ordered selected and entered values}
 
 Extraoral: {WNL or findings}
 TMJ: {WNL or findings}

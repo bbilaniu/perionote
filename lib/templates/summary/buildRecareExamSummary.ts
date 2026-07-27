@@ -232,6 +232,7 @@ export function buildRecareExamSummary(
   ];
 
   const radiographs = form.radiographs.map(trimmed).filter(Boolean);
+  const chiefConcerns = form.chiefConcern.map(trimmed).filter(Boolean);
   const recordsAndConcern = [
     radiographs.length
       ? `Radiographs: ${radiographs.join("; ")}`
@@ -241,8 +242,10 @@ export function buildRecareExamSummary(
       form.intraoralPhotosStatus,
       form.intraoralPhotosDetails,
     ),
-    trimmed(form.chiefConcern)
-      ? `Patient's chief concern: ${withTerminalPunctuation(form.chiefConcern)}`
+    chiefConcerns.length
+      ? `Patient's chief concern: ${withTerminalPunctuation(
+          chiefConcerns.join("; "),
+        )}`
       : "",
   ];
 

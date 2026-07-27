@@ -17,7 +17,10 @@ export const recareExamFixture: RecareExamForm = {
   radiographs: ["4 BW", "2 PA"],
   intraoralPhotosStatus: "no",
   intraoralPhotosDetails: "",
-  chiefConcern: "Synthetic concern for demonstration.",
+  chiefConcern: [
+    "Food catches between teeth",
+    "Synthetic concern for demonstration",
+  ],
   extraoralStatus: "wnl",
   extraoralFindings: "",
   tmjStatus: "findings",

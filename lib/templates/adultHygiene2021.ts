@@ -4,8 +4,6 @@ import type {
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 
-export const patientChiefConcernChoices = ["Nothing", "Sensitivity"] as const;
-
 export const plaqueChoices = [
   "Localized mild interproximal",
   "Localized moderate interproximal",
@@ -152,7 +150,7 @@ export interface AdultHygiene2021Form {
   medicalHistoryReview: string;
   premedicationStatus: PremedicationStatus;
   premedicationDetails: string;
-  patientChiefConcern: string;
+  patientChiefConcern: string[];
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
   plaqueOther: string;
@@ -215,7 +213,7 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     medicalHistoryReview: "",
     premedicationStatus: "not-documented",
     premedicationDetails: "",
-    patientChiefConcern: "",
+    patientChiefConcern: [],
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
     plaqueOther: "",
