@@ -14,8 +14,7 @@ export const recareExamFixture: RecareExamForm = {
   premedicationDetails: "",
   class5IndicatorsChecked: true,
   mieleCodes: "SYNTH-001",
-  radiographsStatus: "yes",
-  radiographsDetails: "Synthetic bitewings recorded.",
+  radiographs: ["4 BW", "2 PA"],
   intraoralPhotosStatus: "no",
   intraoralPhotosDetails: "",
   chiefConcern: "Synthetic concern for demonstration.",
@@ -39,6 +38,7 @@ export const recareExamFixture: RecareExamForm = {
   overjetMm: "2",
   overbitePercent: "30",
   cpapStatus: "no",
+  cpapUseStatus: "not-documented",
   occlusalSplintStatus: "yes",
   occlusalSplintUseStatus: "yes",
   orthodonticHistoryStatus: "yes",
@@ -46,10 +46,25 @@ export const recareExamFixture: RecareExamForm = {
   removableDenturesStatus: "no",
   improvementRequest: "Synthetic request to discuss whitening.",
   additionalComments: "Synthetic demonstration data only.",
-  treatmentOptionsHygieneMaintenance: true,
-  otherTreatmentOptions: "Synthetic restorative consultation",
-  treatmentPlanHygieneMaintenance: true,
-  otherTreatmentPlan: "",
+  treatmentOptions: [
+    {
+      id: "fixture-treatment-option-1",
+      treatmentType: "Hygiene maintenance",
+      toothArea: "",
+    },
+    {
+      id: "fixture-treatment-option-2",
+      treatmentType: "Synthetic restorative consultation",
+      toothArea: "teeth 14, 15",
+    },
+  ],
+  treatmentPlan: [
+    {
+      id: "fixture-treatment-plan-1",
+      treatmentType: "Hygiene maintenance",
+      toothArea: "",
+    },
+  ],
   nextVisit: "Synthetic hygiene maintenance visit",
   dateBooked: "2026-08-15",
 };

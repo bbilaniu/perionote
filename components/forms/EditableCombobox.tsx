@@ -30,6 +30,7 @@ export function EditableCombobox<
   onValueChange,
   onSelectSuggestion,
   renderSuggestion,
+  suggestionAction,
   selectedContent,
   actions,
   helpText,
@@ -49,6 +50,12 @@ export function EditableCombobox<
   onValueChange: (value: string) => void;
   onSelectSuggestion: (suggestion: TSuggestion) => void;
   renderSuggestion?: (suggestion: TSuggestion) => ReactNode;
+  suggestionAction?: {
+    label: (suggestion: TSuggestion) => string;
+    icon: ReactNode;
+    onAction: (suggestion: TSuggestion) => void;
+    disabled?: boolean;
+  };
   selectedContent?: ReactNode;
   actions?: ReactNode;
   helpText?: ReactNode;
@@ -233,30 +240,55 @@ export function EditableCombobox<
           {suggestions.length ? (
             suggestions.map((suggestion, index) => {
               const selected = suggestion.label === value;
+              const actionLabel = suggestionAction?.label(suggestion);
               return (
                 <li
-                  id={`${listboxId}-option-${index}`}
                   key={suggestion.id}
-                  role="option"
-                  aria-selected={selected}
-                  className={`flex cursor-pointer items-start justify-between gap-3 rounded-lg px-3 py-2 text-sm ${
+                  role="none"
+                  className={`flex items-start gap-1 rounded-lg text-sm ${
                     activeIndex === index
                       ? "bg-sky-100 text-sky-950 dark:bg-sky-900 dark:text-sky-50"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
-                  onPointerDown={(event) => event.preventDefault()}
                   onPointerEnter={() => setActiveIndex(index)}
-                  onClick={() => selectSuggestion(index)}
                 >
-                  <span className="min-w-0">
-                    {renderSuggestion
-                      ? renderSuggestion(suggestion)
-                      : suggestion.label}
-                  </span>
-                  {selected ? (
-                    <SelectedIndicator>
-                      <span className="sr-only">Selected</span>
-                    </SelectedIndicator>
+                  <div
+                    id={`${listboxId}-option-${index}`}
+                    role="option"
+                    aria-selected={selected}
+                    className="flex min-w-0 flex-1 cursor-pointer items-start justify-between gap-3 px-3 py-2"
+                    onPointerDown={(event) => event.preventDefault()}
+                    onClick={() => selectSuggestion(index)}
+                  >
+                    <span className="min-w-0">
+                      {renderSuggestion
+                        ? renderSuggestion(suggestion)
+                        : suggestion.label}
+                    </span>
+                    {selected ? (
+                      <SelectedIndicator>
+                        <span className="sr-only">Selected</span>
+                      </SelectedIndicator>
+                    ) : null}
+                  </div>
+                  {suggestionAction && actionLabel ? (
+                    <button
+                      type="button"
+                      className="m-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                      aria-label={actionLabel}
+                      title={actionLabel}
+                      disabled={suggestionAction.disabled}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        suggestionAction.onAction(suggestion);
+                        requestAnimationFrame(() =>
+                          internalInputRef.current?.focus(),
+                        );
+                      }}
+                    >
+                      {suggestionAction.icon}
+                    </button>
                   ) : null}
                 </li>
               );

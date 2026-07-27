@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ChangeEvent,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -13,6 +12,7 @@ import type {
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
+  RecareTreatmentEntry,
 } from "@/lib/templates/recareExam";
 import {
   createEmptyRecareExamForm,
@@ -23,6 +23,7 @@ import {
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
+import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 
@@ -30,6 +31,8 @@ const inputClass = `mt-1 ${formControlClass()}`;
 
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
+const compactButtonClass =
+  "inline-flex items-center justify-center rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 
 const recareNoteDiscardWarning =
   "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
@@ -83,6 +86,7 @@ function TextField({
   disabled,
   readOnly,
   placeholder,
+  helpText,
 }: {
   id: string;
   label: string;
@@ -96,8 +100,14 @@ function TextField({
   disabled?: boolean;
   readOnly?: boolean;
   placeholder?: string;
+  helpText?: string;
 }) {
   const errorId = `${id}-error`;
+  const helpTextId = `${id}-help`;
+  const describedBy =
+    [helpText ? helpTextId : "", error ? errorId : ""]
+      .filter(Boolean)
+      .join(" ") || undefined;
 
   return (
     <div>
@@ -117,9 +127,17 @@ function TextField({
         placeholder={placeholder}
         autoComplete="off"
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
+        aria-describedby={describedBy}
         onChange={(event) => onChange(event.target.value)}
       />
+      {helpText ? (
+        <p
+          id={helpTextId}
+          className="mt-1 text-xs text-slate-500 dark:text-slate-400"
+        >
+          {helpText}
+        </p>
+      ) : null}
       {error ? (
         <p id={errorId} className="mt-1 text-sm text-red-700 dark:text-red-300">
           {error}
@@ -180,6 +198,131 @@ function CheckboxField({
       />
       <span>{label}</span>
     </label>
+  );
+}
+
+function TreatmentEntryList({
+  id,
+  label,
+  addLabel,
+  entries,
+  onAdd,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  addLabel: string;
+  entries: RecareTreatmentEntry[];
+  onAdd: () => void;
+  onChange: (entries: RecareTreatmentEntry[]) => void;
+}) {
+  function updateEntry(
+    entryId: string,
+    patch: Partial<Omit<RecareTreatmentEntry, "id">>,
+  ) {
+    onChange(
+      entries.map((entry) =>
+        entry.id === entryId ? { ...entry, ...patch } : entry,
+      ),
+    );
+  }
+
+  function moveEntry(index: number, direction: "earlier" | "later") {
+    const targetIndex = direction === "earlier" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= entries.length) {
+      return;
+    }
+    const reordered = [...entries];
+    [reordered[index], reordered[targetIndex]] = [
+      reordered[targetIndex],
+      reordered[index],
+    ];
+    onChange(reordered);
+  }
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold">{label}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Only the treatment type can be remembered.
+      </p>
+      {entries.length ? (
+        <ol className="space-y-3" aria-label={`${label} entries`}>
+          {entries.map((entry, index) => (
+            <li
+              key={entry.id}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                <CatalogueCombobox
+                  id={`${id}-${entry.id}-type`}
+                  label="Treatment type"
+                  catalogueKey="recare-treatment.items"
+                  value={entry.treatmentType}
+                  onChange={(value) =>
+                    updateEntry(entry.id, { treatmentType: value })
+                  }
+                  rememberActionLabel="Remember treatment type"
+                  unhideActionLabel="Unhide treatment type"
+                  allowHideSuggestionsWhenEmpty
+                />
+                <TextField
+                  id={`${id}-${entry.id}-tooth-area`}
+                  label="Tooth/area"
+                  value={entry.toothArea}
+                  onChange={(value) =>
+                    updateEntry(entry.id, { toothArea: value })
+                  }
+                  placeholder="Optional tooth, teeth, or area"
+                  helpText="Not saved. This value stays in this note."
+                />
+                <div className="flex flex-wrap items-start gap-2 md:pt-7">
+                  <button
+                    type="button"
+                    className={compactButtonClass}
+                    disabled={index === 0}
+                    aria-label={`Move ${label} item ${index + 1} earlier`}
+                    onClick={() => moveEntry(index, "earlier")}
+                  >
+                    Earlier
+                  </button>
+                  <button
+                    type="button"
+                    className={compactButtonClass}
+                    disabled={index === entries.length - 1}
+                    aria-label={`Move ${label} item ${index + 1} later`}
+                    onClick={() => moveEntry(index, "later")}
+                  >
+                    Later
+                  </button>
+                  <button
+                    type="button"
+                    className={compactButtonClass}
+                    aria-label={`Remove ${label} item ${index + 1}`}
+                    onClick={() =>
+                      onChange(
+                        entries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        ),
+                      )
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">
+          No {label.toLocaleLowerCase("en-CA")} added.
+        </p>
+      )}
+      <button type="button" className={compactButtonClass} onClick={onAdd}>
+        {addLabel}
+      </button>
+    </div>
   );
 }
 
@@ -290,6 +433,7 @@ export function RecareExamTemplate({
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
+  const treatmentEntrySequence = useRef(0);
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
 
@@ -383,19 +527,15 @@ export function RecareExamTemplate({
     patientIdRef.current?.focus();
   }
 
-  function handleCheckbox(
-    key: keyof Pick<
-      RecareExamForm,
-      | "class5IndicatorsChecked"
-      | "rightMolarOcclusionNotApplicable"
-      | "leftMolarOcclusionNotApplicable"
-      | "skeletalOcclusionNotApplicable"
-      | "treatmentOptionsHygieneMaintenance"
-      | "treatmentPlanHygieneMaintenance"
-    >,
-  ) {
-    return (event: ChangeEvent<HTMLInputElement>) => {
-      updateField(key, event.target.checked);
+  function createTreatmentEntry(
+    scope: "option" | "plan",
+    source?: RecareTreatmentEntry,
+  ): RecareTreatmentEntry {
+    treatmentEntrySequence.current += 1;
+    return {
+      id: `${scope}-${Date.now()}-${treatmentEntrySequence.current}`,
+      treatmentType: source?.treatmentType ?? "",
+      toothArea: source?.toothArea ?? "",
     };
   }
 
@@ -591,17 +731,12 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Records and Chief Concern">
-            <YesNoWithDetails
+            <CatalogueMultiCombobox
               id="recare-radiographs"
               label="Radiographs"
-              status={form.radiographsStatus}
-              details={form.radiographsDetails}
-              onStatusChange={(value) =>
-                updateField("radiographsStatus", value)
-              }
-              onDetailsChange={(value) =>
-                updateField("radiographsDetails", value)
-              }
+              catalogueKey="imaging.radiographs"
+              values={form.radiographs}
+              onChange={(value) => updateField("radiographs", value)}
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"
@@ -796,11 +931,25 @@ export function RecareExamTemplate({
             <div className="grid gap-4 md:grid-cols-2">
               <FixedChoiceListbox
                 id="recare-cpap"
-                label="CPAP use"
+                label="Has a CPAP?"
                 value={form.cpapStatus}
                 options={statusOptions}
-                onChange={(value) => updateField("cpapStatus", value)}
+                onChange={(value) => {
+                  updateField("cpapStatus", value);
+                  if (value !== "yes") {
+                    updateField("cpapUseStatus", "not-documented");
+                  }
+                }}
               />
+              {form.cpapStatus === "yes" ? (
+                <FixedChoiceListbox
+                  id="recare-cpap-use"
+                  label="Uses the CPAP?"
+                  value={form.cpapUseStatus}
+                  options={statusOptions}
+                  onChange={(value) => updateField("cpapUseStatus", value)}
+                />
+              ) : null}
               <FixedChoiceListbox
                 id="recare-occlusal-splint"
                 label="Has an occlusal splint"
@@ -877,51 +1026,59 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Treatment and Next Visit">
-            <fieldset className="space-y-3">
-              <legend className="font-semibold">Treatment Options</legend>
-              <label className="flex items-center gap-3 text-sm">
-                <input
-                  id="recare-treatment-option-hygiene"
-                  type="checkbox"
-                  className="h-4 w-4 accent-sky-700"
-                  checked={form.treatmentOptionsHygieneMaintenance}
-                  onChange={handleCheckbox(
-                    "treatmentOptionsHygieneMaintenance",
-                  )}
-                />
-                Hygiene maintenance
-              </label>
-              <TextareaField
-                id="recare-other-treatment-options"
-                label="Other treatment options"
-                value={form.otherTreatmentOptions}
-                onChange={(value) =>
-                  updateField("otherTreatmentOptions", value)
-                }
-                placeholder="Enter one option per line"
-              />
-            </fieldset>
+            <TreatmentEntryList
+              id="recare-treatment-options"
+              label="Treatment Options"
+              addLabel="Add Treatment Option"
+              entries={form.treatmentOptions}
+              onAdd={() =>
+                updateField("treatmentOptions", [
+                  ...form.treatmentOptions,
+                  createTreatmentEntry("option"),
+                ])
+              }
+              onChange={(value) => updateField("treatmentOptions", value)}
+            />
 
-            <fieldset className="space-y-3">
-              <legend className="font-semibold">Treatment Plan</legend>
-              <label className="flex items-center gap-3 text-sm">
-                <input
-                  id="recare-treatment-plan-hygiene"
-                  type="checkbox"
-                  className="h-4 w-4 accent-sky-700"
-                  checked={form.treatmentPlanHygieneMaintenance}
-                  onChange={handleCheckbox("treatmentPlanHygieneMaintenance")}
-                />
-                Hygiene maintenance
-              </label>
-              <TextareaField
-                id="recare-other-treatment-plan"
-                label="Other treatment plan"
-                value={form.otherTreatmentPlan}
-                onChange={(value) => updateField("otherTreatmentPlan", value)}
-                placeholder="Enter one plan item per line"
+            <div className="space-y-3">
+              {form.treatmentPlan.every(
+                (entry) =>
+                  !entry.treatmentType.trim() && !entry.toothArea.trim(),
+              ) ? (
+                <button
+                  type="button"
+                  className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+                  disabled={
+                    !form.treatmentOptions.some((entry) =>
+                      Boolean(entry.treatmentType.trim()),
+                    )
+                  }
+                  onClick={() =>
+                    updateField(
+                      "treatmentPlan",
+                      form.treatmentOptions
+                        .filter((entry) => entry.treatmentType.trim())
+                        .map((entry) => createTreatmentEntry("plan", entry)),
+                    )
+                  }
+                >
+                  Copy Treatment Options to Treatment Plan
+                </button>
+              ) : null}
+              <TreatmentEntryList
+                id="recare-treatment-plan"
+                label="Treatment Plan"
+                addLabel="Add Treatment Plan Item"
+                entries={form.treatmentPlan}
+                onAdd={() =>
+                  updateField("treatmentPlan", [
+                    ...form.treatmentPlan,
+                    createTreatmentEntry("plan"),
+                  ])
+                }
+                onChange={(value) => updateField("treatmentPlan", value)}
               />
-            </fieldset>
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <TextField

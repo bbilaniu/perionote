@@ -21,6 +21,9 @@ export function CatalogueCombobox({
   error,
   inputRef,
   disabled,
+  rememberActionLabel = "Remember this value",
+  unhideActionLabel = "Unhide this value",
+  allowHideSuggestionsWhenEmpty = false,
 }: {
   id: string;
   label: string;
@@ -30,12 +33,16 @@ export function CatalogueCombobox({
   error?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   disabled?: boolean;
+  rememberActionLabel?: string;
+  unhideActionLabel?: string;
+  allowHideSuggestionsWhenEmpty?: boolean;
 }) {
   const {
     storageStatus,
     getItems,
     findEquivalent,
     rememberValue,
+    setHidden,
   } = useCatalogues();
   const [statusMessage, setStatusMessage] = useState("");
 
@@ -72,6 +79,23 @@ export function CatalogueCombobox({
     }
   }
 
+  function handleHideSuggestion(
+    suggestion: (typeof suggestions)[number],
+  ) {
+    try {
+      setHidden(suggestion.id, suggestion.owner, true);
+      setStatusMessage(
+        `${suggestion.label} hidden from suggestions. You can unhide it in Manage Catalogues.`,
+      );
+    } catch (hideError) {
+      setStatusMessage(
+        hideError instanceof Error
+          ? hideError.message
+          : "This suggestion could not be hidden.",
+      );
+    }
+  }
+
   return (
     <EditableCombobox
       id={id}
@@ -99,6 +123,33 @@ export function CatalogueCombobox({
           </span>
         </>
       )}
+      suggestionAction={
+        allowHideSuggestionsWhenEmpty && !value.trim()
+          ? {
+              label: (suggestion) =>
+                `Hide ${suggestion.label} from suggestions`,
+              icon: (
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 3l18 18" />
+                  <path d="M10.6 10.7a2 2 0 0 0 2.7 2.7" />
+                  <path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5.5 0 9.5 4.8 10 8a9.8 9.8 0 0 1-2.2 4.3" />
+                  <path d="M6.6 6.6A10.5 10.5 0 0 0 2 12c.5 3.2 4.5 8 10 8a10.7 10.7 0 0 0 5.4-1.5" />
+                </svg>
+              ),
+              onAction: handleHideSuggestion,
+              disabled: storageStatus !== "ready",
+            }
+          : undefined
+      }
       actions={
         canRemember || canUnhide ? (
           <button
@@ -107,7 +158,7 @@ export function CatalogueCombobox({
             disabled={storageStatus !== "ready"}
             onClick={handleRemember}
           >
-            {canUnhide ? "Unhide this value" : "Remember this value"}
+            {canUnhide ? unhideActionLabel : rememberActionLabel}
           </button>
         ) : null
       }
