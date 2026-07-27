@@ -94,7 +94,7 @@ values listed below. Anesthetic remains unseeded pending redesign:
 | `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | 4 complete options | Single value |
 | `oral-hygiene.compliance` | Oral Hygiene and Education | Oral hygiene compliance | `ohi-compliance` | 6 complete options | Single value |
 | `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | 8 complete options | Multiple values |
-| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | 8 complete options | Multiple values |
+| `hygiene-treatment.completed` | Treatment | Treatment completed today: treatment type | `hygiene-treatment` | 8 complete options | Structured rows; reusable treatment type plus fixed Tooth/area |
 | `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None—rework required | Single value |
 | `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | 4 complete options | Single value |
 | `scheduling.recall-interval` | Intervals and Next Visit | Recommended recall interval | `recommended-recall-interval` | 3 complete options | Single value |
@@ -151,11 +151,10 @@ interaction:
 - editing, hiding, or deleting a catalogue entry never changes the current
   form value or previously copied notes.
 
-### Multi-value catalogue fields
+### Ordered catalogue fields
 
-OH aids and Treatment completed require a reusable
-`CatalogueMultiCombobox` interaction rather than placing several catalogue
-labels into one opaque string:
+OH aids uses a reusable `CatalogueMultiCombobox` interaction rather than
+placing several catalogue labels into one opaque string:
 
 - the form stores an ordered in-memory array of snapshotted text values;
 - selecting a suggestion appends it unless an equivalent value is already
@@ -168,6 +167,13 @@ labels into one opaque string:
 - reset and navigation discard the selected array with the rest of the form;
   and
 - generated output joins selected values with `; ` in their displayed order.
+
+Treatment completed today uses ordered structured rows. Each row contains a
+catalogue-backed editable treatment type and an optional fixed-choice
+Tooth/area. Treatment types retain the explicit remember behavior above.
+Tooth/area accepts only `maxilla`, `mandible`, `full mouth`, `Q1`, `Q2`, `Q3`,
+`Q4`, `S1`, `S2`, `S3`, `S4`, `S5`, or `S6`; users cannot enter, remember, or
+add other Tooth/area choices. Rows can be added, removed, and reordered.
 
 The catalogue-management page manages the underlying reusable suggestions, not
 the current encounter's selected values.
@@ -380,7 +386,7 @@ values; the unresolved value remains excluded.
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
 | A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE` | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea | `patient-specific` clinical decision | A `Treatment recommended:` block containing only explicitly selected or entered items |
-| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Catalogue-backed editable multi-value control: **Treatment completed today** | Current selections: `patient-specific`; reusable options: `catalogue` | `Treatment completed today: {selected and entered values}` |
+| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional fixed-choice **Tooth/area** | Row and Tooth/area: `patient-specific`; reusable treatment types: `catalogue`; Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional Tooth/area}` joined with `; ` |
 | A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]` | Catalogue-backed editable text: **Anesthetic** | Current value: `patient-specific`; reusable options: `catalogue` | `Anesthetic: {text}` |
 | A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]` | Catalogue-backed editable text: **Desensitizer** | Current value: `patient-specific`; reusable options: `catalogue` | `Desensitizer: {text}` |
 
@@ -389,6 +395,9 @@ All eight visible Treatment completed values and all four Desensitizer values
 are approved public starter values. Anesthetic remains unseeded and must be
 reworked before its options are reconsidered. Selecting an item records text
 only and never infers dose, amount, safety, appropriateness, or treatment.
+Tooth/area starts at **Not specified** for every row and is limited to the 13
+approved fixed choices; it is not a catalogue and does not permit custom
+values.
 
 ### Appliances and Relevant History
 
@@ -497,8 +506,9 @@ Clinical review accepted the complete mapping on 2026-07-25, including:
    disease-process-review, and PPE statements.
 9. Catalogue-backed Oral hygiene compliance with an independent comment, plus
    the approved flossing and brushing choices with **Other**.
-10. Unchecked Hygiene maintenance; public starter values for Treatment
-    completed and Desensitizer; and an unseeded Anesthetic field pending
+10. Unchecked Hygiene maintenance; structured Treatment completed rows with
+    public treatment-type starters and the closed Tooth/area vocabulary;
+    public Desensitizer starters; and an unseeded Anesthetic field pending
     redesign.
 11. Conditional night-guard controls and the proposed retainer choices.
 12. Catalogue-backed recall and hygiene intervals with independent comments,

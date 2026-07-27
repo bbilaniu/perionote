@@ -56,7 +56,7 @@ Hygiene goal: Synthetic daily interdental cleaning goal.
 Treatment recommended:
   - HYGIENE MAINTENANCE
   - Synthetic follow-up assessment
-Treatment completed today: Synthetic scaling; Synthetic polishing
+Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla
 Anesthetic: Synthetic anesthetic documentation.
 Desensitizer: Synthetic desensitizer documentation.
 
@@ -112,6 +112,33 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
       "Plaque: Imported plaque wording.",
+    );
+  });
+
+  it("adds a fixed tooth or area to each documented treatment", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      treatmentCompleted: [
+        {
+          id: "completed-1",
+          treatmentType: "Synthetic scaling",
+          toothArea: "Q1" as const,
+        },
+        {
+          id: "completed-2",
+          treatmentType: "Synthetic polishing",
+          toothArea: "" as const,
+        },
+        {
+          id: "completed-3",
+          treatmentType: "",
+          toothArea: "full mouth" as const,
+        },
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Treatment completed today: Synthetic scaling — Q1; Synthetic polishing",
     );
   });
 

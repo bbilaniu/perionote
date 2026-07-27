@@ -46,8 +46,16 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
   treatmentRecommendedHygieneMaintenance: true,
   otherTreatmentRecommended: "Synthetic follow-up assessment",
   treatmentCompleted: [
-    "Synthetic scaling",
-    "Synthetic polishing",
+    {
+      id: "fixture-treatment-completed-1",
+      treatmentType: "Synthetic scaling",
+      toothArea: "full mouth",
+    },
+    {
+      id: "fixture-treatment-completed-2",
+      treatmentType: "Synthetic polishing",
+      toothArea: "maxilla",
+    },
   ],
   anesthetic: "Synthetic anesthetic documentation",
   desensitizer: "Synthetic desensitizer documentation",

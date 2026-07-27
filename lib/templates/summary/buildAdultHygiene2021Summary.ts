@@ -214,9 +214,19 @@ export function buildAdultHygiene2021Summary(
       form.treatmentRecommendedHygieneMaintenance,
       form.otherTreatmentRecommended,
     ),
-    form.treatmentCompleted.length
-      ? `Treatment completed today: ${form.treatmentCompleted.join("; ")}`
-      : "",
+    (() => {
+      const completed = form.treatmentCompleted
+        .map((entry) => {
+          const treatmentType = trimmed(entry.treatmentType);
+          if (!treatmentType) return "";
+          const toothArea = trimmed(entry.toothArea);
+          return toothArea ? `${treatmentType} — ${toothArea}` : treatmentType;
+        })
+        .filter(Boolean);
+      return completed.length
+        ? `Treatment completed today: ${completed.join("; ")}`
+        : "";
+    })(),
     labelledLine("Anesthetic", form.anesthetic),
     labelledLine("Desensitizer", form.desensitizer),
   ];

@@ -141,7 +141,7 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
     /PSR\/Pocketing: 1 2 2 \/ 2 1 2/,
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Synthetic scaling; Synthetic polishing/,
+    /Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla/,
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Recommended Recall Interval: 6-month recall\./,
@@ -202,10 +202,6 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     ],
     ["#adult-hygiene-compliance", "Good"],
     ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
-    [
-      "#adult-hygiene-treatment-completed",
-      "1U scale (cavitron and hand scaling)",
-    ],
     ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
     ["#adult-hygiene-recall-interval", "6-month recall"],
     ["#adult-hygiene-hygiene-interval", "4-month scale"],
@@ -220,9 +216,17 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     ).toBeVisible();
   }
 
-  const treatmentCompleted = page.locator(
-    "#adult-hygiene-treatment-completed",
-  );
+  await page
+    .getByRole("button", { name: "Add treatment completed", exact: true })
+    .click();
+  const completedValues = page.getByRole("list", {
+    name: "Treatment completed today entries",
+  });
+  const completedRow = completedValues.locator(":scope > li").first();
+  const treatmentCompleted = completedRow.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
   await treatmentCompleted.focus();
   await page
     .getByRole("option", {
@@ -230,24 +234,54 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       exact: true,
     })
     .click();
-  const completedValues = page.getByRole("list", {
-    name: "Treatment completed today selected values",
+
+  const toothArea = completedRow.getByRole("button", {
+    name: "Tooth/area",
+    exact: true,
   });
-  const completedRow = completedValues.locator(":scope > li").first();
+  await toothArea.click();
+  const toothAreaOptions = page.getByRole("listbox", {
+    name: "Tooth/area options",
+    exact: true,
+  });
+  await expect(
+    toothAreaOptions.getByRole("option").allTextContents(),
+  ).resolves.toEqual([
+    "Not specified",
+    "maxilla",
+    "mandible",
+    "full mouth",
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+  ]);
+  await toothAreaOptions
+    .getByRole("option", { name: "full mouth", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — full mouth/,
+  );
   await expect(
     completedRow.getByRole("button", {
-      name: "Move 1U scale (cavitron and hand scaling) earlier",
+      name: "Move treatment completed item 1 earlier",
     }),
   ).toHaveClass(/py-2/);
   const removeCompleted = completedRow.getByRole("button", {
-    name: "Remove 1U scale (cavitron and hand scaling)",
+    name: "Remove treatment completed item 1",
   });
   await expect(removeCompleted).toHaveClass(/border-red-300/);
   await expect(removeCompleted).toHaveClass(/text-red-800/);
   await removeCompleted.hover();
   await expect(
     completedRow.getByRole("tooltip").filter({
-      hasText: "Remove this value from the note.",
+      hasText: "Remove this treatment line from the note.",
     }),
   ).toBeVisible();
 

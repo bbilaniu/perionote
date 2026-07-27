@@ -84,6 +84,32 @@ export const brushingFrequencyChoices = [
   "Never brushing",
 ] as const;
 
+export const treatmentToothAreaChoices = [
+  "maxilla",
+  "mandible",
+  "full mouth",
+  "Q1",
+  "Q2",
+  "Q3",
+  "Q4",
+  "S1",
+  "S2",
+  "S3",
+  "S4",
+  "S5",
+  "S6",
+] as const;
+
+export type TreatmentToothArea =
+  | ""
+  | (typeof treatmentToothAreaChoices)[number];
+
+export type AdultHygieneTreatmentCompletedEntry = {
+  id: string;
+  treatmentType: string;
+  toothArea: TreatmentToothArea;
+};
+
 export interface AdultHygiene2021Form {
   patientId: string;
   noteLastRecallDate: string;
@@ -129,7 +155,7 @@ export interface AdultHygiene2021Form {
   hygieneGoal: string;
   treatmentRecommendedHygieneMaintenance: boolean;
   otherTreatmentRecommended: string;
-  treatmentCompleted: string[];
+  treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
   anesthetic: string;
   desensitizer: string;
   nightGuardStatus: DocumentationStatus;

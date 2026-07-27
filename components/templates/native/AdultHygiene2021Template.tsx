@@ -13,8 +13,11 @@ import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCo
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
+  type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
+  type TreatmentToothArea,
   bleedingChoices,
   brushingFrequencyChoices,
   calculusChoices,
@@ -26,6 +29,7 @@ import {
   periodontitisStageChoices,
   plaqueChoices,
   stainChoices,
+  treatmentToothAreaChoices,
 } from "@/lib/templates/adultHygiene2021";
 import type {
   DocumentationStatus,
@@ -39,6 +43,10 @@ const inputClass = `mt-1 ${formControlClass()}`;
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
+const treatmentRowButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const treatmentRowRemoveButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
@@ -50,6 +58,14 @@ const documentationStatusOptions: Array<{
   { value: "not-documented", label: "Not documented" },
   { value: "no", label: "No" },
   { value: "yes", label: "Yes" },
+];
+
+const treatmentToothAreaOptions: Array<{
+  value: TreatmentToothArea;
+  label: string;
+}> = [
+  { value: "", label: "Not specified" },
+  ...treatmentToothAreaChoices.map((value) => ({ value, label: value })),
 ];
 
 function Section({
@@ -274,6 +290,130 @@ function CheckboxField({
   );
 }
 
+function TreatmentCompletedList({
+  entries,
+  onAdd,
+  onChange,
+}: {
+  entries: AdultHygieneTreatmentCompletedEntry[];
+  onAdd: () => void;
+  onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
+}) {
+  function updateEntry(
+    entryId: string,
+    patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>,
+  ) {
+    onChange(
+      entries.map((entry) =>
+        entry.id === entryId ? { ...entry, ...patch } : entry,
+      ),
+    );
+  }
+
+  function moveEntry(index: number, direction: "earlier" | "later") {
+    const targetIndex = direction === "earlier" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= entries.length) return;
+    const reordered = [...entries];
+    [reordered[index], reordered[targetIndex]] = [
+      reordered[targetIndex],
+      reordered[index],
+    ];
+    onChange(reordered);
+  }
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold">Treatment completed today</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Treatment types can be remembered. Tooth/area is limited to the listed
+        choices and is never saved to a catalogue.
+      </p>
+      {entries.length ? (
+        <ol
+          className="space-y-3"
+          aria-label="Treatment completed today entries"
+        >
+          {entries.map((entry, index) => (
+            <li
+              key={entry.id}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+                <CatalogueCombobox
+                  id={`adult-hygiene-treatment-completed-${entry.id}-type`}
+                  label="Treatment type"
+                  catalogueKey="hygiene-treatment.completed"
+                  value={entry.treatmentType}
+                  onChange={(value) =>
+                    updateEntry(entry.id, { treatmentType: value })
+                  }
+                  rememberActionLabel="Remember treatment type"
+                  unhideActionLabel="Unhide treatment type"
+                  roomyActions
+                />
+                <FixedChoiceListbox
+                  id={`adult-hygiene-treatment-completed-${entry.id}-tooth-area`}
+                  label="Tooth/area"
+                  value={entry.toothArea}
+                  options={treatmentToothAreaOptions}
+                  onChange={(value) =>
+                    updateEntry(entry.id, { toothArea: value })
+                  }
+                />
+                <div className="flex flex-wrap items-start gap-2 md:pt-7">
+                  <TooltipActionButton
+                    tooltip="Move this treatment line earlier in the note."
+                    className={treatmentRowButtonClass}
+                    disabled={index === 0}
+                    ariaLabel={`Move treatment completed item ${index + 1} earlier`}
+                    onClick={() => moveEntry(index, "earlier")}
+                  >
+                    Earlier
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Move this treatment line later in the note."
+                    className={treatmentRowButtonClass}
+                    disabled={index === entries.length - 1}
+                    ariaLabel={`Move treatment completed item ${index + 1} later`}
+                    onClick={() => moveEntry(index, "later")}
+                  >
+                    Later
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Remove this treatment line from the note."
+                    className={treatmentRowRemoveButtonClass}
+                    ariaLabel={`Remove treatment completed item ${index + 1}`}
+                    onClick={() =>
+                      onChange(
+                        entries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        ),
+                      )
+                    }
+                  >
+                    Remove
+                  </TooltipActionButton>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">
+          No treatment completed today added.
+        </p>
+      )}
+      <button
+        type="button"
+        className={treatmentRowButtonClass}
+        onClick={onAdd}
+      >
+        Add treatment completed
+      </button>
+    </div>
+  );
+}
+
 async function writeClipboard(value: string): Promise<boolean> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -310,6 +450,7 @@ export function AdultHygiene2021Template({
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
+  const treatmentEntrySequence = useRef(0);
 
   useEffect(() => setStartedAt(new Date()), []);
 
@@ -380,7 +521,9 @@ export function AdultHygiene2021Template({
       ...fixture,
       psrPocketing: [...fixture.psrPocketing],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
-      treatmentCompleted: [...fixture.treatmentCompleted],
+      treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
+        ...entry,
+      })),
     });
     setPatientIdError("");
     setProviderError("");
@@ -395,6 +538,15 @@ export function AdultHygiene2021Template({
     setProviderError("");
     setCopyMessage("");
     patientIdRef.current?.focus();
+  }
+
+  function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {
+    treatmentEntrySequence.current += 1;
+    return {
+      id: `completed-${Date.now()}-${treatmentEntrySequence.current}`,
+      treatmentType: "",
+      toothArea: "",
+    };
   }
 
   return (
@@ -833,13 +985,15 @@ export function AdultHygiene2021Template({
                 placeholder="Enter one item per line"
               />
             </fieldset>
-            <CatalogueMultiCombobox
-              id="adult-hygiene-treatment-completed"
-              label="Treatment completed today"
-              catalogueKey="hygiene-treatment.completed"
-              values={form.treatmentCompleted}
+            <TreatmentCompletedList
+              entries={form.treatmentCompleted}
+              onAdd={() =>
+                updateField("treatmentCompleted", [
+                  ...form.treatmentCompleted,
+                  createTreatmentCompletedEntry(),
+                ])
+              }
               onChange={(value) => updateField("treatmentCompleted", value)}
-              roomySelectionActions
             />
             <CatalogueCombobox
               id="adult-hygiene-anesthetic"
