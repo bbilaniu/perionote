@@ -492,7 +492,11 @@ export function RecareExamTemplate({
     );
     setCopyMessage("");
 
-    if (missingPatientId || missingProvider || !hasRequiredRecareExamFields(form)) {
+    if (
+      missingPatientId ||
+      missingProvider ||
+      !hasRequiredRecareExamFields(form)
+    ) {
       requestAnimationFrame(() => {
         (missingPatientId ? patientIdRef.current : dentistRef.current)?.focus();
       });
@@ -593,7 +597,9 @@ export function RecareExamTemplate({
           >
             <fieldset
               aria-invalid={Boolean(providerError)}
-              aria-describedby={providerError ? "recare-provider-error" : undefined}
+              aria-describedby={
+                providerError ? "recare-provider-error" : undefined
+              }
             >
               <legend className="sr-only">Visit team providers</legend>
               <div className="grid gap-4 md:grid-cols-3">
@@ -697,9 +703,7 @@ export function RecareExamTemplate({
                 label="Medical history reviewed"
                 catalogueKey="medical-history.review"
                 value={form.medicalHistoryReview}
-                onChange={(value) =>
-                  updateField("medicalHistoryReview", value)
-                }
+                onChange={(value) => updateField("medicalHistoryReview", value)}
               />
 
               <div className="space-y-4">
@@ -775,9 +779,7 @@ export function RecareExamTemplate({
               status={form.tmjStatus}
               findings={form.tmjFindings}
               onStatusChange={(value) => updateField("tmjStatus", value)}
-              onFindingsChange={(value) =>
-                updateField("tmjFindings", value)
-              }
+              onFindingsChange={(value) => updateField("tmjFindings", value)}
             />
             <ExamFinding
               id="recare-masseter"
@@ -854,9 +856,7 @@ export function RecareExamTemplate({
                   label="Left molar occlusion"
                   catalogueKey="clinical-exam.molar-occlusion"
                   value={form.leftMolarOcclusion}
-                  onChange={(value) =>
-                    updateField("leftMolarOcclusion", value)
-                  }
+                  onChange={(value) => updateField("leftMolarOcclusion", value)}
                   disabled={form.leftMolarOcclusionNotApplicable}
                 />
                 <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 sm:mt-6">
@@ -952,16 +952,13 @@ export function RecareExamTemplate({
               ) : null}
               <FixedChoiceListbox
                 id="recare-occlusal-splint"
-                label="Has an occlusal splint"
+                label="Has an occlusal splint?"
                 value={form.occlusalSplintStatus}
                 options={statusOptions}
                 onChange={(value) => {
                   updateField("occlusalSplintStatus", value);
                   if (value !== "yes") {
-                    updateField(
-                      "occlusalSplintUseStatus",
-                      "not-documented",
-                    );
+                    updateField("occlusalSplintUseStatus", "not-documented");
                   }
                 }}
               />

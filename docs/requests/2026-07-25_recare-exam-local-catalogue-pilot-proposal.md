@@ -264,6 +264,11 @@ The page should:
 - explain that values are stored only in the current browser profile;
 - warn that clearing site data may remove them;
 - group catalogues by **Visit Team** and **Clinical Exam**;
+- consolidate Dentist, RDA, and RDH into a keyboard-accessible **Provider
+  roles** tabbed card;
+- consolidate Molar occlusion and Skeletal occlusion into a
+  keyboard-accessible **Occlusion** tabbed card;
+- preserve unfinished Add value text when switching between catalogue tabs;
 - show the field or fields to which each catalogue applies;
 - distinguish starter suggestions from locally remembered values;
 - add a local item to an allowlisted catalogue;

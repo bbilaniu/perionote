@@ -11,6 +11,73 @@ async function reloadDiscardingForm(page: Page) {
   await reloadPromise;
 }
 
+test("catalogue manager groups related catalogues into keyboard-accessible tabs", async ({
+  page,
+}) => {
+  await page.goto("/catalogues");
+
+  const providerGroup = page.getByRole("region", {
+    name: "Provider roles catalogues",
+  });
+  const dentistTab = providerGroup.getByRole("tab", { name: /Dentist/ });
+  const rdaTab = providerGroup.getByRole("tab", { name: /RDA/ });
+  const rdhTab = providerGroup.getByRole("tab", { name: /RDH/ });
+  const dentistCatalogue = providerGroup.locator(
+    '[data-catalogue-key="visit-team.dentist"]',
+  );
+  const rdaCatalogue = providerGroup.locator(
+    '[data-catalogue-key="visit-team.rda"]',
+  );
+
+  await expect(dentistTab).toHaveAttribute("aria-selected", "true");
+  await expect(rdaTab).toHaveAttribute("aria-selected", "false");
+  await expect(rdhTab).toHaveAttribute("aria-selected", "false");
+  await expect(dentistCatalogue).toBeVisible();
+  await expect(rdaCatalogue).toBeHidden();
+
+  await dentistCatalogue
+    .getByLabel("Add Dentist value")
+    .fill("Unsubmitted Dentist");
+  await rdaTab.click();
+  await rdaCatalogue
+    .getByLabel("Add RDA value")
+    .fill("Unsubmitted RDA");
+  await dentistTab.click();
+  await expect(dentistCatalogue.getByLabel("Add Dentist value")).toHaveValue(
+    "Unsubmitted Dentist",
+  );
+
+  await dentistTab.press("ArrowRight");
+  await expect(rdaTab).toBeFocused();
+  await expect(rdaTab).toHaveAttribute("aria-selected", "true");
+  await rdaTab.press("End");
+  await expect(rdhTab).toBeFocused();
+  await expect(rdhTab).toHaveAttribute("aria-selected", "true");
+
+  const occlusionGroup = page.getByRole("region", {
+    name: "Occlusion catalogues",
+  });
+  const molarTab = occlusionGroup.getByRole("tab", {
+    name: /Molar occlusion/,
+  });
+  const skeletalTab = occlusionGroup.getByRole("tab", {
+    name: /Skeletal occlusion/,
+  });
+  await expect(molarTab).toHaveAttribute("aria-selected", "true");
+  await expect(molarTab).toContainText("3");
+  await skeletalTab.click();
+  await expect(
+    occlusionGroup.locator(
+      '[data-catalogue-key="clinical-exam.molar-occlusion"]',
+    ),
+  ).toBeHidden();
+  await expect(
+    occlusionGroup.locator(
+      '[data-catalogue-key="clinical-exam.skeletal-occlusion"]',
+    ),
+  ).toBeVisible();
+});
+
 test("Recare Exam offers public occlusion seeds and remembers providers explicitly", async ({
   page,
 }) => {
@@ -232,6 +299,10 @@ test("catalogue export and import transfer local values without a network reques
   const rdaCatalogue = page.locator(
     '[data-catalogue-key="visit-team.rda"]',
   );
+  await page
+    .getByRole("region", { name: "Provider roles catalogues" })
+    .getByRole("tab", { name: /RDA/ })
+    .click();
   await rdaCatalogue
     .getByLabel("Add RDA value")
     .fill("Temporary Synthetic RDA");
@@ -250,6 +321,10 @@ test("catalogue export and import transfer local values without a network reques
   await expect(
     rdaCatalogue.locator('input[value="Temporary Synthetic RDA"]'),
   ).toHaveCount(0);
+  await page
+    .getByRole("region", { name: "Provider roles catalogues" })
+    .getByRole("tab", { name: /Dentist/ })
+    .click();
   await expect(
     dentistCatalogue.locator('input[value="Portable Synthetic Dentist"]'),
   ).toBeVisible();
