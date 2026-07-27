@@ -79,6 +79,30 @@ export const brushingFrequencyChoices = [
   "Never brushing",
 ] as const;
 
+export const homeCareOheTopicChoices = [
+  "Bass brushing",
+  "C-shape flossing technique",
+  "Sulcabrush and interdental brush technique",
+] as const;
+
+export const diseaseAndRiskOheTopicChoices = [
+  "Caries theory",
+  "Caries risk factors",
+  "Periodontitis theory",
+  "Periodontitis risk factors",
+] as const;
+
+export const preventionAndMaintenanceOheTopicChoices = [
+  "Review benefits of Prevident or Opti-Rinse",
+  "Importance of maintaining the recommended hygiene interval",
+] as const;
+
+export const oheTopicChoices = [
+  ...homeCareOheTopicChoices,
+  ...diseaseAndRiskOheTopicChoices,
+  ...preventionAndMaintenanceOheTopicChoices,
+] as const;
+
 export const treatmentToothAreaChoices = [
   "full mouth",
   "maxilla",
@@ -174,6 +198,8 @@ export interface AdultHygiene2021Form {
   homeCareInstructionReviewed: boolean;
   ohiAidsReviewed: string[];
   diseaseProcessReviewed: boolean;
+  oheTopicsReviewed: string[];
+  oheNotes: string;
   flossingFrequencyChoice: string;
   flossingFrequencyOther: string;
   brushingFrequencyChoice: string;
@@ -238,6 +264,8 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     homeCareInstructionReviewed: false,
     ohiAidsReviewed: [],
     diseaseProcessReviewed: false,
+    oheTopicsReviewed: [],
+    oheNotes: "",
     flossingFrequencyChoice: "",
     flossingFrequencyOther: "",
     brushingFrequencyChoice: "",

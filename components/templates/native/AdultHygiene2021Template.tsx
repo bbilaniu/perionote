@@ -22,10 +22,14 @@ import {
   type AdultHygiene2021Form,
   brushingFrequencyChoices,
   createEmptyAdultHygiene2021Form,
+  diseaseAndRiskOheTopicChoices,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
+  homeCareOheTopicChoices,
+  oheTopicChoices,
   periodontitisGradeChoices,
   periodontitisStageChoices,
+  preventionAndMaintenanceOheTopicChoices,
   treatmentToothAreaChoices,
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
@@ -62,6 +66,21 @@ const treatmentToothAreaChoiceGroups = [
     label: "Sextants",
     choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
     columns: 3,
+  },
+] as const;
+
+const oheTopicChoiceGroups = [
+  {
+    label: "Home-care techniques",
+    choices: homeCareOheTopicChoices,
+  },
+  {
+    label: "Disease and risk",
+    choices: diseaseAndRiskOheTopicChoices,
+  },
+  {
+    label: "Prevention and maintenance",
+    choices: preventionAndMaintenanceOheTopicChoices,
   },
 ] as const;
 
@@ -725,6 +744,7 @@ export function AdultHygiene2021Template({
       psrPocketing: [...fixture.psrPocketing],
       patientChiefConcern: [...fixture.patientChiefConcern],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
+      oheTopicsReviewed: [...fixture.oheTopicsReviewed],
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
         ...entry,
         toothAreas: [...entry.toothAreas],
@@ -1165,6 +1185,25 @@ export function AdultHygiene2021Template({
               label="Disease process reviewed with patient today"
               checked={form.diseaseProcessReviewed}
               onChange={(value) => updateField("diseaseProcessReviewed", value)}
+            />
+            <FixedChoiceMultiCombobox
+              id="adult-hygiene-ohe-topics"
+              label="Additional OHE topics reviewed"
+              choices={oheTopicChoices}
+              choiceGroups={oheTopicChoiceGroups}
+              values={form.oheTopicsReviewed}
+              onChange={(values) => updateField("oheTopicsReviewed", values)}
+              customPlaceholder="Search OHE topics"
+              customHelpText=""
+              showSelectedChips={false}
+              allowCustomValues={false}
+            />
+            <TextareaField
+              id="adult-hygiene-ohe-notes"
+              label="OHE notes"
+              value={form.oheNotes}
+              onChange={(value) => updateField("oheNotes", value)}
+              placeholder="Optional OHE details discussed today"
             />
             <ChoiceWithOther
               id="adult-hygiene-flossing"

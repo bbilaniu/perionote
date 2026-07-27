@@ -27,6 +27,41 @@ function selectedValue(choice: string, other: string): string {
   return trimmed(other) || trimmed(choice);
 }
 
+function oheTopicLine(values: string[]): string {
+  const cleanValues = values.map(trimmed).filter(Boolean);
+  const selected = new Set(cleanValues);
+  const handled = new Set<string>();
+  const topics: string[] = [];
+
+  for (const value of cleanValues) {
+    if (handled.has(value)) continue;
+
+    if (
+      (value === "Caries theory" || value === "Caries risk factors") &&
+      selected.has("Caries theory") &&
+      selected.has("Caries risk factors")
+    ) {
+      topics.push("Caries theory and risk factors");
+      handled.add("Caries theory");
+      handled.add("Caries risk factors");
+    } else if (
+      (value === "Periodontitis theory" ||
+        value === "Periodontitis risk factors") &&
+      selected.has("Periodontitis theory") &&
+      selected.has("Periodontitis risk factors")
+    ) {
+      topics.push("Periodontitis theory and risk factors");
+      handled.add("Periodontitis theory");
+      handled.add("Periodontitis risk factors");
+    } else {
+      topics.push(value);
+      handled.add(value);
+    }
+  }
+
+  return topics.length ? `OHE: ${topics.join("; ")}.` : "";
+}
+
 function labelledLine(label: string, value: string): string {
   const cleanValue = trimmed(value);
   return cleanValue ? `${label}: ${withTerminalPunctuation(cleanValue)}` : "";
@@ -209,6 +244,8 @@ export function buildAdultHygiene2021Summary(
     form.diseaseProcessReviewed
       ? "REVIEWED DISEASE PROCESS WITH PATIENT TODAY"
       : "",
+    oheTopicLine(form.oheTopicsReviewed),
+    labelledLine("OHE notes", form.oheNotes),
     currentHabits.length
       ? `Patient is currently: ${currentHabits.join("; ")}.`
       : "",

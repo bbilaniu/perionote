@@ -147,6 +147,28 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
   - Sensitivity to hot and cold`);
   });
 
+  it("adds optional OHE topics and notes without replacing existing OHE lines", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      diseaseProcessReviewed: true,
+      oheTopicsReviewed: [
+        "Bass brushing",
+        "Caries theory",
+        "Caries risk factors",
+        "Periodontitis theory",
+        "Periodontitis risk factors",
+        "Importance of maintaining the recommended hygiene interval",
+      ],
+      oheNotes: "Demonstrated brushing modifications",
+    };
+
+    expect(
+      buildAdultHygiene2021Summary(form),
+    ).toBe(`REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and risk factors; Importance of maintaining the recommended hygiene interval.
+OHE notes: Demonstrated brushing modifications.`);
+  });
+
   it("adds multiple fixed and encounter-only tooth areas to a treatment", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),

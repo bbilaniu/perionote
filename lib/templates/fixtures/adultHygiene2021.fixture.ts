@@ -42,6 +42,8 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
   homeCareInstructionReviewed: true,
   ohiAidsReviewed: ["Synthetic interdental aid", "Synthetic brushing aid"],
   diseaseProcessReviewed: true,
+  oheTopicsReviewed: [],
+  oheNotes: "",
   flossingFrequencyChoice: "Flossing 1x/day",
   flossingFrequencyOther: "",
   brushingFrequencyChoice: "Brushing 2x/day",

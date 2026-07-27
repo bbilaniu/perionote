@@ -246,6 +246,7 @@ none is selected by default.
 | Periodontitis stage | Stage I (P1); Stage II (P2); Stage III (P3); Stage IV (P4); N/A |
 | Periodontitis grade | Grade A: slow rate; Grade B: moderate rate; Grade C: rapid rate; N/A |
 | Oral hygiene compliance | Poor; Fair; Good; Excellent; Poor–fair; Fair–good |
+| Additional OHE topics reviewed | Bass brushing; C-shape flossing technique; Sulcabrush and interdental brush technique; Caries theory; Caries risk factors; Periodontitis theory; Periodontitis risk factors; Review benefits of Prevident or Opti-Rinse; Importance of maintaining the recommended hygiene interval |
 | Flossing frequency | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing |
 | Brushing frequency | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing |
 | Recommended recall interval | 12-month recall; 6-month recall; 9-month recall |
@@ -407,6 +408,8 @@ field remain independent; selecting a structured value never clears comments.
 | A24 | Fixed home-care instruction sentence | Unchecked checkbox: **Standard home-care instruction reviewed** | `appCore` | Preserve the source sentence only when checked |
 | A25 | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]` | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended** | Current selections: `patient-specific`; reusable options: `catalogue` | `OH Aids Reviewed/Recommended: {selected and entered values}` |
 | A26 | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY` | Unchecked checkbox: **Disease process reviewed with patient today** | `appCore` | Preserve the source sentence only when checked |
+| A26a | Additive OHE extension | Grouped fixed multi-value control: **Additional OHE topics reviewed** | `appCore`; no value selected by default | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed |
+| A26b | Additive OHE extension | Optional textarea: **OHE notes** | `patient-specific` | `OHE notes: {entered text}` only when entered |
 | A27 | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two optional structured choices with editable **Other** values: **Flossing frequency** and **Brushing frequency** | Choice: `appCore`; Other: `patient-specific` | `Patient is currently: {documented flossing}; {documented brushing}.` |
 | A28 | `Hygiene goal:` | Textarea: **Hygiene goal** | `patient-specific` | `Hygiene goal: {text}` |
 
@@ -418,6 +421,13 @@ application choices. Eight of nine visible OHI-aids values are complete; one rem
 unresolved, and the scrollbar means additional values may not have been
 captured. The eight complete captured values are approved public starter
 values; the unresolved value remains excluded.
+
+The additive OHE topic and notes controls do not move, rename, or replace any
+accepted 2021 fields or output lines. Both start empty. Existing notes
+therefore remain unchanged unless a user explicitly documents an additional
+topic or OHE note. The topic menu is visually grouped into home-care
+techniques, disease and risk, and prevention and maintenance. It uses fixed
+reviewed choices; non-standard discussion belongs in OHE notes.
 
 ### Treatment
 

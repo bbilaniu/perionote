@@ -287,7 +287,7 @@ export function FixedChoiceMultiCombobox({
           >
             <div className="border-b border-slate-200 p-2 dark:border-slate-800">
               <label className="sr-only" htmlFor={`${id}-search`}>
-                Search or add custom {label}
+                {allowCustomValues ? "Search or add custom" : "Search"} {label}
               </label>
               <input
                 ref={searchRef}

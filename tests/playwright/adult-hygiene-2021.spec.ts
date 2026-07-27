@@ -141,6 +141,28 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   const ohiAids = page.locator("#adult-hygiene-ohi-aids");
   await ohiAids.fill("Synthetic interdental aid");
   await ohiAids.press("Enter");
+  await page
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  const oheTopicsDialog = page.getByRole("dialog", {
+    name: "Additional OHE topics reviewed options",
+  });
+  const diseaseAndRiskTopics = oheTopicsDialog.getByRole("group", {
+    name: "Disease and risk Additional OHE topics reviewed choices",
+  });
+  await diseaseAndRiskTopics.getByText("Caries theory", { exact: true }).click();
+  await diseaseAndRiskTopics
+    .getByText("Caries risk factors", { exact: true })
+    .click();
+  await oheTopicsDialog
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+  await page
+    .locator("#adult-hygiene-ohe-notes")
+    .fill("Demonstrated brushing modifications");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Informed verbal consent given by PATIENT and PARENT for treatment today\./,
@@ -150,6 +172,9 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /OH Aids Reviewed\/Recommended: Synthetic interdental aid/,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./,
   );
 
   const preview = await page.locator("#adult-hygiene-summary").inputValue();
