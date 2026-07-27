@@ -4,10 +4,7 @@ import type {
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 
-export const patientChiefConcernChoices = [
-  "Nothing",
-  "Sensitivity",
-] as const;
+export const patientChiefConcernChoices = ["Nothing", "Sensitivity"] as const;
 
 export const plaqueChoices = [
   "Localized mild interproximal",
@@ -85,9 +82,9 @@ export const brushingFrequencyChoices = [
 ] as const;
 
 export const treatmentToothAreaChoices = [
+  "full mouth",
   "maxilla",
   "mandible",
-  "full mouth",
   "Q1",
   "Q2",
   "Q3",
