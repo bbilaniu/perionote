@@ -1,5 +1,23 @@
 # hygienenote
 
+## 0.3.5
+
+### Patch Changes
+
+- 6e9ad3b: Add recoverable inline hiding to every catalogue-backed suggestion menu,
+  including ordered multi-value fields.
+- 6e9ad3b: Improve pilot treatment, radiograph, and OH-aid row actions with roomier
+  controls, red outlined removal, accessible action tooltips, and roomier
+  treatment creation and remember actions, and replace the native catalogue
+  import picker with a styled, accessible filename control.
+- 6e9ad3b: Promote the 2021 Adult Hygiene interactive conversion and its dedicated local
+  catalogues from draft to pilot.
+- 6e9ad3b: Allow the same Radiographs value to be added more than once to a Recare Exam
+  encounter while keeping reusable catalogue suggestions unique.
+- 6e9ad3b: Group related provider-role and occlusion catalogues into accessible tabbed
+  cards while preserving each catalogue's independent values and unfinished
+  input.
+
 ## 0.3.4
 
 ### Patch Changes
