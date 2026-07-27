@@ -38,7 +38,7 @@ function remember(
 }
 
 describe("local catalogues", () => {
-  it("respects draft and pilot catalogue lifecycles", () => {
+  it("allows Adult Hygiene catalogues in development and hides them in production while draft", () => {
     const adultHygieneKey = "hygiene-treatment.completed";
     expect(
       getCatalogueDefinitionsForBuild("development").some(
@@ -58,16 +58,6 @@ describe("local catalogues", () => {
     expect(
       getCatalogueDefinitionsForBuild("production").some(
         (definition) => definition.key === "medical-history.review",
-      ),
-    ).toBe(true);
-    expect(
-      getCatalogueDefinitionsForBuild("production").some(
-        (definition) => definition.key === "imaging.radiographs",
-      ),
-    ).toBe(true);
-    expect(
-      getCatalogueDefinitionsForBuild("production").some(
-        (definition) => definition.key === "recare-treatment.items",
       ),
     ).toBe(true);
   });
@@ -92,21 +82,6 @@ describe("local catalogues", () => {
         "clinical-exam.skeletal-occlusion",
       ).map((item) => item.label),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
-    expect(
-      listCatalogueItems(emptyState, "imaging.radiographs").map(
-        (item) => item.label,
-      ),
-    ).toEqual([
-      "PAN",
-      "1 BW",
-      "2 BW",
-      "3 BW",
-      "4 BW",
-      "5 BW",
-      "6 BW",
-      "1 PA",
-      "2 PA",
-    ]);
     expect(
       listCatalogueItems(emptyState, "medical-history.review").map(
         (item) => item.label,
@@ -179,11 +154,6 @@ describe("local catalogues", () => {
       "Fluoride varnish",
       "Crystal X-PUR",
     ]);
-    expect(
-      listCatalogueItems(emptyState, "recare-treatment.items").map(
-        (item) => item.label,
-      ),
-    ).toEqual(["Hygiene maintenance"]);
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.anesthetic"),
     ).toEqual([]);

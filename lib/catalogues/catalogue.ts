@@ -13,14 +13,12 @@ export const CATALOGUE_KEYS = [
   "visit-team.rdh",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
-  "imaging.radiographs",
   "medical-history.review",
   "periodontal.fmp-done",
   "periodontal.health-gingivitis",
   "oral-hygiene.compliance",
   "oral-hygiene.aids-reviewed",
   "hygiene-treatment.completed",
-  "recare-treatment.items",
   "hygiene-treatment.anesthetic",
   "hygiene-treatment.desensitizer",
   "scheduling.recall-interval",
@@ -33,7 +31,6 @@ export type CatalogueOwner = "seed" | "user";
 
 export const CATALOGUE_SECTIONS = [
   "Visit Team",
-  "Records and Chief Concern",
   "Clinical Exam",
   "Medical History",
   "Periodontal Assessment",
@@ -134,18 +131,6 @@ const medicalHistoryReviewSeeds = catalogueSeeds("medical-history.review", [
   ["updated-meds", "YES- UPDATED MEDS"],
 ]);
 
-const radiographSeeds = catalogueSeeds("imaging.radiographs", [
-  ["pan", "PAN"],
-  ["1-bw", "1 BW"],
-  ["2-bw", "2 BW"],
-  ["3-bw", "3 BW"],
-  ["4-bw", "4 BW"],
-  ["5-bw", "5 BW"],
-  ["6-bw", "6 BW"],
-  ["1-pa", "1 PA"],
-  ["2-pa", "2 PA"],
-]);
-
 const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
   ["all-findings-discussed", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
   ["completed-within-year", "NO, COMPLETED WITHIN A YEAR"],
@@ -206,10 +191,6 @@ const treatmentCompletedSeeds = catalogueSeeds(
     ["crystal-x-pur", "Crystal X-PUR"],
   ],
 );
-
-const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
-  ["hygiene-maintenance", "Hygiene maintenance"],
-]);
 
 const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
   ["none", "NONE"],
@@ -283,14 +264,6 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     lifecycle: "pilot",
   },
   {
-    key: "imaging.radiographs",
-    section: "Records and Chief Concern",
-    title: "Radiographs",
-    fieldLabels: ["Radiographs"],
-    seeds: radiographSeeds,
-    lifecycle: "pilot",
-  },
-  {
     key: "medical-history.review",
     section: "Medical History",
     title: "Medical history reviewed",
@@ -329,14 +302,6 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     fieldLabels: ["OH aids reviewed/recommended"],
     seeds: ohiAidsReviewedSeeds,
     lifecycle: "draft",
-  },
-  {
-    key: "recare-treatment.items",
-    section: "Treatment",
-    title: "Recare treatment options and plan",
-    fieldLabels: ["Treatment Options", "Treatment Plan"],
-    seeds: recareTreatmentSeeds,
-    lifecycle: "pilot",
   },
   {
     key: "hygiene-treatment.completed",

@@ -14,12 +14,6 @@ export type RetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
-export type RecareTreatmentEntry = {
-  id: string;
-  treatmentType: string;
-  toothArea: string;
-};
-
 export interface RecareExamForm {
   patientId: string;
   dentist: string;
@@ -34,7 +28,8 @@ export interface RecareExamForm {
   premedicationDetails: string;
   class5IndicatorsChecked: boolean;
   mieleCodes: string;
-  radiographs: string[];
+  radiographsStatus: DocumentationStatus;
+  radiographsDetails: string;
   intraoralPhotosStatus: DocumentationStatus;
   intraoralPhotosDetails: string;
   chiefConcern: string;
@@ -58,7 +53,6 @@ export interface RecareExamForm {
   overjetMm: string;
   overbitePercent: string;
   cpapStatus: DocumentationStatus;
-  cpapUseStatus: DocumentationStatus;
   occlusalSplintStatus: DocumentationStatus;
   occlusalSplintUseStatus: DocumentationStatus;
   orthodonticHistoryStatus: DocumentationStatus;
@@ -66,8 +60,10 @@ export interface RecareExamForm {
   removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
-  treatmentOptions: RecareTreatmentEntry[];
-  treatmentPlan: RecareTreatmentEntry[];
+  treatmentOptionsHygieneMaintenance: boolean;
+  otherTreatmentOptions: string;
+  treatmentPlanHygieneMaintenance: boolean;
+  otherTreatmentPlan: string;
   nextVisit: string;
   dateBooked: string;
 }
@@ -87,7 +83,8 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     premedicationDetails: "",
     class5IndicatorsChecked: false,
     mieleCodes: "",
-    radiographs: [],
+    radiographsStatus: "not-documented",
+    radiographsDetails: "",
     intraoralPhotosStatus: "not-documented",
     intraoralPhotosDetails: "",
     chiefConcern: "",
@@ -111,7 +108,6 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     overjetMm: "",
     overbitePercent: "",
     cpapStatus: "not-documented",
-    cpapUseStatus: "not-documented",
     occlusalSplintStatus: "not-documented",
     occlusalSplintUseStatus: "not-documented",
     orthodonticHistoryStatus: "not-documented",
@@ -119,8 +115,10 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     removableDenturesStatus: "not-documented",
     improvementRequest: "",
     additionalComments: "",
-    treatmentOptions: [],
-    treatmentPlan: [],
+    treatmentOptionsHygieneMaintenance: false,
+    otherTreatmentOptions: "",
+    treatmentPlanHygieneMaintenance: false,
+    otherTreatmentPlan: "",
     nextVisit: "",
     dateBooked: "",
   };

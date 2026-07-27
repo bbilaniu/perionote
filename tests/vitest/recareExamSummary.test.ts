@@ -35,7 +35,7 @@ Premedication required: No.
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments.
 Miele Sterilization codes scanned: SYNTH-001
 
-Radiographs: 4 BW; 2 PA
+Radiographs: Yes—Synthetic bitewings recorded.
 Intraoral photos: No.
 Patient's chief concern: Synthetic concern for demonstration.
 
@@ -52,7 +52,7 @@ Skeletal occlusion: N/A.
 Overjet: 2 mm.
 Overbite: 30%.
 
-CPAP: No.
+CPAP use: No.
 Occlusal splint: Yes; uses.
 Orthodontic history: Yes.
 Retainers: Fixed.
@@ -63,7 +63,7 @@ Additional comments: Synthetic demonstration data only.
 
 Treatment Options:
   - Hygiene maintenance
-  - Synthetic restorative consultation — teeth 14, 15
+  - Synthetic restorative consultation
 
 Treatment Plan:
   - Hygiene maintenance
@@ -89,53 +89,25 @@ Medical history reviewed: YES- NO CHANGES.`,
     );
   });
 
-  it("preserves documented No answers and unknown editable values", () => {
+  it("preserves documented No answers and unknown editable details", () => {
     const form = {
       ...createEmptyRecareExamForm(),
       patientId: " TEST-2002 ",
       rda: " Example RDA ",
-      radiographs: ["Imported value ZX/7"],
-      cpapStatus: "yes" as const,
-      cpapUseStatus: "no" as const,
+      radiographsStatus: "no" as const,
+      radiographsDetails: "Imported value ZX/7",
       occlusalSplintStatus: "no" as const,
       retainerStatus: "none" as const,
-      treatmentOptions: [
-        {
-          id: "option-1",
-          treatmentType: "Second option",
-          toothArea: "teeth 14, 15",
-        },
-        {
-          id: "option-2",
-          treatmentType: "First option",
-          toothArea: "",
-        },
-      ],
-      treatmentPlan: [
-        {
-          id: "plan-1",
-          treatmentType: "First option",
-          toothArea: "upper right",
-        },
-      ],
     };
 
     expect(hasRequiredRecareExamFields(form)).toBe(true);
     expect(buildRecareExamSummary(form)).toBe(`PATIENT ID: TEST-2002
 RDA: Example RDA
 
-Radiographs: Imported value ZX/7
+Radiographs: No—Imported value ZX/7.
 
-CPAP: Yes; does not use.
 Occlusal splint: No.
-Retainers: None.
-
-Treatment Options:
-  - Second option — teeth 14, 15
-  - First option
-
-Treatment Plan:
-  - First option — upper right`);
+Retainers: None.`);
   });
 
   it("uses browser-local timestamp components", () => {
