@@ -52,7 +52,7 @@ const adultHygieneDiscardWarning =
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
 const treatmentToothAreaChoiceGroups = [
   {
-    choices: ["maxilla", "mandible", "full mouth"],
+    choices: ["full mouth", "maxilla", "mandible"],
     columns: 1,
   },
   {
@@ -414,11 +414,7 @@ function TreatmentCompletedList({
           No treatment completed today added.
         </p>
       )}
-      <button
-        type="button"
-        className={treatmentRowButtonClass}
-        onClick={onAdd}
-      >
+      <button type="button" className={treatmentRowButtonClass} onClick={onAdd}>
         Add treatment completed
       </button>
     </div>
@@ -731,9 +727,7 @@ export function AdultHygiene2021Template({
                 label="Medical history reviewed"
                 catalogueKey="medical-history.review"
                 value={form.medicalHistoryReview}
-                onChange={(value) =>
-                  updateField("medicalHistoryReview", value)
-                }
+                onChange={(value) => updateField("medicalHistoryReview", value)}
               />
 
               <div className="space-y-4">
@@ -935,9 +929,7 @@ export function AdultHygiene2021Template({
               id="adult-hygiene-disease-process-reviewed"
               label="Disease process reviewed with patient today"
               checked={form.diseaseProcessReviewed}
-              onChange={(value) =>
-                updateField("diseaseProcessReviewed", value)
-              }
+              onChange={(value) => updateField("diseaseProcessReviewed", value)}
             />
             <ChoiceWithOther
               id="adult-hygiene-flossing"
@@ -981,10 +973,7 @@ export function AdultHygiene2021Template({
                 label="Hygiene maintenance"
                 checked={form.treatmentRecommendedHygieneMaintenance}
                 onChange={(value) =>
-                  updateField(
-                    "treatmentRecommendedHygieneMaintenance",
-                    value,
-                  )
+                  updateField("treatmentRecommendedHygieneMaintenance", value)
                 }
               />
               <TextareaField
