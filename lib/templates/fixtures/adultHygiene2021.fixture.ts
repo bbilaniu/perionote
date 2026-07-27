@@ -49,12 +49,12 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
     {
       id: "fixture-treatment-completed-1",
       treatmentType: "Synthetic scaling",
-      toothArea: "full mouth",
+      toothAreas: ["Q2", "Q3", "teeth 14–16"],
     },
     {
       id: "fixture-treatment-completed-2",
       treatmentType: "Synthetic polishing",
-      toothArea: "maxilla",
+      toothAreas: ["maxilla"],
     },
   ],
   anesthetic: "Synthetic anesthetic documentation",

@@ -1,5 +1,6 @@
-import type {
-  AdultHygiene2021Form,
+import {
+  type AdultHygiene2021Form,
+  orderTreatmentToothAreas,
 } from "@/lib/templates/adultHygiene2021";
 import type {
   DocumentationStatus,
@@ -219,8 +220,10 @@ export function buildAdultHygiene2021Summary(
         .map((entry) => {
           const treatmentType = trimmed(entry.treatmentType);
           if (!treatmentType) return "";
-          const toothArea = trimmed(entry.toothArea);
-          return toothArea ? `${treatmentType} — ${toothArea}` : treatmentType;
+          const toothAreas = orderTreatmentToothAreas(entry.toothAreas);
+          return toothAreas.length
+            ? `${treatmentType} — ${toothAreas.join(", ")}`
+            : treatmentType;
         })
         .filter(Boolean);
       return completed.length

@@ -235,38 +235,41 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     })
     .click();
 
-  const toothArea = completedRow.getByRole("button", {
-    name: "Tooth/area",
-    exact: true,
-  });
-  await toothArea.click();
-  const toothAreaOptions = page.getByRole("listbox", {
-    name: "Tooth/area options",
-    exact: true,
-  });
-  await expect(
-    toothAreaOptions.getByRole("option").allTextContents(),
-  ).resolves.toEqual([
-    "Not specified",
-    "maxilla",
-    "mandible",
-    "full mouth",
-    "Q1",
-    "Q2",
-    "Q3",
-    "Q4",
-    "S1",
-    "S2",
-    "S3",
-    "S4",
-    "S5",
-    "S6",
-  ]);
-  await toothAreaOptions
-    .getByRole("option", { name: "full mouth", exact: true })
+  await completedRow
+    .getByText("Select Tooth/area", { exact: true })
     .click();
+  const toothAreaOptions = completedRow.getByRole("group", {
+    name: "Standard Tooth/area choices",
+    exact: true,
+  });
+  await expect(toothAreaOptions.getByRole("checkbox")).toHaveCount(13);
+  await toothAreaOptions
+    .getByRole("checkbox", { name: "Q3", exact: true })
+    .check();
+  await toothAreaOptions
+    .getByRole("checkbox", { name: "Q2", exact: true })
+    .check();
+  await completedRow
+    .getByRole("textbox", {
+      name: "Custom Tooth/area (this note only)",
+      exact: true,
+    })
+    .fill("teeth 14–16");
+  await completedRow
+    .getByRole("button", { name: "Add to this note", exact: true })
+    .click();
+
+  const selectedToothAreas = completedRow.getByRole("list", {
+    name: "Tooth/area selected values",
+    exact: true,
+  });
+  await expect(selectedToothAreas.getByRole("listitem")).toHaveText([
+    "Q2×",
+    "Q3×",
+    "teeth 14–16×",
+  ]);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — full mouth/,
+    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/,
   );
   await expect(
     completedRow.getByRole("button", {
@@ -358,6 +361,9 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Synthetic reusable/,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /teeth 14–16/,
   );
 });
 

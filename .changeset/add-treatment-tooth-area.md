@@ -2,5 +2,6 @@
 "hygienenote": minor
 ---
 
-Add a closed Tooth/area selector to each Adult Hygiene treatment completed
-entry while preserving catalogue-backed treatment types.
+Add a multi-select Tooth/area control to each Adult Hygiene treatment completed
+entry, with fixed choices and encounter-only custom text, while preserving
+catalogue-backed treatment types.

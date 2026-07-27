@@ -100,14 +100,44 @@ export const treatmentToothAreaChoices = [
   "S6",
 ] as const;
 
-export type TreatmentToothArea =
-  | ""
-  | (typeof treatmentToothAreaChoices)[number];
+export function normalizeTreatmentToothArea(value: string) {
+  return value.normalize("NFKC").trim().toLocaleLowerCase("en-CA");
+}
+
+export function canonicalTreatmentToothArea(value: string) {
+  const normalized = normalizeTreatmentToothArea(value);
+  return treatmentToothAreaChoices.find(
+    (choice) => normalizeTreatmentToothArea(choice) === normalized,
+  );
+}
+
+export function orderTreatmentToothAreas(values: string[]) {
+  const normalizedValues = new Set(values.map(normalizeTreatmentToothArea));
+  const fixedValues = treatmentToothAreaChoices.filter((choice) =>
+    normalizedValues.has(normalizeTreatmentToothArea(choice)),
+  );
+  const seen = new Set(fixedValues.map(normalizeTreatmentToothArea));
+  const customValues = values
+    .map((value) => value.trim())
+    .filter((value) => {
+      const normalized = normalizeTreatmentToothArea(value);
+      if (
+        !normalized ||
+        canonicalTreatmentToothArea(value) ||
+        seen.has(normalized)
+      ) {
+        return false;
+      }
+      seen.add(normalized);
+      return true;
+    });
+  return [...fixedValues, ...customValues];
+}
 
 export type AdultHygieneTreatmentCompletedEntry = {
   id: string;
   treatmentType: string;
-  toothArea: TreatmentToothArea;
+  toothAreas: string[];
 };
 
 export interface AdultHygiene2021Form {
