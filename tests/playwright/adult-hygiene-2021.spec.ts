@@ -12,16 +12,14 @@ async function reloadDiscardingForm(page: Page) {
   await reloadPromise;
 }
 
-test("Adult Hygiene draft pill matches the purple draft notice", async ({
+test("Adult Hygiene pilot pill matches the amber pilot notice", async ({
   page,
 }) => {
   await page.goto("/templates/clinic");
-  const draftPill = page.getByText("Interactive · draft", { exact: true });
-  await expect(draftPill).toHaveClass(/bg-violet-100/);
-  await expect(draftPill).toHaveClass(/text-violet-900/);
-  await expect(
-    page.getByText("Interactive · pilot", { exact: true }),
-  ).toHaveClass(/bg-amber-100/);
+  const pilotPills = page.getByText("Interactive · pilot", { exact: true });
+  await expect(pilotPills).toHaveCount(2);
+  await expect(pilotPills.first()).toHaveClass(/bg-amber-100/);
+  await expect(pilotPills.first()).toHaveClass(/text-amber-900/);
 });
 
 test("interactive Generated Note cards match the form card background", async ({
@@ -54,7 +52,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     }),
   ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2021/");
   await expect(
-    page.getByText("Draft interactive conversion", { exact: true }),
+    page.getByText("Pilot interactive conversion", { exact: true }),
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 09:10",

@@ -38,7 +38,7 @@ function remember(
 }
 
 describe("local catalogues", () => {
-  it("respects draft and pilot catalogue lifecycles", () => {
+  it("publishes Adult Hygiene pilot catalogue definitions", () => {
     const adultHygieneKey = "hygiene-treatment.completed";
     expect(
       getCatalogueDefinitionsForBuild("development").some(
@@ -49,7 +49,7 @@ describe("local catalogues", () => {
       getCatalogueDefinitionsForBuild("production").some(
         (definition) => definition.key === adultHygieneKey,
       ),
-    ).toBe(false);
+    ).toBe(true);
     expect(
       getCatalogueDefinitionsForBuild("production").some(
         (definition) => definition.key === "visit-team.rdh",

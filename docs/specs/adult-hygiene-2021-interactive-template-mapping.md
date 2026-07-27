@@ -10,7 +10,7 @@
 - Interactive route:
   `/templates/clinic/adult-hygiene-2021/interactive`
 - Source baseline commit: `7d3d21c`
-- Initial lifecycle status: `draft`
+- Lifecycle status: `pilot` (promoted 2026-07-26)
 - Governing decisions:
   - [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)
   - [ADR 0002: Separate Clinic and Interactive Template Libraries](../adr/0002-separate-clinic-and-interactive-template-libraries.md)
@@ -45,7 +45,8 @@ The proposed conversion will:
 - reuse the existing browser-local provider catalogues;
 - require deliberate documentation of findings and performed actions;
 - use synthetic fixtures and test values; and
-- begin as a development-only `draft`.
+- begin as a development-only `draft`, then become production-visible only
+  after explicit promotion to `pilot`.
 
 The proposed conversion will not:
 
@@ -116,9 +117,9 @@ The exact public starter labels are:
 These starter values are suggestions only and are never preselected. The two
 truncated Health/Gingivitis entries and one truncated OHI-aids entry remain
 excluded. The Anesthetic list must be redesigned before it can receive public
-starter values. The shared Medical history reviewed catalogue is lifecycle
-`pilot` because it is also used by the production-visible Recare Exam pilot;
-the other Adult Hygiene-only catalogue groups remain `draft`.
+starter values. The shared Medical history reviewed catalogue and the Adult
+Hygiene-only catalogue groups are lifecycle `pilot`, matching the
+production-visible Adult Hygiene and Recare Exam pilots.
 
 The existing provider keys remain shared:
 
@@ -499,8 +500,8 @@ Clinical review accepted the complete mapping on 2026-07-25, including:
 
 ## Technical Acceptance After Clinical Approval
 
-Implementation may now begin at lifecycle status `draft`. Promotion to `pilot`
-requires:
+Implementation began at lifecycle status `draft`. The conversion was promoted
+to `pilot` on 2026-07-26 after satisfying these requirements:
 
 - machine-readable provenance for source `adult-hygiene-2021` at baseline
   `7d3d21c`;

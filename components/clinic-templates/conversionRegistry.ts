@@ -25,9 +25,9 @@ const allClinicConversions = [
     slug: "adult-hygiene-2021",
     title: "2021 Adult Hygiene",
     description:
-      "Draft interactive conversion of the clinic 2021 Adult Hygiene note.",
+      "Pilot interactive conversion of the clinic 2021 Adult Hygiene note.",
     kind: "native",
-    lifecycle: "draft",
+    lifecycle: "pilot",
     provenance: {
       sourceClinicTemplateSlug: "adult-hygiene-2021",
       sourceRevision: "7d3d21c",

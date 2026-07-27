@@ -304,7 +304,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "FMP done",
     fieldLabels: ["FMP done"],
     seeds: fmpDoneSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "periodontal.health-gingivitis",
@@ -312,7 +312,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Health/Gingivitis",
     fieldLabels: ["Health/Gingivitis"],
     seeds: healthGingivitisSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "oral-hygiene.compliance",
@@ -320,7 +320,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Oral hygiene compliance",
     fieldLabels: ["Oral hygiene compliance"],
     seeds: oralHygieneComplianceSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "oral-hygiene.aids-reviewed",
@@ -328,7 +328,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "OH aids reviewed/recommended",
     fieldLabels: ["OH aids reviewed/recommended"],
     seeds: ohiAidsReviewedSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "recare-treatment.items",
@@ -344,7 +344,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Treatment completed today",
     fieldLabels: ["Treatment completed today"],
     seeds: treatmentCompletedSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "hygiene-treatment.anesthetic",
@@ -352,7 +352,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Anesthetic",
     fieldLabels: ["Anesthetic"],
     seeds: [],
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "hygiene-treatment.desensitizer",
@@ -360,7 +360,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Desensitizer",
     fieldLabels: ["Desensitizer"],
     seeds: desensitizerSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "scheduling.recall-interval",
@@ -368,7 +368,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Recommended recall interval",
     fieldLabels: ["Recommended recall interval"],
     seeds: recallIntervalSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "scheduling.hygiene-interval",
@@ -376,7 +376,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Recommended hygiene interval",
     fieldLabels: ["Recommended hygiene interval"],
     seeds: hygieneIntervalSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
   {
     key: "scheduling.next-visit",
@@ -384,7 +384,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Next visit",
     fieldLabels: ["Next visit"],
     seeds: nextVisitSeeds,
-    lifecycle: "draft",
+    lifecycle: "pilot",
   },
 ];
 
