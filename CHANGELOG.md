@@ -1,5 +1,35 @@
 # hygienenote
 
+## 0.4.0
+
+### Minor Changes
+
+- e4b78ff: Add optional grouped OHE topics and OHE notes to Adult Hygiene 2021 without
+  changing existing OHE fields or output when the additions are empty.
+- 94350c5: Make Adult Hygiene and Recare Exam patient chief concerns share an ordered
+  multi-value catalogue with encounter-only custom entries and a mutually
+  exclusive Nothing option.
+- bcfdbb0: Let Adult Hygiene and Recare Exam notes render selected patient chief concerns
+  inline or as an indented list using a per-note checkbox.
+- 7cf181d: Add explicit odontogram status and a structured Caries Risk card to Recare
+  Exam notes, including catalogue-backed ordered risk factors.
+- bcfdbb0: Let Recare Exam Treatment Options and Treatment Plan render independently as
+  numbered lists or semicolon-separated inline entries.
+- 9772b2f: Add a multi-select Tooth/area control to each Adult Hygiene treatment completed
+  entry, with fixed choices and encounter-only custom text, while preserving
+  catalogue-backed treatment types.
+- 87ec9b1: Organize Adult Hygiene plaque, stain, calculus, and bleeding findings into
+  grouped, composable fixed-choice facets while retaining encounter-only Other
+  values.
+- b876458: Let Adult Hygiene 2021 users enter custom flossing and brushing frequencies
+  directly in their suggestion boxes instead of separate Other fields.
+
+### Patch Changes
+
+- 871f2bf: Format generated note headers with a readable local date and time, followed by
+  Patient ID and consistent Dentist, RDA, and RDH lines, while preserving the
+  compact timestamp appearance in the form.
+
 ## 0.3.5
 
 ### Patch Changes
