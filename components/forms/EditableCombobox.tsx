@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from "react";
 import {
+  compoundControlWrapperClass,
   DropdownChevron,
   formControlClass,
   SelectedIndicator,
@@ -175,7 +176,7 @@ export function EditableCombobox<
 
       {selectedContent}
 
-      <div className="relative mt-1">
+      <div className={compoundControlWrapperClass}>
         <input
           ref={(node) => {
             internalInputRef.current = node;

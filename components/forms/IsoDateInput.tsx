@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  compoundControlWrapperClass,
   formControlClass,
   trailingControlButtonClass,
 } from "@/components/forms/controlStyles";
@@ -58,7 +59,7 @@ export function IsoDateInput({
   }
 
   return (
-    <div className="relative mt-1">
+    <div className={compoundControlWrapperClass}>
       <input
         ref={pickerRef}
         data-native-date-picker
