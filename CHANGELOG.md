@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.4.1
+
+### Patch Changes
+
+- 141083e: Fixed appearence of the Date field, by making the native field invisible and overlaying it with the desired appearence. selecting the field opens the native picker.
+
 ## 0.4.0
 
 ### Minor Changes
