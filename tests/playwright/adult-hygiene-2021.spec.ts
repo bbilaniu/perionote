@@ -77,6 +77,28 @@ test("date and time fields stay inside cards on narrow screens", async ({
   }
 });
 
+test("Adult Hygiene date fields match the text-field box on narrow screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(adultHygieneUrl);
+
+  const referenceBox = await page
+    .locator("#adult-hygiene-note-started")
+    .boundingBox();
+  expect(referenceBox).not.toBeNull();
+
+  for (const selector of [
+    "#adult-hygiene-last-recall-date",
+    "#adult-hygiene-date-booked",
+  ]) {
+    const dateBox = await page.locator(selector).boundingBox();
+    expect(dateBox).not.toBeNull();
+    expect(dateBox!.width).toBeCloseTo(referenceBox!.width, 0);
+    expect(dateBox!.height).toBeCloseTo(referenceBox!.height, 0);
+  }
+});
+
 test("Adult Hygiene enforces copy requirements and supports independent consent sources", async ({
   page,
   context,

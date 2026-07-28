@@ -257,7 +257,9 @@ function TextField({
       <input
         ref={inputRef}
         id={id}
-        className={inputClass}
+        className={`${inputClass} ${
+          type === "date" ? "h-10 appearance-none" : ""
+        }`}
         type={type}
         value={value}
         readOnly={readOnly}
