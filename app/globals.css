@@ -13,3 +13,30 @@
 body {
   @apply bg-slate-50 text-slate-900 antialiased transition-colors dark:bg-slate-950 dark:text-slate-100;
 }
+
+/*
+ * Mobile WebKit gives native date/time controls an intrinsic width based on
+ * their localized value. Let the surrounding form grid size every temporal
+ * control instead, so it cannot push beyond a card on narrow screens.
+ */
+input:is(
+  [type="date"],
+  [type="datetime-local"],
+  [type="month"],
+  [type="time"],
+  [type="week"]
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Keep WebKit's localized value aligned with the rest of our form controls. */
+input:is(
+    [type="date"],
+    [type="datetime-local"],
+    [type="month"],
+    [type="time"],
+    [type="week"]
+  )::-webkit-date-and-time-value {
+  text-align: left;
+}
