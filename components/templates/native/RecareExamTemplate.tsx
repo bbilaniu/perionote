@@ -28,6 +28,7 @@ import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 
 const inputClass = `mt-1 ${formControlClass()}`;
@@ -130,21 +131,34 @@ function TextField({
         {label}
         {required ? <span aria-hidden="true"> *</span> : null}
       </label>
-      <input
-        ref={inputRef}
-        id={id}
-        className={inputClass}
-        type={type}
-        inputMode={inputMode}
-        value={value}
-        disabled={disabled}
-        readOnly={readOnly}
-        placeholder={placeholder}
-        autoComplete="off"
-        aria-invalid={Boolean(error)}
-        aria-describedby={describedBy}
-        onChange={(event) => onChange(event.target.value)}
-      />
+      {type === "date" ? (
+        <IsoDateInput
+          id={id}
+          value={value}
+          onChange={onChange}
+          inputRef={inputRef}
+          disabled={disabled}
+          readOnly={readOnly}
+          ariaInvalid={Boolean(error)}
+          ariaDescribedBy={describedBy}
+        />
+      ) : (
+        <input
+          ref={inputRef}
+          id={id}
+          className={inputClass}
+          type={type}
+          inputMode={inputMode}
+          value={value}
+          disabled={disabled}
+          readOnly={readOnly}
+          placeholder={placeholder}
+          autoComplete="off"
+          aria-invalid={Boolean(error)}
+          aria-describedby={describedBy}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
       {helpText ? (
         <p
           id={helpTextId}
