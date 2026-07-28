@@ -9,6 +9,7 @@ import {
   type RefObject,
 } from "react";
 import type {
+  CariesRiskLevel,
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
@@ -18,6 +19,7 @@ import {
   createEmptyRecareExamForm,
   hasRequiredRecareExamFields,
 } from "@/lib/templates/recareExam";
+import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import {
   buildRecareExamSummary,
   formatRecareExamLocalTimestamp,
@@ -50,6 +52,16 @@ const examStatusOptions: Array<{ value: ExamStatus; label: string }> = [
   { value: "not-assessed", label: "Not assessed" },
   { value: "wnl", label: "WNL" },
   { value: "findings", label: "Findings" },
+];
+
+const cariesRiskLevelOptions: Array<{
+  value: CariesRiskLevel;
+  label: string;
+}> = [
+  { value: "", label: "None selected" },
+  { value: "Low", label: "Low" },
+  { value: "Moderate", label: "Moderate" },
+  { value: "High", label: "High" },
 ];
 
 function Section({
@@ -515,7 +527,10 @@ export function RecareExamTemplate({
   }
 
   function loadDemo() {
-    setForm({ ...fixture });
+    setForm({
+      ...fixture,
+      chiefConcern: [...fixture.chiefConcern],
+    });
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("Synthetic demo data loaded.");
@@ -759,11 +774,27 @@ export function RecareExamTemplate({
                 updateField("intraoralPhotosDetails", value)
               }
             />
-            <TextareaField
+            <CatalogueMultiCombobox
               id="recare-chief-concern"
               label="Patient's chief concern"
-              value={form.chiefConcern}
-              onChange={(value) => updateField("chiefConcern", value)}
+              catalogueKey="patient.chief-concerns"
+              values={form.chiefConcern}
+              onChange={(values) =>
+                updateField(
+                  "chiefConcern",
+                  applyPatientChiefConcernSelectionRules(
+                    form.chiefConcern,
+                    values,
+                  ),
+                )
+              }
+              roomySelectionActions
+            />
+            <CheckboxField
+              id="recare-chief-concern-list-format"
+              label="List each concern on a separate line in the note"
+              checked={form.listChiefConcerns}
+              onChange={(value) => updateField("listChiefConcerns", value)}
             />
           </Section>
 
@@ -1027,6 +1058,43 @@ export function RecareExamTemplate({
             />
           </Section>
 
+          <Section title="Odontogram and Caries Risk">
+            <CheckboxField
+              id="recare-odontogram-up-to-date"
+              label="Odontogram up to date"
+              checked={form.odontogramUpToDate}
+              onChange={(value) => updateField("odontogramUpToDate", value)}
+            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <FixedChoiceListbox
+                id="recare-caries-risk-level"
+                label="Caries risk level"
+                value={form.cariesRiskLevel}
+                options={cariesRiskLevelOptions}
+                onChange={(value) => updateField("cariesRiskLevel", value)}
+              />
+              <div className="md:col-span-2">
+                <CatalogueMultiCombobox
+                  id="recare-caries-risk-factors"
+                  label="Caries risk factors"
+                  catalogueKey="clinical-exam.caries-risk-factors"
+                  values={form.cariesRiskFactors}
+                  onChange={(value) => updateField("cariesRiskFactors", value)}
+                  roomySelectionActions
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TextareaField
+                  id="recare-caries-risk-notes"
+                  label="Caries risk notes"
+                  placeholder="Document rationale for the caries risk selection."
+                  value={form.cariesRiskNotes}
+                  onChange={(value) => updateField("cariesRiskNotes", value)}
+                />
+              </div>
+            </div>
+          </Section>
+
           <Section title="Treatment and Next Visit">
             <TreatmentEntryList
               id="recare-treatment-options"
@@ -1040,6 +1108,12 @@ export function RecareExamTemplate({
                 ])
               }
               onChange={(value) => updateField("treatmentOptions", value)}
+            />
+            <CheckboxField
+              id="recare-treatment-options-list-format"
+              label="List each treatment option on a separate line in the note"
+              checked={form.listTreatmentOptions}
+              onChange={(value) => updateField("listTreatmentOptions", value)}
             />
 
             <div className="space-y-3">
@@ -1079,6 +1153,12 @@ export function RecareExamTemplate({
                   ])
                 }
                 onChange={(value) => updateField("treatmentPlan", value)}
+              />
+              <CheckboxField
+                id="recare-treatment-plan-list-format"
+                label="List each treatment plan item on a separate line in the note"
+                checked={form.listTreatmentPlan}
+                onChange={(value) => updateField("listTreatmentPlan", value)}
               />
             </div>
 

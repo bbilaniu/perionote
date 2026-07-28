@@ -1,4 +1,5 @@
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
+import { patientChiefConcernSeedValues } from "@/lib/templates/patientChiefConcern";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
@@ -11,8 +12,10 @@ export const CATALOGUE_KEYS = [
   "visit-team.dentist",
   "visit-team.rda",
   "visit-team.rdh",
+  "patient.chief-concerns",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
+  "clinical-exam.caries-risk-factors",
   "imaging.radiographs",
   "medical-history.review",
   "periodontal.fmp-done",
@@ -116,7 +119,7 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
 
 function catalogueSeeds(
   prefix: string,
-  values: Array<[id: string, label: string]>,
+  values: ReadonlyArray<readonly [id: string, label: string]>,
 ): CatalogueSeed[] {
   return values.map(([id, label]) => ({
     id: `seed.${prefix}.${id}`,
@@ -145,6 +148,27 @@ const radiographSeeds = catalogueSeeds("imaging.radiographs", [
   ["1-pa", "1 PA"],
   ["2-pa", "2 PA"],
 ]);
+
+const patientChiefConcernSeeds = catalogueSeeds(
+  "patient.chief-concerns",
+  patientChiefConcernSeedValues,
+);
+
+const cariesRiskFactorSeeds = catalogueSeeds(
+  "clinical-exam.caries-risk-factors",
+  [
+    ["high-sugar-frequency", "High frequency of sugar intake"],
+    ["inadequate-oral-hygiene", "Inadequate oral hygiene"],
+    ["insufficient-fluoride", "Insufficient exposure to fluoride"],
+    ["heavily-restored-dentition", "Heavily restored dentition"],
+    ["hyposalivation", "Hyposalivation"],
+    [
+      "caries-history-36-months",
+      "History of caries in the last 36 months",
+    ],
+    ["symptom-driven-visits", "Symptomatically driven dental visits"],
+  ],
+);
 
 const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
   ["all-findings-discussed", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
@@ -267,6 +291,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     lifecycle: "pilot",
   },
   {
+    key: "patient.chief-concerns",
+    section: "Records and Chief Concern",
+    title: "Patient chief concerns",
+    fieldLabels: ["Patient chief concern", "Patient's chief concern"],
+    seeds: patientChiefConcernSeeds,
+    lifecycle: "pilot",
+  },
+  {
     key: "clinical-exam.molar-occlusion",
     section: "Clinical Exam",
     title: "Molar occlusion",
@@ -280,6 +312,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Skeletal occlusion",
     fieldLabels: ["Skeletal occlusion"],
     seeds: occlusionSeeds("skeletal"),
+    lifecycle: "pilot",
+  },
+  {
+    key: "clinical-exam.caries-risk-factors",
+    section: "Clinical Exam",
+    title: "Caries risk factors",
+    fieldLabels: ["Caries risk factors"],
+    seeds: cariesRiskFactorSeeds,
     lifecycle: "pilot",
   },
   {

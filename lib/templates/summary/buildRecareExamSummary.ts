@@ -5,6 +5,7 @@ import type {
   RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 
 type BuildRecareExamSummaryOptions = {
   startedAt?: Date;
@@ -27,10 +28,49 @@ function appendDetails(base: string, details: string): string {
     : `${base}.`;
 }
 
-function joinConsentSources(sources: string[]): string {
-  if (sources.length <= 1) return sources[0] ?? "";
-  if (sources.length === 2) return `${sources[0]} and ${sources[1]}`;
-  return `${sources.slice(0, -1).join(", ")} and ${sources.at(-1)}`;
+function joinNaturalLanguageList(values: string[]): string {
+  if (values.length <= 1) return values[0] ?? "";
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+}
+
+function lowerFirst(value: string): string {
+  return value ? `${value[0].toLocaleLowerCase("en-CA")}${value.slice(1)}` : "";
+}
+
+function cariesRiskFactor(value: string): string {
+  const cleanValue = trimmed(value);
+  return cleanValue === "History of caries in the last 36 months"
+    ? "history of active decay in the last 36 months"
+    : lowerFirst(cleanValue);
+}
+
+function cariesRiskLine(
+  level: RecareExamForm["cariesRiskLevel"],
+  factors: string[],
+  notes: string,
+): string {
+  const cleanFactors = factors.map(trimmed).filter(Boolean);
+  const cleanNotes = trimmed(notes);
+  if (!level && cleanFactors.length === 0 && !cleanNotes) return "";
+
+  let line = level
+    ? `${level} caries risk`
+    : cleanFactors.length
+      ? `Factors include ${joinNaturalLanguageList(
+          cleanFactors.map(cariesRiskFactor),
+        )}`
+      : "";
+
+  if (level && cleanFactors.length) {
+    line += ` due to ${joinNaturalLanguageList(
+      cleanFactors.map(cariesRiskFactor),
+    )}`;
+  }
+
+  if (!line) return `Caries risk: ${withTerminalPunctuation(cleanNotes)}`;
+  if (!cleanNotes) return `Caries risk: ${line}`;
+  return `Caries risk: ${line}. ${withTerminalPunctuation(cleanNotes)}`;
 }
 
 function yesNoLine(
@@ -82,8 +122,9 @@ function ownershipUseLine(
 }
 
 function treatmentBlock(
-  heading: string,
+  label: string,
   values: RecareTreatmentEntry[],
+  asList: boolean,
 ): string[] {
   const entries = values
     .map((entry) => {
@@ -97,7 +138,12 @@ function treatmentBlock(
     })
     .filter(Boolean);
   if (entries.length === 0) return [];
-  return [heading, ...entries.map((entry) => `  - ${entry}`)];
+  return asList
+    ? [
+        `${label}:`,
+        ...entries.map((entry, index) => `  ${index + 1}. ${entry}`),
+      ]
+    : [`${label}: ${entries.join("; ")}`];
 }
 
 export function formatRecareExamLocalTimestamp(date: Date): string {
@@ -110,18 +156,52 @@ export function formatRecareExamLocalTimestamp(date: Date): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
+export function formatNoteHeaderLocalTimestamp(date: Date): string {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  const year = date.getFullYear();
+  const hours24 = date.getHours();
+  const hours = hours24 % 12 || 12;
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+  const meridiem = hours24 < 12 ? "AM" : "PM";
+
+  return `----- ${month} ${day}, ${year} ${hours}:${minutes}:${seconds} ${meridiem} -----`;
+}
+
 export function buildRecareExamSummary(
   form: RecareExamForm,
   options: BuildRecareExamSummaryOptions = {},
 ): string {
+  const hasPatientOrTeam = [
+    form.patientId,
+    form.dentist,
+    form.rda,
+    form.rdh,
+  ].some((value) => Boolean(trimmed(value)));
+  const showPatientAndTeam = Boolean(options.startedAt) || hasPatientOrTeam;
   const patientAndTeam = [
-    trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
     options.startedAt
-      ? `NOTE STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
+      ? formatNoteHeaderLocalTimestamp(options.startedAt)
       : "",
-    trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
-    trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
-    trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
+    showPatientAndTeam ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd() : "",
+    showPatientAndTeam ? `DENTIST: ${trimmed(form.dentist)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
   ];
 
   const consentSources = [
@@ -131,7 +211,7 @@ export function buildRecareExamSummary(
   ];
   const consentLine = consentSources.length
     ? [
-        `Informed verbal consent given by ${joinConsentSources(consentSources)} for treatment today.`,
+        `Informed verbal consent given by ${joinNaturalLanguageList(consentSources)} for treatment today.`,
         trimmed(form.consentDetails)
           ? withTerminalPunctuation(form.consentDetails)
           : "",
@@ -168,9 +248,11 @@ export function buildRecareExamSummary(
       form.intraoralPhotosStatus,
       form.intraoralPhotosDetails,
     ),
-    trimmed(form.chiefConcern)
-      ? `Patient's chief concern: ${withTerminalPunctuation(form.chiefConcern)}`
-      : "",
+    formatPatientChiefConcerns(
+      "Patient's chief concern",
+      form.chiefConcern,
+      form.listChiefConcerns,
+    ),
   ];
 
   const extraoralAndTmj = [
@@ -238,6 +320,15 @@ export function buildRecareExamSummary(
       : "",
   ];
 
+  const odontogramAndCariesRisk = [
+    form.odontogramUpToDate ? "ODONTOGRAM UP TO DATE" : "",
+    cariesRiskLine(
+      form.cariesRiskLevel,
+      form.cariesRiskFactors,
+      form.cariesRiskNotes,
+    ),
+  ];
+
   const nextVisit = [
     trimmed(form.nextVisit) ? `Next Visit: ${trimmed(form.nextVisit)}` : "",
     trimmed(form.dateBooked) ? `Date Booked: ${trimmed(form.dateBooked)}` : "",
@@ -251,8 +342,17 @@ export function buildRecareExamSummary(
     intraoralAndOcclusion,
     appliancesAndHistory,
     patientRequests,
-    treatmentBlock("Treatment Options:", form.treatmentOptions),
-    treatmentBlock("Treatment Plan:", form.treatmentPlan),
+    odontogramAndCariesRisk,
+    treatmentBlock(
+      "Treatment Options",
+      form.treatmentOptions,
+      form.listTreatmentOptions,
+    ),
+    treatmentBlock(
+      "Treatment Plan",
+      form.treatmentPlan,
+      form.listTreatmentPlan,
+    ),
     nextVisit,
   ]
     .map((group) => group.filter(Boolean))

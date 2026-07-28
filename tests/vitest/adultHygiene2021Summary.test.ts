@@ -4,6 +4,7 @@ import {
   hasRequiredAdultHygiene2021Fields,
 } from "@/lib/templates/adultHygiene2021";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
+import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 
 describe("buildAdultHygiene2021Summary", () => {
@@ -16,14 +17,15 @@ describe("buildAdultHygiene2021Summary", () => {
   it("builds the accepted source-ordered note from synthetic data", () => {
     const summary = buildAdultHygiene2021Summary(
       adultHygiene2021Fixture,
-      { startedAt: new Date(2026, 6, 25, 14, 5) },
+      { startedAt: new Date(2026, 6, 25, 14, 5, 6) },
     );
 
-    expect(summary).toBe(`PATIENT ID: TEST-AH-1001
-NOTE STARTED: 2026-07-25 14:05
-Last Recall Date: 2026-01-15
+    expect(summary).toBe(`----- July 25, 2026 2:05:06 PM -----
+PATIENT ID: TEST-AH-1001
 DENTIST: Dr. Example
+RDA:
 RDH: Example RDH
+Last Recall Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
 Miele Sterilization Codes Scanned: SYNTH-AH-001
@@ -31,7 +33,7 @@ Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic history reviewed with no changes.
 Premedication Required: No.
 
-Patient Chief Concern: Sensitivity.
+Patient Chief Concern: Sensitivity to hot and cold; Food catches between teeth.
 Hygiene Area of Concern: Synthetic lower anterior concern.
 Plaque: Localized moderate interproximal.
 Stain: Localized slight.
@@ -55,7 +57,7 @@ Hygiene goal: Synthetic daily interdental cleaning goal.
 Treatment recommended:
   - HYGIENE MAINTENANCE
   - Synthetic follow-up assessment
-Treatment completed today: Synthetic scaling; Synthetic polishing
+Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla
 Anesthetic: Synthetic anesthetic documentation.
 Desensitizer: Synthetic desensitizer documentation.
 
@@ -93,7 +95,9 @@ Date Booked: 2026-11-15`);
 
     expect(hasRequiredAdultHygiene2021Fields(form)).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(`PATIENT ID: TEST-AH-2002
+DENTIST:
 RDA: Example RDA
+RDH:
 
 Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today.
 
@@ -109,6 +113,98 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
       "Plaque: Imported plaque wording.",
+    );
+  });
+
+  it("makes Nothing mutually exclusive with other chief concerns", () => {
+    expect(
+      applyPatientChiefConcernSelectionRules(
+        ["Food catches between teeth"],
+        ["Food catches between teeth", "Nothing"],
+      ),
+    ).toEqual(["Nothing"]);
+
+    expect(
+      applyPatientChiefConcernSelectionRules(
+        ["Nothing"],
+        ["Nothing", "Sore gums upon brushing/flossing"],
+      ),
+    ).toEqual(["Sore gums upon brushing/flossing"]);
+  });
+
+  it("can list chief concerns on separate note lines", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      patientChiefConcern: [
+        "Food catches between teeth",
+        "Sensitivity to hot and cold",
+      ],
+      listChiefConcerns: true,
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Patient Chief Concern:
+  - Food catches between teeth
+  - Sensitivity to hot and cold`);
+  });
+
+  it("adds optional OHE topics and notes without replacing existing OHE lines", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      diseaseProcessReviewed: true,
+      oheTopicsReviewed: [
+        "Bass brushing",
+        "Caries theory",
+        "Caries risk factors",
+        "Periodontitis theory",
+        "Periodontitis risk factors",
+        "Importance of maintaining the recommended hygiene interval",
+      ],
+      oheNotes: "Demonstrated brushing modifications",
+    };
+
+    expect(
+      buildAdultHygiene2021Summary(form),
+    ).toBe(`REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and risk factors; Importance of maintaining the recommended hygiene interval.
+OHE notes: Demonstrated brushing modifications.`);
+  });
+
+  it("accepts custom flossing and brushing frequencies directly", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      flossingFrequency: "Uses floss picks most evenings",
+      brushingFrequency: "Brushes after each meal",
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Patient is currently: Uses floss picks most evenings; Brushes after each meal.",
+    );
+  });
+
+  it("adds multiple fixed and encounter-only tooth areas to a treatment", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      treatmentCompleted: [
+        {
+          id: "completed-1",
+          treatmentType: "Synthetic scaling",
+          toothAreas: ["Q3", "teeth 14–16", "q2", "TEETH 14–16"],
+        },
+        {
+          id: "completed-2",
+          treatmentType: "Synthetic polishing",
+          toothAreas: [],
+        },
+        {
+          id: "completed-3",
+          treatmentType: "",
+          toothAreas: ["full mouth"],
+        },
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing",
     );
   });
 

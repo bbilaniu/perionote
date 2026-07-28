@@ -17,7 +17,11 @@ export const recareExamFixture: RecareExamForm = {
   radiographs: ["4 BW", "2 PA"],
   intraoralPhotosStatus: "no",
   intraoralPhotosDetails: "",
-  chiefConcern: "Synthetic concern for demonstration.",
+  chiefConcern: [
+    "Food catches between teeth",
+    "Synthetic concern for demonstration",
+  ],
+  listChiefConcerns: false,
   extraoralStatus: "wnl",
   extraoralFindings: "",
   tmjStatus: "findings",
@@ -46,6 +50,14 @@ export const recareExamFixture: RecareExamForm = {
   removableDenturesStatus: "no",
   improvementRequest: "Synthetic request to discuss whitening.",
   additionalComments: "Synthetic demonstration data only.",
+  odontogramUpToDate: true,
+  cariesRiskLevel: "Moderate",
+  cariesRiskFactors: [
+    "High frequency of sugar intake",
+    "Insufficient exposure to fluoride",
+    "History of caries in the last 36 months",
+  ],
+  cariesRiskNotes: "Synthetic diet and home-care factors reviewed.",
   treatmentOptions: [
     {
       id: "fixture-treatment-option-1",
@@ -58,6 +70,7 @@ export const recareExamFixture: RecareExamForm = {
       toothArea: "teeth 14, 15",
     },
   ],
+  listTreatmentOptions: true,
   treatmentPlan: [
     {
       id: "fixture-treatment-plan-1",
@@ -65,6 +78,7 @@ export const recareExamFixture: RecareExamForm = {
       toothArea: "",
     },
   ],
+  listTreatmentPlan: true,
   nextVisit: "Synthetic hygiene maintenance visit",
   dateBooked: "2026-08-15",
 };

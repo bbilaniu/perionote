@@ -39,7 +39,7 @@ The pilot will:
 - keep all completed and partial form data in memory only;
 - use synthetic fixtures and test values;
 - provide browser-local catalogues for the approved provider, radiograph,
-  occlusion, and reusable treatment-item fields;
+  occlusion, caries-risk-factor, and reusable treatment-item fields;
 - provide deliberate local catalogue import and export; and
 - establish the provenance, lifecycle, and testing pattern for later
   conversions.
@@ -77,15 +77,18 @@ preselected.
 4. Records and Chief Concern
 5. Clinical Exam
 6. Appliances and Relevant History
-7. Treatment and Next Visit
-8. Generated Note
+7. Odontogram and Caries Risk
+8. Treatment and Next Visit
+9. Generated Note
 
 A required **Patient ID** field and a read-only **Note started** timestamp are
 included as user-requested extensions. The timestamp records the browser-local
-date and time when the page loads or the form is reset after confirmation.
-Patient names are not collected. Like all form data, these values remain only
-in memory until the generated note is explicitly copied. At least one Visit
-Team field—Dentist, RDA, or RDH—is also required before copying.
+date and time when the page loads or the form is reset after confirmation. The
+form field displays `YYYY-MM-DD HH:mm`; the generated note uses the readable
+dashed header shown below. Patient names are not collected. Like all form data,
+these values remain only in memory until the generated note is explicitly
+copied. At least one Visit Team field—Dentist, RDA, or RDH—is also required
+before copying.
 
 ## Field Mapping
 
@@ -93,16 +96,16 @@ Team field—Dentist, RDA, or RDH—is also required before copying.
 
 | ID  | Source                                               | Control                                                                            | Classification     | Generated output                   |
 | --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ | ---------------------------------- |
-| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                                             | `patient-specific` | `PATIENT ID: {text}`               |
-| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `NOTE STARTED: {YYYY-MM-DD HH:mm}` |
+| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                                             | `patient-specific` | `PATIENT ID: {text}`                                     |
+| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `----- {Month D, YYYY h:mm:ss AM/PM} -----`              |
 
 ### Visit Team
 
 | ID  | Source                               | Control                                     | Classification | Generated output               |
 | --- | ------------------------------------ | ------------------------------------------- | -------------- | ------------------------------ |
-| R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue`    | `DENTIST: {text}` when entered |
-| R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue`    | `RDA: {text}` when entered     |
-| R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue`    | `RDH: {text}` when entered     |
+| R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue`    | `DENTIST: {text}` |
+| R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue`    | `RDA: {text}`     |
+| R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue`    | `RDH: {text}`     |
 
 Provider fields do not ship with real staff values or public suggestions. A
 user may deliberately remember a value in the current browser profile under
@@ -139,7 +142,7 @@ state.
 | --- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values, including repeats}` |
 | R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific`                       | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
-| R12 | `a) Patients chief concern:`                   | Textarea: **Patient's chief concern**                                | `patient-specific`                                                   | `Patient's chief concern: {text}`                                        |
+| R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue; format: `administrative` | Inline `Patient's chief concern: {values joined with "; "}` by default, or heading plus indented bullets |
 
 Radiographs uses the complete visible options from the reviewed local JSON
 extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
@@ -147,6 +150,14 @@ extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
 explicit browser-local additions remain available. Selected entries can be
 removed and reordered without modifying the catalogue. Intraoral photos
 continues to use an explicit Yes/No status plus editable details.
+
+Patient chief concerns share the same starter and browser-local catalogue as
+Adult Hygiene. Custom values apply only to the current note unless deliberately
+remembered. Selecting `Nothing` removes all other concerns; selecting or adding
+another concern removes `Nothing`. The unchecked
+**List each concern on a separate line in the note** checkbox preserves inline
+output by default; checking it lists the selected concerns using an indented
+bullet style.
 
 ### Clinical Exam
 
@@ -198,18 +209,37 @@ and **Partial/complete removable dentures**. Every documented negative,
 affirmative, or selected-status answer appears in the generated note for CPAP,
 occlusal splint, orthodontic history, retainers, and removable dentures.
 
+### Odontogram and Caries Risk
+
+| ID  | Source | Control | Classification | Generated output |
+| --- | --- | --- | --- | --- |
+| R36 | User-requested extension based on frequently entered Additional Comments text | Unchecked checkbox: **Odontogram up to date** | `appCore` | `ODONTOGRAM UP TO DATE` only when explicitly checked |
+| R37 | Caries Risk card reused from the Very Short template | Fixed **Caries risk level**: None selected / Low / Moderate / High | `appCore` | `{level} caries risk` when selected |
+| R38 | Caries Risk card reused from the Very Short template | Ordered catalogue-backed multi-value **Caries risk factors** | Current selections: `patient-specific`; reusable factors: `catalogue` | Append `due to {ordered factors}` |
+| R39 | Caries Risk card reused from the Very Short template | Textarea: **Caries risk notes** | `patient-specific` | Append the entered rationale |
+
+The odontogram checkbox and all Caries Risk controls start empty. The factor
+catalogue uses the seven factors already present in the Very Short template as
+public starters: **High frequency of sugar intake**, **Inadequate oral
+hygiene**, **Insufficient exposure to fluoride**, **Heavily restored
+dentition**, **Hyposalivation**, **History of caries in the last 36 months**,
+and **Symptomatically driven dental visits**. Factors may be selected, entered,
+removed, and reordered. Only an explicit **Remember and add** action stores a
+new factor in the browser-local catalogue. Risk level, current factor
+selections, and notes remain encounter-specific.
+
 ### Treatment and Next Visit
 
 | ID  | Source                                             | Control                                                                                                                 | Classification                                                                                                                    | Generated output                                                                                     |
 | --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered editable rows with a catalogue-backed **Treatment type** and optional encounter-only **Tooth/area**             | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; never automatically selected | An ordered `Treatment Options:` block containing `Treatment type` and, when present, ` — Tooth/area` |
-| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields; while empty, offer **Copy Treatment Options to Treatment Plan** | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; never automatically selected | An ordered `Treatment Plan:` block containing only explicitly entered or explicitly copied rows      |
+| R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered editable rows with a catalogue-backed **Treatment type**, optional encounter-only **Tooth/area**, and checked-by-default per-note list-format checkbox | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Options:` list by default, or a semicolon-separated inline line |
+| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields and format checkbox; while empty, offer **Copy Treatment Options to Treatment Plan** | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Plan:` list by default, or a semicolon-separated inline line |
 | R33 | `Next Visit: [UNRESOLVED PLACEHOLDER: NEXT VISIT]` | Editable text: **Next visit**                                                                                           | `patient-specific`                                                                                                                | `Next Visit: {text}`                                                                                 |
 | R34 | `Date Booked:`                                     | Optional date input: **Date booked**                                                                                    | `administrative`                                                                                                                  | `Date Booked: {YYYY-MM-DD}`                                                                          |
 
 The shared treatment-type catalogue has only one public starter: **Hygiene
 maintenance**. It is an explicit option, not a default or recommendation.
-Each list supports adding, removing, reordering, and editing rows inline.
+Each control supports adding, removing, reordering, and editing rows inline.
 Treatment types may be repeated so that the same treatment can document
 different teeth or areas. **Remember treatment type** saves only the type;
 the optional Tooth/area value always remains in the current note. Selecting a
@@ -222,6 +252,12 @@ snapshots the current ordered Treatment Options after an explicit click.
 Copied rows receive independent identities, so later edits do not affect the
 source rows. Neither field infers the next visit.
 
+The checked-by-default **List each treatment option on a separate line in the
+note** and **List each treatment plan item on a separate line in the note**
+checkboxes are independent. Checked output numbers entries from `1.` in their
+displayed order. Unchecking a checkbox places that section's entries after its
+heading on one line, separated by semicolons.
+
 Treatment Options and Treatment Plan remain separate controls. The source's
 undeclared `NEXT VISIT` placeholder maps to unrestricted text. Dates generated
 by the template, including Date Booked, use `YYYY-MM-DD`.
@@ -229,10 +265,10 @@ by the template, including Date Booked, use `YYYY-MM-DD`.
 ## Generated-Note Order
 
 The note should preserve the source order, preceded by the user-requested
-Patient ID and note-start timestamp extensions:
+note-start timestamp and Patient ID extensions:
 
-1. Patient ID
-2. Form-start timestamp
+1. Form-start timestamp
+2. Patient ID
 3. Visit team
 4. Consent
 5. Medical history and premedication
@@ -242,13 +278,16 @@ Patient ID and note-start timestamp extensions:
 9. Clinical exam
 10. Appliances and relevant history
 11. Patient improvement request and additional comments
-12. Treatment options
-13. Treatment plan
-14. Next visit and date booked
+12. Odontogram status and caries risk
+13. Treatment options
+14. Treatment plan
+15. Next visit and date booked
 
-Unanswered fields are omitted. Section headings with no output are also
-omitted. The generated note must not contain placeholder labels such as
-`undefined`, `Not assessed`, or `[UNRESOLVED PLACEHOLDER: ...]`.
+Unanswered fields are omitted, except that the Patient ID and all three Visit
+Team labels remain visible in the standardized header. Section headings with
+no output are also omitted. The generated note must not contain placeholder
+labels such as `undefined`, `Not assessed`, or
+`[UNRESOLVED PLACEHOLDER: ...]`.
 
 The visible preview contains the complete generated note. A successful
 **Copy note** action writes that preview to the clipboard unchanged and does
@@ -259,8 +298,8 @@ not add a separate copy-time timestamp.
 The following uses tokens rather than real clinical or staff information:
 
 ```text
+----- {Month D, YYYY h:mm:ss AM/PM when the page loaded or reset was confirmed} -----
 PATIENT ID: {entered patient ID}
-NOTE STARTED: {YYYY-MM-DD HH:mm when the page loaded or reset was confirmed}
 DENTIST: {entered dentist}
 RDA: {entered RDA}
 RDH: {entered RDH}
@@ -271,7 +310,7 @@ Premedication required: {documented answer}
 
 Radiographs: {ordered selected and entered values}
 Intraoral photos: {Yes/No and optional details}
-Patient's chief concern: {entered text}
+Patient's chief concern: {ordered selected and entered values inline by default, or as indented bullets when list formatting is checked}
 
 Extraoral: {WNL or findings}
 TMJ: {WNL or findings}
@@ -295,11 +334,14 @@ Partial/complete removable dentures: {documented answer}
 Patient would like to improve: {entered text}
 Additional comments: {entered text}
 
+ODONTOGRAM UP TO DATE
+Caries risk: {level} caries risk due to {ordered factors}. {entered notes}
+
 Treatment Options:
-  - {treatment type}{ — optional tooth/area}
+  1. {treatment type}{ — optional tooth/area}
 
 Treatment Plan:
-  - {treatment type}{ — optional tooth/area}
+  1. {treatment type}{ — optional tooth/area}
 
 Next Visit: {entered text}
 Date Booked: {YYYY-MM-DD}
@@ -332,14 +374,18 @@ does not leave extra blank lines when an entire group is omitted.
   current browser-local date and time.
 - Demo data, if offered, must be clearly synthetic and require an explicit
   action to load.
-- Provider, radiograph, occlusion, and reusable treatment-type values are remembered
-  only through the explicit local catalogue interaction approved under ADR 0001. Typing, selecting, loading demo data, copying, or resetting the form
-  never saves a catalogue value.
+- Provider, radiograph, occlusion, caries-risk-factor, and reusable
+  treatment-type values are remembered only through the explicit local
+  catalogue interaction approved under ADR 0001. Typing, selecting, loading
+  demo data, copying, or resetting the form never saves a catalogue value.
 - Selected radiographs and structured Treatment Options and Treatment Plan
   rows remain encounter-specific even when a treatment type originated in a
   catalogue. Repeated Radiographs values remain separate encounter entries and
   do not create duplicate catalogue suggestions. Tooth/area values are never
   catalogue candidates.
+- Selected caries risk factors remain encounter-specific even when they
+  originated in a catalogue. Caries risk level and notes are never catalogue
+  candidates.
 - Other patient-specific, administrative, measurement, findings, and
   next-visit values are never catalogue candidates under this mapping.
 
@@ -371,8 +417,8 @@ contract are genuinely the same, not only because two fields look similar.
 
 ## Acceptance Criteria
 
-- All 36 mapping IDs—34 source mappings plus the Patient ID and note-start
-  timestamp extensions—are
+- All 40 mapping IDs—34 source mappings plus the Patient ID, note-start,
+  odontogram, and Caries Risk extensions—are
   implemented or explicitly removed through an approved revision of this
   specification.
 - The source consent duplication is resolved and produces no accidental
@@ -399,6 +445,11 @@ contract are genuinely the same, not only because two fields look similar.
   negative, affirmative, or selected-status appliance/history answer appears
   in the generated note.
 - The UI and generated note use **Partial/complete removable dentures**.
+- Odontogram status is not inferred and appears as `ODONTOGRAM UP TO DATE`
+  only when explicitly checked.
+- Caries Risk provides the same fixed levels and notes field as the Very Short
+  template, plus ordered catalogue-backed factors with the seven existing
+  factors as starters.
 - Treatment options and plans are never preselected, support ordered catalogue
   entries, and copy from Options to an empty Plan only after an explicit click.
 - Unknown editable values render and appear unchanged in generated output.

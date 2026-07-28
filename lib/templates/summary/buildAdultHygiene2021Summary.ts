@@ -1,11 +1,13 @@
-import type {
-  AdultHygiene2021Form,
+import {
+  type AdultHygiene2021Form,
+  orderTreatmentToothAreas,
 } from "@/lib/templates/adultHygiene2021";
 import type {
   DocumentationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
-import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
+import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 
 type BuildAdultHygiene2021SummaryOptions = {
   startedAt?: Date;
@@ -23,6 +25,41 @@ function withTerminalPunctuation(value: string): string {
 
 function selectedValue(choice: string, other: string): string {
   return trimmed(other) || trimmed(choice);
+}
+
+function oheTopicLine(values: string[]): string {
+  const cleanValues = values.map(trimmed).filter(Boolean);
+  const selected = new Set(cleanValues);
+  const handled = new Set<string>();
+  const topics: string[] = [];
+
+  for (const value of cleanValues) {
+    if (handled.has(value)) continue;
+
+    if (
+      (value === "Caries theory" || value === "Caries risk factors") &&
+      selected.has("Caries theory") &&
+      selected.has("Caries risk factors")
+    ) {
+      topics.push("Caries theory and risk factors");
+      handled.add("Caries theory");
+      handled.add("Caries risk factors");
+    } else if (
+      (value === "Periodontitis theory" ||
+        value === "Periodontitis risk factors") &&
+      selected.has("Periodontitis theory") &&
+      selected.has("Periodontitis risk factors")
+    ) {
+      topics.push("Periodontitis theory and risk factors");
+      handled.add("Periodontitis theory");
+      handled.add("Periodontitis risk factors");
+    } else {
+      topics.push(value);
+      handled.add(value);
+    }
+  }
+
+  return topics.length ? `OHE: ${topics.join("; ")}.` : "";
 }
 
 function labelledLine(label: string, value: string): string {
@@ -80,17 +117,24 @@ export function buildAdultHygiene2021Summary(
   form: AdultHygiene2021Form,
   options: BuildAdultHygiene2021SummaryOptions = {},
 ): string {
+  const hasPatientOrTeam = [
+    form.patientId,
+    form.dentist,
+    form.rda,
+    form.rdh,
+  ].some((value) => Boolean(trimmed(value)));
+  const showPatientAndTeam = Boolean(options.startedAt) || hasPatientOrTeam;
   const patientAndTeam = [
-    trimmed(form.patientId) ? `PATIENT ID: ${trimmed(form.patientId)}` : "",
     options.startedAt
-      ? `NOTE STARTED: ${formatRecareExamLocalTimestamp(options.startedAt)}`
+      ? formatNoteHeaderLocalTimestamp(options.startedAt)
       : "",
+    showPatientAndTeam ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd() : "",
+    showPatientAndTeam ? `DENTIST: ${trimmed(form.dentist)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
+    showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
     trimmed(form.noteLastRecallDate)
       ? `Last Recall Date: ${trimmed(form.noteLastRecallDate)}`
       : "",
-    trimmed(form.dentist) ? `DENTIST: ${trimmed(form.dentist)}` : "",
-    trimmed(form.rdh) ? `RDH: ${trimmed(form.rdh)}` : "",
-    trimmed(form.rda) ? `RDA: ${trimmed(form.rda)}` : "",
   ];
 
   const consentSources = [
@@ -130,7 +174,11 @@ export function buildAdultHygiene2021Summary(
   ];
 
   const concernsAndFindings = [
-    labelledLine("Patient Chief Concern", form.patientChiefConcern),
+    formatPatientChiefConcerns(
+      "Patient Chief Concern",
+      form.patientChiefConcern,
+      form.listChiefConcerns,
+    ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
     labelledLine("Plaque", selectedValue(form.plaqueChoice, form.plaqueOther)),
     labelledLine("Stain", selectedValue(form.stainChoice, form.stainOther)),
@@ -168,14 +216,8 @@ export function buildAdultHygiene2021Summary(
   ];
 
   const currentHabits = [
-    selectedValue(
-      form.flossingFrequencyChoice,
-      form.flossingFrequencyOther,
-    ),
-    selectedValue(
-      form.brushingFrequencyChoice,
-      form.brushingFrequencyOther,
-    ),
+    trimmed(form.flossingFrequency),
+    trimmed(form.brushingFrequency),
   ].filter(Boolean);
 
   const oralHygieneAndEducation = [
@@ -196,6 +238,8 @@ export function buildAdultHygiene2021Summary(
     form.diseaseProcessReviewed
       ? "REVIEWED DISEASE PROCESS WITH PATIENT TODAY"
       : "",
+    oheTopicLine(form.oheTopicsReviewed),
+    labelledLine("OHE notes", form.oheNotes),
     currentHabits.length
       ? `Patient is currently: ${currentHabits.join("; ")}.`
       : "",
@@ -207,9 +251,21 @@ export function buildAdultHygiene2021Summary(
       form.treatmentRecommendedHygieneMaintenance,
       form.otherTreatmentRecommended,
     ),
-    form.treatmentCompleted.length
-      ? `Treatment completed today: ${form.treatmentCompleted.join("; ")}`
-      : "",
+    (() => {
+      const completed = form.treatmentCompleted
+        .map((entry) => {
+          const treatmentType = trimmed(entry.treatmentType);
+          if (!treatmentType) return "";
+          const toothAreas = orderTreatmentToothAreas(entry.toothAreas);
+          return toothAreas.length
+            ? `${treatmentType} — ${toothAreas.join(", ")}`
+            : treatmentType;
+        })
+        .filter(Boolean);
+      return completed.length
+        ? `Treatment completed today: ${completed.join("; ")}`
+        : "";
+    })(),
     labelledLine("Anesthetic", form.anesthetic),
     labelledLine("Desensitizer", form.desensitizer),
   ];

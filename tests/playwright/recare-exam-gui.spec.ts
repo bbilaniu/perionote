@@ -297,8 +297,23 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await expect(addPlanItem).toHaveClass(/py-2/);
   await expect(addPlanItem).toHaveClass(/text-sm/);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  - Hygiene maintenance\n  - Fillings — tooth 36\n  - Fillings — teeth 14, 15\n\nTreatment Plan:\n  - Hygiene maintenance\n  - Fillings — tooth 36\n  - Fillings — teeth 14, 15/,
+    /Treatment Options:\n  1\. Hygiene maintenance\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Hygiene maintenance\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15/,
   );
+  const listTreatmentOptions = page.getByLabel(
+    "List each treatment option on a separate line in the note",
+  );
+  const listTreatmentPlan = page.getByLabel(
+    "List each treatment plan item on a separate line in the note",
+  );
+  await expect(listTreatmentOptions).toBeChecked();
+  await expect(listTreatmentPlan).toBeChecked();
+  await listTreatmentOptions.uncheck();
+  await listTreatmentPlan.uncheck();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Treatment Options: Hygiene maintenance; Fillings — tooth 36; Fillings — teeth 14, 15\n\nTreatment Plan: Hygiene maintenance; Fillings — tooth 36; Fillings — teeth 14, 15/,
+  );
+  await listTreatmentOptions.check();
+  await listTreatmentPlan.check();
 
   await optionRows
     .nth(1)
@@ -324,7 +339,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   ).toHaveValue("Composite fillings");
   await expect(planRows).toHaveCount(2);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  - Hygiene maintenance\n  - Composite fillings — tooth 36\n  - Fillings — teeth 14, 15\n\nTreatment Plan:\n  - Hygiene maintenance\n  - Fillings — teeth 14, 15/,
+    /Treatment Options:\n  1\. Hygiene maintenance\n  2\. Composite fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Hygiene maintenance\n  2\. Fillings — teeth 14, 15/,
   );
 
   await addOption.click();

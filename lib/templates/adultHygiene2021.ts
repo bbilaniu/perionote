@@ -4,11 +4,6 @@ import type {
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 
-export const patientChiefConcernChoices = [
-  "Nothing",
-  "Sensitivity",
-] as const;
-
 export const plaqueChoices = [
   "Localized mild interproximal",
   "Localized moderate interproximal",
@@ -84,6 +79,86 @@ export const brushingFrequencyChoices = [
   "Never brushing",
 ] as const;
 
+export const homeCareOheTopicChoices = [
+  "Bass brushing",
+  "C-shape flossing technique",
+  "Sulcabrush and interdental brush technique",
+] as const;
+
+export const diseaseAndRiskOheTopicChoices = [
+  "Caries theory",
+  "Caries risk factors",
+  "Periodontitis theory",
+  "Periodontitis risk factors",
+] as const;
+
+export const preventionAndMaintenanceOheTopicChoices = [
+  "Review benefits of Prevident or Opti-Rinse",
+  "Importance of maintaining the recommended hygiene interval",
+] as const;
+
+export const oheTopicChoices = [
+  ...homeCareOheTopicChoices,
+  ...diseaseAndRiskOheTopicChoices,
+  ...preventionAndMaintenanceOheTopicChoices,
+] as const;
+
+export const treatmentToothAreaChoices = [
+  "full mouth",
+  "maxilla",
+  "mandible",
+  "Q1",
+  "Q2",
+  "Q3",
+  "Q4",
+  "S1",
+  "S2",
+  "S3",
+  "S4",
+  "S5",
+  "S6",
+] as const;
+
+export function normalizeTreatmentToothArea(value: string) {
+  return value.normalize("NFKC").trim().toLocaleLowerCase("en-CA");
+}
+
+export function canonicalTreatmentToothArea(value: string) {
+  const normalized = normalizeTreatmentToothArea(value);
+  return treatmentToothAreaChoices.find(
+    (choice) => normalizeTreatmentToothArea(choice) === normalized,
+  );
+}
+
+export function orderTreatmentToothAreas(values: string[]) {
+  const normalizedValues = new Set(values.map(normalizeTreatmentToothArea));
+  const fixedValues = treatmentToothAreaChoices.filter((choice) =>
+    normalizedValues.has(normalizeTreatmentToothArea(choice)),
+  );
+  const seen = new Set(fixedValues.map(normalizeTreatmentToothArea));
+  const customValues = values
+    .map((value) => value.trim())
+    .filter((value) => {
+      const normalized = normalizeTreatmentToothArea(value);
+      if (
+        !normalized ||
+        canonicalTreatmentToothArea(value) ||
+        seen.has(normalized)
+      ) {
+        return false;
+      }
+      seen.add(normalized);
+      return true;
+    });
+  return [...fixedValues, ...customValues];
+}
+
+export type AdultHygieneTreatmentCompletedEntry = {
+  id: string;
+  treatmentType: string;
+  toothAreas: string[];
+};
+
 export interface AdultHygiene2021Form {
   patientId: string;
   noteLastRecallDate: string;
@@ -99,7 +174,8 @@ export interface AdultHygiene2021Form {
   medicalHistoryReview: string;
   premedicationStatus: PremedicationStatus;
   premedicationDetails: string;
-  patientChiefConcern: string;
+  patientChiefConcern: string[];
+  listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
   plaqueOther: string;
@@ -122,14 +198,14 @@ export interface AdultHygiene2021Form {
   homeCareInstructionReviewed: boolean;
   ohiAidsReviewed: string[];
   diseaseProcessReviewed: boolean;
-  flossingFrequencyChoice: string;
-  flossingFrequencyOther: string;
-  brushingFrequencyChoice: string;
-  brushingFrequencyOther: string;
+  oheTopicsReviewed: string[];
+  oheNotes: string;
+  flossingFrequency: string;
+  brushingFrequency: string;
   hygieneGoal: string;
   treatmentRecommendedHygieneMaintenance: boolean;
   otherTreatmentRecommended: string;
-  treatmentCompleted: string[];
+  treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
   anesthetic: string;
   desensitizer: string;
   nightGuardStatus: DocumentationStatus;
@@ -162,7 +238,8 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     medicalHistoryReview: "",
     premedicationStatus: "not-documented",
     premedicationDetails: "",
-    patientChiefConcern: "",
+    patientChiefConcern: [],
+    listChiefConcerns: false,
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
     plaqueOther: "",
@@ -185,10 +262,10 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     homeCareInstructionReviewed: false,
     ohiAidsReviewed: [],
     diseaseProcessReviewed: false,
-    flossingFrequencyChoice: "",
-    flossingFrequencyOther: "",
-    brushingFrequencyChoice: "",
-    brushingFrequencyOther: "",
+    oheTopicsReviewed: [],
+    oheNotes: "",
+    flossingFrequency: "",
+    brushingFrequency: "",
     hygieneGoal: "",
     treatmentRecommendedHygieneMaintenance: false,
     otherTreatmentRecommended: "",

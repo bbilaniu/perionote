@@ -58,12 +58,29 @@ test("clinic interactive list controls use one closed-state affordance without c
   await chiefConcern.focus();
   await chiefConcern.press("ArrowDown");
   await chiefConcern.press("Enter");
-  await expect(chiefConcern).toHaveValue("Nothing");
+  const selectedChiefConcerns = page.getByRole("list", {
+    name: "Patient chief concern selected values",
+  });
+  await expect(selectedChiefConcerns).toContainText("Nothing");
 
   await chiefConcern.fill("Custom concern");
   await expect(page.locator("[data-empty-suggestions]")).toContainText(
-    "No matching suggestions",
+    "No matching catalogue suggestions",
   );
+  await chiefConcern.press("Enter");
+  await expect(selectedChiefConcerns).not.toContainText("Nothing");
+  await expect(selectedChiefConcerns).toContainText("Custom concern");
+
+  await chiefConcern.focus();
+  await chiefConcern.press("ArrowDown");
+  await chiefConcern.press("Enter");
+  await expect(selectedChiefConcerns).toContainText("Nothing");
+  await expect(selectedChiefConcerns).not.toContainText("Custom concern");
+
+  await chiefConcern.fill("Custom concern");
+  await chiefConcern.press("Enter");
+  await expect(selectedChiefConcerns).not.toContainText("Nothing");
+  await expect(selectedChiefConcerns).toContainText("Custom concern");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Patient Chief Concern: Custom concern\./,
   );
@@ -73,6 +90,64 @@ test("clinic interactive list controls use one closed-state affordance without c
       CATALOGUE_STORAGE_KEY,
     ),
   ).toBeNull();
+});
+
+test("Recare and Adult Hygiene share the chief concern catalogue and Nothing rule", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const recareChiefConcern = page.getByRole("combobox", {
+    name: "Patient's chief concern",
+  });
+  await recareChiefConcern.focus();
+  await page
+    .getByRole("option", {
+      name: /Food catches between teeth Starter/,
+    })
+    .click();
+
+  const selectedRecareConcerns = page.getByRole("list", {
+    name: "Patient's chief concern selected values",
+  });
+  await expect(selectedRecareConcerns).toContainText(
+    "Food catches between teeth",
+  );
+
+  await recareChiefConcern.focus();
+  await page
+    .getByRole("option", {
+      name: /Nothing Starter/,
+    })
+    .click();
+  await expect(selectedRecareConcerns).toContainText("Nothing");
+  await expect(selectedRecareConcerns).not.toContainText(
+    "Food catches between teeth",
+  );
+
+  await recareChiefConcern.fill("Shared custom concern");
+  await page.getByRole("button", { name: "Remember and add" }).click();
+  await expect(selectedRecareConcerns).not.toContainText("Nothing");
+  await expect(selectedRecareConcerns).toContainText("Shared custom concern");
+  await page
+    .getByLabel("List each concern on a separate line in the note")
+    .check();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Patient's chief concern:\n  - Shared custom concern/,
+  );
+
+  const adultPage = await page.context().newPage();
+  await adultPage.goto(adultHygieneUrl);
+  const adultChiefConcern = adultPage.getByRole("combobox", {
+    name: "Patient chief concern",
+  });
+  await adultChiefConcern.focus();
+  await expect(
+    adultPage.getByRole("option", {
+      name: /Shared custom concern Local/,
+    }),
+  ).toBeVisible();
+  await adultPage.close();
 });
 
 test("custom list controls support pointer, keyboard, selected, and closing states", async ({
@@ -257,8 +332,16 @@ test("editable combobox options remain tappable in a touch-oriented context", as
       name: "Show Patient chief concern suggestions",
     })
     .tap();
-  await page.getByRole("option", { name: "Sensitivity", exact: true }).tap();
-  await expect(chiefConcern).toHaveValue("Sensitivity");
+  await page
+    .getByRole("option", {
+      name: /Sensitivity to hot and cold Starter/,
+    })
+    .tap();
+  await expect(
+    page.getByRole("list", {
+      name: "Patient chief concern selected values",
+    }),
+  ).toContainText("Sensitivity to hot and cold");
 
   const nightGuard = page.getByRole("button", {
     name: "Has a night guard",

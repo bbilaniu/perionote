@@ -84,17 +84,18 @@ tracked. Extracted staff names and unreviewed private values may not.
 ## Catalogue Extension
 
 The Adult Hygiene conversion extends the existing catalogue allowlist with
-eleven browser-local groups. Ten ship with the reviewed, complete starter
+twelve browser-local groups. Eleven ship with the reviewed, complete starter
 values listed below. Anesthetic remains unseeded pending redesign:
 
 | Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Public seeds | Control use |
 | --- | --- | --- | --- | --- | --- |
+| `patient.chief-concerns` | Records and Chief Concern | Patient chief concern | Not imported | 5 reviewed options | Multiple values; `Nothing` is mutually exclusive |
 | `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | 4 complete options | Single value |
 | `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | 5 complete options | Single value |
 | `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | 4 complete options | Single value |
 | `oral-hygiene.compliance` | Oral Hygiene and Education | Oral hygiene compliance | `ohi-compliance` | 6 complete options | Single value |
 | `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | 8 complete options | Multiple values |
-| `hygiene-treatment.completed` | Treatment | Treatment completed today | `hygiene-treatment` | 8 complete options | Multiple values |
+| `hygiene-treatment.completed` | Treatment | Treatment completed today: treatment type | `hygiene-treatment` | 8 complete options | Structured rows; reusable treatment type plus multi-value Tooth/area |
 | `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None—rework required | Single value |
 | `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | 4 complete options | Single value |
 | `scheduling.recall-interval` | Intervals and Next Visit | Recommended recall interval | `recommended-recall-interval` | 3 complete options | Single value |
@@ -103,6 +104,7 @@ values listed below. Anesthetic remains unseeded pending redesign:
 
 The exact public starter labels are:
 
+- **Patient chief concern:** `Nothing`; `Sore gums upon brushing/flossing`; `Dissatisfaction with the appearance of teeth due to yellowing/stain`; `Food catches between teeth`; `Sensitivity to hot and cold`.
 - **Medical history reviewed:** `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS`.
 - **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
@@ -151,9 +153,9 @@ interaction:
 - editing, hiding, or deleting a catalogue entry never changes the current
   form value or previously copied notes.
 
-### Multi-value catalogue fields
+### Ordered catalogue fields
 
-OH aids and Treatment completed require a reusable
+Patient chief concerns and OH aids use a reusable
 `CatalogueMultiCombobox` interaction rather than placing several catalogue
 labels into one opaque string:
 
@@ -168,6 +170,38 @@ labels into one opaque string:
 - reset and navigation discard the selected array with the rest of the form;
   and
 - generated output joins selected values with `; ` in their displayed order.
+
+For Patient chief concern, `Nothing` is mutually exclusive. Selecting it
+removes every other concern, and selecting or adding another concern removes
+`Nothing`. Custom concerns remain encounter-only unless the user deliberately
+chooses **Remember and add**. An unchecked
+**List each concern on a separate line in the note** checkbox keeps the default
+semicolon-separated inline output. Checking it renders the same selected
+values as an indented bullet list under the Patient Chief Concern heading.
+
+Treatment completed today uses ordered structured rows. Each row contains a
+catalogue-backed editable treatment type and optional multi-value Tooth/area.
+Treatment types retain the explicit remember behavior above. Tooth/area offers
+`maxilla`, `mandible`, `full mouth`, `Q1`, `Q2`, `Q3`, `Q4`, `S1`, `S2`, `S3`,
+`S4`, `S5`, or `S6` as fixed choices and permits custom text for the current
+note. Custom Tooth/area text cannot be remembered or added to a catalogue.
+Fixed choices are emitted in the order listed here, followed by custom values
+in entry order; normalized duplicates are rejected. Rows and their selected
+values can be added, removed, and reordered independently. Tooth/area uses a
+compact multi-combobox: its anchored menu filters the fixed choices, remains
+open while fixed or custom values are selected, and offers non-matching text
+as an encounter-only custom value. **Done**, Escape, the trigger, or an
+intentional outside click closes the menu. The closed Tooth/area control shows
+all selected values in full. The reusable control supports optional removable
+selection chips, which are disabled here to keep treatment rows compact.
+Encounter-only custom selections remain visible and deselectable inside the
+open menu. Fixed and custom selections use the same right-aligned sky checkmark
+and blue hover/focus treatment as the application's single-choice menus.
+The fixed choices use a clinician-facing anatomical layout: arch and full-mouth
+choices first, quadrants in two columns as `Q1 Q2 / Q4 Q3`, and sextants in
+three columns as `S1 S2 S3 / S6 S5 S4`. Each grid cell reserves space for its
+selection checkmark. This visual order does not change the canonical generated
+note order.
 
 The catalogue-management page manages the underlying reusable suggestions, not
 the current encounter's selected values.
@@ -206,21 +240,24 @@ none is selected by default.
 
 | Field | Approved choices |
 | --- | --- |
-| Patient chief concern quick choices | Nothing; Sensitivity |
+| Patient chief concern catalogue seeds | Nothing; Sore gums upon brushing/flossing; Dissatisfaction with the appearance of teeth due to yellowing/stain; Food catches between teeth; Sensitivity to hot and cold |
 | Stain | None; Localized slight; Localized moderate; Localized heavy; Generalized slight; Generalized moderate; Generalized heavy |
 | Bleeding | Localized mild; Localized moderate; Localized severe; Generalized mild; Generalized moderate; Generalized severe |
 | Periodontitis stage | Stage I (P1); Stage II (P2); Stage III (P3); Stage IV (P4); N/A |
 | Periodontitis grade | Grade A: slow rate; Grade B: moderate rate; Grade C: rapid rate; N/A |
 | Oral hygiene compliance | Poor; Fair; Good; Excellent; Poor–fair; Fair–good |
+| Additional OHE topics reviewed | Bass brushing; C-shape flossing technique; Sulcabrush and interdental brush technique; Caries theory; Caries risk factors; Periodontitis theory; Periodontitis risk factors; Review benefits of Prevident or Opti-Rinse; Importance of maintaining the recommended hygiene interval |
 | Flossing frequency | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing |
 | Brushing frequency | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing |
 | Recommended recall interval | 12-month recall; 6-month recall; 9-month recall |
 | Recommended hygiene interval | 3-month scale; 4-month scale; 6-month scale; N/A |
 
-Each applicable control also provides **Other** free text so imported,
-historical, and currently undocumented values remain valid. The Plaque and
-Calculus choices are recorded separately in their field section because their
-two lists are most easily reviewed side by side.
+Fields that retain an explicit **Other** control accept free text so imported,
+historical, and currently undocumented values remain valid. Flossing and
+brushing frequency instead accept custom text directly in their editable
+suggestion boxes. The Plaque and Calculus choices are recorded separately in
+their field section because their two lists are most easily reviewed side by
+side.
 
 ## Classification Legend
 
@@ -257,8 +294,11 @@ are never preselected.
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
 | A00 | Proposed consistency extension; not in source | Required editable text: **Patient ID** | `patient-specific` | `PATIENT ID: {text}` |
-| A01 | Proposed consistency extension; not in source | Read-only browser-local **Note started** timestamp set at page load or confirmed reset | `administrative` | `NOTE STARTED: {YYYY-MM-DD HH:mm}` |
+| A01 | Proposed consistency extension; not in source | Read-only browser-local **Note started** timestamp set at page load or confirmed reset | `administrative` | `----- {Month D, YYYY h:mm:ss AM/PM} -----` |
 | A02 | `Last Recall Date: [AUTO: Last Recall Date]` | Optional date input: **Last recall date** | `patient-specific` | `Last Recall Date: {YYYY-MM-DD}` |
+
+The Note started form field displays `YYYY-MM-DD HH:mm`; its generated-note
+output uses the readable dashed header shown in the table.
 
 Patient names are not collected. Patient ID and all encounter state remain
 only in memory. Copying is proposed to require Patient ID and at least one
@@ -268,9 +308,9 @@ Visit Team field, matching the Recare Exam pilot.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A03 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` when entered |
-| A04 | `RDH: [SELECT/INSERT: Hygienist]` | Catalogue-backed editable text: **RDH** | `catalogue` | `RDH: {text}` when entered |
-| A05 | `RDA: [SELECT/INSERT: RDA]` | Catalogue-backed editable text: **RDA** | `catalogue` | `RDA: {text}` when entered |
+| A03 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` |
+| A04 | `RDH: [SELECT/INSERT: Hygienist]` | Catalogue-backed editable text: **RDH** | `catalogue` | `RDH: {text}` |
+| A05 | `RDA: [SELECT/INSERT: RDA]` | Catalogue-backed editable text: **RDA** | `catalogue` | `RDA: {text}` |
 
 These fields reuse the existing `visit-team.dentist`, `visit-team.rdh`, and
 `visit-team.rda` catalogues. They ship with no real staff names or public
@@ -300,12 +340,12 @@ valid.
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
-| A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Editable text with reviewed generic quick choices: **Patient chief concern** | Entered text: `patient-specific`; quick choices: `appCore` | `Patient Chief Concern: {text}` |
+| A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
 | A12 | `Hygiene Area of Concern:` | Textarea: **Hygiene area of concern** | `patient-specific` | `Hygiene Area of Concern: {text}` |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Structured choice with editable **Other** value: **Plaque** | Choice: `appCore`; Other: `patient-specific` | `Plaque: {selected or entered text}` |
-| A14 | `Stain: [SELECT/INSERT: STAIN]` | Structured choice with editable **Other** value: **Stain** | Choice: `appCore`; Other: `patient-specific` | `Stain: {selected or entered text}` |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]` | Structured choice with editable **Other** value: **Calculus** | Choice: `appCore`; Other: `patient-specific` | `Calculus: {selected or entered text}` |
-| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]` | Structured choice with editable **Other** value: **Bleeding** | Choice: `appCore`; Other: `patient-specific` | `Bleeding: {selected or entered text}` |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Plaque: {extent intensity location}` or entered text |
+| A14 | `Stain: [SELECT/INSERT: STAIN]` | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Stain: {extent intensity}` or entered text |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]` | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Calculus: {extent intensity location(s)}` or entered text |
+| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]` | Grouped **Extent** and **Severity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Bleeding: {extent severity}` or entered text |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
@@ -330,6 +370,16 @@ The labels above expand the remaining ClearDent shorthand: `LOC` to
 an editable **Other** value because unknown documentation must remain valid and
 the Plaque screenshot scrollbar means additional values may not have been
 captured. No finding is selected by default or saved automatically.
+
+The interactive controls reuse the grouped fixed-choice menu. Extent,
+intensity, and severity sections permit one selection each. Plaque location
+permits one selection; Calculus location permits both **marginal** and
+**interproximal**, emitted as `marginal/interproximal`. This initial
+implementation intentionally permits every cross-section combination instead
+of encoding clinical compatibility rules. Selecting **None** for Stain clears
+its other facets, and selecting another Stain facet clears **None**. Existing
+complete strings are parsed into the same facets when demo or imported values
+are loaded.
 
 ### Periodontal Assessment
 
@@ -360,24 +410,38 @@ field remain independent; selecting a structured value never clears comments.
 | A24 | Fixed home-care instruction sentence | Unchecked checkbox: **Standard home-care instruction reviewed** | `appCore` | Preserve the source sentence only when checked |
 | A25 | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]` | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended** | Current selections: `patient-specific`; reusable options: `catalogue` | `OH Aids Reviewed/Recommended: {selected and entered values}` |
 | A26 | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY` | Unchecked checkbox: **Disease process reviewed with patient today** | `appCore` | Preserve the source sentence only when checked |
-| A27 | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two optional structured choices with editable **Other** values: **Flossing frequency** and **Brushing frequency** | Choice: `appCore`; Other: `patient-specific` | `Patient is currently: {documented flossing}; {documented brushing}.` |
+| A26a | Additive OHE extension | Grouped fixed multi-value control: **Additional OHE topics reviewed** | `appCore`; no value selected by default | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed |
+| A26b | Additive OHE extension | Optional textarea: **OHE notes** | `patient-specific` | `OHE notes: {entered text}` only when entered |
+| A27 | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two editable suggestion boxes: **Flossing frequency** and **Brushing frequency**; each accepts a standard suggestion or directly entered custom text | Suggestions: `appCore`; current entered values: `patient-specific` | `Patient is currently: {documented flossing}; {documented brushing}.` |
 | A28 | `Hygiene goal:` | Textarea: **Hygiene goal** | `patient-specific` | `Hygiene goal: {text}` |
 
 The fixed home-care and disease-process statements describe actions and are
 therefore never included by default. Compliance has a complete visible
 ClearDent list whose values are public catalogue starters. Its comment remains
-independent and patient-specific. Flossing and brushing remain structured
-application choices. Eight of nine visible OHI-aids values are complete; one remains
+independent and patient-specific. Flossing and brushing retain their reviewed
+application suggestions while allowing custom wording directly in the same
+field; there is no separate Other field and typed values are not saved.
+In the form, these two frequency fields appear immediately beneath the Oral
+hygiene compliance and comment row. Their generated-note position remains in
+the accepted source order.
+Eight of nine visible OHI-aids values are complete; one remains
 unresolved, and the scrollbar means additional values may not have been
 captured. The eight complete captured values are approved public starter
 values; the unresolved value remains excluded.
+
+The additive OHE topic and notes controls do not move, rename, or replace any
+accepted 2021 fields or output lines. Both start empty. Existing notes
+therefore remain unchanged unless a user explicitly documents an additional
+topic or OHE note. The topic menu is visually grouped into home-care
+techniques, disease and risk, and prevention and maintenance. It uses fixed
+reviewed choices; non-standard discussion belongs in OHE notes.
 
 ### Treatment
 
 | ID | Source | Proposed control | Classification | Generated output |
 | --- | --- | --- | --- | --- |
 | A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE` | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea | `patient-specific` clinical decision | A `Treatment recommended:` block containing only explicitly selected or entered items |
-| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Catalogue-backed editable multi-value control: **Treatment completed today** | Current selections: `patient-specific`; reusable options: `catalogue` | `Treatment completed today: {selected and entered values}` |
+| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional multi-value **Tooth/area**, including encounter-only custom text | Row and Tooth/area: `patient-specific`; reusable treatment types: `catalogue`; fixed Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional comma-separated Tooth/area values}` joined with `; ` |
 | A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]` | Catalogue-backed editable text: **Anesthetic** | Current value: `patient-specific`; reusable options: `catalogue` | `Anesthetic: {text}` |
 | A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]` | Catalogue-backed editable text: **Desensitizer** | Current value: `patient-specific`; reusable options: `catalogue` | `Desensitizer: {text}` |
 
@@ -386,6 +450,10 @@ All eight visible Treatment completed values and all four Desensitizer values
 are approved public starter values. Anesthetic remains unseeded and must be
 reworked before its options are reconsidered. Selecting an item records text
 only and never infers dose, amount, safety, appropriateness, or treatment.
+Tooth/area starts with no selection for every row. Any number of the 13
+approved fixed choices may be selected simultaneously, and custom text may be
+added to the current encounter. Tooth/area is not a catalogue: custom values
+are discarded on reset or reload and cannot become reusable suggestions.
 
 ### Appliances and Relevant History
 
@@ -422,10 +490,10 @@ decisions and are never inferred from other fields.
 The note preserves source order, preceded by the approved consistency
 extensions:
 
-1. Patient ID
-2. Note started timestamp
-3. Last recall date
-4. Visit team
+1. Note started timestamp
+2. Patient ID
+3. Visit team
+4. Last recall date
 5. Sterilization
 6. Consent, medical history, and premedication
 7. Patient concerns and hygiene findings
@@ -437,9 +505,10 @@ extensions:
 13. Recommended intervals
 14. Next visit and date booked
 
-Unanswered fields and empty section headings are omitted. The generated note
-must not contain `undefined`, empty placeholder markers, **Not documented**, or
-unresolved `[AUTO]` and `[SELECT/INSERT]` text.
+Unanswered fields and empty section headings are omitted, except that the
+Patient ID and all three Visit Team labels remain visible in the standardized
+header. The generated note must not contain `undefined`, empty placeholder
+markers, **Not documented**, or unresolved `[AUTO]` and `[SELECT/INSERT]` text.
 
 The visible preview contains the complete generated note. **Copy note** writes
 that preview to the clipboard unchanged and does not add a copy-time timestamp.
@@ -493,9 +562,10 @@ Clinical review accepted the complete mapping on 2026-07-25, including:
    disease-process-review, and PPE statements.
 9. Catalogue-backed Oral hygiene compliance with an independent comment, plus
    the approved flossing and brushing choices with **Other**.
-10. Unchecked Hygiene maintenance; public starter values for Treatment
-    completed and Desensitizer; and an unseeded Anesthetic field pending
-    redesign.
+10. Unchecked Hygiene maintenance; structured Treatment completed rows with
+    public treatment-type starters, multi-select fixed Tooth/area choices, and
+    encounter-only custom Tooth/area text; public Desensitizer starters; and an
+    unseeded Anesthetic field pending redesign.
 11. Conditional night-guard controls and the proposed retainer choices.
 12. Catalogue-backed recall and hygiene intervals with independent comments,
     and public starter values for Next visit.

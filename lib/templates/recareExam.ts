@@ -14,6 +14,8 @@ export type RetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
+export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
+
 export type RecareTreatmentEntry = {
   id: string;
   treatmentType: string;
@@ -37,7 +39,8 @@ export interface RecareExamForm {
   radiographs: string[];
   intraoralPhotosStatus: DocumentationStatus;
   intraoralPhotosDetails: string;
-  chiefConcern: string;
+  chiefConcern: string[];
+  listChiefConcerns: boolean;
   extraoralStatus: ExamStatus;
   extraoralFindings: string;
   tmjStatus: ExamStatus;
@@ -66,8 +69,14 @@ export interface RecareExamForm {
   removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
+  odontogramUpToDate: boolean;
+  cariesRiskLevel: CariesRiskLevel;
+  cariesRiskFactors: string[];
+  cariesRiskNotes: string;
   treatmentOptions: RecareTreatmentEntry[];
+  listTreatmentOptions: boolean;
   treatmentPlan: RecareTreatmentEntry[];
+  listTreatmentPlan: boolean;
   nextVisit: string;
   dateBooked: string;
 }
@@ -90,7 +99,8 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     radiographs: [],
     intraoralPhotosStatus: "not-documented",
     intraoralPhotosDetails: "",
-    chiefConcern: "",
+    chiefConcern: [],
+    listChiefConcerns: false,
     extraoralStatus: "not-assessed",
     extraoralFindings: "",
     tmjStatus: "not-assessed",
@@ -119,8 +129,14 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     removableDenturesStatus: "not-documented",
     improvementRequest: "",
     additionalComments: "",
+    odontogramUpToDate: false,
+    cariesRiskLevel: "",
+    cariesRiskFactors: [],
+    cariesRiskNotes: "",
     treatmentOptions: [],
+    listTreatmentOptions: true,
     treatmentPlan: [],
+    listTreatmentPlan: true,
     nextVisit: "",
     dateBooked: "",
   };

@@ -11,22 +11,29 @@ import {
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
+import {
+  FixedChoiceMultiCombobox,
+  type FixedChoiceMultiComboboxGroup,
+} from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
+import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
+  type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
-  bleedingChoices,
   brushingFrequencyChoices,
-  calculusChoices,
   createEmptyAdultHygiene2021Form,
+  diseaseAndRiskOheTopicChoices,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
-  patientChiefConcernChoices,
+  homeCareOheTopicChoices,
+  oheTopicChoices,
   periodontitisGradeChoices,
   periodontitisStageChoices,
-  plaqueChoices,
-  stainChoices,
+  preventionAndMaintenanceOheTopicChoices,
+  treatmentToothAreaChoices,
 } from "@/lib/templates/adultHygiene2021";
+import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import type {
   DocumentationStatus,
   PremedicationStatus,
@@ -39,9 +46,150 @@ const inputClass = `mt-1 ${formControlClass()}`;
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
+const treatmentRowButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const treatmentRowRemoveButtonClass =
+  "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
+const treatmentToothAreaChoiceGroups = [
+  {
+    choices: ["full mouth", "maxilla", "mandible"],
+    columns: 1,
+  },
+  {
+    label: "Quadrants",
+    choices: ["Q1", "Q2", "Q4", "Q3"],
+    columns: 2,
+  },
+  {
+    label: "Sextants",
+    choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
+    columns: 3,
+  },
+] as const;
+
+const oheTopicChoiceGroups = [
+  {
+    label: "Home-care techniques",
+    choices: homeCareOheTopicChoices,
+  },
+  {
+    label: "Disease and risk",
+    choices: diseaseAndRiskOheTopicChoices,
+  },
+  {
+    label: "Prevention and maintenance",
+    choices: preventionAndMaintenanceOheTopicChoices,
+  },
+] as const;
+
+const extentFacetChoices = ["Localized", "Generalized"] as const;
+const mildIntensityFacetChoices = ["mild", "moderate", "heavy"] as const;
+const plaqueLocationFacetChoices = ["marginal", "interproximal"] as const;
+const plaqueFacetChoices = [
+  ...extentFacetChoices,
+  ...mildIntensityFacetChoices,
+  ...plaqueLocationFacetChoices,
+] as const;
+const plaqueFacetGroups = [
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Intensity",
+    choices: mildIntensityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+  {
+    label: "Location",
+    choices: plaqueLocationFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const stainIntensityFacetChoices = ["slight", "moderate", "heavy"] as const;
+const stainFacetChoices = [
+  "None",
+  ...extentFacetChoices,
+  ...stainIntensityFacetChoices,
+] as const;
+const stainFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Intensity",
+    choices: stainIntensityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const calculusLocationFacetChoices = [
+  "marginal",
+  "interproximal",
+] as const;
+const calculusFacetChoices = [
+  ...extentFacetChoices,
+  ...mildIntensityFacetChoices,
+  ...calculusLocationFacetChoices,
+] as const;
+const calculusFacetGroups = [
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Intensity",
+    choices: mildIntensityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+  {
+    label: "Location",
+    choices: calculusLocationFacetChoices,
+    columns: 2,
+    selectionMode: "multiple",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const bleedingSeverityFacetChoices = ["mild", "moderate", "severe"] as const;
+const bleedingFacetChoices = [
+  ...extentFacetChoices,
+  ...bleedingSeverityFacetChoices,
+] as const;
+const bleedingFacetGroups = [
+  {
+    label: "Extent",
+    choices: extentFacetChoices,
+    columns: 2,
+    selectionMode: "single",
+  },
+  {
+    label: "Severity",
+    choices: bleedingSeverityFacetChoices,
+    columns: 3,
+    selectionMode: "single",
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
 
 const documentationStatusOptions: Array<{
   value: DocumentationStatus;
@@ -157,39 +305,81 @@ function TextareaField({
   );
 }
 
-function ChoiceWithOther({
+function parseFacetedChoice(
+  choice: string,
+  facetChoices: readonly string[],
+) {
+  const selectedTokens = new Set(
+    choice
+      .normalize("NFKC")
+      .trim()
+      .toLocaleLowerCase("en-CA")
+      .split(/[\s/]+/)
+      .filter(Boolean),
+  );
+  return facetChoices.filter((facet) =>
+    selectedTokens.has(
+      facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA"),
+    ),
+  );
+}
+
+function FacetedChoiceWithOther({
   id,
   label,
   choice,
   other,
-  choices,
+  facetChoices,
+  facetGroups,
   onChoiceChange,
   onOtherChange,
+  formatChoice = (values) => values.join(" "),
+  standaloneValue,
 }: {
   id: string;
   label: string;
   choice: string;
   other: string;
-  choices: readonly string[];
+  facetChoices: readonly string[];
+  facetGroups: readonly FixedChoiceMultiComboboxGroup[];
   onChoiceChange: (choice: string) => void;
   onOtherChange: (other: string) => void;
+  formatChoice?: (values: string[]) => string;
+  standaloneValue?: string;
 }) {
+  const selectedFacets = parseFacetedChoice(choice, facetChoices);
+
   return (
     <div className="grid gap-3 md:grid-cols-2">
-      <FixedChoiceListbox
+      <FixedChoiceMultiCombobox
         id={`${id}-choice`}
         label={label}
-        value={choice}
-        options={[
-          { value: "", label: "Not documented" },
-          ...choices.map((value) => ({ value, label: value })),
-        ]}
-        onChange={(value) => {
-          onChoiceChange(value);
-          if (value) {
+        choices={facetChoices}
+        choiceGroups={facetGroups}
+        values={selectedFacets}
+        onChange={(values) => {
+          let nextValues = values;
+          if (standaloneValue) {
+            const hadStandaloneValue = selectedFacets.includes(standaloneValue);
+            const hasStandaloneValue = values.includes(standaloneValue);
+            if (hasStandaloneValue && !hadStandaloneValue) {
+              nextValues = [standaloneValue];
+            } else if (hadStandaloneValue && values.length > 1) {
+              nextValues = values.filter(
+                (value) => value !== standaloneValue,
+              );
+            }
+          }
+          const nextChoice = formatChoice(nextValues);
+          onChoiceChange(nextChoice);
+          if (nextChoice) {
             onOtherChange("");
           }
         }}
+        customPlaceholder={`Search ${label.toLocaleLowerCase("en-CA")} options`}
+        customHelpText="Choose options in each applicable section."
+        showSelectedChips={false}
+        allowCustomValues={false}
       />
       <TextField
         id={`${id}-other`}
@@ -274,6 +464,129 @@ function CheckboxField({
   );
 }
 
+function TreatmentCompletedList({
+  entries,
+  onAdd,
+  onChange,
+}: {
+  entries: AdultHygieneTreatmentCompletedEntry[];
+  onAdd: () => void;
+  onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
+}) {
+  function updateEntry(
+    entryId: string,
+    patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>,
+  ) {
+    onChange(
+      entries.map((entry) =>
+        entry.id === entryId ? { ...entry, ...patch } : entry,
+      ),
+    );
+  }
+
+  function moveEntry(index: number, direction: "earlier" | "later") {
+    const targetIndex = direction === "earlier" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= entries.length) return;
+    const reordered = [...entries];
+    [reordered[index], reordered[targetIndex]] = [
+      reordered[targetIndex],
+      reordered[index],
+    ];
+    onChange(reordered);
+  }
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold">Treatment completed today</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Treatment types can be remembered. Select one or more standard
+        Tooth/area choices, or add custom text for this note only.
+      </p>
+      {entries.length ? (
+        <ol
+          className="space-y-3"
+          aria-label="Treatment completed today entries"
+        >
+          {entries.map((entry, index) => (
+            <li
+              key={entry.id}
+              className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
+            >
+              <div className="grid gap-3 md:grid-cols-2">
+                <CatalogueCombobox
+                  id={`adult-hygiene-treatment-completed-${entry.id}-type`}
+                  label="Treatment type"
+                  catalogueKey="hygiene-treatment.completed"
+                  value={entry.treatmentType}
+                  onChange={(value) =>
+                    updateEntry(entry.id, { treatmentType: value })
+                  }
+                  rememberActionLabel="Remember treatment type"
+                  unhideActionLabel="Unhide treatment type"
+                  roomyActions
+                />
+                <FixedChoiceMultiCombobox
+                  id={`adult-hygiene-treatment-completed-${entry.id}-tooth-area`}
+                  label="Tooth/area"
+                  choices={treatmentToothAreaChoices}
+                  choiceGroups={treatmentToothAreaChoiceGroups}
+                  values={entry.toothAreas}
+                  onChange={(values) =>
+                    updateEntry(entry.id, { toothAreas: values })
+                  }
+                  customPlaceholder="Search or add a Tooth/area"
+                  showSelectedChips={false}
+                />
+                <div className="flex flex-wrap items-start gap-2 md:col-span-2">
+                  <TooltipActionButton
+                    tooltip="Move this treatment line earlier in the note."
+                    className={treatmentRowButtonClass}
+                    disabled={index === 0}
+                    ariaLabel={`Move treatment completed item ${index + 1} earlier`}
+                    onClick={() => moveEntry(index, "earlier")}
+                  >
+                    Earlier
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Move this treatment line later in the note."
+                    className={treatmentRowButtonClass}
+                    disabled={index === entries.length - 1}
+                    ariaLabel={`Move treatment completed item ${index + 1} later`}
+                    onClick={() => moveEntry(index, "later")}
+                  >
+                    Later
+                  </TooltipActionButton>
+                  <TooltipActionButton
+                    tooltip="Remove this treatment line from the note."
+                    className={treatmentRowRemoveButtonClass}
+                    ariaLabel={`Remove treatment completed item ${index + 1}`}
+                    onClick={() =>
+                      onChange(
+                        entries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        ),
+                      )
+                    }
+                  >
+                    Remove
+                  </TooltipActionButton>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-slate-950 dark:text-slate-400">
+          No treatment completed today added.
+        </p>
+      )}
+      <button type="button" className={treatmentRowButtonClass} onClick={onAdd}>
+        Add treatment completed
+      </button>
+    </div>
+  );
+}
+
 async function writeClipboard(value: string): Promise<boolean> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -310,6 +623,7 @@ export function AdultHygiene2021Template({
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
+  const treatmentEntrySequence = useRef(0);
 
   useEffect(() => setStartedAt(new Date()), []);
 
@@ -379,8 +693,13 @@ export function AdultHygiene2021Template({
     setForm({
       ...fixture,
       psrPocketing: [...fixture.psrPocketing],
+      patientChiefConcern: [...fixture.patientChiefConcern],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
-      treatmentCompleted: [...fixture.treatmentCompleted],
+      oheTopicsReviewed: [...fixture.oheTopicsReviewed],
+      treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
+        ...entry,
+        toothAreas: [...entry.toothAreas],
+      })),
     });
     setPatientIdError("");
     setProviderError("");
@@ -395,6 +714,15 @@ export function AdultHygiene2021Template({
     setProviderError("");
     setCopyMessage("");
     patientIdRef.current?.focus();
+  }
+
+  function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {
+    treatmentEntrySequence.current += 1;
+    return {
+      id: `completed-${Date.now()}-${treatmentEntrySequence.current}`,
+      treatmentType: "",
+      toothAreas: [],
+    };
   }
 
   return (
@@ -567,9 +895,7 @@ export function AdultHygiene2021Template({
                 label="Medical history reviewed"
                 catalogueKey="medical-history.review"
                 value={form.medicalHistoryReview}
-                onChange={(value) =>
-                  updateField("medicalHistoryReview", value)
-                }
+                onChange={(value) => updateField("medicalHistoryReview", value)}
               />
 
               <div className="space-y-4">
@@ -601,12 +927,27 @@ export function AdultHygiene2021Template({
           </Section>
 
           <Section title="Patient Concerns and Hygiene Findings">
-            <StaticSuggestionCombobox
+            <CatalogueMultiCombobox
               id="adult-hygiene-chief-concern"
               label="Patient chief concern"
-              value={form.patientChiefConcern}
-              onChange={(value) => updateField("patientChiefConcern", value)}
-              suggestions={patientChiefConcernChoices}
+              catalogueKey="patient.chief-concerns"
+              values={form.patientChiefConcern}
+              onChange={(values) =>
+                updateField(
+                  "patientChiefConcern",
+                  applyPatientChiefConcernSelectionRules(
+                    form.patientChiefConcern,
+                    values,
+                  ),
+                )
+              }
+              roomySelectionActions
+            />
+            <CheckboxField
+              id="adult-hygiene-chief-concern-list-format"
+              label="List each concern on a separate line in the note"
+              checked={form.listChiefConcerns}
+              onChange={(value) => updateField("listChiefConcerns", value)}
             />
             <TextareaField
               id="adult-hygiene-area-of-concern"
@@ -614,39 +955,62 @@ export function AdultHygiene2021Template({
               value={form.hygieneAreaOfConcern}
               onChange={(value) => updateField("hygieneAreaOfConcern", value)}
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-plaque"
               label="Plaque"
               choice={form.plaqueChoice}
               other={form.plaqueOther}
-              choices={plaqueChoices}
+              facetChoices={plaqueFacetChoices}
+              facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
               onOtherChange={(value) => updateField("plaqueOther", value)}
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-stain"
               label="Stain"
               choice={form.stainChoice}
               other={form.stainOther}
-              choices={stainChoices}
+              facetChoices={stainFacetChoices}
+              facetGroups={stainFacetGroups}
               onChoiceChange={(value) => updateField("stainChoice", value)}
               onOtherChange={(value) => updateField("stainOther", value)}
+              standaloneValue="None"
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-calculus"
               label="Calculus"
               choice={form.calculusChoice}
               other={form.calculusOther}
-              choices={calculusChoices}
+              facetChoices={calculusFacetChoices}
+              facetGroups={calculusFacetGroups}
               onChoiceChange={(value) => updateField("calculusChoice", value)}
               onOtherChange={(value) => updateField("calculusOther", value)}
+              formatChoice={(values) => {
+                const locationValues = values.filter((value) =>
+                  calculusLocationFacetChoices.includes(
+                    value as (typeof calculusLocationFacetChoices)[number],
+                  ),
+                );
+                return [
+                  ...values.filter(
+                    (value) =>
+                      !calculusLocationFacetChoices.includes(
+                        value as (typeof calculusLocationFacetChoices)[number],
+                      ),
+                  ),
+                  locationValues.join("/"),
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+              }}
             />
-            <ChoiceWithOther
+            <FacetedChoiceWithOther
               id="adult-hygiene-bleeding"
               label="Bleeding"
               choice={form.bleedingChoice}
               other={form.bleedingOther}
-              choices={bleedingChoices}
+              facetChoices={bleedingFacetChoices}
+              facetGroups={bleedingFacetGroups}
               onChoiceChange={(value) => updateField("bleedingChoice", value)}
               onOtherChange={(value) => updateField("bleedingOther", value)}
             />
@@ -751,6 +1115,24 @@ export function AdultHygiene2021Template({
                 placeholder="Optional comment"
               />
             </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <StaticSuggestionCombobox
+                id="adult-hygiene-flossing"
+                label="Flossing frequency"
+                value={form.flossingFrequency}
+                suggestions={flossingFrequencyChoices}
+                onChange={(value) => updateField("flossingFrequency", value)}
+                placeholder="Select or enter a flossing frequency"
+              />
+              <StaticSuggestionCombobox
+                id="adult-hygiene-brushing"
+                label="Brushing frequency"
+                value={form.brushingFrequency}
+                suggestions={brushingFrequencyChoices}
+                onChange={(value) => updateField("brushingFrequency", value)}
+                placeholder="Select or enter a brushing frequency"
+              />
+            </div>
             <CheckboxField
               id="adult-hygiene-home-care-reviewed"
               label="Standard home-care instruction reviewed"
@@ -771,35 +1153,26 @@ export function AdultHygiene2021Template({
               id="adult-hygiene-disease-process-reviewed"
               label="Disease process reviewed with patient today"
               checked={form.diseaseProcessReviewed}
-              onChange={(value) =>
-                updateField("diseaseProcessReviewed", value)
-              }
+              onChange={(value) => updateField("diseaseProcessReviewed", value)}
             />
-            <ChoiceWithOther
-              id="adult-hygiene-flossing"
-              label="Flossing frequency"
-              choice={form.flossingFrequencyChoice}
-              other={form.flossingFrequencyOther}
-              choices={flossingFrequencyChoices}
-              onChoiceChange={(value) =>
-                updateField("flossingFrequencyChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("flossingFrequencyOther", value)
-              }
+            <FixedChoiceMultiCombobox
+              id="adult-hygiene-ohe-topics"
+              label="Additional OHE topics reviewed"
+              choices={oheTopicChoices}
+              choiceGroups={oheTopicChoiceGroups}
+              values={form.oheTopicsReviewed}
+              onChange={(values) => updateField("oheTopicsReviewed", values)}
+              customPlaceholder="Search OHE topics"
+              customHelpText=""
+              showSelectedChips={false}
+              allowCustomValues={false}
             />
-            <ChoiceWithOther
-              id="adult-hygiene-brushing"
-              label="Brushing frequency"
-              choice={form.brushingFrequencyChoice}
-              other={form.brushingFrequencyOther}
-              choices={brushingFrequencyChoices}
-              onChoiceChange={(value) =>
-                updateField("brushingFrequencyChoice", value)
-              }
-              onOtherChange={(value) =>
-                updateField("brushingFrequencyOther", value)
-              }
+            <TextareaField
+              id="adult-hygiene-ohe-notes"
+              label="OHE notes"
+              value={form.oheNotes}
+              onChange={(value) => updateField("oheNotes", value)}
+              placeholder="Optional OHE details discussed today"
             />
             <TextareaField
               id="adult-hygiene-goal"
@@ -817,10 +1190,7 @@ export function AdultHygiene2021Template({
                 label="Hygiene maintenance"
                 checked={form.treatmentRecommendedHygieneMaintenance}
                 onChange={(value) =>
-                  updateField(
-                    "treatmentRecommendedHygieneMaintenance",
-                    value,
-                  )
+                  updateField("treatmentRecommendedHygieneMaintenance", value)
                 }
               />
               <TextareaField
@@ -833,13 +1203,15 @@ export function AdultHygiene2021Template({
                 placeholder="Enter one item per line"
               />
             </fieldset>
-            <CatalogueMultiCombobox
-              id="adult-hygiene-treatment-completed"
-              label="Treatment completed today"
-              catalogueKey="hygiene-treatment.completed"
-              values={form.treatmentCompleted}
+            <TreatmentCompletedList
+              entries={form.treatmentCompleted}
+              onAdd={() =>
+                updateField("treatmentCompleted", [
+                  ...form.treatmentCompleted,
+                  createTreatmentCompletedEntry(),
+                ])
+              }
               onChange={(value) => updateField("treatmentCompleted", value)}
-              roomySelectionActions
             />
             <CatalogueCombobox
               id="adult-hygiene-anesthetic"
