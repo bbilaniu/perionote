@@ -212,6 +212,14 @@ npm run test:e2e:webkit
 npm run lint
 ```
 
+Next.js generated files are isolated by workflow so concurrent checks do not
+overwrite a running development server:
+
+- `npm run dev` uses `.next-dev`
+- `npm run build` uses an isolated project copy under `.next-build`, then
+  publishes its static export to `out`
+- Playwright's managed development server uses `.next-playwright`
+
 First-time required Chromium E2E setup:
 
 ```bash

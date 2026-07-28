@@ -6,8 +6,9 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "node scripts/run-next.mjs dev .next-dev",
+    "dev:e2e": "node scripts/run-next.mjs dev .next-playwright --port 3100",
+    "build": "node scripts/build-next.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
