@@ -43,3 +43,23 @@ input:is(
   padding: 0;
   margin: 0;
 }
+
+/*
+ * iOS WebKit does not reliably open a date picker through showPicker() or a
+ * scripted click. Put the native control over our visible calendar affordance
+ * so the user's tap reaches the date input directly.
+ */
+@supports (-webkit-touch-callout: none) {
+  input[data-native-date-picker] {
+    top: 0.25rem;
+    right: 0.25rem;
+    bottom: 0.25rem;
+    left: auto;
+    z-index: 20;
+    width: 2rem;
+    height: auto;
+    pointer-events: auto;
+    cursor: pointer;
+    opacity: 0;
+  }
+}
