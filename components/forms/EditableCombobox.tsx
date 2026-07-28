@@ -10,9 +10,11 @@ import {
   type RefObject,
 } from "react";
 import {
+  compoundControlWrapperClass,
   DropdownChevron,
   formControlClass,
   SelectedIndicator,
+  trailingControlButtonClass,
 } from "@/components/forms/controlStyles";
 
 export type EditableComboboxSuggestion = {
@@ -174,7 +176,7 @@ export function EditableCombobox<
 
       {selectedContent}
 
-      <div className="relative mt-1">
+      <div className={compoundControlWrapperClass}>
         <input
           ref={(node) => {
             internalInputRef.current = node;
@@ -219,7 +221,7 @@ export function EditableCombobox<
         <button
           type="button"
           data-dropdown-trigger
-          className="absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center rounded-r-xl text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          className={trailingControlButtonClass}
           aria-label={`${open ? "Hide" : "Show"} ${label} suggestions`}
           aria-expanded={open}
           aria-controls={listboxId}

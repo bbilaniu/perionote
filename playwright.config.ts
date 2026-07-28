@@ -11,7 +11,7 @@ export default defineConfig({
     trace: "on-first-retry"
   },
   webServer: {
-    command: "npm run dev -- --port 3100",
+    command: "npm run dev:e2e",
     url: "http://localhost:3100",
     reuseExistingServer: true,
     timeout: 120_000

@@ -258,6 +258,7 @@ function TextField({
       {type === "date" ? (
         <IsoDateInput
           id={id}
+          label={label}
           value={value}
           onChange={onChange}
           inputRef={inputRef}

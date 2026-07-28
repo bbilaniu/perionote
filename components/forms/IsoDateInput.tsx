@@ -1,8 +1,29 @@
-import { formControlClass } from "@/components/forms/controlStyles";
-import type { RefObject } from "react";
+"use client";
+
+import {
+  compoundControlWrapperClass,
+  formControlClass,
+  trailingControlButtonClass,
+} from "@/components/forms/controlStyles";
+import { useRef, type RefObject } from "react";
+
+const isoDatePattern =
+  "[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])";
+
+function formatIsoDateInput(value: string): string {
+  const digits = value.replaceAll(/\D/g, "").slice(0, 8);
+  if (digits.length <= 4) {
+    return digits;
+  }
+  if (digits.length <= 6) {
+    return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  }
+  return `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6)}`;
+}
 
 export function IsoDateInput({
   id,
+  label,
   value,
   onChange,
   inputRef,
@@ -12,6 +33,7 @@ export function IsoDateInput({
   ariaDescribedBy,
 }: {
   id: string;
+  label: string;
   value: string;
   onChange: (value: string) => void;
   inputRef?: RefObject<HTMLInputElement | null>;
@@ -20,32 +42,90 @@ export function IsoDateInput({
   ariaInvalid?: boolean;
   ariaDescribedBy?: string;
 }) {
+  const pickerRef = useRef<HTMLInputElement>(null);
+  const pickerValue = /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+
+  function openPicker() {
+    const picker = pickerRef.current;
+    if (!picker) {
+      return;
+    }
+
+    try {
+      picker.showPicker();
+    } catch {
+      picker.click();
+    }
+  }
+
   return (
-    <div className="relative mt-1">
+    <div className={compoundControlWrapperClass}>
+      <input
+        ref={pickerRef}
+        data-native-date-picker
+        className="pointer-events-none absolute left-0 top-0 h-px w-px opacity-0"
+        type="date"
+        value={pickerValue}
+        disabled={disabled}
+        readOnly={readOnly}
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        onChange={(event) => onChange(event.target.value)}
+      />
       <input
         ref={inputRef}
         id={id}
-        className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
-        type="date"
+        data-iso-date-display
+        className={`${formControlClass({
+          opensList: true,
+          invalid: ariaInvalid,
+        })} h-10`}
+        type="text"
         value={value}
+        placeholder="YYYY-MM-DD"
+        inputMode="numeric"
+        pattern={isoDatePattern}
+        maxLength={10}
+        title="Use YYYY-MM-DD format."
         disabled={disabled}
         readOnly={readOnly}
         autoComplete="off"
         aria-invalid={ariaInvalid}
         aria-describedby={ariaDescribedBy}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) => onChange(formatIsoDateInput(event.target.value))}
       />
-      <input
-        data-iso-date-display
-        className={`${formControlClass()} pointer-events-none h-10 peer-focus:border-sky-600 peer-focus:ring-2 peer-focus:ring-sky-200 dark:peer-focus:border-sky-400 dark:peer-focus:ring-sky-900`}
-        type="text"
-        value={value}
-        placeholder="YYYY-MM-DD"
-        disabled={disabled}
-        readOnly
-        tabIndex={-1}
-        aria-hidden="true"
-      />
+      <button
+        data-date-picker-trigger
+        className={trailingControlButtonClass}
+        type="button"
+        aria-label={`Choose ${label}`}
+        disabled={disabled || readOnly}
+        onClick={openPicker}
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 20 20"
+          fill="none"
+          className="h-4 w-4"
+        >
+          <rect
+            x="3"
+            y="4.5"
+            width="14"
+            height="12.5"
+            rx="2"
+            stroke="currentColor"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M6.5 2.75v3.5M13.5 2.75v3.5M3 8.25h14"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+        </svg>
+      </button>
     </div>
   );
 }
