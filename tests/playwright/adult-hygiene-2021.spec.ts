@@ -38,6 +38,45 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
+test("date and time fields stay inside cards on narrow screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+
+  for (const url of [
+    adultHygieneUrl,
+    "/templates/clinic/recare-exam/interactive",
+    "/templates/dental-hygiene-note-webform",
+  ]) {
+    await page.goto(url);
+
+    const temporalFields = page.locator(
+      'input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], input[type="week"]',
+    );
+    expect(await temporalFields.count()).toBeGreaterThan(0);
+
+    for (const field of await temporalFields.all()) {
+      await expect(field).toHaveCSS("min-width", "0px");
+      await expect(field).toHaveCSS("max-width", "100%");
+
+      if (!(await field.isVisible())) {
+        continue;
+      }
+
+      const [fieldBox, parentBox] = await Promise.all([
+        field.boundingBox(),
+        field.locator("..").boundingBox(),
+      ]);
+      expect(fieldBox).not.toBeNull();
+      expect(parentBox).not.toBeNull();
+      expect(fieldBox!.x).toBeGreaterThanOrEqual(parentBox!.x);
+      expect(fieldBox!.x + fieldBox!.width).toBeLessThanOrEqual(
+        parentBox!.x + parentBox!.width + 1,
+      );
+    }
+  }
+});
+
 test("Adult Hygiene enforces copy requirements and supports independent consent sources", async ({
   page,
   context,
