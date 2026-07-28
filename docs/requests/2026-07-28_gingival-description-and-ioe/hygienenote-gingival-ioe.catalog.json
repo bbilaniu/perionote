@@ -1,18 +1,12 @@
 {
   "$schema": "./hygienenote-gingival-ioe.schema.json",
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "catalogId": "hygienenote.gingival-and-ioe",
   "title": "HygieneNote Gingival Description and Intraoral Examination",
   "source": {
     "documentName": "DH Note.docx",
-    "sourcePages": [
-      2,
-      3,
-      4
-    ],
-    "excludedFromImplementation": [
-      "chief_concerns"
-    ],
+    "sourcePages": [2, 3, 4],
+    "excludedFromImplementation": ["chief_concerns"],
     "exclusionReason": "Chief Concern was already implemented before this specification.",
     "sourceTables": [
       {
@@ -200,8 +194,8 @@
   "implementationPolicies": {
     "sourceOfTruth": "normalizedSections",
     "rawSourceTablesAreAuditOnly": true,
-    "persistStableOptionIds": true,
-    "persistGeneratedText": false,
+    "canonicalFixedSelectionValue": "stable_option_id",
+    "generatedTextIsNotCanonicalSelectionValue": true,
     "defaultAssessmentStatus": "not_assessed",
     "unselectedDoesNotMeanNormal": true,
     "wnlRequiresExplicitUserAction": true,
@@ -215,6 +209,7 @@
       "causal association",
       "pathology status",
       "patient symptoms",
+      "caries risk factor",
       "patient education",
       "treatment recommendation",
       "follow-up plan"
@@ -260,10 +255,7 @@
       }
     ],
     "location": {
-      "supportedScopes": [
-        "generalized",
-        "localized"
-      ],
+      "supportedScopes": ["generalized", "localized"],
       "supportedSelectors": [
         "free_text_region",
         "arch",
@@ -904,13 +896,8 @@
             }
           ],
           "supportsComment": true,
-          "duplicateCheck": [
-            "gingival description",
-            "bleeding on probing"
-          ],
-          "notes": [
-            "Do not create a second independent gingival state model."
-          ]
+          "duplicateCheck": ["gingival description", "bleeding on probing"],
+          "notes": ["Do not create a second independent gingival state model."]
         },
         {
           "id": "ioe.tongue",
@@ -971,20 +958,22 @@
             {
               "id": "ioe.tongue.coated",
               "label": "Coated",
-              "classification": "abnormal",
+              "classification": "normal_variation",
               "noteFragment": "coated",
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "Coated",
-              "reviewStatus": "classification_review_recommended"
+              "reviewStatus": "classification_review_resolved",
+              "classificationNote": "Treat as an observed normal variation; do not infer pathology, cause, or treatment."
             },
             {
               "id": "ioe.tongue.fissured",
               "label": "Fissured",
-              "classification": "abnormal",
+              "classification": "normal_variation",
               "noteFragment": "fissured",
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "fissured",
-              "reviewStatus": "classification_review_recommended"
+              "reviewStatus": "classification_review_resolved",
+              "classificationNote": "Treat as an observed normal variation; do not infer pathology, cause, or treatment."
             },
             {
               "id": "ioe.tongue.swollen",
@@ -1517,7 +1506,8 @@
               "classification": "abnormal",
               "noteFragment": "open bite",
               "sourceCategory": "abnormal_findings",
-              "sourceTerm": "open bite"
+              "sourceTerm": "open bite",
+              "supportsLocation": true
             },
             {
               "id": "ioe.occlusion.crossbite",
@@ -1535,6 +1525,7 @@
               "noteFragment": "increased overjet",
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "increased overjet",
+              "supportsLocation": true,
               "supportsMeasurement": true,
               "measurementUnit": "mm"
             },
@@ -1545,8 +1536,10 @@
               "noteFragment": "increased overbite",
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "increased overbite",
+              "supportsLocation": true,
               "supportsMeasurement": true,
-              "measurementUnit": "mm"
+              "measurementUnits": ["percent", "mm"],
+              "allowMultipleMeasurements": true
             },
             {
               "id": "ioe.occlusion.slight_malocclusion",
@@ -1555,16 +1548,12 @@
               "noteFragment": "slight malocclusion",
               "sourceCategory": "common_variations",
               "sourceTerm": "Slight malocclusion",
+              "supportsLocation": true,
               "reviewStatus": "definition_review_recommended"
             }
           ],
           "supportsComment": true,
-          "duplicateCheck": [
-            "occlusion",
-            "overjet",
-            "overbite",
-            "crossbite"
-          ],
+          "duplicateCheck": ["occlusion", "overjet", "overbite", "crossbite"],
           "notes": [
             "Do not create duplicate occlusion state if equivalent fields already exist."
           ]
@@ -1661,17 +1650,22 @@
     {
       "id": "review.tongue_fissured_classification",
       "question": "Should fissured tongue remain abnormal or be treated as a normal variation?",
-      "currentDecision": "Preserve the source classification but flag it for clinical review."
+      "currentDecision": "Treat as a normal variation. Preserve the source classification only in the audit transcription and do not infer pathology."
     },
     {
       "id": "review.tongue_coated_classification",
       "question": "Should coated tongue always be classified as abnormal?",
-      "currentDecision": "Preserve the source classification but flag it for clinical review."
+      "currentDecision": "Treat as a normal variation. Preserve the source classification only in the audit transcription and do not infer pathology."
     },
     {
       "id": "review.ioe_duplicate_sections",
       "question": "Do Teeth, Occlusion, Saliva, Gingiva, or bleeding already exist elsewhere in the form?",
-      "currentDecision": "Codex must inspect and reuse or summarize existing fields instead of creating competing state."
+      "currentDecision": "Route Gingival Description to Adult Hygiene; route structured soft-tissue IOE, Saliva, and occlusal additions to existing Recare owners; create no direct IOE Gingiva state; defer Teeth."
+    },
+    {
+      "id": "review.occlusion_overbite_measurement_units",
+      "question": "Should overbite be recorded in percent or millimetres?",
+      "currentDecision": "Preserve Recare percent recording and add an independent millimetre value; allow either or both."
     }
   ]
 }

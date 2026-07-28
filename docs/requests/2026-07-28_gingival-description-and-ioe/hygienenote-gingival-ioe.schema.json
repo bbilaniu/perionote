@@ -25,10 +25,7 @@
     },
     "source": {
       "type": "object",
-      "required": [
-        "documentName",
-        "sourceTables"
-      ],
+      "required": ["documentName", "sourceTables"],
       "properties": {
         "documentName": {
           "type": "string"
@@ -56,10 +53,7 @@
     },
     "normalizedSections": {
       "type": "object",
-      "required": [
-        "gingivalDescription",
-        "ioe"
-      ],
+      "required": ["gingivalDescription", "ioe"],
       "properties": {
         "gingivalDescription": {
           "$ref": "#/$defs/gingivalSection"
@@ -80,11 +74,7 @@
   "$defs": {
     "sourceTable": {
       "type": "object",
-      "required": [
-        "tableId",
-        "headers",
-        "rows"
-      ],
+      "required": ["tableId", "headers", "rows"],
       "properties": {
         "tableId": {
           "type": "string"
@@ -109,10 +99,7 @@
     },
     "statusOption": {
       "type": "object",
-      "required": [
-        "id",
-        "label"
-      ],
+      "required": ["id", "label"],
       "properties": {
         "id": {
           "type": "string"
@@ -143,11 +130,7 @@
           "minLength": 1
         },
         "classification": {
-          "enum": [
-            "normal",
-            "normal_variation",
-            "abnormal"
-          ]
+          "enum": ["normal", "normal_variation", "abnormal"]
         },
         "noteFragment": {
           "type": "string"
@@ -157,17 +140,85 @@
         },
         "sourceTerm": {
           "type": "string"
+        },
+        "supportsLocation": {
+          "type": "boolean"
+        },
+        "supportsLaterality": {
+          "type": "boolean"
+        },
+        "supportsTooth": {
+          "type": "boolean"
+        },
+        "supportsSurface": {
+          "type": "boolean"
+        },
+        "supportsMeasurement": {
+          "type": "boolean"
+        },
+        "measurementUnit": {
+          "enum": ["mm", "percent"]
+        },
+        "measurementUnits": {
+          "type": "array",
+          "items": {
+            "enum": ["mm", "percent"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "allowMultipleMeasurements": {
+          "type": "boolean"
+        },
+        "supportsGrade": {
+          "type": "boolean"
+        },
+        "reviewStatus": {
+          "type": "string"
+        },
+        "classificationNote": {
+          "type": "string"
+        },
+        "automationNote": {
+          "type": "string"
+        },
+        "contextNote": {
+          "type": "string"
         }
       },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "supportsMeasurement": {
+                "const": true
+              }
+            },
+            "required": ["supportsMeasurement"]
+          },
+          "then": {
+            "oneOf": [
+              {
+                "required": ["measurementUnit"],
+                "not": {
+                  "required": ["measurementUnits"]
+                }
+              },
+              {
+                "required": ["measurementUnits"],
+                "not": {
+                  "required": ["measurementUnit"]
+                }
+              }
+            ]
+          }
+        }
+      ],
       "additionalProperties": true
     },
     "dimension": {
       "type": "object",
-      "required": [
-        "id",
-        "label",
-        "options"
-      ],
+      "required": ["id", "label", "options"],
       "properties": {
         "id": {
           "type": "string"
@@ -186,12 +237,7 @@
     },
     "gingivalSection": {
       "type": "object",
-      "required": [
-        "id",
-        "label",
-        "dimensions",
-        "wnlPreset"
-      ],
+      "required": ["id", "label", "dimensions", "wnlPreset"],
       "properties": {
         "id": {
           "type": "string"
@@ -228,7 +274,18 @@
           "type": "string"
         },
         "implementationMode": {
-          "type": "string"
+          "enum": [
+            "direct",
+            "derived_from_gingival_description",
+            "reuse_existing_or_summary",
+            "reuse_existing_or_direct"
+          ]
+        },
+        "enabledByDefault": {
+          "type": "boolean"
+        },
+        "defaultStatus": {
+          "enum": ["not_assessed", "wnl", "findings"]
         },
         "statusOptions": {
           "type": "array",
@@ -247,11 +304,7 @@
     },
     "ioeSection": {
       "type": "object",
-      "required": [
-        "id",
-        "label",
-        "structures"
-      ],
+      "required": ["id", "label", "structures"],
       "properties": {
         "id": {
           "type": "string"
