@@ -3,6 +3,9 @@ import type { ReactNode } from "react";
 const controlBaseClass =
   "block border bg-white text-sm text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-sky-600 focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:hover:border-slate-600 dark:focus:border-sky-400 dark:focus:ring-sky-900 dark:disabled:bg-slate-900 dark:disabled:text-slate-500";
 
+export const trailingControlButtonClass =
+  "absolute inset-y-0 right-0 inline-flex w-10 items-center justify-center rounded-r-xl text-slate-600 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800";
+
 export function formControlClass({
   opensList = false,
   invalid = false,

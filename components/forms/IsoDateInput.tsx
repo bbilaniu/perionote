@@ -1,6 +1,9 @@
 "use client";
 
-import { formControlClass } from "@/components/forms/controlStyles";
+import {
+  formControlClass,
+  trailingControlButtonClass,
+} from "@/components/forms/controlStyles";
 import { useRef, type RefObject } from "react";
 
 const isoDatePattern =
@@ -73,7 +76,10 @@ export function IsoDateInput({
         ref={inputRef}
         id={id}
         data-iso-date-display
-        className={`${formControlClass({ invalid: ariaInvalid })} h-10 pr-11`}
+        className={`${formControlClass({
+          opensList: true,
+          invalid: ariaInvalid,
+        })} h-10`}
         type="text"
         value={value}
         placeholder="YYYY-MM-DD"
@@ -90,7 +96,7 @@ export function IsoDateInput({
       />
       <button
         data-date-picker-trigger
-        className="absolute inset-y-1 right-1 inline-flex w-8 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:focus:ring-sky-900"
+        className={trailingControlButtonClass}
         type="button"
         aria-label={`Choose ${label}`}
         disabled={disabled || readOnly}
