@@ -92,10 +92,18 @@ test("Adult Hygiene date fields match the text-field box on narrow screens", asy
     "#adult-hygiene-last-recall-date",
     "#adult-hygiene-date-booked",
   ]) {
-    const dateBox = await page.locator(selector).boundingBox();
-    expect(dateBox).not.toBeNull();
-    expect(dateBox!.width).toBeCloseTo(referenceBox!.width, 0);
-    expect(dateBox!.height).toBeCloseTo(referenceBox!.height, 0);
+    const datePicker = page.locator(selector);
+    await datePicker.fill("2026-07-28");
+
+    const dateDisplay = datePicker.locator(
+      "xpath=following-sibling::input[@data-iso-date-display]",
+    );
+    await expect(dateDisplay).toHaveValue("2026-07-28");
+
+    const displayBox = await dateDisplay.boundingBox();
+    expect(displayBox).not.toBeNull();
+    expect(displayBox!.width).toBeCloseTo(referenceBox!.width, 0);
+    expect(displayBox!.height).toBeCloseTo(referenceBox!.height, 0);
   }
 });
 

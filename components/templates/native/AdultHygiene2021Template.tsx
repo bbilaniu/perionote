@@ -16,6 +16,7 @@ import {
   type FixedChoiceMultiComboboxGroup,
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
@@ -254,21 +255,31 @@ function TextField({
         {label}
         {required ? <span aria-hidden="true"> *</span> : null}
       </label>
-      <input
-        ref={inputRef}
-        id={id}
-        className={`${inputClass} ${
-          type === "date" ? "h-10 appearance-none" : ""
-        }`}
-        type={type}
-        value={value}
-        readOnly={readOnly}
-        placeholder={placeholder}
-        autoComplete="off"
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? errorId : undefined}
-        onChange={(event) => onChange(event.target.value)}
-      />
+      {type === "date" ? (
+        <IsoDateInput
+          id={id}
+          value={value}
+          onChange={onChange}
+          inputRef={inputRef}
+          readOnly={readOnly}
+          ariaInvalid={Boolean(error)}
+          ariaDescribedBy={error ? errorId : undefined}
+        />
+      ) : (
+        <input
+          ref={inputRef}
+          id={id}
+          className={inputClass}
+          type={type}
+          value={value}
+          readOnly={readOnly}
+          placeholder={placeholder}
+          autoComplete="off"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? errorId : undefined}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      )}
       {error ? (
         <p id={errorId} className="mt-1 text-sm text-red-700 dark:text-red-300">
           {error}
