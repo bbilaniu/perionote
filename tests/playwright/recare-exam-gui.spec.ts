@@ -136,7 +136,7 @@ test("Recare Exam documents CPAP ownership and conditional use", async ({
   await expect(page.locator("#recare-summary")).toHaveValue(/CPAP: No\./);
 });
 
-test("Recare Exam places the Intraoral status inside structured observations", async ({
+test("Recare Exam aligns Intraoral with the primary exam and conditionally shows structured details", async ({
   page,
 }) => {
   await page.goto(recareExamUrl);
@@ -145,8 +145,12 @@ test("Recare Exam places the Intraoral status inside structured observations", a
     name: "Structured intraoral observations",
     exact: true,
   });
-  const intraoralStatus = structuredIntraoral.getByRole("button", {
+  const intraoralStatus = page.getByRole("button", {
     name: "Intraoral",
+    exact: true,
+  });
+  const freeText = page.getByRole("textbox", {
+    name: "Intraoral findings",
     exact: true,
   });
   const normalFlow = structuredIntraoral.getByRole("checkbox", {
@@ -155,22 +159,18 @@ test("Recare Exam places the Intraoral status inside structured observations", a
   });
 
   await expect(intraoralStatus).toBeVisible();
-  await expect(normalFlow).toHaveCount(0);
   await expect(
-    structuredIntraoral.getByRole("textbox", {
-      name: "Intraoral findings",
+    structuredIntraoral.getByRole("button", {
+      name: "Intraoral",
       exact: true,
-    }),
+    })
   ).toHaveCount(0);
+  await expect(normalFlow).toHaveCount(0);
+  await expect(freeText).toHaveCount(0);
 
   await intraoralStatus.click();
   await page.getByRole("option", { name: "Findings", exact: true }).click();
-  await expect(
-    structuredIntraoral.getByRole("textbox", {
-      name: "Intraoral findings",
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(freeText).toBeVisible();
   await expect(normalFlow).toBeVisible();
   await normalFlow.check();
 
@@ -206,13 +206,13 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
     name: "Structured intraoral observations",
     exact: true,
   });
-  const intraoralStatus = structuredIntraoral.getByRole("button", {
+  const intraoralStatus = page.getByRole("button", {
     name: "Intraoral",
     exact: true,
   });
   await intraoralStatus.click();
   await page.getByRole("option", { name: "Findings", exact: true }).click();
-  const freeText = structuredIntraoral.getByRole("textbox", {
+  const freeText = page.getByRole("textbox", {
     name: "Intraoral findings",
     exact: true,
   });

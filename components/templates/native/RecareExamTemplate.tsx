@@ -435,18 +435,12 @@ function ExamFinding({
 
 function StructuredIntraoralFindings({
   status,
-  findings,
   values,
-  onStatusChange,
-  onFindingsChange,
   onApplyNormal,
   onChange,
 }: {
   status: ExamStatus;
-  findings: string;
   values: RecareIntraoralFinding[];
-  onStatusChange: (status: ExamStatus) => void;
-  onFindingsChange: (findings: string) => void;
   onApplyNormal: () => void;
   onChange: (values: RecareIntraoralFinding[]) => void;
 }) {
@@ -466,24 +460,6 @@ function StructuredIntraoralFindings({
         Apply the reviewed normal observations or select individual
         observations. Both document Findings.
       </p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <FixedChoiceListbox
-          id="recare-intraoral-status"
-          label="Intraoral"
-          value={status}
-          options={examStatusOptions}
-          onChange={onStatusChange}
-        />
-        {status === "findings" ? (
-          <TextField
-            id="recare-intraoral-findings"
-            label="Intraoral findings"
-            value={findings}
-            onChange={onFindingsChange}
-            placeholder="Enter additional findings"
-          />
-        ) : null}
-      </div>
       <button
         type="button"
         className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
@@ -1153,16 +1129,21 @@ export function RecareExamTemplate({
                 updateField("tmjLoadFindings", value)
               }
             />
-            <StructuredIntraoralFindings
+            <ExamFinding
+              id="recare-intraoral"
+              label="Intraoral"
               status={form.intraoralStatus}
               findings={form.intraoralFindings}
-              values={form.structuredIntraoralFindings ?? []}
               onStatusChange={changeIntraoralStatus}
-              onApplyNormal={applyNormalStructuredIntraoral}
               onFindingsChange={(value) => {
                 updateField("intraoralFindings", value);
                 if (value.trim()) updateField("intraoralStatus", "findings");
               }}
+            />
+            <StructuredIntraoralFindings
+              status={form.intraoralStatus}
+              values={form.structuredIntraoralFindings ?? []}
+              onApplyNormal={applyNormalStructuredIntraoral}
               onChange={(values) => {
                 updateField("structuredIntraoralFindings", values);
                 if (values.length) updateField("intraoralStatus", "findings");
