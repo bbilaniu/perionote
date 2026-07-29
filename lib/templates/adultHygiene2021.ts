@@ -3,6 +3,10 @@ import type {
   PremedicationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import {
+  createEmptyGingivalDescriptionAssessment,
+  type GingivalDescriptionAssessment,
+} from "@/lib/templates/gingivalDescriptionCatalog";
 
 export const plaqueChoices = [
   "Localized mild interproximal",
@@ -126,14 +130,14 @@ export function normalizeTreatmentToothArea(value: string) {
 export function canonicalTreatmentToothArea(value: string) {
   const normalized = normalizeTreatmentToothArea(value);
   return treatmentToothAreaChoices.find(
-    (choice) => normalizeTreatmentToothArea(choice) === normalized,
+    (choice) => normalizeTreatmentToothArea(choice) === normalized
   );
 }
 
 export function orderTreatmentToothAreas(values: string[]) {
   const normalizedValues = new Set(values.map(normalizeTreatmentToothArea));
   const fixedValues = treatmentToothAreaChoices.filter((choice) =>
-    normalizedValues.has(normalizeTreatmentToothArea(choice)),
+    normalizedValues.has(normalizeTreatmentToothArea(choice))
   );
   const seen = new Set(fixedValues.map(normalizeTreatmentToothArea));
   const customValues = values
@@ -189,6 +193,7 @@ export interface AdultHygiene2021Form {
   recession: string;
   fmpDone: string;
   healthGingivitis: string;
+  gingivalDescription?: GingivalDescriptionAssessment;
   periodontitisStageChoice: string;
   periodontitisStageComments: string;
   periodontitisGradeChoice: string;
@@ -253,6 +258,7 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     recession: "",
     fmpDone: "",
     healthGingivitis: "",
+    gingivalDescription: createEmptyGingivalDescriptionAssessment(),
     periodontitisStageChoice: "",
     periodontitisStageComments: "",
     periodontitisGradeChoice: "",
@@ -288,7 +294,7 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
 }
 
 export function hasRequiredAdultHygiene2021Fields(
-  form: AdultHygiene2021Form,
+  form: AdultHygiene2021Form
 ): boolean {
   return (
     Boolean(form.patientId.trim()) &&

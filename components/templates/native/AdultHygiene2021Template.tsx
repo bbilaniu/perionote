@@ -42,6 +42,14 @@ import type {
 } from "@/lib/templates/recareExam";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import {
+  copyGingivalDescriptionAssessment,
+  createEmptyGingivalDescriptionAssessment,
+  createGingivalDescriptionWnlAssessment,
+  gingivalDescriptionCatalog,
+  type GingivalDescriptionAssessment,
+  type GingivalDescriptionFinding,
+} from "@/lib/templates/gingivalDescriptionCatalog";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 const buttonClass =
@@ -142,10 +150,7 @@ const stainFacetGroups = [
   },
 ] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
 
-const calculusLocationFacetChoices = [
-  "marginal",
-  "interproximal",
-] as const;
+const calculusLocationFacetChoices = ["marginal", "interproximal"] as const;
 const calculusFacetChoices = [
   ...extentFacetChoices,
   ...mildIntensityFacetChoices,
@@ -319,22 +324,19 @@ function TextareaField({
   );
 }
 
-function parseFacetedChoice(
-  choice: string,
-  facetChoices: readonly string[],
-) {
+function parseFacetedChoice(choice: string, facetChoices: readonly string[]) {
   const selectedTokens = new Set(
     choice
       .normalize("NFKC")
       .trim()
       .toLocaleLowerCase("en-CA")
       .split(/[\s/]+/)
-      .filter(Boolean),
+      .filter(Boolean)
   );
   return facetChoices.filter((facet) =>
     selectedTokens.has(
-      facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA"),
-    ),
+      facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA")
+    )
   );
 }
 
@@ -379,9 +381,7 @@ function FacetedChoiceWithOther({
             if (hasStandaloneValue && !hadStandaloneValue) {
               nextValues = [standaloneValue];
             } else if (hadStandaloneValue && values.length > 1) {
-              nextValues = values.filter(
-                (value) => value !== standaloneValue,
-              );
+              nextValues = values.filter((value) => value !== standaloneValue);
             }
           }
           const nextChoice = formatChoice(nextValues);
@@ -478,6 +478,203 @@ function CheckboxField({
   );
 }
 
+function GingivalDescriptionControl({
+  value,
+  onChange,
+}: {
+  value: GingivalDescriptionAssessment | undefined;
+  onChange: (value: GingivalDescriptionAssessment) => void;
+}) {
+  const assessment = value ?? createEmptyGingivalDescriptionAssessment();
+  const selected = new Map(
+    assessment.findings.map((finding) => [finding.optionId, finding])
+  );
+
+  function updateFinding(
+    optionId: string,
+    patch: Partial<Omit<GingivalDescriptionFinding, "optionId">>
+  ) {
+    const current = selected.get(optionId);
+    if (!current) return;
+    onChange({
+      status: "findings",
+      findings: assessment.findings.map((finding) =>
+        finding.optionId === optionId ? { ...finding, ...patch } : finding
+      ),
+    });
+  }
+
+  function toggleFinding(optionId: string, checked: boolean) {
+    onChange({
+      status:
+        checked || assessment.findings.length > 1 ? "findings" : "not_assessed",
+      findings: checked
+        ? [
+            ...assessment.findings.filter(
+              (finding) => finding.optionId !== optionId
+            ),
+            {
+              optionId,
+              extent: "",
+              locations: [],
+              measurement: "",
+              comment: "",
+            },
+          ]
+        : assessment.findings.filter(
+            (finding) => finding.optionId !== optionId
+          ),
+    });
+  }
+
+  function setWnl() {
+    if (
+      assessment.status === "findings" &&
+      assessment.findings.length > 0 &&
+      !window.confirm(
+        "Clear the documented Gingival Description findings and set this assessment to WNL?"
+      )
+    ) {
+      return;
+    }
+    onChange(createGingivalDescriptionWnlAssessment());
+  }
+
+  return (
+    <fieldset className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+      <legend className="px-1 font-semibold">Gingival Description</legend>
+      <p className="text-sm text-slate-600 dark:text-slate-400">
+        Not assessed until WNL or individual observations are explicitly
+        documented.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+          onClick={setWnl}
+        >
+          {gingivalDescriptionCatalog.wnlPreset.label}
+        </button>
+        <button
+          type="button"
+          className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+          onClick={() => onChange(createEmptyGingivalDescriptionAssessment())}
+          disabled={
+            assessment.status === "not_assessed" &&
+            assessment.findings.length === 0
+          }
+        >
+          Clear gingival description
+        </button>
+        <span className="self-center text-sm" aria-live="polite">
+          Status:{" "}
+          {assessment.status === "wnl"
+            ? "Within normal limits"
+            : assessment.status === "findings"
+            ? "Findings documented"
+            : "Not assessed"}
+        </span>
+      </div>
+      {gingivalDescriptionCatalog.dimensions.map((dimension) => (
+        <fieldset
+          key={dimension.id}
+          className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+        >
+          <legend className="font-medium">{dimension.label}</legend>
+          <div className="grid gap-3 md:grid-cols-2">
+            {dimension.options.map((option) => {
+              const finding = selected.get(option.id);
+              const supportsLocation =
+                dimension.supportsLocation ||
+                ("supportsLocation" in option && option.supportsLocation);
+              const supportsMeasurement =
+                "supportsMeasurement" in option && option.supportsMeasurement;
+              return (
+                <div
+                  key={option.id}
+                  className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                >
+                  <CheckboxField
+                    id={`adult-hygiene-${option.id.replaceAll(".", "-")}`}
+                    label={option.label}
+                    checked={Boolean(finding)}
+                    onChange={(checked) => toggleFinding(option.id, checked)}
+                  />
+                  {finding ? (
+                    <div className="mt-3 grid gap-3">
+                      <FixedChoiceListbox
+                        id={`adult-hygiene-${option.id.replaceAll(
+                          ".",
+                          "-"
+                        )}-extent`}
+                        label={`${option.label} extent`}
+                        value={finding.extent}
+                        options={[
+                          { value: "", label: "Not specified" },
+                          { value: "generalized", label: "Generalized" },
+                          { value: "localized", label: "Localized" },
+                        ]}
+                        onChange={(extent) =>
+                          updateFinding(option.id, { extent })
+                        }
+                        compact
+                      />
+                      {supportsLocation ? (
+                        <TextField
+                          id={`adult-hygiene-${option.id.replaceAll(
+                            ".",
+                            "-"
+                          )}-location`}
+                          label={`${option.label} location`}
+                          value={finding.locations.join(", ")}
+                          onChange={(locations) =>
+                            updateFinding(option.id, {
+                              locations: locations
+                                .split(/[,;\n]/)
+                                .map((item) => item.trim())
+                                .filter(Boolean),
+                            })
+                          }
+                          placeholder="Arch, quadrant, sextant, tooth, surface, or region"
+                        />
+                      ) : null}
+                      {supportsMeasurement ? (
+                        <TextField
+                          id={`adult-hygiene-${option.id.replaceAll(
+                            ".",
+                            "-"
+                          )}-measurement`}
+                          label={`${option.label} measurement (mm)`}
+                          value={finding.measurement}
+                          onChange={(measurement) =>
+                            updateFinding(option.id, { measurement })
+                          }
+                        />
+                      ) : null}
+                      <TextField
+                        id={`adult-hygiene-${option.id.replaceAll(
+                          ".",
+                          "-"
+                        )}-comment`}
+                        label={`${option.label} notes`}
+                        value={finding.comment}
+                        onChange={(comment) =>
+                          updateFinding(option.id, { comment })
+                        }
+                        placeholder="Optional encounter-specific note"
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </fieldset>
+      ))}
+    </fieldset>
+  );
+}
+
 function TreatmentCompletedList({
   entries,
   onAdd,
@@ -489,12 +686,12 @@ function TreatmentCompletedList({
 }) {
   function updateEntry(
     entryId: string,
-    patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>,
+    patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>
   ) {
     onChange(
       entries.map((entry) =>
-        entry.id === entryId ? { ...entry, ...patch } : entry,
-      ),
+        entry.id === entryId ? { ...entry, ...patch } : entry
+      )
     );
   }
 
@@ -556,7 +753,9 @@ function TreatmentCompletedList({
                     tooltip="Move this treatment line earlier in the note."
                     className={treatmentRowButtonClass}
                     disabled={index === 0}
-                    ariaLabel={`Move treatment completed item ${index + 1} earlier`}
+                    ariaLabel={`Move treatment completed item ${
+                      index + 1
+                    } earlier`}
                     onClick={() => moveEntry(index, "earlier")}
                   >
                     Earlier
@@ -565,7 +764,9 @@ function TreatmentCompletedList({
                     tooltip="Move this treatment line later in the note."
                     className={treatmentRowButtonClass}
                     disabled={index === entries.length - 1}
-                    ariaLabel={`Move treatment completed item ${index + 1} later`}
+                    ariaLabel={`Move treatment completed item ${
+                      index + 1
+                    } later`}
                     onClick={() => moveEntry(index, "later")}
                   >
                     Later
@@ -576,9 +777,7 @@ function TreatmentCompletedList({
                     ariaLabel={`Remove treatment completed item ${index + 1}`}
                     onClick={() =>
                       onChange(
-                        entries.filter(
-                          (candidate) => candidate.id !== entry.id,
-                        ),
+                        entries.filter((candidate) => candidate.id !== entry.id)
                       )
                     }
                   >
@@ -629,7 +828,7 @@ export function AdultHygiene2021Template({
   summary: string;
 }) {
   const [form, setForm] = useState<AdultHygiene2021Form>(
-    createEmptyAdultHygiene2021Form,
+    createEmptyAdultHygiene2021Form
   );
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [patientIdError, setPatientIdError] = useState("");
@@ -655,12 +854,12 @@ export function AdultHygiene2021Template({
       buildAdultHygiene2021Summary(form, {
         ...(startedAt ? { startedAt } : {}),
       }),
-    [form, startedAt],
+    [form, startedAt]
   );
 
   function updateField<TKey extends keyof AdultHygiene2021Form>(
     key: TKey,
-    value: AdultHygiene2021Form[TKey],
+    value: AdultHygiene2021Form[TKey]
   ) {
     setForm((current) => ({ ...current, [key]: value }));
     setCopyMessage("");
@@ -678,11 +877,11 @@ export function AdultHygiene2021Template({
   async function copyNote() {
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rdh, form.rda].some((value) =>
-      Boolean(value.trim()),
+      Boolean(value.trim())
     );
     setPatientIdError(missingPatientId ? "Enter a Patient ID." : "");
     setProviderError(
-      missingProvider ? "Enter at least one of Dentist, RDH, or RDA." : "",
+      missingProvider ? "Enter at least one of Dentist, RDH, or RDA." : ""
     );
     setCopyMessage("");
     if (
@@ -699,13 +898,16 @@ export function AdultHygiene2021Template({
     setCopyMessage(
       copied
         ? "Note copied."
-        : "The note could not be copied. Select the preview and copy it manually.",
+        : "The note could not be copied. Select the preview and copy it manually."
     );
   }
 
   function loadDemo() {
     setForm({
       ...fixture,
+      gingivalDescription: copyGingivalDescriptionAssessment(
+        fixture.gingivalDescription
+      ),
       psrPocketing: [...fixture.psrPocketing],
       patientChiefConcern: [...fixture.patientChiefConcern],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
@@ -850,7 +1052,7 @@ export function AdultHygiene2021Template({
                   onChange={(value) =>
                     updateField(
                       "class5IndicatorStatus",
-                      value ? "yes" : "not-documented",
+                      value ? "yes" : "not-documented"
                     )
                   }
                 />
@@ -951,8 +1153,8 @@ export function AdultHygiene2021Template({
                   "patientChiefConcern",
                   applyPatientChiefConcernSelectionRules(
                     form.patientChiefConcern,
-                    values,
-                  ),
+                    values
+                  )
                 )
               }
               roomySelectionActions
@@ -1002,15 +1204,15 @@ export function AdultHygiene2021Template({
               formatChoice={(values) => {
                 const locationValues = values.filter((value) =>
                   calculusLocationFacetChoices.includes(
-                    value as (typeof calculusLocationFacetChoices)[number],
-                  ),
+                    value as (typeof calculusLocationFacetChoices)[number]
+                  )
                 );
                 return [
                   ...values.filter(
                     (value) =>
                       !calculusLocationFacetChoices.includes(
-                        value as (typeof calculusLocationFacetChoices)[number],
-                      ),
+                        value as (typeof calculusLocationFacetChoices)[number]
+                      )
                   ),
                   locationValues.join("/"),
                 ]
@@ -1077,6 +1279,10 @@ export function AdultHygiene2021Template({
               catalogueKey="periodontal.health-gingivitis"
               value={form.healthGingivitis}
               onChange={(value) => updateField("healthGingivitis", value)}
+            />
+            <GingivalDescriptionControl
+              value={form.gingivalDescription}
+              onChange={(value) => updateField("gingivalDescription", value)}
             />
             <ChoiceWithComment
               id="adult-hygiene-periodontitis-stage"

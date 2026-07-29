@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const adultHygieneUrl =
-  "/templates/clinic/adult-hygiene-2021/interactive";
+const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
 async function reloadDiscardingForm(page: Page) {
   const dialogPromise = page.waitForEvent("dialog");
@@ -51,7 +50,7 @@ test("date and time fields stay inside cards on narrow screens", async ({
     await page.goto(url);
 
     const temporalFields = page.locator(
-      'input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], input[type="week"]',
+      'input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], input[type="week"]'
     );
     expect(await temporalFields.count()).toBeGreaterThan(0);
 
@@ -71,7 +70,7 @@ test("date and time fields stay inside cards on narrow screens", async ({
       expect(parentBox).not.toBeNull();
       expect(fieldBox!.x).toBeGreaterThanOrEqual(parentBox!.x);
       expect(fieldBox!.x + fieldBox!.width).toBeLessThanOrEqual(
-        parentBox!.x + parentBox!.width + 1,
+        parentBox!.x + parentBox!.width + 1
       );
     }
   }
@@ -97,8 +96,8 @@ test("Adult Hygiene date fields match the text-field box on narrow screens", asy
     await expect(dateDisplay).toHaveValue("2026-07-28");
     await expect(
       dateDisplay.locator(
-        "xpath=following-sibling::button[@data-date-picker-trigger]",
-      ),
+        "xpath=following-sibling::button[@data-date-picker-trigger]"
+      )
     ).toBeEnabled();
 
     const displayBox = await dateDisplay.boundingBox();
@@ -119,13 +118,13 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(
     page.getByRole("link", {
       name: "Original 2021 Adult Hygiene template",
-    }),
+    })
   ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2021/");
   await expect(
-    page.getByText("Pilot interactive conversion", { exact: true }),
+    page.getByText("Pilot interactive conversion", { exact: true })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
-    "2026-07-25 09:10",
+    "2026-07-25 09:10"
   );
   const consentHistorySection = page
     .getByRole("heading", {
@@ -136,7 +135,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(
     consentHistorySection
       .locator('input, button[data-list-control="fixed-listbox"]')
-      .evaluateAll((controls) => controls.map((control) => control.id)),
+      .evaluateAll((controls) => controls.map((control) => control.id))
   ).resolves.toEqual([
     "adult-hygiene-class5",
     "adult-hygiene-miele-codes",
@@ -151,7 +150,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Enter a Patient ID.")).toBeVisible();
   await expect(
-    page.getByText("Enter at least one of Dentist, RDH, or RDA."),
+    page.getByText("Enter at least one of Dentist, RDH, or RDA.")
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-patient-id")).toBeFocused();
 
@@ -159,7 +158,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.locator("#adult-hygiene-dentist")).toBeFocused();
   await expect(
-    page.evaluate(() => navigator.clipboard.readText()),
+    page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toBe("sentinel");
 
   await page.locator("#adult-hygiene-rdh").fill("Example RDH");
@@ -180,13 +179,13 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     plaqueExtent.getByRole("checkbox", {
       name: "Generalized",
       exact: true,
-    }),
+    })
   ).not.toBeChecked();
   await expect(
     plaqueExtent.getByRole("checkbox", {
       name: "Localized",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await plaqueOptions
     .getByRole("group", {
@@ -223,7 +222,9 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   const diseaseAndRiskTopics = oheTopicsDialog.getByRole("group", {
     name: "Disease and risk Additional OHE topics reviewed choices",
   });
-  await diseaseAndRiskTopics.getByText("Caries theory", { exact: true }).click();
+  await diseaseAndRiskTopics
+    .getByText("Caries theory", { exact: true })
+    .click();
   await diseaseAndRiskTopics
     .getByText("Caries risk factors", { exact: true })
     .click();
@@ -242,33 +243,33 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await flossingFrequency.fill("Uses floss picks most evenings");
   await brushingFrequency.fill("Brushes after each meal");
   await expect(
-    page.getByLabel("Other flossing frequency", { exact: true }),
+    page.getByLabel("Other flossing frequency", { exact: true })
   ).toHaveCount(0);
   await expect(
-    page.getByLabel("Other brushing frequency", { exact: true }),
+    page.getByLabel("Other brushing frequency", { exact: true })
   ).toHaveCount(0);
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Informed verbal consent given by PATIENT and PARENT for treatment today\./,
+    /Informed verbal consent given by PATIENT and PARENT for treatment today\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Plaque: Localized moderate interproximal\.[\s\S]*Calculus: Imported calculus wording\./,
+    /Plaque: Localized moderate interproximal\.[\s\S]*Calculus: Imported calculus wording\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OH Aids Reviewed\/Recommended: Synthetic interdental aid/,
+    /OH Aids Reviewed\/Recommended: Synthetic interdental aid/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./,
+    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./,
+    /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./
   );
 
   const preview = await page.locator("#adult-hygiene-summary").inputValue();
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
-    page.evaluate(() => navigator.clipboard.readText()),
+    page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toBe(preview);
 });
 
@@ -280,36 +281,63 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
 
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
-    "TEST-AH-1001",
+    "TEST-AH-1001"
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /PSR\/Pocketing: 1 2 2 \/ 2 1 2/,
+    /PSR\/Pocketing: 1 2 2 \/ 2 1 2/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla/,
+    /Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Recommended Recall Interval: 6-month recall\./,
+    /Recommended Recall Interval: 6-month recall\./
   );
 
   await reloadDiscardingForm(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /^----- July 25, 2026 9:10:00 AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
+    /^----- July 25, 2026 9:10:00 AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/
   );
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
-      "Clear all entered 2021 Adult Hygiene values and start a new note?",
+      "Clear all entered 2021 Adult Hygiene values and start a new note?"
     );
     await dialog.accept();
   });
   await page.getByRole("button", { name: "Reset form" }).click();
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
-    "2026-07-25 10:25",
+    "2026-07-25 10:25"
+  );
+});
+
+test("Adult Hygiene adds explicit gingival findings and WNL without changing existing periodontal fields", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .getByRole("combobox", { name: "Health/Gingivitis" })
+    .fill("Existing health value");
+  await page.getByLabel("Gingival recession", { exact: true }).check();
+  await page.getByRole("button", { name: "Gingival recession extent" }).click();
+  await page.getByRole("option", { name: "Localized", exact: true }).click();
+  await page.getByLabel("Gingival recession location").fill("tooth 13 facial");
+  await page.getByLabel("Gingival recession measurement (mm)").fill("2");
+
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description:\n  - Position \/ Size: gingival recession; extent: localized; location: tooth 13 facial; measurement: 2 mm\./
+  );
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Set gingival description to WNL" })
+    .click();
+  await expect(page.getByText("Status: Within normal limits")).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
   );
 });
 
@@ -329,15 +357,13 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     .getByText("Localized", { exact: true })
     .click();
   await expect(
-    stainOptions.getByRole("checkbox", { name: "None", exact: true }),
+    stainOptions.getByRole("checkbox", { name: "None", exact: true })
   ).not.toBeChecked();
   await stainOptions
     .getByRole("group", { name: "Intensity Stain choices", exact: true })
     .getByText("slight", { exact: true })
     .click();
-  await stainOptions
-    .getByRole("button", { name: "Done", exact: true })
-    .click();
+  await stainOptions.getByRole("button", { name: "Done", exact: true }).click();
 
   await page.locator("#adult-hygiene-calculus-choice").click();
   const calculusOptions = page.getByRole("dialog", {
@@ -362,13 +388,13 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     calculusLocation.getByRole("checkbox", {
       name: "marginal",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await expect(
     calculusLocation.getByRole("checkbox", {
       name: "interproximal",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await calculusOptions
     .getByRole("button", { name: "Done", exact: true })
@@ -392,7 +418,7 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     .click();
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./,
+    /Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./
   );
 });
 
@@ -415,19 +441,13 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       page.getByRole("option", {
         name: `${label} Starter`,
         exact: true,
-      }),
+      })
     ).toBeVisible();
   }
 
   for (const [controlId, starter] of [
-    [
-      "#adult-hygiene-fmp-done",
-      "YES, ALL FINDINGS DISCUSSED WITH PATIENT",
-    ],
-    [
-      "#adult-hygiene-health-gingivitis",
-      "HEALTH INTACT PERIODONTAL SUPPORT",
-    ],
+    ["#adult-hygiene-fmp-done", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
+    ["#adult-hygiene-health-gingivitis", "HEALTH INTACT PERIODONTAL SUPPORT"],
     ["#adult-hygiene-compliance", "Good"],
     ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
     ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
@@ -440,7 +460,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       page.getByRole("option", {
         name: `${starter} Starter`,
         exact: true,
-      }),
+      })
     ).toBeVisible();
   }
 
@@ -463,9 +483,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     })
     .click();
 
-  await completedRow
-    .getByText("Select Tooth/area", { exact: true })
-    .click();
+  await completedRow.getByText("Select Tooth/area", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {
     name: "Standard Tooth/area choices",
     exact: true,
@@ -476,7 +494,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     exact: true,
   });
   await expect(quadrantChoices.locator(":scope > div")).toHaveClass(
-    /grid-cols-2/,
+    /grid-cols-2/
   );
   await expect(quadrantChoices.locator("label")).toHaveText([
     "Q1",
@@ -489,7 +507,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     exact: true,
   });
   await expect(sextantChoices.locator(":scope > div")).toHaveClass(
-    /grid-cols-3/,
+    /grid-cols-3/
   );
   await expect(sextantChoices.locator("label")).toHaveText([
     "S1",
@@ -513,7 +531,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await toothAreaOptions.getByText("Q2", { exact: true }).click();
   await expect(q2ToothArea).toBeChecked();
   await expect(
-    toothAreaOptions.locator("[data-selected-indicator]"),
+    toothAreaOptions.locator("[data-selected-indicator]")
   ).toHaveCount(2);
   await completedRow
     .getByRole("textbox", {
@@ -533,36 +551,34 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     completedRow.getByRole("checkbox", {
       name: "teeth 14–16 Custom",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await expect(
     completedRow
       .getByRole("dialog", { name: "Tooth/area options", exact: true })
-      .locator("[data-selected-indicator]"),
+      .locator("[data-selected-indicator]")
   ).toHaveCount(3);
   await expect(
     completedRow.getByRole("button", {
       name: "Q2, Q3, teeth 14–16",
       exact: true,
-    }),
+    })
   ).toBeVisible();
   await expect(
     completedRow.getByRole("list", {
       name: "Tooth/area selected values",
       exact: true,
-    }),
+    })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/,
+    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/
   );
-  await completedRow
-    .getByRole("button", { name: "Done", exact: true })
-    .click();
+  await completedRow.getByRole("button", { name: "Done", exact: true }).click();
   await expect(toothAreaOptions).toBeHidden();
   await expect(
     completedRow.getByRole("button", {
       name: "Move treatment completed item 1 earlier",
-    }),
+    })
   ).toHaveClass(/py-2/);
   const removeCompleted = completedRow.getByRole("button", {
     name: "Remove treatment completed item 1",
@@ -573,14 +589,14 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     completedRow.getByRole("tooltip").filter({
       hasText: "Remove this treatment line from the note.",
-    }),
+    })
   ).toBeVisible();
 
   const anesthetic = page.locator("#adult-hygiene-anesthetic");
   await anesthetic.focus();
   await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
   await expect(
-    page.getByText("No catalogue suggestions saved yet.", { exact: true }),
+    page.getByText("No catalogue suggestions saved yet.", { exact: true })
   ).toBeVisible();
 
   await medicalHistory.fill("Synthetic reusable history phrase");
@@ -598,7 +614,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await ohiAids.fill("Synthetic reusable OHI aid");
   await ohiControl.getByRole("button", { name: "Remember and add" }).click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OH Aids Reviewed\/Recommended: Synthetic reusable OHI aid/,
+    /OH Aids Reviewed\/Recommended: Synthetic reusable OHI aid/
   );
   const ohiAidRow = page
     .getByRole("list", {
@@ -609,7 +625,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     ohiAidRow.getByRole("button", {
       name: "Move Synthetic reusable OHI aid earlier",
-    }),
+    })
   ).toHaveClass(/py-2/);
   const removeOhiAid = ohiAidRow.getByRole("button", {
     name: "Remove Synthetic reusable OHI aid",
@@ -619,7 +635,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     ohiAidRow.getByRole("tooltip").filter({
       hasText: "Remove this value from the note.",
-    }),
+    })
   ).toBeVisible();
 
   await reloadDiscardingForm(page);
@@ -628,30 +644,30 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable history phrase Local/,
-    }),
+    })
   ).toBeVisible();
 
   await compliance.focus();
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable compliance Local/,
-    }),
+    })
   ).toBeVisible();
 
   await expect(
-    page.getByText("Synthetic reusable OHI aid", { exact: true }),
+    page.getByText("Synthetic reusable OHI aid", { exact: true })
   ).toHaveCount(0);
   await ohiAids.focus();
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable OHI aid Local/,
-    }),
+    })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Synthetic reusable/,
+    /Synthetic reusable/
   );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /teeth 14–16/,
+    /teeth 14–16/
   );
 });
 
@@ -665,10 +681,11 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
   await expect(sextantInputs).toHaveCount(6);
   await expect(
     sextantInputs.evaluateAll((inputs) =>
-      inputs.map((input) =>
-        document.querySelector(`label[for="${input.id}"]`)?.textContent,
-      ),
-    ),
+      inputs.map(
+        (input) =>
+          document.querySelector(`label[for="${input.id}"]`)?.textContent
+      )
+    )
   ).resolves.toEqual([
     "Sextant 1",
     "Sextant 2",
@@ -684,7 +701,7 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
       .fill(`${sextant}`);
   }
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /PSR\/Pocketing: 1 2 3 \/ 6 5 4/,
+    /PSR\/Pocketing: 1 2 3 \/ 6 5 4/
   );
 });
 
@@ -732,6 +749,6 @@ test("Adult Hygiene keeps comments independent from their main values", async ({
     .fill("4-month scale");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontitis Stage: Stage II \(P2\)\.[\s\S]*Periodontitis stage comments: Synthetic stage context\.[\s\S]*Periodontitis Grade: Grade B: moderate rate\.[\s\S]*Periodontitis grade comments: Synthetic grade context\.[\s\S]*Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./,
+    /Periodontitis Stage: Stage II \(P2\)\.[\s\S]*Periodontitis stage comments: Synthetic stage context\.[\s\S]*Periodontitis Grade: Grade B: moderate rate\.[\s\S]*Periodontitis grade comments: Synthetic grade context\.[\s\S]*Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
   );
 });

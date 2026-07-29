@@ -64,13 +64,13 @@ The private extraction identifies 23 UDF groups used by this source template,
 in addition to the three provider rosters. The implementation should treat
 them according to their evidence and ownership:
 
-| Extracted kind | Proposed use | Public-build rule |
-| --- | --- | --- |
-| Complete `closed_vocabulary` | Proposed structured application choices, subject to clinical review | Only reviewed, generic choices may be tracked |
-| `closed_or_template_vocabulary` | Editable catalogue-backed field or structured control after review | Do not assume the visible screenshot list is complete |
-| `clinic_catalog` or `template_catalog` | Browser-local catalogue imported deliberately by the user | No private values or real staff names in source, fixtures, or seeds |
-| `template_phrase_catalog` | Free text, reviewed public starters, or a local catalogue only when complete source text is available | Never turn screenshot ellipses into documentation |
-| Any incomplete, scrolling, abbreviated, or truncated list | Evidence for control design, not an authoritative seed list | Preserve free-text entry and flag incomplete coverage |
+| Extracted kind                                            | Proposed use                                                                                          | Public-build rule                                                   |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Complete `closed_vocabulary`                              | Proposed structured application choices, subject to clinical review                                   | Only reviewed, generic choices may be tracked                       |
+| `closed_or_template_vocabulary`                           | Editable catalogue-backed field or structured control after review                                    | Do not assume the visible screenshot list is complete               |
+| `clinic_catalog` or `template_catalog`                    | Browser-local catalogue imported deliberately by the user                                             | No private values or real staff names in source, fixtures, or seeds |
+| `template_phrase_catalog`                                 | Free text, reviewed public starters, or a local catalogue only when complete source text is available | Never turn screenshot ellipses into documentation                   |
+| Any incomplete, scrolling, abbreviated, or truncated list | Evidence for control design, not an authoritative seed list                                           | Preserve free-text entry and flag incomplete coverage               |
 
 Provider rosters may be transformed locally into the existing Dentist, RDH,
 and RDA catalogue groups. The transformation output must remain ignored and be
@@ -87,20 +87,20 @@ The Adult Hygiene conversion extends the existing catalogue allowlist with
 twelve browser-local groups. Eleven ship with the reviewed, complete starter
 values listed below. Anesthetic remains unseeded pending redesign:
 
-| Catalogue key | Section | Adult Hygiene field | ClearDent extraction field | Public seeds | Control use |
-| --- | --- | --- | --- | --- | --- |
-| `patient.chief-concerns` | Records and Chief Concern | Patient chief concern | Not imported | 5 reviewed options | Multiple values; `Nothing` is mutually exclusive |
-| `medical-history.review` | Medical History | Medical history reviewed | `medical-and-dental-history-status` | 4 complete options | Single value |
-| `periodontal.fmp-done` | Periodontal Assessment | FMP done | `full-mouth-periodontal-charting-done` | 5 complete options | Single value |
-| `periodontal.health-gingivitis` | Periodontal Assessment | Health/Gingivitis | `health` | 4 complete options | Single value |
-| `oral-hygiene.compliance` | Oral Hygiene and Education | Oral hygiene compliance | `ohi-compliance` | 6 complete options | Single value |
-| `oral-hygiene.aids-reviewed` | Oral Hygiene and Education | OH aids reviewed/recommended | `ohi-aids-reviewed-recommended` | 8 complete options | Multiple values |
-| `hygiene-treatment.completed` | Treatment | Treatment completed today: treatment type | `hygiene-treatment` | 8 complete options | Structured rows; reusable treatment type plus multi-value Tooth/area |
-| `hygiene-treatment.anesthetic` | Treatment | Anesthetic | `hygiene-anaesthetic` | None—rework required | Single value |
-| `hygiene-treatment.desensitizer` | Treatment | Desensitizer | `desensitizer` | 4 complete options | Single value |
-| `scheduling.recall-interval` | Intervals and Next Visit | Recommended recall interval | `recommended-recall-interval` | 3 complete options | Single value |
-| `scheduling.hygiene-interval` | Intervals and Next Visit | Recommended hygiene interval | `recommended-hygiene-interval` | 4 complete options | Single value |
-| `scheduling.next-visit` | Intervals and Next Visit | Next visit | `next-visit` | 7 complete options | Single value |
+| Catalogue key                    | Section                    | Adult Hygiene field                       | ClearDent extraction field             | Public seeds         | Control use                                                          |
+| -------------------------------- | -------------------------- | ----------------------------------------- | -------------------------------------- | -------------------- | -------------------------------------------------------------------- |
+| `patient.chief-concerns`         | Records and Chief Concern  | Patient chief concern                     | Not imported                           | 5 reviewed options   | Multiple values; `Nothing` is mutually exclusive                     |
+| `medical-history.review`         | Medical History            | Medical history reviewed                  | `medical-and-dental-history-status`    | 4 complete options   | Single value                                                         |
+| `periodontal.fmp-done`           | Periodontal Assessment     | FMP done                                  | `full-mouth-periodontal-charting-done` | 5 complete options   | Single value                                                         |
+| `periodontal.health-gingivitis`  | Periodontal Assessment     | Health/Gingivitis                         | `health`                               | 4 complete options   | Single value                                                         |
+| `oral-hygiene.compliance`        | Oral Hygiene and Education | Oral hygiene compliance                   | `ohi-compliance`                       | 6 complete options   | Single value                                                         |
+| `oral-hygiene.aids-reviewed`     | Oral Hygiene and Education | OH aids reviewed/recommended              | `ohi-aids-reviewed-recommended`        | 8 complete options   | Multiple values                                                      |
+| `hygiene-treatment.completed`    | Treatment                  | Treatment completed today: treatment type | `hygiene-treatment`                    | 8 complete options   | Structured rows; reusable treatment type plus multi-value Tooth/area |
+| `hygiene-treatment.anesthetic`   | Treatment                  | Anesthetic                                | `hygiene-anaesthetic`                  | None—rework required | Single value                                                         |
+| `hygiene-treatment.desensitizer` | Treatment                  | Desensitizer                              | `desensitizer`                         | 4 complete options   | Single value                                                         |
+| `scheduling.recall-interval`     | Intervals and Next Visit   | Recommended recall interval               | `recommended-recall-interval`          | 3 complete options   | Single value                                                         |
+| `scheduling.hygiene-interval`    | Intervals and Next Visit   | Recommended hygiene interval              | `recommended-hygiene-interval`         | 4 complete options   | Single value                                                         |
+| `scheduling.next-visit`          | Intervals and Next Visit   | Next visit                                | `next-visit`                           | 7 complete options   | Single value                                                         |
 
 The exact public starter labels are:
 
@@ -129,11 +129,11 @@ values. Hidden suggestions remain recoverable through **Manage Catalogues**.
 
 The existing provider keys remain shared:
 
-| Catalogue key | ClearDent extraction field |
-| --- | --- |
-| `visit-team.dentist` | `dentists` |
-| `visit-team.rdh` | `hygienist` |
-| `visit-team.rda` | `rda` |
+| Catalogue key        | ClearDent extraction field |
+| -------------------- | -------------------------- |
+| `visit-team.dentist` | `dentists`                 |
+| `visit-team.rdh`     | `hygienist`                |
+| `visit-team.rda`     | `rda`                      |
 
 The new keys expand the `CatalogueKey` allowlist and catalogue-management
 sections. They do not change the stored item shape, so
@@ -238,19 +238,19 @@ The following reviewed, generic, non-identifying choices may be tracked in the
 public application. They are form choices, not clinical recommendations, and
 none is selected by default.
 
-| Field | Approved choices |
-| --- | --- |
-| Patient chief concern catalogue seeds | Nothing; Sore gums upon brushing/flossing; Dissatisfaction with the appearance of teeth due to yellowing/stain; Food catches between teeth; Sensitivity to hot and cold |
-| Stain | None; Localized slight; Localized moderate; Localized heavy; Generalized slight; Generalized moderate; Generalized heavy |
-| Bleeding | Localized mild; Localized moderate; Localized severe; Generalized mild; Generalized moderate; Generalized severe |
-| Periodontitis stage | Stage I (P1); Stage II (P2); Stage III (P3); Stage IV (P4); N/A |
-| Periodontitis grade | Grade A: slow rate; Grade B: moderate rate; Grade C: rapid rate; N/A |
-| Oral hygiene compliance | Poor; Fair; Good; Excellent; Poor–fair; Fair–good |
-| Additional OHE topics reviewed | Bass brushing; C-shape flossing technique; Sulcabrush and interdental brush technique; Caries theory; Caries risk factors; Periodontitis theory; Periodontitis risk factors; Review benefits of Prevident or Opti-Rinse; Importance of maintaining the recommended hygiene interval |
-| Flossing frequency | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing |
-| Brushing frequency | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing |
-| Recommended recall interval | 12-month recall; 6-month recall; 9-month recall |
-| Recommended hygiene interval | 3-month scale; 4-month scale; 6-month scale; N/A |
+| Field                                 | Approved choices                                                                                                                                                                                                                                                                    |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Patient chief concern catalogue seeds | Nothing; Sore gums upon brushing/flossing; Dissatisfaction with the appearance of teeth due to yellowing/stain; Food catches between teeth; Sensitivity to hot and cold                                                                                                             |
+| Stain                                 | None; Localized slight; Localized moderate; Localized heavy; Generalized slight; Generalized moderate; Generalized heavy                                                                                                                                                            |
+| Bleeding                              | Localized mild; Localized moderate; Localized severe; Generalized mild; Generalized moderate; Generalized severe                                                                                                                                                                    |
+| Periodontitis stage                   | Stage I (P1); Stage II (P2); Stage III (P3); Stage IV (P4); N/A                                                                                                                                                                                                                     |
+| Periodontitis grade                   | Grade A: slow rate; Grade B: moderate rate; Grade C: rapid rate; N/A                                                                                                                                                                                                                |
+| Oral hygiene compliance               | Poor; Fair; Good; Excellent; Poor–fair; Fair–good                                                                                                                                                                                                                                   |
+| Additional OHE topics reviewed        | Bass brushing; C-shape flossing technique; Sulcabrush and interdental brush technique; Caries theory; Caries risk factors; Periodontitis theory; Periodontitis risk factors; Review benefits of Prevident or Opti-Rinse; Importance of maintaining the recommended hygiene interval |
+| Flossing frequency                    | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing                                                                                                                                                            |
+| Brushing frequency                    | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing                                                                                                                                                                                                                   |
+| Recommended recall interval           | 12-month recall; 6-month recall; 9-month recall                                                                                                                                                                                                                                     |
+| Recommended hygiene interval          | 3-month scale; 4-month scale; 6-month scale; N/A                                                                                                                                                                                                                                    |
 
 Fields that retain an explicit **Other** control accept free text so imported,
 historical, and currently undocumented values remain valid. Flossing and
@@ -291,11 +291,11 @@ are never preselected.
 
 ### Patient and Visit Context
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A00 | Proposed consistency extension; not in source | Required editable text: **Patient ID** | `patient-specific` | `PATIENT ID: {text}` |
-| A01 | Proposed consistency extension; not in source | Read-only browser-local **Note started** timestamp set at page load or confirmed reset | `administrative` | `----- {Month D, YYYY h:mm:ss AM/PM} -----` |
-| A02 | `Last Recall Date: [AUTO: Last Recall Date]` | Optional date input: **Last recall date** | `patient-specific` | `Last Recall Date: {YYYY-MM-DD}` |
+| ID  | Source                                        | Proposed control                                                                       | Classification     | Generated output                            |
+| --- | --------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------- |
+| A00 | Proposed consistency extension; not in source | Required editable text: **Patient ID**                                                 | `patient-specific` | `PATIENT ID: {text}`                        |
+| A01 | Proposed consistency extension; not in source | Read-only browser-local **Note started** timestamp set at page load or confirmed reset | `administrative`   | `----- {Month D, YYYY h:mm:ss AM/PM} -----` |
+| A02 | `Last Recall Date: [AUTO: Last Recall Date]`  | Optional date input: **Last recall date**                                              | `patient-specific` | `Last Recall Date: {YYYY-MM-DD}`            |
 
 The Note started form field displays `YYYY-MM-DD HH:mm`; its generated-note
 output uses the readable dashed header shown in the table.
@@ -306,11 +306,11 @@ Visit Team field, matching the Recare Exam pilot.
 
 ### Visit Team
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A03 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue` | `DENTIST: {text}` |
-| A04 | `RDH: [SELECT/INSERT: Hygienist]` | Catalogue-backed editable text: **RDH** | `catalogue` | `RDH: {text}` |
-| A05 | `RDA: [SELECT/INSERT: RDA]` | Catalogue-backed editable text: **RDA** | `catalogue` | `RDA: {text}` |
+| ID  | Source                               | Proposed control                            | Classification | Generated output  |
+| --- | ------------------------------------ | ------------------------------------------- | -------------- | ----------------- |
+| A03 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue`    | `DENTIST: {text}` |
+| A04 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue`    | `RDH: {text}`     |
+| A05 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue`    | `RDA: {text}`     |
 
 These fields reuse the existing `visit-team.dentist`, `visit-team.rdh`, and
 `visit-team.rda` catalogues. They ship with no real staff names or public
@@ -318,13 +318,13 @@ suggestions. At least one of the three is proposed as required before copying.
 
 ### Consent, Medical History, and Sterilization
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]` | Unchecked checkbox: **Class 5 indicators checked**, positioned next to Miele sterilization codes | `appCore` | Preserve the complete source sentence followed by `Yes` only when explicitly checked |
-| A07 | `Miele Sterilization Codes Scanned:` | Editable text: **Miele sterilization codes** | `administrative` | `Miele Sterilization Codes Scanned: {text}` when entered |
-| A08 | Informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** text | Consent sources: `appCore`; details: `patient-specific` | `Informed verbal consent given by {selected sources} for treatment today.` plus entered details |
-| A09 | `Medical history reviewed: [SELECT/INSERT: MedHx/DentalHx]` | Catalogue-backed editable text: **Medical history reviewed** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `Medical history reviewed: {selected or entered text}` |
-| A10 | `Premedication Required: [SELECT/INSERT: PREMED]` | Status: **Not documented / Not required / Required**; optional details when required | Status: `appCore`; details: `patient-specific` | `Premedication Required: No.` or `Premedication Required: Yes—{details}.` |
+| ID  | Source                                                                                               | Proposed control                                                                                                           | Classification                                                            | Generated output                                                                                |
+| --- | ---------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| A06 | Class 5 indicator sentence and `[SELECT/INSERT: Cl5 Indicator Strip Checked]`                        | Unchecked checkbox: **Class 5 indicators checked**, positioned next to Miele sterilization codes                           | `appCore`                                                                 | Preserve the complete source sentence followed by `Yes` only when explicitly checked            |
+| A07 | `Miele Sterilization Codes Scanned:`                                                                 | Editable text: **Miele sterilization codes**                                                                               | `administrative`                                                          | `Miele Sterilization Codes Scanned: {text}` when entered                                        |
+| A08 | Informed-consent line, including patient-name `[AUTO]` markers and `[SELECT/INSERT: CONSENT FOR TX]` | Three independent unchecked checkboxes: **Patient**, **Parent**, and **Legal guardian**; optional **Consent details** text | Consent sources: `appCore`; details: `patient-specific`                   | `Informed verbal consent given by {selected sources} for treatment today.` plus entered details |
+| A09 | `Medical history reviewed: [SELECT/INSERT: MedHx/DentalHx]`                                          | Catalogue-backed editable text: **Medical history reviewed**                                                               | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `Medical history reviewed: {selected or entered text}`                                          |
+| A10 | `Premedication Required: [SELECT/INSERT: PREMED]`                                                    | Status: **Not documented / Not required / Required**; optional details when required                                       | Status: `appCore`; details: `patient-specific`                            | `Premedication Required: No.` or `Premedication Required: Yes—{details}.`                       |
 
 Patient, Parent, and Legal guardian are independent because more than one may
 give consent. None is preselected. When several are checked, generated output
@@ -338,31 +338,31 @@ valid.
 
 ### Patient Concerns and Hygiene Findings
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
+| ID  | Source                                               | Proposed control                                                                                                                                                           | Classification                                                                             | Generated output                                                                                       |
+| --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
-| A12 | `Hygiene Area of Concern:` | Textarea: **Hygiene area of concern** | `patient-specific` | `Hygiene Area of Concern: {text}` |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]` | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Plaque: {extent intensity location}` or entered text |
-| A14 | `Stain: [SELECT/INSERT: STAIN]` | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Stain: {extent intensity}` or entered text |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]` | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Calculus: {extent intensity location(s)}` or entered text |
-| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]` | Grouped **Extent** and **Severity** facets, with editable **Other** | Facets: `appCore`; Other: `patient-specific` | `Bleeding: {extent severity}` or entered text |
+| A12 | `Hygiene Area of Concern:`                           | Textarea: **Hygiene area of concern**                                                                                                                                      | `patient-specific`                                                                         | `Hygiene Area of Concern: {text}`                                                                      |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other**                                                                                    | Facets: `appCore`; Other: `patient-specific`                                               | `Plaque: {extent intensity location}` or entered text                                                  |
+| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other**                                                                                          | Facets: `appCore`; Other: `patient-specific`                                               | `Stain: {extent intensity}` or entered text                                                            |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with editable **Other**                                                                            | Facets: `appCore`; Other: `patient-specific`                                               | `Calculus: {extent intensity location(s)}` or entered text                                             |
+| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with editable **Other**                                                                                                        | Facets: `appCore`; Other: `patient-specific`                                               | `Bleeding: {extent severity}` or entered text                                                          |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
 Plaque choices and nine Calculus choices. The application may track these as
 reviewed generic choices rather than private clinic catalogue values:
 
-| Plaque choices | Calculus choices |
-| --- | --- |
-| Localized mild interproximal | Localized mild interproximal |
-| Localized moderate interproximal | Localized moderate interproximal |
-| Localized heavy interproximal | Localized heavy interproximal |
-| Generalized mild interproximal | Localized mild marginal |
-| Generalized moderate interproximal | Localized moderate marginal |
-| Generalized heavy interproximal | Localized heavy marginal |
-| Localized mild marginal | Generalized mild marginal/interproximal |
-| Localized moderate marginal | Generalized moderate marginal/interproximal |
-| Localized heavy marginal | Generalized heavy marginal/interproximal |
+| Plaque choices                     | Calculus choices                            |
+| ---------------------------------- | ------------------------------------------- |
+| Localized mild interproximal       | Localized mild interproximal                |
+| Localized moderate interproximal   | Localized moderate interproximal            |
+| Localized heavy interproximal      | Localized heavy interproximal               |
+| Generalized mild interproximal     | Localized mild marginal                     |
+| Generalized moderate interproximal | Localized moderate marginal                 |
+| Generalized heavy interproximal    | Localized heavy marginal                    |
+| Localized mild marginal            | Generalized mild marginal/interproximal     |
+| Localized moderate marginal        | Generalized moderate marginal/interproximal |
+| Localized heavy marginal           | Generalized heavy marginal/interproximal    |
 
 The labels above expand the remaining ClearDent shorthand: `LOC` to
 **Localized**, `GEN` to **Generalized**, `MOD` to **Moderate**, and `MARG` to
@@ -383,14 +383,15 @@ are loaded.
 
 ### Periodontal Assessment
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A17 | `PSR/Pocketing: _ _ _ / _ _ _` | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4** | `patient-specific` | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants |
-| A18 | `Recession:` | Editable text: **Recession** | `patient-specific` | `Recession: {text}` |
-| A19 | `FMP Done: [SELECT/INSERT: FMP DONE]` | Catalogue-backed editable text: **FMP done** | Current value: `patient-specific`; reusable complete phrases: `catalogue` | `FMP Done: {selected or entered text}` |
-| A20 | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` | Catalogue-backed editable text: **Health/Gingivitis** | Current value: `patient-specific`; reusable options: `catalogue` | `Health/Gingivitis: {text}` |
-| A21 | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]` | Optional structured choice: **Not documented** or an approved Periodontitis stage value, plus independent **Periodontitis stage comments** | Choice: `appCore`; comments: `patient-specific` | Separate `Periodontitis Stage: {selected stage}.` and `Periodontitis stage comments: {comments}.` lines when documented |
-| A22 | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]` | Optional structured choice: **Not documented** or an approved Periodontitis grade value, plus independent **Periodontitis grade comments** | Choice: `appCore`; comments: `patient-specific` | Separate `Periodontitis Grade: {selected grade}.` and `Periodontitis grade comments: {comments}.` lines when documented |
+| ID   | Source                                                                                                                                                                                                                                                                      | Proposed control                                                                                                                           | Classification                                                                                                                               | Generated output                                                                                                                       |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| A17  | `PSR/Pocketing: _ _ _ / _ _ _`                                                                                                                                                                                                                                              | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4**        | `patient-specific`                                                                                                                           | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants                                                                      |
+| A18  | `Recession:`                                                                                                                                                                                                                                                                | Editable text: **Recession**                                                                                                               | `patient-specific`                                                                                                                           | `Recession: {text}`                                                                                                                    |
+| A19  | `FMP Done: [SELECT/INSERT: FMP DONE]`                                                                                                                                                                                                                                       | Catalogue-backed editable text: **FMP done**                                                                                               | Current value: `patient-specific`; reusable complete phrases: `catalogue`                                                                    | `FMP Done: {selected or entered text}`                                                                                                 |
+| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]`                                                                                                                                                                                                                                | Catalogue-backed editable text: **Health/Gingivitis**                                                                                      | Current value: `patient-specific`; reusable options: `catalogue`                                                                             | `Health/Gingivitis: {text}`                                                                                                            |
+| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Structured multi-finding **Gingival Description**, immediately after Health/Gingivitis                                                     | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed` | Omitted when absent or Not assessed; one WNL line or one ordered findings block after Health/Gingivitis and before Periodontitis Stage |
+| A21  | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]`                                                                                                                                                                                                              | Optional structured choice: **Not documented** or an approved Periodontitis stage value, plus independent **Periodontitis stage comments** | Choice: `appCore`; comments: `patient-specific`                                                                                              | Separate `Periodontitis Stage: {selected stage}.` and `Periodontitis stage comments: {comments}.` lines when documented                |
+| A22  | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]`                                                                                                                                                                                                              | Optional structured choice: **Not documented** or an approved Periodontitis grade value, plus independent **Periodontitis grade comments** | Choice: `appCore`; comments: `patient-specific`                                                                                              | Separate `Periodontitis Grade: {selected grade}.` and `Periodontitis grade comments: {comments}.` lines when documented                |
 
 The six PSR/Pocketing inputs preserve the source's six-position shape and use
 the clinically approved clockwise order `1 2 3 / 6 5 4`, without imposing an
@@ -402,18 +403,58 @@ complete phrases are public starter values. Stage and grade have complete
 ClearDent lists, including N/A. Stage, grade, and each respective comments
 field remain independent; selecting a structured value never clears comments.
 
+#### Additive Gingival Description contract
+
+The Slice 1 extension does not rename, move, synchronize, or replace Bleeding,
+Recession, FMP Done, or Health/Gingivitis. In particular, the existing
+`periodontal.health-gingivitis` browser-local catalogue remains unchanged; the
+new vocabulary is fixed checked-in application data and cannot be remembered
+or edited. An absent extension property is treated exactly like Not assessed,
+so an old-shaped form produces byte-for-byte pre-extension output.
+
+The control renders Color, Contour / Shape, Consistency, Surface / Texture, and
+Position / Size in reviewed catalogue order. Each selected option is an
+independent finding with optional generalized/localized extent, supported
+location, optional encounter note, and a measurement only where catalogue
+metadata permits it. Gingival recession is the only current option with an
+`mm` measurement. Unknown or retired IDs are ignored rather than converted to
+invented prose.
+
+**WNL:** The explicit **Set gingival description to WNL** action stores the ten
+reviewed preset IDs. If findings exist, confirmation is required before only
+the new assessment is cleared. It emits exactly:
+
+```text
+Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted.
+```
+
+**Mixed synthetic findings:** a generalized color observation and localized
+measured recession emit:
+
+```text
+Gingival Description:
+  - Color: coral pink; extent: generalized.
+  - Position / Size: gingival recession; extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding.
+```
+
+Existing explicit periodontal documentation intentionally coexists with this
+block. No independent IOE Gingiva state or output is created. Selecting or
+editing a finding after WNL changes the assessment to Findings; clearing it
+returns to Not assessed. The state is active-page memory only and introduces
+no completed-form storage or JSON import/export.
+
 ### Oral Hygiene and Education
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A23 | `Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]` | Catalogue-backed editable text: **Oral hygiene compliance**, plus independent **Oral hygiene compliance comment** | Current value and comment: `patient-specific`; reusable compliance values: `catalogue` | Separate `Oral hygiene compliance: {selected or entered text}` and `Oral hygiene compliance comment: {comment}` lines when documented |
-| A24 | Fixed home-care instruction sentence | Unchecked checkbox: **Standard home-care instruction reviewed** | `appCore` | Preserve the source sentence only when checked |
-| A25 | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]` | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended** | Current selections: `patient-specific`; reusable options: `catalogue` | `OH Aids Reviewed/Recommended: {selected and entered values}` |
-| A26 | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY` | Unchecked checkbox: **Disease process reviewed with patient today** | `appCore` | Preserve the source sentence only when checked |
-| A26a | Additive OHE extension | Grouped fixed multi-value control: **Additional OHE topics reviewed** | `appCore`; no value selected by default | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed |
-| A26b | Additive OHE extension | Optional textarea: **OHE notes** | `patient-specific` | `OHE notes: {entered text}` only when entered |
-| A27 | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two editable suggestion boxes: **Flossing frequency** and **Brushing frequency**; each accepts a standard suggestion or directly entered custom text | Suggestions: `appCore`; current entered values: `patient-specific` | `Patient is currently: {documented flossing}; {documented brushing}.` |
-| A28 | `Hygiene goal:` | Textarea: **Hygiene goal** | `patient-specific` | `Hygiene goal: {text}` |
+| ID   | Source                                                                                  | Proposed control                                                                                                                                     | Classification                                                                         | Generated output                                                                                                                      |
+| ---- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| A23  | `Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]`                              | Catalogue-backed editable text: **Oral hygiene compliance**, plus independent **Oral hygiene compliance comment**                                    | Current value and comment: `patient-specific`; reusable compliance values: `catalogue` | Separate `Oral hygiene compliance: {selected or entered text}` and `Oral hygiene compliance comment: {comment}` lines when documented |
+| A24  | Fixed home-care instruction sentence                                                    | Unchecked checkbox: **Standard home-care instruction reviewed**                                                                                      | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
+| A25  | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]`          | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended**                                                                      | Current selections: `patient-specific`; reusable options: `catalogue`                  | `OH Aids Reviewed/Recommended: {selected and entered values}`                                                                         |
+| A26  | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY`                                           | Unchecked checkbox: **Disease process reviewed with patient today**                                                                                  | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
+| A26a | Additive OHE extension                                                                  | Grouped fixed multi-value control: **Additional OHE topics reviewed**                                                                                | `appCore`; no value selected by default                                                | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed                 |
+| A26b | Additive OHE extension                                                                  | Optional textarea: **OHE notes**                                                                                                                     | `patient-specific`                                                                     | `OHE notes: {entered text}` only when entered                                                                                         |
+| A27  | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two editable suggestion boxes: **Flossing frequency** and **Brushing frequency**; each accepts a standard suggestion or directly entered custom text | Suggestions: `appCore`; current entered values: `patient-specific`                     | `Patient is currently: {documented flossing}; {documented brushing}.`                                                                 |
+| A28  | `Hygiene goal:`                                                                         | Textarea: **Hygiene goal**                                                                                                                           | `patient-specific`                                                                     | `Hygiene goal: {text}`                                                                                                                |
 
 The fixed home-care and disease-process statements describe actions and are
 therefore never included by default. Compliance has a complete visible
@@ -438,12 +479,12 @@ reviewed choices; non-standard discussion belongs in OHE notes.
 
 ### Treatment
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE` | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea | `patient-specific` clinical decision | A `Treatment recommended:` block containing only explicitly selected or entered items |
+| ID  | Source                                                       | Proposed control                                                                                                                                              | Classification                                                                                                        | Generated output                                                                                              |
+| --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE`        | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea                                                              | `patient-specific` clinical decision                                                                                  | A `Treatment recommended:` block containing only explicitly selected or entered items                         |
 | A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional multi-value **Tooth/area**, including encounter-only custom text | Row and Tooth/area: `patient-specific`; reusable treatment types: `catalogue`; fixed Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional comma-separated Tooth/area values}` joined with `; ` |
-| A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]` | Catalogue-backed editable text: **Anesthetic** | Current value: `patient-specific`; reusable options: `catalogue` | `Anesthetic: {text}` |
-| A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]` | Catalogue-backed editable text: **Desensitizer** | Current value: `patient-specific`; reusable options: `catalogue` | `Desensitizer: {text}` |
+| A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]`            | Catalogue-backed editable text: **Anesthetic**                                                                                                                | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Anesthetic: {text}`                                                                                          |
+| A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]`                | Catalogue-backed editable text: **Desensitizer**                                                                                                              | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Desensitizer: {text}`                                                                                        |
 
 Hygiene maintenance is an explicit option, not a default or recommendation.
 All eight visible Treatment completed values and all four Desensitizer values
@@ -457,13 +498,13 @@ are discarded on reset or reload and cannot become reusable suggestions.
 
 ### Appliances and Relevant History
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A33 | `Does patient have a NightGuard?` | Status: **Not documented / No / Yes**, labelled **Has a night guard** | `appCore` | `Night guard: No.` when No; combined with A34 when Yes |
-| A34 | `Do they use NightGuard?` | Status: **Not documented / No / Yes**, labelled **Uses the night guard**, shown when ownership is Yes | `appCore` | `Night guard: Yes; {uses/does not use/use not documented}.` |
-| A35 | `Have they had orthodontics?` | Status: **Not documented / No / Yes** | `appCore` | `Orthodontic history: No.` or `Orthodontic history: Yes.` |
-| A36 | `Do they wear Retainers? Fixed or removable?` | Status: **Not documented / None / Fixed / Removable / Fixed and removable** | `appCore` | `Retainers: {selected status}.` |
-| A37 | `Additional Notes:` | Textarea: **Additional notes** | `patient-specific` | `Additional Notes: {text}` |
+| ID  | Source                                        | Proposed control                                                                                      | Classification     | Generated output                                            |
+| --- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------- |
+| A33 | `Does patient have a NightGuard?`             | Status: **Not documented / No / Yes**, labelled **Has a night guard**                                 | `appCore`          | `Night guard: No.` when No; combined with A34 when Yes      |
+| A34 | `Do they use NightGuard?`                     | Status: **Not documented / No / Yes**, labelled **Uses the night guard**, shown when ownership is Yes | `appCore`          | `Night guard: Yes; {uses/does not use/use not documented}.` |
+| A35 | `Have they had orthodontics?`                 | Status: **Not documented / No / Yes**                                                                 | `appCore`          | `Orthodontic history: No.` or `Orthodontic history: Yes.`   |
+| A36 | `Do they wear Retainers? Fixed or removable?` | Status: **Not documented / None / Fixed / Removable / Fixed and removable**                           | `appCore`          | `Retainers: {selected status}.`                             |
+| A37 | `Additional Notes:`                           | Textarea: **Additional notes**                                                                        | `patient-specific` | `Additional Notes: {text}`                                  |
 
 Retainer status remains available regardless of orthodontic-history selection.
 The form will not infer that a negative or undocumented history makes a
@@ -471,13 +512,13 @@ retainer response impossible.
 
 ### Intervals and Next Visit
 
-| ID | Source | Proposed control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| A38 | Fixed PPE sentence | Unchecked checkbox: **Standard PPE statement applies** | `appCore` | Preserve the source sentence only when checked |
-| A39 | `Recommended Recall Interval: [SELECT/INSERT: REC RECALL INTERVAL]` | Catalogue-backed editable text: **Recommended recall interval**, plus independent **Recommended recall interval comments** | Current value and comments: `patient-specific`; reusable interval values: `catalogue` | Separate `Recommended Recall Interval: {selected or entered text}` and `Recommended recall interval comments: {comments}` lines when documented |
+| ID  | Source                                                                | Proposed control                                                                                                             | Classification                                                                        | Generated output                                                                                                                                  |
+| --- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A38 | Fixed PPE sentence                                                    | Unchecked checkbox: **Standard PPE statement applies**                                                                       | `appCore`                                                                             | Preserve the source sentence only when checked                                                                                                    |
+| A39 | `Recommended Recall Interval: [SELECT/INSERT: REC RECALL INTERVAL]`   | Catalogue-backed editable text: **Recommended recall interval**, plus independent **Recommended recall interval comments**   | Current value and comments: `patient-specific`; reusable interval values: `catalogue` | Separate `Recommended Recall Interval: {selected or entered text}` and `Recommended recall interval comments: {comments}` lines when documented   |
 | A40 | `Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]` | Catalogue-backed editable text: **Recommended hygiene interval**, plus independent **Recommended hygiene interval comments** | Current value and comments: `patient-specific`; reusable interval values: `catalogue` | Separate `Recommended Hygiene Interval: {selected or entered text}` and `Recommended hygiene interval comments: {comments}` lines when documented |
-| A41 | `Next visit: [SELECT/INSERT: NEXT VISIT]` | Catalogue-backed editable text: **Next visit** | Current value: `patient-specific`; reusable options: `catalogue` | `Next visit: {text}` |
-| A42 | `Date Booked:` | Optional date input: **Date booked** | `administrative` | `Date Booked: {YYYY-MM-DD}` |
+| A41 | `Next visit: [SELECT/INSERT: NEXT VISIT]`                             | Catalogue-backed editable text: **Next visit**                                                                               | Current value: `patient-specific`; reusable options: `catalogue`                      | `Next visit: {text}`                                                                                                                              |
+| A42 | `Date Booked:`                                                        | Optional date input: **Date booked**                                                                                         | `administrative`                                                                      | `Date Booked: {YYYY-MM-DD}`                                                                                                                       |
 
 Recall and hygiene intervals have complete visible ClearDent lists whose values
 are public catalogue starters. Their comments remain independent and
