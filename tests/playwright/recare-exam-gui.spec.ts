@@ -253,6 +253,23 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Intraoral:\n  - Buccal mucosa: pink; moist; no lesions; no swelling\.\n  - Tongue: pink; moist; symmetrical; no lesions\.\n  - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n  - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n  - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n  - Saliva: clear; normal flow\./
   );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all entered intraoral observations and return Intraoral to Not assessed?"
+    );
+    await dialog.accept();
+  });
+  await structuredIntraoral
+    .getByRole("button", {
+      name: "Clear intraoral observations",
+      exact: true,
+    })
+    .click();
+  await expect(intraoralStatus).toContainText("Not assessed");
+  await expect(freeText).toHaveCount(0);
+  await expect(normalFlow).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).toHaveValue("");
 });
 
 test("Recare Exam treatment rows allow duplicate types, note-only areas, inline edits, and independent plan copies", async ({

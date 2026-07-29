@@ -9,7 +9,6 @@ import type {
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import {
-  gingivalCatalogOptions,
   gingivalDescriptionCatalog,
   type GingivalDescriptionAssessment,
 } from "@/lib/templates/gingivalDescriptionCatalog";
@@ -95,37 +94,67 @@ export function formatGingivalDescription(
     )}`;
   }
 
+  const customFindings = trimmed(assessment.customFindings ?? "");
   const selected = new Map(
     assessment.findings.map((finding) => [finding.optionId, finding])
   );
-  const lines = gingivalCatalogOptions.flatMap(({ dimension, option }) => {
-    const finding = selected.get(option.id);
-    if (!finding) return [];
-    const clauses = [`${dimension.label}: ${option.noteFragment}`];
-    if (finding.extent) clauses.push(`extent: ${finding.extent}`);
-    if (
-      (dimension.supportsLocation ||
-        ("supportsLocation" in option && option.supportsLocation)) &&
-      finding.locations.length
-    ) {
-      clauses.push(
-        `location: ${finding.locations.map(trimmed).filter(Boolean).join(", ")}`
-      );
-    }
-    if (
-      "supportsMeasurement" in option &&
-      option.supportsMeasurement &&
-      trimmed(finding.measurement)
-    ) {
-      clauses.push(
-        `measurement: ${trimmed(finding.measurement)} ${option.measurementUnit}`
-      );
-    }
-    if (trimmed(finding.comment))
-      clauses.push(`notes: ${trimmed(finding.comment)}`);
-    return [`  - ${withTerminalPunctuation(clauses.join("; "))}`];
+  const lines = gingivalDescriptionCatalog.dimensions.flatMap((dimension) => {
+    const optionFragments = dimension.options.flatMap((option) => {
+      const finding = selected.get(option.id);
+      if (!finding) return [];
+      const annotations: string[] = [];
+      if (finding.extent) annotations.push(`extent: ${finding.extent}`);
+      if (
+        (dimension.supportsLocation ||
+          ("supportsLocation" in option && option.supportsLocation)) &&
+        finding.locations.length
+      ) {
+        annotations.push(
+          `location: ${finding.locations
+            .map(trimmed)
+            .filter(Boolean)
+            .join(", ")}`
+        );
+      }
+      if (
+        "supportsMeasurement" in option &&
+        option.supportsMeasurement &&
+        trimmed(finding.measurement)
+      ) {
+        annotations.push(
+          `measurement: ${trimmed(finding.measurement)} ${
+            option.measurementUnit
+          }`
+        );
+      }
+      if (trimmed(finding.comment))
+        annotations.push(`notes: ${trimmed(finding.comment)}`);
+      return [
+        annotations.length
+          ? `${option.noteFragment} (${annotations.join("; ")})`
+          : option.noteFragment,
+      ];
+    });
+    return optionFragments.length
+      ? [
+          `  - ${dimension.label}: ${withTerminalPunctuation(
+            optionFragments.join("; ")
+          )}`,
+        ]
+      : [];
   });
-  return lines.length ? ["Gingival Description:", ...lines].join("\n") : "";
+  if (!lines.length) {
+    return customFindings
+      ? `Gingival Description: ${withTerminalPunctuation(customFindings)}`
+      : "";
+  }
+  return [
+    "Gingival Description:",
+    ...lines,
+    ...(customFindings
+      ? [`  Observations: ${withTerminalPunctuation(customFindings)}`]
+      : []),
+  ].join("\n");
 }
 
 function documentationStatusLine(

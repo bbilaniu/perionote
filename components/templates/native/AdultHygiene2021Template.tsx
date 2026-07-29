@@ -49,6 +49,7 @@ import {
   gingivalDescriptionCatalog,
   type GingivalDescriptionAssessment,
   type GingivalDescriptionFinding,
+  type GingivalDescriptionStatus,
 } from "@/lib/templates/gingivalDescriptionCatalog";
 
 const inputClass = `mt-1 ${formControlClass()}`;
@@ -61,6 +62,14 @@ const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
+const gingivalDescriptionStatusOptions: Array<{
+  value: GingivalDescriptionStatus;
+  label: string;
+}> = [
+  { value: "not_assessed", label: "Not assessed" },
+  { value: "wnl", label: "WNL" },
+  { value: "findings", label: "Findings" },
+];
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
 const treatmentToothAreaChoiceGroups = [
   {
@@ -478,9 +487,13 @@ function GingivalDescriptionControl({
   onChange: (value: GingivalDescriptionAssessment) => void;
 }) {
   const assessment = value ?? createEmptyGingivalDescriptionAssessment();
+  const [showWnlDetails, setShowWnlDetails] = useState(false);
   const selected = new Map(
     assessment.findings.map((finding) => [finding.optionId, finding])
   );
+  const hasObservations =
+    assessment.findings.length > 0 ||
+    Boolean((assessment.customFindings ?? "").trim());
 
   function updateFinding(
     optionId: string,
@@ -489,6 +502,7 @@ function GingivalDescriptionControl({
     const current = selected.get(optionId);
     if (!current) return;
     onChange({
+      ...assessment,
       status: "findings",
       findings: assessment.findings.map((finding) =>
         finding.optionId === optionId ? { ...finding, ...patch } : finding
@@ -498,8 +512,8 @@ function GingivalDescriptionControl({
 
   function toggleFinding(optionId: string, checked: boolean) {
     onChange({
-      status:
-        checked || assessment.findings.length > 1 ? "findings" : "not_assessed",
+      ...assessment,
+      status: "findings",
       findings: checked
         ? [
             ...assessment.findings.filter(
@@ -521,53 +535,109 @@ function GingivalDescriptionControl({
 
   function setWnl() {
     if (
-      assessment.status === "findings" &&
-      assessment.findings.length > 0 &&
+      assessment.status !== "wnl" &&
+      hasObservations &&
       !window.confirm(
         "Clear the documented Gingival Description findings and set this assessment to WNL?"
       )
     ) {
       return;
     }
+    setShowWnlDetails(false);
     onChange(createGingivalDescriptionWnlAssessment());
   }
 
+  function changeStatus(status: GingivalDescriptionStatus) {
+    if (status === "wnl") {
+      setWnl();
+      return;
+    }
+    setShowWnlDetails(false);
+    onChange({ ...assessment, status });
+  }
+
+  function applyNormalStructuredObservations() {
+    if (
+      assessment.status !== "wnl" &&
+      hasObservations &&
+      !window.confirm(
+        "Replace all documented Gingival Description observations with the reviewed normal structured observations?"
+      )
+    ) {
+      return;
+    }
+    onChange(createGingivalDescriptionWnlAssessment());
+    setShowWnlDetails(true);
+  }
+
+  function clearAssessment() {
+    if (
+      hasObservations &&
+      !window.confirm(
+        "Clear all documented Gingival Description observations and return this assessment to Not assessed?"
+      )
+    ) {
+      return;
+    }
+    setShowWnlDetails(false);
+    onChange(createEmptyGingivalDescriptionAssessment());
+  }
+
   return (
-    <fieldset className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-      <legend className="px-1 font-semibold">Gingival Description</legend>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        Not assessed until WNL or individual observations are explicitly
-        documented.
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
-          onClick={setWnl}
-        >
-          {gingivalDescriptionCatalog.wnlPreset.label}
-        </button>
-        <button
-          type="button"
-          className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
-          onClick={() => onChange(createEmptyGingivalDescriptionAssessment())}
-          disabled={
-            assessment.status === "not_assessed" &&
-            assessment.findings.length === 0
-          }
-        >
-          Clear gingival description
-        </button>
-        <span className="self-center text-sm" aria-live="polite">
-          Status:{" "}
-          {assessment.status === "wnl"
-            ? "Within normal limits"
-            : assessment.status === "findings"
-            ? "Findings documented"
-            : "Not assessed"}
-        </span>
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <FixedChoiceListbox
+          id="adult-hygiene-gingival-description-status"
+          label="Gingival Description"
+          value={assessment.status}
+          options={gingivalDescriptionStatusOptions}
+          onChange={changeStatus}
+        />
+        {assessment.status === "findings" ? (
+          <TextField
+            id="adult-hygiene-gingival-description-findings"
+            label="Gingival Description findings"
+            value={assessment.customFindings ?? ""}
+            onChange={(customFindings) =>
+              onChange({
+                ...assessment,
+                status: "findings",
+                customFindings,
+              })
+            }
+            placeholder="Enter additional gingival findings"
+          />
+        ) : null}
       </div>
-      {gingivalDescriptionCatalog.dimensions.map((dimension) => (
+      <fieldset className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+        <legend className="px-1 font-semibold">
+          Structured gingival observations
+        </legend>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Apply the reviewed normal observations or document individual
+          findings. Detailed controls are shown for Findings.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+            onClick={applyNormalStructuredObservations}
+          >
+            Apply normal structured observations
+          </button>
+          <button
+            type="button"
+            className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+            onClick={clearAssessment}
+            disabled={
+              assessment.status === "not_assessed" && !hasObservations
+            }
+          >
+            Clear gingival description
+          </button>
+        </div>
+        {assessment.status === "findings" || showWnlDetails
+          ? gingivalDescriptionCatalog.dimensions.map((dimension) => (
         <fieldset
           key={dimension.id}
           className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
@@ -662,8 +732,10 @@ function GingivalDescriptionControl({
             })}
           </div>
         </fieldset>
-      ))}
-    </fieldset>
+            ))
+          : null}
+      </fieldset>
+    </>
   );
 }
 

@@ -45,8 +45,8 @@ Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
 Health/Gingivitis: Synthetic gingival-health documentation.
 Gingival Description:
-  - Color: coral pink; extent: generalized.
-  - Position / Size: gingival recession; extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding.
+  - Color: coral pink (extent: generalized).
+  - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 Periodontitis Stage: Stage II (P2).
 Periodontitis Grade: Grade B: moderate rate.
 
@@ -86,6 +86,22 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(oldShape)).toBe(
       "Health/Gingivitis: Health intact."
     );
+    current.gingivalDescription = {
+      status: "not_assessed",
+      customFindings: "Retained custom observation",
+      findings: [
+        {
+          optionId: "gingiva.color.coral_pink",
+          extent: "generalized",
+          locations: [],
+          measurement: "",
+          comment: "retained but hidden",
+        },
+      ],
+    };
+    expect(buildAdultHygiene2021Summary(current)).toBe(
+      "Health/Gingivitis: Health intact."
+    );
   });
 
   it("formats explicit gingival WNL from the reviewed preset", () => {
@@ -97,6 +113,31 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(form)).toBe(
       "Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted."
     );
+  });
+
+  it("formats custom gingival findings alone or beside structured observations", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.gingivalDescription = {
+      status: "findings",
+      findings: [],
+      customFindings: "Custom gingival observation",
+    };
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Gingival Description: Custom gingival observation."
+    );
+
+    form.gingivalDescription.findings = [
+      {
+        optionId: "gingiva.color.coral_pink",
+        extent: "",
+        locations: [],
+        measurement: "",
+        comment: "",
+      },
+    ];
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Gingival Description:
+  - Color: coral pink.
+  Observations: Custom gingival observation.`);
   });
 
   it("keeps original periodontal lines beside ordered structured findings", () => {
@@ -128,6 +169,13 @@ Date Booked: 2026-11-15`);
           measurement: "unsupported",
           comment: "normal variation",
         },
+        {
+          optionId: "gingiva.color.coral_pink",
+          extent: "",
+          locations: [],
+          measurement: "",
+          comment: "",
+        },
       ],
     };
 
@@ -136,8 +184,8 @@ Date Booked: 2026-11-15`);
 Recession: Existing unrestricted recession.
 Health/Gingivitis: Existing health value.
 Gingival Description:
-  - Color: physiologic pigmentation; extent: generalized; notes: normal variation.
-  - Position / Size: gingival recession; extent: localized; location: Q1, tooth 13 facial; measurement: 1.5 mm; notes: monitored.`);
+  - Color: coral pink; physiologic pigmentation (extent: generalized; notes: normal variation).
+  - Position / Size: gingival recession (extent: localized; location: Q1, tooth 13 facial; measurement: 1.5 mm; notes: monitored).`);
   });
 
   it("supports independent consent sources and position-preserving partial PSR values", () => {

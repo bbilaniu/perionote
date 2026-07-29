@@ -390,7 +390,7 @@ are loaded.
 | A18  | `Recession:`                                                                                                                                                                                                                                                                | Editable text: **Recession**                                                                                                               | `patient-specific`                                                                                                                           | `Recession: {text}`                                                                                                                    |
 | A19  | `FMP Done: [SELECT/INSERT: FMP DONE]`                                                                                                                                                                                                                                       | Catalogue-backed editable text: **FMP done**                                                                                               | Current value: `patient-specific`; reusable complete phrases: `catalogue`                                                                    | `FMP Done: {selected or entered text}`                                                                                                 |
 | A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]`                                                                                                                                                                                                                                | Catalogue-backed editable text: **Health/Gingivitis**                                                                                      | Current value: `patient-specific`; reusable options: `catalogue`                                                                             | `Health/Gingivitis: {text}`                                                                                                            |
-| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Structured multi-finding **Gingival Description**, immediately after Health/Gingivitis                                                     | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed` | Omitted when absent or Not assessed; one WNL line or one ordered findings block after Health/Gingivitis and before Periodontitis Stage |
+| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Explicit **Gingival Description** status followed by a progressive structured multi-finding fieldset, immediately after Health/Gingivitis | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed` | Omitted when absent or Not assessed; one WNL line or one compact per-dimension findings block before Periodontitis Stage               |
 | A21  | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]`                                                                                                                                                                                                              | Optional structured choice: **Not documented** or an approved Periodontitis stage value, plus independent **Periodontitis stage comments** | Choice: `appCore`; comments: `patient-specific`                                                                                              | Separate `Periodontitis Stage: {selected stage}.` and `Periodontitis stage comments: {comments}.` lines when documented                |
 | A22  | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]`                                                                                                                                                                                                              | Optional structured choice: **Not documented** or an approved Periodontitis grade value, plus independent **Periodontitis grade comments** | Choice: `appCore`; comments: `patient-specific`                                                                                              | Separate `Periodontitis Grade: {selected grade}.` and `Periodontitis grade comments: {comments}.` lines when documented                |
 
@@ -413,36 +413,65 @@ new vocabulary is fixed checked-in application data and cannot be remembered
 or edited. An absent extension property is treated exactly like Not assessed,
 so an old-shaped form produces byte-for-byte pre-extension output.
 
-The control renders Color, Contour / Shape, Consistency, Surface / Texture, and
-Position / Size in reviewed catalogue order. Each selected option is an
+The primary **Gingival Description** status control is aligned with the other
+Periodontal Assessment fields immediately after Health/Gingivitis. It exposes
+the single shared Not assessed / WNL / Findings state. A separate
+**Structured gingival observations** fieldset owns the explanatory text,
+normal-observation shortcut, clear action, and detailed observations. Findings
+also reveals an optional patient-specific **Gingival Description findings**
+field beside the primary status for custom observations not represented by the
+fixed catalogue.
+
+The detailed controls are visible while the shared status is Findings or when
+the normal-observation shortcut explicitly expands its WNL preset for
+inspection. They render Color, Contour / Shape, Consistency, Surface / Texture,
+and Position / Size in reviewed catalogue order. Each selected option is an
 independent finding with optional generalized/localized extent, supported
 location, optional encounter note, and a measurement only where catalogue
 metadata permits it. Gingival recession is the only current option with an
-`mm` measurement. Unknown or retired IDs are ignored rather than converted to
-invented prose.
+`mm` measurement. Selecting or editing an observation sets Findings; removing
+the last observation does not silently change the explicit status.
 
-**WNL:** The explicit **Set gingival description to WNL** action stores the ten
-reviewed preset IDs. If findings exist, confirmation is required before only
-the new assessment is cleared. It emits exactly:
+Not assessed hides detailed controls without discarding their values and
+suppresses them from the note; selecting Findings again restores them. The
+explicit **Clear gingival description** action permanently clears the
+structured and custom values and returns to Not assessed only after
+confirmation when values exist. Unknown or retired IDs are ignored rather
+than converted to invented prose.
+
+**WNL:** Choosing WNL from the shared status control stores the ten reviewed
+preset IDs. If retained findings exist, confirmation is required before only
+the new assessment is replaced. WNL hides detailed controls and emits exactly:
 
 ```text
 Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted.
 ```
+
+**Apply normal structured observations** establishes that same reviewed WNL
+preset and reveals its ten detailed selections for inspection. While they
+remain untouched, the status and generated note remain WNL and use the
+canonical sentence above. Editing any option or annotation changes the status
+to Findings and switches to compact structured output. Existing non-WNL
+structured or custom observations require confirmation before replacement.
 
 **Mixed synthetic findings:** a generalized color observation and localized
 measured recession emit:
 
 ```text
 Gingival Description:
-  - Color: coral pink; extent: generalized.
-  - Position / Size: gingival recession; extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding.
+  - Color: coral pink (extent: generalized).
+  - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 ```
 
 Existing explicit periodontal documentation intentionally coexists with this
 block. No independent IOE Gingiva state or output is created. Selecting or
-editing a finding after WNL changes the assessment to Findings; clearing it
-returns to Not assessed. The state is active-page memory only and introduces
-no completed-form storage or JSON import/export.
+editing a finding after WNL changes the assessment to Findings. Findings are
+grouped into one compact bullet per catalogue dimension, with selected options
+in catalogue order and option-specific annotations in parentheses. Custom text
+alone emits `Gingival Description: {custom findings}.`; beside structured
+findings it emits an indented `Observations: {custom findings}.` line. The
+state is active-page memory only and introduces no completed-form storage or
+JSON import/export.
 
 ### Oral Hygiene and Education
 

@@ -437,11 +437,15 @@ function StructuredIntraoralFindings({
   status,
   values,
   onApplyNormal,
+  onClear,
+  clearDisabled,
   onChange,
 }: {
   status: ExamStatus;
   values: RecareIntraoralFinding[];
   onApplyNormal: () => void;
+  onClear: () => void;
+  clearDisabled: boolean;
   onChange: (values: RecareIntraoralFinding[]) => void;
 }) {
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
@@ -460,13 +464,23 @@ function StructuredIntraoralFindings({
         Apply the reviewed normal observations or select individual
         observations. Both document Findings.
       </p>
-      <button
-        type="button"
-        className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-        onClick={onApplyNormal}
-      >
-        Apply normal structured observations
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+          onClick={onApplyNormal}
+        >
+          Apply normal structured observations
+        </button>
+        <button
+          type="button"
+          className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+          onClick={onClear}
+          disabled={clearDisabled}
+        >
+          Clear intraoral observations
+        </button>
+      </div>
       {status === "findings"
         ? recareIntraoralStructures.map((structure) => (
             <div key={structure.id} className="space-y-2">
@@ -814,6 +828,26 @@ export function RecareExamTemplate({
     setCopyMessage("");
   }
 
+  function clearIntraoralObservations() {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (
+      hasFindings &&
+      !window.confirm(
+        "Clear all entered intraoral observations and return Intraoral to Not assessed?"
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      intraoralStatus: "not-assessed",
+      intraoralFindings: "",
+      structuredIntraoralFindings: [],
+    }));
+    setCopyMessage("");
+  }
+
   function changeAdditionalOcclusalValues(values: string[]) {
     const existing = [...(form.additionalOcclusalFindings ?? [])];
     const next = values.map((finding, index) => {
@@ -1144,6 +1178,12 @@ export function RecareExamTemplate({
               status={form.intraoralStatus}
               values={form.structuredIntraoralFindings ?? []}
               onApplyNormal={applyNormalStructuredIntraoral}
+              onClear={clearIntraoralObservations}
+              clearDisabled={
+                form.intraoralStatus === "not-assessed" &&
+                !form.intraoralFindings.trim() &&
+                !form.structuredIntraoralFindings?.length
+              }
               onChange={(values) => {
                 updateField("structuredIntraoralFindings", values);
                 if (values.length) updateField("intraoralStatus", "findings");

@@ -321,26 +321,107 @@ test("Adult Hygiene adds explicit gingival findings and WNL without changing exi
   page,
 }) => {
   await page.goto(adultHygieneUrl);
+  const structuredGingival = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const gingivalStatus = page.getByRole("button", {
+    name: "Gingival Description",
+    exact: true,
+  });
+  const recession = structuredGingival.getByLabel("Gingival recession", {
+    exact: true,
+  });
+
+  await expect(gingivalStatus).toContainText("Not assessed");
+  await expect(
+    structuredGingival.getByRole("button", {
+      name: "Gingival Description",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(recession).toHaveCount(0);
   await page
     .getByRole("combobox", { name: "Health/Gingivitis" })
     .fill("Existing health value");
-  await page.getByLabel("Gingival recession", { exact: true }).check();
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await recession.check();
   await page.getByRole("button", { name: "Gingival recession extent" }).click();
   await page.getByRole("option", { name: "Localized", exact: true }).click();
   await page.getByLabel("Gingival recession location").fill("tooth 13 facial");
   await page.getByLabel("Gingival recession measurement (mm)").fill("2");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description:\n  - Position \/ Size: gingival recession; extent: localized; location: tooth 13 facial; measurement: 2 mm\./
+    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: tooth 13 facial; measurement: 2 mm\)\./
   );
 
-  page.once("dialog", (dialog) => dialog.accept());
+  await gingivalStatus.click();
   await page
-    .getByRole("button", { name: "Set gingival description to WNL" })
+    .getByRole("option", { name: "Not assessed", exact: true })
     .click();
-  await expect(page.getByText("Status: Within normal limits")).toBeVisible();
+  await expect(recession).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Gingival Description/
+  );
+
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await expect(recession).toBeChecked();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear the documented Gingival Description findings and set this assessment to WNL?"
+    );
+    await dialog.accept();
+  });
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(gingivalStatus).toContainText("WNL");
+  await expect(recession).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+  );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all documented Gingival Description observations and return this assessment to Not assessed?"
+    );
+    await dialog.accept();
+  });
+  await structuredGingival
+    .getByRole("button", { name: "Clear gingival description", exact: true })
+    .click();
+  await expect(gingivalStatus).toContainText("Not assessed");
+
+  await page
+    .getByRole("button", {
+      name: "Apply normal structured observations",
+      exact: true,
+    })
+    .click();
+  await expect(gingivalStatus).toContainText("WNL");
+  await expect(
+    structuredGingival.getByLabel("Coral pink", { exact: true })
+  ).toBeChecked();
+  const noOvergrowth = structuredGingival.getByLabel("No overgrowth", {
+    exact: true,
+  });
+  await expect(noOvergrowth).toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+  );
+
+  await noOvergrowth.uncheck();
+  await expect(gingivalStatus).toContainText("Findings");
+  const customFindings = page.getByRole("textbox", {
+    name: "Gingival Description findings",
+    exact: true,
+  });
+  await expect(customFindings).toBeVisible();
+  await customFindings.fill("Custom gingival observation");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Gingival Description:\n  - Color: coral pink\.[\s\S]*  - Position \/ Size: no recession\.\n  Observations: Custom gingival observation\./
   );
 });
 

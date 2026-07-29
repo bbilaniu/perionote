@@ -217,6 +217,12 @@ free text or structured observations already exist, the action asks for
 confirmation before replacing only those Intraoral values; cancellation
 changes nothing.
 
+**Clear intraoral observations** is an explicit destructive action in the
+same fieldset. When free text or structured observations exist, it asks for
+confirmation before clearing both, returns the shared status to Not assessed,
+and leaves all unrelated Recare fields unchanged. Cancellation changes
+nothing.
+
 Structured output is one compact bullet per selected structure. Structures
 and their selected options use catalogue order regardless of selection order.
 Supported annotations remain attached to their option in parentheses:
