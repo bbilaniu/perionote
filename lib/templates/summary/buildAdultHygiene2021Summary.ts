@@ -8,6 +8,11 @@ import type {
 } from "@/lib/templates/recareExam";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import {
+  gingivalCatalogOptions,
+  gingivalDescriptionCatalog,
+  type GingivalDescriptionAssessment,
+} from "@/lib/templates/gingivalDescriptionCatalog";
 
 type BuildAdultHygiene2021SummaryOptions = {
   startedAt?: Date;
@@ -67,9 +72,52 @@ function labelledLine(label: string, value: string): string {
   return cleanValue ? `${label}: ${withTerminalPunctuation(cleanValue)}` : "";
 }
 
+export function formatGingivalDescription(
+  assessment: GingivalDescriptionAssessment | undefined
+): string {
+  if (!assessment || assessment.status === "not_assessed") return "";
+  if (assessment.status === "wnl") {
+    return `Gingival Description: ${withTerminalPunctuation(
+      gingivalDescriptionCatalog.wnlPreset.generatedNoteText
+    )}`;
+  }
+
+  const selected = new Map(
+    assessment.findings.map((finding) => [finding.optionId, finding])
+  );
+  const lines = gingivalCatalogOptions.flatMap(({ dimension, option }) => {
+    const finding = selected.get(option.id);
+    if (!finding) return [];
+    const clauses = [`${dimension.label}: ${option.noteFragment}`];
+    if (finding.extent) clauses.push(`extent: ${finding.extent}`);
+    if (
+      (dimension.supportsLocation ||
+        ("supportsLocation" in option && option.supportsLocation)) &&
+      finding.locations.length
+    ) {
+      clauses.push(
+        `location: ${finding.locations.map(trimmed).filter(Boolean).join(", ")}`
+      );
+    }
+    if (
+      "supportsMeasurement" in option &&
+      option.supportsMeasurement &&
+      trimmed(finding.measurement)
+    ) {
+      clauses.push(
+        `measurement: ${trimmed(finding.measurement)} ${option.measurementUnit}`
+      );
+    }
+    if (trimmed(finding.comment))
+      clauses.push(`notes: ${trimmed(finding.comment)}`);
+    return [`  - ${withTerminalPunctuation(clauses.join("; "))}`];
+  });
+  return lines.length ? ["Gingival Description:", ...lines].join("\n") : "";
+}
+
 function documentationStatusLine(
   label: string,
-  status: DocumentationStatus,
+  status: DocumentationStatus
 ): string {
   if (status === "not-documented") return "";
   return `${label}: ${status === "yes" ? "Yes" : "No"}.`;
@@ -93,29 +141,30 @@ function retainerLine(status: RetainerStatus): string {
 
 function treatmentRecommendedBlock(
   hygieneMaintenance: boolean,
-  otherTreatment: string,
+  otherTreatment: string
 ): string[] {
   const entries = [
     ...(hygieneMaintenance ? ["HYGIENE MAINTENANCE"] : []),
-    ...otherTreatment
-      .split(/\r?\n/)
-      .map(trimmed)
-      .filter(Boolean),
+    ...otherTreatment.split(/\r?\n/).map(trimmed).filter(Boolean),
   ];
   return entries.length
     ? ["Treatment recommended:", ...entries.map((entry) => `  - ${entry}`)]
     : [];
 }
 
-function psrPocketingLine(values: AdultHygiene2021Form["psrPocketing"]): string {
+function psrPocketingLine(
+  values: AdultHygiene2021Form["psrPocketing"]
+): string {
   if (!values.some((value) => trimmed(value))) return "";
   const positions = values.map((value) => trimmed(value) || "_");
-  return `PSR/Pocketing: ${positions.slice(0, 3).join(" ")} / ${positions.slice(3).join(" ")}`;
+  return `PSR/Pocketing: ${positions.slice(0, 3).join(" ")} / ${positions
+    .slice(3)
+    .join(" ")}`;
 }
 
 export function buildAdultHygiene2021Summary(
   form: AdultHygiene2021Form,
-  options: BuildAdultHygiene2021SummaryOptions = {},
+  options: BuildAdultHygiene2021SummaryOptions = {}
 ): string {
   const hasPatientOrTeam = [
     form.patientId,
@@ -125,10 +174,10 @@ export function buildAdultHygiene2021Summary(
   ].some((value) => Boolean(trimmed(value)));
   const showPatientAndTeam = Boolean(options.startedAt) || hasPatientOrTeam;
   const patientAndTeam = [
-    options.startedAt
-      ? formatNoteHeaderLocalTimestamp(options.startedAt)
+    options.startedAt ? formatNoteHeaderLocalTimestamp(options.startedAt) : "",
+    showPatientAndTeam
+      ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd()
       : "",
-    showPatientAndTeam ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd() : "",
     showPatientAndTeam ? `DENTIST: ${trimmed(form.dentist)}`.trimEnd() : "",
     showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
     showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
@@ -144,7 +193,9 @@ export function buildAdultHygiene2021Summary(
   ];
   const consentLine = consentSources.length
     ? [
-        `Informed verbal consent given by ${joinConsentSources(consentSources)} for treatment today.`,
+        `Informed verbal consent given by ${joinConsentSources(
+          consentSources
+        )} for treatment today.`,
         trimmed(form.consentDetails)
           ? withTerminalPunctuation(form.consentDetails)
           : "",
@@ -167,28 +218,30 @@ export function buildAdultHygiene2021Summary(
     form.premedicationStatus === "not-required"
       ? "Premedication Required: No."
       : form.premedicationStatus === "required"
-        ? trimmed(form.premedicationDetails)
-          ? `Premedication Required: Yes—${withTerminalPunctuation(form.premedicationDetails)}`
-          : "Premedication Required: Yes."
-        : "",
+      ? trimmed(form.premedicationDetails)
+        ? `Premedication Required: Yes—${withTerminalPunctuation(
+            form.premedicationDetails
+          )}`
+        : "Premedication Required: Yes."
+      : "",
   ];
 
   const concernsAndFindings = [
     formatPatientChiefConcerns(
       "Patient Chief Concern",
       form.patientChiefConcern,
-      form.listChiefConcerns,
+      form.listChiefConcerns
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
     labelledLine("Plaque", selectedValue(form.plaqueChoice, form.plaqueOther)),
     labelledLine("Stain", selectedValue(form.stainChoice, form.stainOther)),
     labelledLine(
       "Calculus",
-      selectedValue(form.calculusChoice, form.calculusOther),
+      selectedValue(form.calculusChoice, form.calculusOther)
     ),
     labelledLine(
       "Bleeding",
-      selectedValue(form.bleedingChoice, form.bleedingOther),
+      selectedValue(form.bleedingChoice, form.bleedingOther)
     ),
   ];
 
@@ -197,21 +250,16 @@ export function buildAdultHygiene2021Summary(
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
     labelledLine("Health/Gingivitis", form.healthGingivitis),
-    labelledLine(
-      "Periodontitis Stage",
-      form.periodontitisStageChoice,
-    ),
+    formatGingivalDescription(form.gingivalDescription),
+    labelledLine("Periodontitis Stage", form.periodontitisStageChoice),
     labelledLine(
       "Periodontitis stage comments",
-      form.periodontitisStageComments,
+      form.periodontitisStageComments
     ),
-    labelledLine(
-      "Periodontitis Grade",
-      form.periodontitisGradeChoice,
-    ),
+    labelledLine("Periodontitis Grade", form.periodontitisGradeChoice),
     labelledLine(
       "Periodontitis grade comments",
-      form.periodontitisGradeComments,
+      form.periodontitisGradeComments
     ),
   ];
 
@@ -221,13 +269,10 @@ export function buildAdultHygiene2021Summary(
   ].filter(Boolean);
 
   const oralHygieneAndEducation = [
-    labelledLine(
-      "Oral hygiene compliance",
-      form.oralHygieneCompliance,
-    ),
+    labelledLine("Oral hygiene compliance", form.oralHygieneCompliance),
     labelledLine(
       "Oral hygiene compliance comment",
-      form.oralHygieneComplianceComment,
+      form.oralHygieneComplianceComment
     ),
     form.homeCareInstructionReviewed
       ? "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY"
@@ -249,7 +294,7 @@ export function buildAdultHygiene2021Summary(
   const treatment = [
     ...treatmentRecommendedBlock(
       form.treatmentRecommendedHygieneMaintenance,
-      form.otherTreatmentRecommended,
+      form.otherTreatmentRecommended
     ),
     (() => {
       const completed = form.treatmentCompleted
@@ -274,18 +319,18 @@ export function buildAdultHygiene2021Summary(
     form.nightGuardStatus === "no"
       ? "Night guard: No."
       : form.nightGuardStatus === "yes"
-        ? form.nightGuardUseStatus === "yes"
-          ? "Night guard: Yes; uses."
-          : form.nightGuardUseStatus === "no"
-            ? "Night guard: Yes; does not use."
-            : "Night guard: Yes; use not documented."
-        : "";
+      ? form.nightGuardUseStatus === "yes"
+        ? "Night guard: Yes; uses."
+        : form.nightGuardUseStatus === "no"
+        ? "Night guard: Yes; does not use."
+        : "Night guard: Yes; use not documented."
+      : "";
 
   const appliancesAndHistory = [
     nightGuard,
     documentationStatusLine(
       "Orthodontic history",
-      form.orthodonticHistoryStatus,
+      form.orthodonticHistoryStatus
     ),
     retainerLine(form.retainerStatus),
     labelledLine("Additional Notes", form.additionalNotes),
@@ -295,21 +340,15 @@ export function buildAdultHygiene2021Summary(
     form.ppeStatementApplies
       ? "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
       : "",
-    labelledLine(
-      "Recommended Recall Interval",
-      form.recallInterval,
-    ),
+    labelledLine("Recommended Recall Interval", form.recallInterval),
     labelledLine(
       "Recommended recall interval comments",
-      form.recallIntervalComments,
+      form.recallIntervalComments
     ),
-    labelledLine(
-      "Recommended Hygiene Interval",
-      form.hygieneInterval,
-    ),
+    labelledLine("Recommended Hygiene Interval", form.hygieneInterval),
     labelledLine(
       "Recommended hygiene interval comments",
-      form.hygieneIntervalComments,
+      form.hygieneIntervalComments
     ),
     labelledLine("Next visit", form.nextVisit),
     trimmed(form.dateBooked) ? `Date Booked: ${trimmed(form.dateBooked)}` : "",

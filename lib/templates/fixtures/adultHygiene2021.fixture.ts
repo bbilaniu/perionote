@@ -33,6 +33,25 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
   recession: "Synthetic localized recession.",
   fmpDone: "Synthetic FMP documentation.",
   healthGingivitis: "Synthetic gingival-health documentation.",
+  gingivalDescription: {
+    status: "findings",
+    findings: [
+      {
+        optionId: "gingiva.color.coral_pink",
+        extent: "generalized",
+        locations: [],
+        measurement: "",
+        comment: "",
+      },
+      {
+        optionId: "gingiva.position.recession",
+        extent: "localized",
+        locations: ["facial 31–33"],
+        measurement: "2",
+        comment: "synthetic finding",
+      },
+    ],
+  },
   periodontitisStageChoice: "Stage II (P2)",
   periodontitisStageComments: "",
   periodontitisGradeChoice: "Grade B: moderate rate",
