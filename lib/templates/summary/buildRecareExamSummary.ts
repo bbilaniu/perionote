@@ -6,7 +6,10 @@ import type {
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
-import { recareIntraoralOptionById } from "@/lib/templates/recareIntraoralCatalog";
+import {
+  recareIntraoralOptionById,
+  recareIntraoralStructures,
+} from "@/lib/templates/recareIntraoralCatalog";
 
 type BuildRecareExamSummaryOptions = {
   startedAt?: Date;
@@ -92,50 +95,74 @@ function examLine(label: string, status: ExamStatus, findings: string): string {
 }
 
 function intraoralLines(form: RecareExamForm): string[] {
-  const findings = (form.structuredIntraoralFindings ?? []).flatMap(
-    (finding) => {
+  if (form.intraoralStatus !== "findings") {
+    const statusLine = examLine(
+      "Intraoral",
+      form.intraoralStatus,
+      form.intraoralFindings
+    );
+    return statusLine ? [statusLine] : [];
+  }
+  const selectedByOptionId = new Map(
+    (form.structuredIntraoralFindings ?? []).flatMap((finding) => {
       const definition = recareIntraoralOptionById.get(finding.optionId);
       if (!definition || definition.structure.id !== finding.structureId)
         return [];
-      const clauses = [definition.option.noteFragment];
-      const locations = definition.option.supportsLocation
+      return [[finding.optionId, finding] as const];
+    })
+  );
+  const findings = recareIntraoralStructures.flatMap((structure) => {
+    const optionFragments = structure.options.flatMap((option) => {
+      const finding = selectedByOptionId.get(option.id);
+      if (!finding) return [];
+      const annotations: string[] = [];
+      const locations = option.supportsLocation
         ? (finding.locations ?? []).map(trimmed).filter(Boolean)
         : [];
-      if (locations.length) clauses.push(`location: ${locations.join(", ")}`);
+      const locationParts = [...locations];
       if (
-        definition.option.supportsLaterality &&
+        option.supportsLaterality &&
         trimmed(finding.laterality ?? "")
       ) {
-        clauses.push(`location: ${trimmed(finding.laterality ?? "")}`);
+        locationParts.push(trimmed(finding.laterality ?? ""));
       }
+      if (locationParts.length)
+        annotations.push(`location: ${locationParts.join(", ")}`);
       if (
-        definition.option.supportsMeasurement &&
+        option.supportsMeasurement &&
         trimmed(finding.measurement ?? "")
       ) {
-        const allowedUnit = definition.option.measurementUnits.includes(
+        const allowedUnit = option.measurementUnits.includes(
           finding.measurementUnit ?? ""
         )
           ? finding.measurementUnit
-          : definition.option.measurementUnits[0];
-        clauses.push(
+          : option.measurementUnits[0];
+        annotations.push(
           `measurement: ${trimmed(finding.measurement ?? "")}${
             allowedUnit ? ` ${allowedUnit}` : ""
           }`
         );
       }
       if (
-        definition.structure.supportsComment &&
+        structure.supportsComment &&
         trimmed(finding.comment ?? "")
       ) {
-        clauses.push(`notes: ${trimmed(finding.comment ?? "")}`);
+        annotations.push(`notes: ${trimmed(finding.comment ?? "")}`);
       }
       return [
-        `  - ${definition.structure.label}: ${withTerminalPunctuation(
-          clauses.join("; ")
-        )}`,
+        annotations.length
+          ? `${option.noteFragment} (${annotations.join("; ")})`
+          : option.noteFragment,
       ];
-    }
-  );
+    });
+    return optionFragments.length
+      ? [
+          `  - ${structure.label}: ${withTerminalPunctuation(
+            optionFragments.join("; ")
+          )}`,
+        ]
+      : [];
+  });
   if (!findings.length) {
     const legacy = examLine(
       "Intraoral",

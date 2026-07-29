@@ -75,6 +75,40 @@ export const recareIntraoralOptionById = new Map(
   )
 );
 
+export const recareNormalStructuredObservationIds = [
+  "ioe.buccal_mucosa.pink",
+  "ioe.buccal_mucosa.moist",
+  "ioe.buccal_mucosa.no_lesions",
+  "ioe.buccal_mucosa.no_swelling",
+  "ioe.tongue.pink",
+  "ioe.tongue.moist",
+  "ioe.tongue.symmetrical",
+  "ioe.tongue.no_lesions",
+  "ioe.floor_of_mouth.pink",
+  "ioe.floor_of_mouth.smooth",
+  "ioe.floor_of_mouth.no_swelling",
+  "ioe.floor_of_mouth.no_discoloration",
+  "ioe.palate.pink",
+  "ioe.palate.intact",
+  "ioe.palate.no_lesions",
+  "ioe.palate.no_abnormal_growths",
+  "ioe.oropharynx.uvula_midline",
+  "ioe.oropharynx.no_redness",
+  "ioe.oropharynx.no_swelling",
+  "ioe.oropharynx.no_exudate",
+  "ioe.saliva.clear",
+  "ioe.saliva.normal_flow",
+] as const;
+
+export function createRecareNormalStructuredIntraoralFindings(): RecareIntraoralFinding[] {
+  return recareNormalStructuredObservationIds.flatMap((optionId) => {
+    const definition = recareIntraoralOptionById.get(optionId);
+    return definition
+      ? [{ optionId, structureId: definition.structure.id }]
+      : [];
+  });
+}
+
 export const recareIntraoralLocationChoices = [
   "Anterior",
   "Posterior",

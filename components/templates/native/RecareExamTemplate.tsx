@@ -33,6 +33,7 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
+  createRecareNormalStructuredIntraoralFindings,
   recareIntraoralLocationChoices,
   recareIntraoralStructures,
 } from "@/lib/templates/recareIntraoralCatalog";
@@ -438,6 +439,7 @@ function StructuredIntraoralFindings({
   values,
   onStatusChange,
   onFindingsChange,
+  onApplyNormal,
   onChange,
 }: {
   status: ExamStatus;
@@ -445,6 +447,7 @@ function StructuredIntraoralFindings({
   values: RecareIntraoralFinding[];
   onStatusChange: (status: ExamStatus) => void;
   onFindingsChange: (findings: string) => void;
+  onApplyNormal: () => void;
   onChange: (values: RecareIntraoralFinding[]) => void;
 }) {
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
@@ -460,8 +463,8 @@ function StructuredIntraoralFindings({
         Structured intraoral observations
       </legend>
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        Optional observations from the reviewed DH Note catalogue. Selecting an
-        observation documents Findings.
+        Apply the reviewed normal observations or select individual
+        observations. Both document Findings.
       </p>
       <div className="grid gap-3 sm:grid-cols-2">
         <FixedChoiceListbox
@@ -481,112 +484,121 @@ function StructuredIntraoralFindings({
           />
         ) : null}
       </div>
-      {recareIntraoralStructures.map((structure) => (
-        <div key={structure.id} className="space-y-2">
-          <h3 className="text-sm font-semibold">{structure.label}</h3>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {structure.options.map((option) => {
-              const selected = values.find(
-                (value) => value.optionId === option.id
-              );
-              return (
-                <div
-                  key={option.id}
-                  className="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
-                >
-                  <label className="flex gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-4 w-4 accent-sky-700"
-                      checked={Boolean(selected)}
-                      onChange={(event) =>
-                        onChange(
-                          event.target.checked
-                            ? [
-                                ...values,
-                                {
-                                  optionId: option.id,
-                                  structureId: structure.id,
-                                },
-                              ]
-                            : values.filter(
-                                (value) => value.optionId !== option.id
-                              )
-                        )
-                      }
-                    />
-                    <span>{option.label}</span>
-                  </label>
-                  {selected ? (
-                    <div className="mt-2 space-y-2">
-                      {option.supportsLocation ? (
-                        <TextField
-                          id={`recare-${option.id}-location`}
-                          label="Location"
-                          value={(selected.locations ?? []).join(", ")}
-                          onChange={(value) =>
-                            patch(option.id, {
-                              locations: value
-                                .split(",")
-                                .map((item) => item.trim())
-                                .filter(Boolean),
-                            })
-                          }
-                          placeholder="Tooth/area or region"
-                        />
-                      ) : null}
-                      {option.supportsLaterality ? (
-                        <FixedChoiceListbox
-                          id={`recare-${option.id}-laterality`}
-                          label="Laterality"
-                          value={selected.laterality ?? ""}
-                          options={[
-                            { value: "", label: "None" },
-                            { value: "Right", label: "Right" },
-                            { value: "Left", label: "Left" },
-                            { value: "Bilateral", label: "Bilateral" },
-                          ]}
-                          onChange={(value) =>
-                            patch(option.id, { laterality: value })
+      <button
+        type="button"
+        className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+        onClick={onApplyNormal}
+      >
+        Apply normal structured observations
+      </button>
+      {status === "findings"
+        ? recareIntraoralStructures.map((structure) => (
+            <div key={structure.id} className="space-y-2">
+              <h3 className="text-sm font-semibold">{structure.label}</h3>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {structure.options.map((option) => {
+                  const selected = values.find(
+                    (value) => value.optionId === option.id
+                  );
+                  return (
+                    <div
+                      key={option.id}
+                      className="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+                    >
+                      <label className="flex gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-1 h-4 w-4 accent-sky-700"
+                          checked={Boolean(selected)}
+                          onChange={(event) =>
+                            onChange(
+                              event.target.checked
+                                ? [
+                                    ...values,
+                                    {
+                                      optionId: option.id,
+                                      structureId: structure.id,
+                                    },
+                                  ]
+                                : values.filter(
+                                    (value) => value.optionId !== option.id
+                                  )
+                            )
                           }
                         />
-                      ) : null}
-                      {option.supportsMeasurement ? (
-                        <TextField
-                          id={`recare-${option.id}-measurement`}
-                          label={`Measurement${
-                            option.measurementUnits.length === 1
-                              ? ` (${option.measurementUnits[0]})`
-                              : ""
-                          }`}
-                          value={selected.measurement ?? ""}
-                          onChange={(value) =>
-                            patch(option.id, {
-                              measurement: value,
-                              measurementUnit: option.measurementUnits[0],
-                            })
-                          }
-                          inputMode="decimal"
-                        />
-                      ) : null}
-                      {structure.supportsComment ? (
-                        <TextField
-                          id={`recare-${option.id}-comment`}
-                          label="Comment"
-                          value={selected.comment ?? ""}
-                          onChange={(value) =>
-                            patch(option.id, { comment: value })
-                          }
-                        />
+                        <span>{option.label}</span>
+                      </label>
+                      {selected ? (
+                        <div className="mt-2 space-y-2">
+                          {option.supportsLocation ? (
+                            <TextField
+                              id={`recare-${option.id}-location`}
+                              label="Location"
+                              value={(selected.locations ?? []).join(", ")}
+                              onChange={(value) =>
+                                patch(option.id, {
+                                  locations: value
+                                    .split(",")
+                                    .map((item) => item.trim())
+                                    .filter(Boolean),
+                                })
+                              }
+                              placeholder="Tooth/area or region"
+                            />
+                          ) : null}
+                          {option.supportsLaterality ? (
+                            <FixedChoiceListbox
+                              id={`recare-${option.id}-laterality`}
+                              label="Laterality"
+                              value={selected.laterality ?? ""}
+                              options={[
+                                { value: "", label: "None" },
+                                { value: "Right", label: "Right" },
+                                { value: "Left", label: "Left" },
+                                { value: "Bilateral", label: "Bilateral" },
+                              ]}
+                              onChange={(value) =>
+                                patch(option.id, { laterality: value })
+                              }
+                            />
+                          ) : null}
+                          {option.supportsMeasurement ? (
+                            <TextField
+                              id={`recare-${option.id}-measurement`}
+                              label={`Measurement${
+                                option.measurementUnits.length === 1
+                                  ? ` (${option.measurementUnits[0]})`
+                                  : ""
+                              }`}
+                              value={selected.measurement ?? ""}
+                              onChange={(value) =>
+                                patch(option.id, {
+                                  measurement: value,
+                                  measurementUnit: option.measurementUnits[0],
+                                })
+                              }
+                              inputMode="decimal"
+                            />
+                          ) : null}
+                          {structure.supportsComment ? (
+                            <TextField
+                              id={`recare-${option.id}-comment`}
+                              label="Comment"
+                              value={selected.comment ?? ""}
+                              onChange={(value) =>
+                                patch(option.id, { comment: value })
+                              }
+                            />
+                          ) : null}
+                        </div>
                       ) : null}
                     </div>
-                  ) : null}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
+                  );
+                })}
+              </div>
+            </div>
+          ))
+        : null}
     </fieldset>
   );
 }
@@ -803,6 +815,27 @@ export function RecareExamTemplate({
       return;
     }
     updateField("intraoralStatus", value);
+  }
+
+  function applyNormalStructuredIntraoral() {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (
+      hasFindings &&
+      !window.confirm(
+        "Replace all entered intraoral findings with the reviewed normal structured observations?"
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      intraoralStatus: "findings",
+      intraoralFindings: "",
+      structuredIntraoralFindings:
+        createRecareNormalStructuredIntraoralFindings(),
+    }));
+    setCopyMessage("");
   }
 
   function changeAdditionalOcclusalValues(values: string[]) {
@@ -1125,6 +1158,7 @@ export function RecareExamTemplate({
               findings={form.intraoralFindings}
               values={form.structuredIntraoralFindings ?? []}
               onStatusChange={changeIntraoralStatus}
+              onApplyNormal={applyNormalStructuredIntraoral}
               onFindingsChange={(value) => {
                 updateField("intraoralFindings", value);
                 if (value.trim()) updateField("intraoralStatus", "findings");
