@@ -28,10 +28,6 @@ function withTerminalPunctuation(value: string): string {
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
 }
 
-function selectedValue(choice: string, other: string): string {
-  return trimmed(other) || trimmed(choice);
-}
-
 function oheTopicLine(values: string[]): string {
   const cleanValues = values.map(trimmed).filter(Boolean);
   const selected = new Set(cleanValues);
@@ -70,6 +66,23 @@ function oheTopicLine(values: string[]): string {
 function labelledLine(label: string, value: string): string {
   const cleanValue = trimmed(value);
   return cleanValue ? `${label}: ${withTerminalPunctuation(cleanValue)}` : "";
+}
+
+function findingWithCommentLine(
+  label: string,
+  finding: string,
+  comment: string
+): string {
+  const cleanFinding = trimmed(finding);
+  const cleanComment = trimmed(comment);
+  if (cleanFinding && cleanComment) {
+    return `${label}: ${withTerminalPunctuation(
+      `${cleanFinding}; ${cleanComment}`
+    )}`;
+  }
+  return cleanFinding
+    ? labelledLine(label, cleanFinding)
+    : labelledLine(`${label} comment`, cleanComment);
 }
 
 export function formatGingivalDescription(
@@ -233,15 +246,17 @@ export function buildAdultHygiene2021Summary(
       form.listChiefConcerns
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
-    labelledLine("Plaque", selectedValue(form.plaqueChoice, form.plaqueOther)),
-    labelledLine("Stain", selectedValue(form.stainChoice, form.stainOther)),
-    labelledLine(
+    findingWithCommentLine("Plaque", form.plaqueChoice, form.plaqueComment),
+    findingWithCommentLine("Stain", form.stainChoice, form.stainComment),
+    findingWithCommentLine(
       "Calculus",
-      selectedValue(form.calculusChoice, form.calculusOther)
+      form.calculusChoice,
+      form.calculusComment
     ),
-    labelledLine(
+    findingWithCommentLine(
       "Bleeding",
-      selectedValue(form.bleedingChoice, form.bleedingOther)
+      form.bleedingChoice,
+      form.bleedingComment
     ),
   ];
 

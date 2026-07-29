@@ -340,26 +340,26 @@ function parseFacetedChoice(choice: string, facetChoices: readonly string[]) {
   );
 }
 
-function FacetedChoiceWithOther({
+function FacetedChoiceWithComment({
   id,
   label,
   choice,
-  other,
+  comment,
   facetChoices,
   facetGroups,
   onChoiceChange,
-  onOtherChange,
+  onCommentChange,
   formatChoice = (values) => values.join(" "),
   standaloneValue,
 }: {
   id: string;
   label: string;
   choice: string;
-  other: string;
+  comment: string;
   facetChoices: readonly string[];
   facetGroups: readonly FixedChoiceMultiComboboxGroup[];
   onChoiceChange: (choice: string) => void;
-  onOtherChange: (other: string) => void;
+  onCommentChange: (comment: string) => void;
   formatChoice?: (values: string[]) => string;
   standaloneValue?: string;
 }) {
@@ -386,9 +386,6 @@ function FacetedChoiceWithOther({
           }
           const nextChoice = formatChoice(nextValues);
           onChoiceChange(nextChoice);
-          if (nextChoice) {
-            onOtherChange("");
-          }
         }}
         customPlaceholder={`Search ${label.toLocaleLowerCase("en-CA")} options`}
         customHelpText="Choose options in each applicable section."
@@ -396,16 +393,11 @@ function FacetedChoiceWithOther({
         allowCustomValues={false}
       />
       <TextField
-        id={`${id}-other`}
-        label={`Other ${label.toLocaleLowerCase("en-CA")}`}
-        value={other}
-        onChange={(value) => {
-          onOtherChange(value);
-          if (value.trim()) {
-            onChoiceChange("");
-          }
-        }}
-        placeholder="Optional custom value"
+        id={`${id}-comment`}
+        label={`${label} comment`}
+        value={comment}
+        onChange={onCommentChange}
+        placeholder="Optional comment"
       />
     </div>
   );
@@ -1171,36 +1163,38 @@ export function AdultHygiene2021Template({
               value={form.hygieneAreaOfConcern}
               onChange={(value) => updateField("hygieneAreaOfConcern", value)}
             />
-            <FacetedChoiceWithOther
+            <FacetedChoiceWithComment
               id="adult-hygiene-plaque"
               label="Plaque"
               choice={form.plaqueChoice}
-              other={form.plaqueOther}
+              comment={form.plaqueComment}
               facetChoices={plaqueFacetChoices}
               facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
-              onOtherChange={(value) => updateField("plaqueOther", value)}
+              onCommentChange={(value) => updateField("plaqueComment", value)}
             />
-            <FacetedChoiceWithOther
+            <FacetedChoiceWithComment
               id="adult-hygiene-stain"
               label="Stain"
               choice={form.stainChoice}
-              other={form.stainOther}
+              comment={form.stainComment}
               facetChoices={stainFacetChoices}
               facetGroups={stainFacetGroups}
               onChoiceChange={(value) => updateField("stainChoice", value)}
-              onOtherChange={(value) => updateField("stainOther", value)}
+              onCommentChange={(value) => updateField("stainComment", value)}
               standaloneValue="None"
             />
-            <FacetedChoiceWithOther
+            <FacetedChoiceWithComment
               id="adult-hygiene-calculus"
               label="Calculus"
               choice={form.calculusChoice}
-              other={form.calculusOther}
+              comment={form.calculusComment}
               facetChoices={calculusFacetChoices}
               facetGroups={calculusFacetGroups}
               onChoiceChange={(value) => updateField("calculusChoice", value)}
-              onOtherChange={(value) => updateField("calculusOther", value)}
+              onCommentChange={(value) =>
+                updateField("calculusComment", value)
+              }
               formatChoice={(values) => {
                 const locationValues = values.filter((value) =>
                   calculusLocationFacetChoices.includes(
@@ -1220,15 +1214,17 @@ export function AdultHygiene2021Template({
                   .join(" ");
               }}
             />
-            <FacetedChoiceWithOther
+            <FacetedChoiceWithComment
               id="adult-hygiene-bleeding"
               label="Bleeding"
               choice={form.bleedingChoice}
-              other={form.bleedingOther}
+              comment={form.bleedingComment}
               facetChoices={bleedingFacetChoices}
               facetGroups={bleedingFacetGroups}
               onChoiceChange={(value) => updateField("bleedingChoice", value)}
-              onOtherChange={(value) => updateField("bleedingOther", value)}
+              onCommentChange={(value) =>
+                updateField("bleedingComment", value)
+              }
             />
           </Section>
 

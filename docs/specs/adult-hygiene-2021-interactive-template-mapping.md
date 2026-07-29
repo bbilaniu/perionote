@@ -342,10 +342,10 @@ valid.
 | --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
 | A12 | `Hygiene Area of Concern:`                           | Textarea: **Hygiene area of concern**                                                                                                                                      | `patient-specific`                                                                         | `Hygiene Area of Concern: {text}`                                                                      |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other**                                                                                    | Facets: `appCore`; Other: `patient-specific`                                               | `Plaque: {extent intensity location}` or entered text                                                  |
-| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other**                                                                                          | Facets: `appCore`; Other: `patient-specific`                                               | `Stain: {extent intensity}` or entered text                                                            |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with editable **Other**                                                                            | Facets: `appCore`; Other: `patient-specific`                                               | `Calculus: {extent intensity location(s)}` or entered text                                             |
-| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with editable **Other**                                                                                                        | Facets: `appCore`; Other: `patient-specific`                                               | `Bleeding: {extent severity}` or entered text                                                          |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped facets for **Extent**, **Intensity**, and **Location**, with independent **Plaque comment**                                                                        | Facets: `appCore`; comment: `patient-specific`                                             | `Plaque: {extent intensity location}; {comment}.`; comment-only state uses `Plaque comment:`            |
+| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with independent **Stain comment**                                                                               | Facets: `appCore`; comment: `patient-specific`                                             | `Stain: {extent intensity}; {comment}.`; comment-only state uses `Stain comment:`                       |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with independent **Calculus comment**                                                              | Facets: `appCore`; comment: `patient-specific`                                             | `Calculus: {extent intensity location(s)}; {comment}.`; comment-only state uses `Calculus comment:`     |
+| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with independent **Bleeding comment**                                                                                          | Facets: `appCore`; comment: `patient-specific`                                             | `Bleeding: {extent severity}; {comment}.`; comment-only state uses `Bleeding comment:`                  |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
@@ -366,10 +366,11 @@ reviewed generic choices rather than private clinic catalogue values:
 
 The labels above expand the remaining ClearDent shorthand: `LOC` to
 **Localized**, `GEN` to **Generalized**, `MOD` to **Moderate**, and `MARG` to
-**Marginal**. Generated output uses these expanded labels. Each control retains
-an editable **Other** value because unknown documentation must remain valid and
-the Plaque screenshot scrollbar means additional values may not have been
-captured. No finding is selected by default or saved automatically.
+**Marginal**. Generated output uses these expanded labels. Each control has an
+independent encounter-specific comment that neither clears nor replaces its
+structured finding. When both are present, the comment is appended to the
+finding's output line. A comment may also be documented without a structured
+finding. No finding is selected by default or saved automatically.
 
 The interactive controls reuse the grouped fixed-choice menu. Extent,
 intensity, and severity sections permit one selection each. Plaque location

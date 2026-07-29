@@ -169,15 +169,34 @@ Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatmen
 PSR/Pocketing: 1 _ 3 / _ 2 _`);
   });
 
-  it("uses editable Other values without retaining the unselected choice", () => {
+  it("keeps hygiene findings and their comments independent", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
       plaqueChoice: "Localized mild interproximal",
-      plaqueOther: "Imported plaque wording",
+      plaqueComment: "Most notable posteriorly",
+      stainChoice: "Generalized moderate",
+      stainComment: "Synthetic extrinsic stain note",
+      calculusChoice: "Localized moderate marginal",
+      calculusComment: "Synthetic calculus note",
+      bleedingChoice: "Generalized mild",
+      bleedingComment: "Synthetic bleeding note",
+    };
+
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Plaque: Localized mild interproximal; Most notable posteriorly.
+Stain: Generalized moderate; Synthetic extrinsic stain note.
+Calculus: Localized moderate marginal; Synthetic calculus note.
+Bleeding: Generalized mild; Synthetic bleeding note.`);
+  });
+
+  it("emits a hygiene comment without requiring a structured finding", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      calculusComment: "Encounter-specific calculus comment",
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Plaque: Imported plaque wording."
+      "Calculus comment: Encounter-specific calculus comment."
     );
   });
 

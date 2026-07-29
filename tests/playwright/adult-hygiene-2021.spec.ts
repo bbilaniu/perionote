@@ -205,8 +205,11 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     .getByRole("button", { name: "Done", exact: true })
     .click();
   await page
-    .locator("#adult-hygiene-calculus-other")
-    .fill("Imported calculus wording");
+    .getByLabel("Plaque comment", { exact: true })
+    .fill("Most notable posteriorly");
+  await page
+    .getByLabel("Calculus comment", { exact: true })
+    .fill("Imported calculus comment");
   const ohiAids = page.locator("#adult-hygiene-ohi-aids");
   await ohiAids.fill("Synthetic interdental aid");
   await ohiAids.press("Enter");
@@ -253,7 +256,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     /Informed verbal consent given by PATIENT and PARENT for treatment today\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Plaque: Localized moderate interproximal\.[\s\S]*Calculus: Imported calculus wording\./
+    /Plaque: Localized moderate interproximal; Most notable posteriorly\.[\s\S]*Calculus comment: Imported calculus comment\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /OH Aids Reviewed\/Recommended: Synthetic interdental aid/
