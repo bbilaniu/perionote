@@ -136,6 +136,38 @@ test("Recare Exam documents CPAP ownership and conditional use", async ({
   await expect(page.locator("#recare-summary")).toHaveValue(/CPAP: No\./);
 });
 
+test("Recare Exam places the Intraoral status inside structured observations", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredIntraoral = page.getByRole("group", {
+    name: "Structured intraoral observations",
+    exact: true,
+  });
+  const intraoralStatus = structuredIntraoral.getByRole("button", {
+    name: "Intraoral",
+    exact: true,
+  });
+
+  await expect(intraoralStatus).toBeVisible();
+  await expect(
+    structuredIntraoral.getByRole("textbox", {
+      name: "Intraoral findings",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  await intraoralStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await expect(
+    structuredIntraoral.getByRole("textbox", {
+      name: "Intraoral findings",
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
 test("Recare Exam treatment rows allow duplicate types, note-only areas, inline edits, and independent plan copies", async ({
   page,
 }) => {

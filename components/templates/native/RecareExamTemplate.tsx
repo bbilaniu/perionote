@@ -433,10 +433,18 @@ function ExamFinding({
 }
 
 function StructuredIntraoralFindings({
+  status,
+  findings,
   values,
+  onStatusChange,
+  onFindingsChange,
   onChange,
 }: {
+  status: ExamStatus;
+  findings: string;
   values: RecareIntraoralFinding[];
+  onStatusChange: (status: ExamStatus) => void;
+  onFindingsChange: (findings: string) => void;
   onChange: (values: RecareIntraoralFinding[]) => void;
 }) {
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
@@ -455,6 +463,24 @@ function StructuredIntraoralFindings({
         Optional observations from the reviewed DH Note catalogue. Selecting an
         observation documents Findings.
       </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <FixedChoiceListbox
+          id="recare-intraoral-status"
+          label="Intraoral"
+          value={status}
+          options={examStatusOptions}
+          onChange={onStatusChange}
+        />
+        {status === "findings" ? (
+          <TextField
+            id="recare-intraoral-findings"
+            label="Intraoral findings"
+            value={findings}
+            onChange={onFindingsChange}
+            placeholder="Enter additional findings"
+          />
+        ) : null}
+      </div>
       {recareIntraoralStructures.map((structure) => (
         <div key={structure.id} className="space-y-2">
           <h3 className="text-sm font-semibold">{structure.label}</h3>
@@ -1094,19 +1120,15 @@ export function RecareExamTemplate({
                 updateField("tmjLoadFindings", value)
               }
             />
-            <ExamFinding
-              id="recare-intraoral"
-              label="Intraoral"
+            <StructuredIntraoralFindings
               status={form.intraoralStatus}
               findings={form.intraoralFindings}
+              values={form.structuredIntraoralFindings ?? []}
               onStatusChange={changeIntraoralStatus}
               onFindingsChange={(value) => {
                 updateField("intraoralFindings", value);
                 if (value.trim()) updateField("intraoralStatus", "findings");
               }}
-            />
-            <StructuredIntraoralFindings
-              values={form.structuredIntraoralFindings ?? []}
               onChange={(values) => {
                 updateField("structuredIntraoralFindings", values);
                 if (values.length) updateField("intraoralStatus", "findings");

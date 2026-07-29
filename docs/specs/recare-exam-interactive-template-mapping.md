@@ -187,6 +187,11 @@ plus supported location, laterality, measurement/unit, and comment values.
 Catalogue wording is resolved when the note is generated; unknown or retired
 IDs are ignored. Gingiva and Teeth are deliberately excluded.
 
+The existing shared **Intraoral** status dropdown and conditional legacy
+findings field are placed at the top of the **Structured intraoral
+observations** fieldset. This is a layout consolidation only: it does not add a
+second status model or change the accepted status values and transitions.
+
 Selecting or editing any finding changes the shared R17 status to Findings,
 including normal and normal-variation observations. WNL is never inferred.
 Choosing WNL while free text or structured observations exist asks for
