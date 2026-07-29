@@ -13,6 +13,8 @@ import type {
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
+  RecareIntraoralFinding,
+  RecareOcclusalFinding,
   RecareTreatmentEntry,
 } from "@/lib/templates/recareExam";
 import {
@@ -30,6 +32,10 @@ import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import {
+  recareIntraoralLocationChoices,
+  recareIntraoralStructures,
+} from "@/lib/templates/recareIntraoralCatalog";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
@@ -248,12 +254,12 @@ function TreatmentEntryList({
 }) {
   function updateEntry(
     entryId: string,
-    patch: Partial<Omit<RecareTreatmentEntry, "id">>,
+    patch: Partial<Omit<RecareTreatmentEntry, "id">>
   ) {
     onChange(
       entries.map((entry) =>
-        entry.id === entryId ? { ...entry, ...patch } : entry,
-      ),
+        entry.id === entryId ? { ...entry, ...patch } : entry
+      )
     );
   }
 
@@ -331,9 +337,7 @@ function TreatmentEntryList({
                     ariaLabel={`Remove ${label} item ${index + 1}`}
                     onClick={() =>
                       onChange(
-                        entries.filter(
-                          (candidate) => candidate.id !== entry.id,
-                        ),
+                        entries.filter((candidate) => candidate.id !== entry.id)
                       )
                     }
                   >
@@ -428,6 +432,198 @@ function ExamFinding({
   );
 }
 
+function StructuredIntraoralFindings({
+  values,
+  onChange,
+}: {
+  values: RecareIntraoralFinding[];
+  onChange: (values: RecareIntraoralFinding[]) => void;
+}) {
+  function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
+    onChange(
+      values.map((value) =>
+        value.optionId === optionId ? { ...value, ...changes } : value
+      )
+    );
+  }
+  return (
+    <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+      <legend className="px-1 text-sm font-semibold">
+        Structured intraoral observations
+      </legend>
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Optional observations from the reviewed DH Note catalogue. Selecting an
+        observation documents Findings.
+      </p>
+      {recareIntraoralStructures.map((structure) => (
+        <div key={structure.id} className="space-y-2">
+          <h3 className="text-sm font-semibold">{structure.label}</h3>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {structure.options.map((option) => {
+              const selected = values.find(
+                (value) => value.optionId === option.id
+              );
+              return (
+                <div
+                  key={option.id}
+                  className="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
+                >
+                  <label className="flex gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      className="mt-1 h-4 w-4 accent-sky-700"
+                      checked={Boolean(selected)}
+                      onChange={(event) =>
+                        onChange(
+                          event.target.checked
+                            ? [
+                                ...values,
+                                {
+                                  optionId: option.id,
+                                  structureId: structure.id,
+                                },
+                              ]
+                            : values.filter(
+                                (value) => value.optionId !== option.id
+                              )
+                        )
+                      }
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                  {selected ? (
+                    <div className="mt-2 space-y-2">
+                      {option.supportsLocation ? (
+                        <TextField
+                          id={`recare-${option.id}-location`}
+                          label="Location"
+                          value={(selected.locations ?? []).join(", ")}
+                          onChange={(value) =>
+                            patch(option.id, {
+                              locations: value
+                                .split(",")
+                                .map((item) => item.trim())
+                                .filter(Boolean),
+                            })
+                          }
+                          placeholder="Tooth/area or region"
+                        />
+                      ) : null}
+                      {option.supportsLaterality ? (
+                        <FixedChoiceListbox
+                          id={`recare-${option.id}-laterality`}
+                          label="Laterality"
+                          value={selected.laterality ?? ""}
+                          options={[
+                            { value: "", label: "None" },
+                            { value: "Right", label: "Right" },
+                            { value: "Left", label: "Left" },
+                            { value: "Bilateral", label: "Bilateral" },
+                          ]}
+                          onChange={(value) =>
+                            patch(option.id, { laterality: value })
+                          }
+                        />
+                      ) : null}
+                      {option.supportsMeasurement ? (
+                        <TextField
+                          id={`recare-${option.id}-measurement`}
+                          label={`Measurement${
+                            option.measurementUnits.length === 1
+                              ? ` (${option.measurementUnits[0]})`
+                              : ""
+                          }`}
+                          value={selected.measurement ?? ""}
+                          onChange={(value) =>
+                            patch(option.id, {
+                              measurement: value,
+                              measurementUnit: option.measurementUnits[0],
+                            })
+                          }
+                          inputMode="decimal"
+                        />
+                      ) : null}
+                      {structure.supportsComment ? (
+                        <TextField
+                          id={`recare-${option.id}-comment`}
+                          label="Comment"
+                          value={selected.comment ?? ""}
+                          onChange={(value) =>
+                            patch(option.id, { comment: value })
+                          }
+                        />
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </fieldset>
+  );
+}
+
+function OcclusalFindingLocations({
+  entry,
+  onChange,
+}: {
+  entry: RecareOcclusalFinding;
+  onChange: (entry: RecareOcclusalFinding) => void;
+}) {
+  const quick = new Set(recareIntraoralLocationChoices);
+  const custom = entry.locations.filter(
+    (location) =>
+      !quick.has(location as (typeof recareIntraoralLocationChoices)[number])
+  );
+  return (
+    <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-3 dark:border-slate-700">
+      <span className="text-xs font-medium">Location (optional)</span>
+      <div className="flex flex-wrap gap-3">
+        {recareIntraoralLocationChoices.map((location) => (
+          <label key={location} className="flex gap-1 text-xs">
+            <input
+              type="checkbox"
+              checked={entry.locations.includes(location)}
+              onChange={(event) =>
+                onChange({
+                  ...entry,
+                  locations: event.target.checked
+                    ? [...entry.locations, location]
+                    : entry.locations.filter((item) => item !== location),
+                })
+              }
+            />
+            {location}
+          </label>
+        ))}
+      </div>
+      <TextField
+        id={`recare-occlusal-${entry.id}-region`}
+        label="Tooth/area or region"
+        value={custom.join(", ")}
+        onChange={(value) =>
+          onChange({
+            ...entry,
+            locations: [
+              ...entry.locations.filter((location) =>
+                quick.has(
+                  location as (typeof recareIntraoralLocationChoices)[number]
+                )
+              ),
+              ...value
+                .split(",")
+                .map((item) => item.trim())
+                .filter(Boolean),
+            ],
+          })
+        }
+      />
+    </div>
+  );
+}
+
 async function writeClipboard(value: string): Promise<boolean> {
   if (navigator.clipboard?.writeText) {
     try {
@@ -457,7 +653,7 @@ export function RecareExamTemplate({
   summary: string;
 }) {
   const [form, setForm] = useState<RecareExamForm>(() =>
-    createEmptyRecareExamForm(),
+    createEmptyRecareExamForm()
   );
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [patientIdError, setPatientIdError] = useState("");
@@ -489,11 +685,11 @@ export function RecareExamTemplate({
       buildRecareExamSummary(form, {
         ...(startedAt ? { startedAt } : {}),
       }),
-    [form, startedAt],
+    [form, startedAt]
   );
   function updateField<TKey extends keyof RecareExamForm>(
     key: TKey,
-    value: RecareExamForm[TKey],
+    value: RecareExamForm[TKey]
   ) {
     setForm((current) => ({ ...current, [key]: value }));
     setCopyMessage("");
@@ -513,12 +709,12 @@ export function RecareExamTemplate({
   async function copyNote() {
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rda, form.rdh].some((value) =>
-      Boolean(value.trim()),
+      Boolean(value.trim())
     );
 
     setPatientIdError(missingPatientId ? "Enter a Patient ID." : "");
     setProviderError(
-      missingProvider ? "Enter at least one of Dentist, RDA, or RDH." : "",
+      missingProvider ? "Enter at least one of Dentist, RDA, or RDH." : ""
     );
     setCopyMessage("");
 
@@ -537,7 +733,7 @@ export function RecareExamTemplate({
     setCopyMessage(
       copied
         ? "Note copied."
-        : "The note could not be copied. Select the preview and copy it manually.",
+        : "The note could not be copied. Select the preview and copy it manually."
     );
   }
 
@@ -545,10 +741,56 @@ export function RecareExamTemplate({
     setForm({
       ...fixture,
       chiefConcern: [...fixture.chiefConcern],
+      structuredIntraoralFindings: (
+        fixture.structuredIntraoralFindings ?? []
+      ).map((finding) => ({
+        ...finding,
+        locations: [...(finding.locations ?? [])],
+      })),
+      additionalOcclusalFindings: (
+        fixture.additionalOcclusalFindings ?? []
+      ).map((finding) => ({ ...finding, locations: [...finding.locations] })),
     });
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("Synthetic demo data loaded.");
+  }
+
+  function changeIntraoralStatus(value: ExamStatus) {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (value === "wnl" && hasFindings) {
+      if (
+        !window.confirm(
+          "Mark Intraoral WNL and clear all entered intraoral findings?"
+        )
+      )
+        return;
+      setForm((current) => ({
+        ...current,
+        intraoralStatus: "wnl",
+        intraoralFindings: "",
+        structuredIntraoralFindings: [],
+      }));
+      setCopyMessage("");
+      return;
+    }
+    updateField("intraoralStatus", value);
+  }
+
+  function changeAdditionalOcclusalValues(values: string[]) {
+    const existing = [...(form.additionalOcclusalFindings ?? [])];
+    const next = values.map((finding, index) => {
+      const sameIndex = existing[index];
+      if (sameIndex?.finding === finding) return sameIndex;
+      const matchIndex = existing.findIndex(
+        (entry) => entry.finding === finding
+      );
+      if (matchIndex >= 0) return existing.splice(matchIndex, 1)[0];
+      return { id: `occlusal-${Date.now()}-${index}`, finding, locations: [] };
+    });
+    updateField("additionalOcclusalFindings", next);
   }
 
   function resetForm() {
@@ -566,7 +808,7 @@ export function RecareExamTemplate({
 
   function createTreatmentEntry(
     scope: "option" | "plan",
-    source?: RecareTreatmentEntry,
+    source?: RecareTreatmentEntry
   ): RecareTreatmentEntry {
     treatmentEntrySequence.current += 1;
     return {
@@ -602,7 +844,7 @@ export function RecareExamTemplate({
       >
         <div className="space-y-6">
           <Section title="Patient and Visit Context">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <TextField
                 id="recare-patient-id"
                 label="Patient ID"
@@ -671,7 +913,7 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Consent, Medical History, and Sterilization">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="flex items-center md:pt-6">
                 <CheckboxField
                   id="recare-class5"
@@ -799,8 +1041,8 @@ export function RecareExamTemplate({
                   "chiefConcern",
                   applyPatientChiefConcernSelectionRules(
                     form.chiefConcern,
-                    values,
-                  ),
+                    values
+                  )
                 )
               }
               roomySelectionActions
@@ -857,10 +1099,18 @@ export function RecareExamTemplate({
               label="Intraoral"
               status={form.intraoralStatus}
               findings={form.intraoralFindings}
-              onStatusChange={(value) => updateField("intraoralStatus", value)}
-              onFindingsChange={(value) =>
-                updateField("intraoralFindings", value)
-              }
+              onStatusChange={changeIntraoralStatus}
+              onFindingsChange={(value) => {
+                updateField("intraoralFindings", value);
+                if (value.trim()) updateField("intraoralStatus", "findings");
+              }}
+            />
+            <StructuredIntraoralFindings
+              values={form.structuredIntraoralFindings ?? []}
+              onChange={(values) => {
+                updateField("structuredIntraoralFindings", values);
+                if (values.length) updateField("intraoralStatus", "findings");
+              }}
             />
 
             <TextField
@@ -870,7 +1120,7 @@ export function RecareExamTemplate({
               onChange={(value) => updateField("oralHabits", value)}
             />
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
                 <CatalogueCombobox
                   id="recare-right-molar-occlusion"
@@ -891,7 +1141,7 @@ export function RecareExamTemplate({
                     onChange={(event) => {
                       updateField(
                         "rightMolarOcclusionNotApplicable",
-                        event.target.checked,
+                        event.target.checked
                       );
                       if (event.target.checked) {
                         updateField("rightMolarOcclusion", "");
@@ -919,7 +1169,7 @@ export function RecareExamTemplate({
                     onChange={(event) => {
                       updateField(
                         "leftMolarOcclusionNotApplicable",
-                        event.target.checked,
+                        event.target.checked
                       );
                       if (event.target.checked) {
                         updateField("leftMolarOcclusion", "");
@@ -949,7 +1199,7 @@ export function RecareExamTemplate({
                   onChange={(event) => {
                     updateField(
                       "skeletalOcclusionNotApplicable",
-                      event.target.checked,
+                      event.target.checked
                     );
                     if (event.target.checked) {
                       updateField("skeletalOcclusion", "");
@@ -960,7 +1210,7 @@ export function RecareExamTemplate({
               </label>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <TextField
                 id="recare-overjet"
                 label="Overjet (mm)"
@@ -975,6 +1225,39 @@ export function RecareExamTemplate({
                 onChange={(value) => updateField("overbitePercent", value)}
                 inputMode="decimal"
               />
+              <TextField
+                id="recare-overbite-mm"
+                label="Overbite (mm)"
+                value={form.overbiteMm ?? ""}
+                onChange={(value) => updateField("overbiteMm", value)}
+                inputMode="decimal"
+              />
+            </div>
+            <div>
+              <CatalogueMultiCombobox
+                id="recare-additional-occlusal-findings"
+                label="Additional occlusal findings"
+                catalogueKey="clinical-exam.additional-occlusal-findings"
+                values={(form.additionalOcclusalFindings ?? []).map(
+                  (entry) => entry.finding
+                )}
+                onChange={changeAdditionalOcclusalValues}
+                roomySelectionActions
+              />
+              {(form.additionalOcclusalFindings ?? []).map((entry) => (
+                <OcclusalFindingLocations
+                  key={entry.id}
+                  entry={entry}
+                  onChange={(updated) =>
+                    updateField(
+                      "additionalOcclusalFindings",
+                      (form.additionalOcclusalFindings ?? []).map((item) =>
+                        item.id === entry.id ? updated : item
+                      )
+                    )
+                  }
+                />
+              ))}
             </div>
           </Section>
 
@@ -1134,14 +1417,14 @@ export function RecareExamTemplate({
             <div className="space-y-3">
               {form.treatmentPlan.every(
                 (entry) =>
-                  !entry.treatmentType.trim() && !entry.toothArea.trim(),
+                  !entry.treatmentType.trim() && !entry.toothArea.trim()
               ) ? (
                 <button
                   type="button"
                   className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
                   disabled={
                     !form.treatmentOptions.some((entry) =>
-                      Boolean(entry.treatmentType.trim()),
+                      Boolean(entry.treatmentType.trim())
                     )
                   }
                   onClick={() =>
@@ -1149,7 +1432,7 @@ export function RecareExamTemplate({
                       "treatmentPlan",
                       form.treatmentOptions
                         .filter((entry) => entry.treatmentType.trim())
-                        .map((entry) => createTreatmentEntry("plan", entry)),
+                        .map((entry) => createTreatmentEntry("plan", entry))
                     )
                   }
                 >

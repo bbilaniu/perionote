@@ -22,6 +22,15 @@ export type RecareTreatmentEntry = {
   toothArea: string;
 };
 
+export type RecareOcclusalFinding = {
+  id: string;
+  finding: string;
+  locations: string[];
+};
+
+export type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCatalog";
+import type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCatalog";
+
 export interface RecareExamForm {
   patientId: string;
   dentist: string;
@@ -51,6 +60,7 @@ export interface RecareExamForm {
   tmjLoadFindings: string;
   intraoralStatus: ExamStatus;
   intraoralFindings: string;
+  structuredIntraoralFindings?: RecareIntraoralFinding[];
   oralHabits: string;
   rightMolarOcclusion: string;
   rightMolarOcclusionNotApplicable: boolean;
@@ -60,6 +70,8 @@ export interface RecareExamForm {
   skeletalOcclusionNotApplicable: boolean;
   overjetMm: string;
   overbitePercent: string;
+  overbiteMm?: string;
+  additionalOcclusalFindings?: RecareOcclusalFinding[];
   cpapStatus: DocumentationStatus;
   cpapUseStatus: DocumentationStatus;
   occlusalSplintStatus: DocumentationStatus;
@@ -111,6 +123,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     tmjLoadFindings: "",
     intraoralStatus: "not-assessed",
     intraoralFindings: "",
+    structuredIntraoralFindings: [],
     oralHabits: "",
     rightMolarOcclusion: "",
     rightMolarOcclusionNotApplicable: false,
@@ -120,6 +133,8 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     skeletalOcclusionNotApplicable: false,
     overjetMm: "",
     overbitePercent: "",
+    overbiteMm: "",
+    additionalOcclusalFindings: [],
     cpapStatus: "not-documented",
     cpapUseStatus: "not-documented",
     occlusalSplintStatus: "not-documented",

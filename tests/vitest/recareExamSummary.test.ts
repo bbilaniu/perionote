@@ -46,13 +46,16 @@ TMJ: Synthetic bilateral clicking without discomfort.
 Palpation of the masseter test: WNL.
 Load TMJ joint test: WNL.
 
-Intraoral: WNL.
+Intraoral:
+  - Tongue: fissured; notes: Synthetic observation.
+  - Saliva: normal flow.
 Oral habits: Synthetic clenching history.
 Molar occlusion—right: Synthetic Class I.
 Molar occlusion—left: N/A.
 Skeletal occlusion: N/A.
 Overjet: 2 mm.
-Overbite: 30%.
+Overbite: 30%; 3 mm.
+Additional occlusal findings: Crossbite (location: Posterior, Left).
 
 CPAP: No.
 Occlusal splint: Yes; uses.
@@ -90,7 +93,7 @@ Date Booked: 2026-08-15`);
 
     expect(buildRecareExamSummary(form)).toBe(
       `Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today. Synthetic consent detail.
-Medical history reviewed: YES- NO CHANGES.`,
+Medical history reviewed: YES- NO CHANGES.`
     );
   });
 
@@ -186,7 +189,8 @@ Treatment Plan:
       listTreatmentPlan: false,
     };
 
-    expect(buildRecareExamSummary(form)).toBe(`Treatment Options: Hygiene maintenance; Restorative consultation — tooth 36
+    expect(buildRecareExamSummary(form))
+      .toBe(`Treatment Options: Hygiene maintenance; Restorative consultation — tooth 36
 
 Treatment Plan: Hygiene maintenance`);
   });
@@ -208,20 +212,83 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         cariesRiskNotes: "Synthetic rationale only",
-      }),
+      })
     ).toBe("Caries risk: Synthetic rationale only.");
   });
 
   it("uses browser-local timestamp components", () => {
     expect(formatRecareExamLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      "2026-01-02 03:04",
+      "2026-01-02 03:04"
     );
     expect(formatNoteHeaderLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      "----- January 2, 2026 3:04:05 AM -----",
+      "----- January 2, 2026 3:04:05 AM -----"
     );
-    expect(formatNoteHeaderLocalTimestamp(new Date(2026, 6, 24, 10, 21, 44))).toBe(
-      "----- July 24, 2026 10:21:44 AM -----",
-    );
+    expect(
+      formatNoteHeaderLocalTimestamp(new Date(2026, 6, 24, 10, 21, 44))
+    ).toBe("----- July 24, 2026 10:21:44 AM -----");
+  });
+
+  it("preserves legacy intraoral output and formats Slice 2 findings safely", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        structuredIntraoralFindings: undefined,
+        intraoralStatus: "wnl",
+      })
+    ).toBe("Intraoral: WNL.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        intraoralFindings: "Legacy observation",
+      })
+    ).toBe("Intraoral: Legacy observation.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        intraoralFindings: "Free text",
+        structuredIntraoralFindings: [
+          {
+            optionId: "ioe.buccal_mucosa.ulcer",
+            structureId: "ioe.buccal_mucosa",
+            locations: ["Right posterior"],
+            measurement: "4",
+            measurementUnit: "mm",
+            comment: "Synthetic note",
+          },
+          {
+            optionId: "ioe.unknown.retired",
+            structureId: "ioe.tongue",
+            comment: "must be ignored",
+          },
+        ],
+      })
+    ).toBe(`Intraoral:
+  - Buccal mucosa: ulcer; location: Right posterior; measurement: 4 mm; notes: Synthetic note.
+  Observations: Free text.`);
+  });
+
+  it("supports percent, millimetre, and dual overbite output", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        overbitePercent: "25",
+      })
+    ).toBe("Overbite: 25%.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        overbiteMm: "2",
+      })
+    ).toBe("Overbite: 2 mm.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        overbitePercent: "25",
+        overbiteMm: "2",
+      })
+    ).toBe("Overbite: 25%; 2 mm.");
   });
 });
 

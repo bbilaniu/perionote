@@ -15,6 +15,7 @@ export const CATALOGUE_KEYS = [
   "patient.chief-concerns",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
+  "clinical-exam.additional-occlusal-findings",
   "clinical-exam.caries-risk-factors",
   "imaging.radiographs",
   "medical-history.review",
@@ -117,9 +118,26 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
 ];
 
+const additionalOcclusalFindingSeeds: CatalogueSeed[] = [
+  { id: "seed.additional-occlusion.open-bite", label: "Open bite" },
+  { id: "seed.additional-occlusion.crossbite", label: "Crossbite" },
+  {
+    id: "seed.additional-occlusion.slight-malocclusion",
+    label: "Slight malocclusion",
+  },
+  {
+    id: "seed.additional-occlusion.increased-overjet",
+    label: "Increased overjet",
+  },
+  {
+    id: "seed.additional-occlusion.increased-overbite",
+    label: "Increased overbite",
+  },
+];
+
 function catalogueSeeds(
   prefix: string,
-  values: ReadonlyArray<readonly [id: string, label: string]>,
+  values: ReadonlyArray<readonly [id: string, label: string]>
 ): CatalogueSeed[] {
   return values.map(([id, label]) => ({
     id: `seed.${prefix}.${id}`,
@@ -151,7 +169,7 @@ const radiographSeeds = catalogueSeeds("imaging.radiographs", [
 
 const patientChiefConcernSeeds = catalogueSeeds(
   "patient.chief-concerns",
-  patientChiefConcernSeedValues,
+  patientChiefConcernSeedValues
 );
 
 const cariesRiskFactorSeeds = catalogueSeeds(
@@ -162,12 +180,9 @@ const cariesRiskFactorSeeds = catalogueSeeds(
     ["insufficient-fluoride", "Insufficient exposure to fluoride"],
     ["heavily-restored-dentition", "Heavily restored dentition"],
     ["hyposalivation", "Hyposalivation"],
-    [
-      "caries-history-36-months",
-      "History of caries in the last 36 months",
-    ],
+    ["caries-history-36-months", "History of caries in the last 36 months"],
     ["symptom-driven-visits", "Symptomatically driven dental visits"],
-  ],
+  ]
 );
 
 const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
@@ -178,21 +193,12 @@ const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
   ["ran-out-of-time", "NO, RAN OUT OF TIME"],
 ]);
 
-const healthGingivitisSeeds = catalogueSeeds(
-  "periodontal.health-gingivitis",
-  [
-    ["health-intact-support", "HEALTH INTACT PERIODONTAL SUPPORT"],
-    [
-      "gingivitis-intact-support",
-      "GINGIVITIS INTACT PERIODONTAL SUPPORT",
-    ],
-    ["health-reduced-support", "HEALTH- REDUCED PERIODONTAL SUPPORT"],
-    [
-      "gingivitis-reduced-support",
-      "GINGIVITIS- REDUCED PERIODONTAL SUPPORT",
-    ],
-  ],
-);
+const healthGingivitisSeeds = catalogueSeeds("periodontal.health-gingivitis", [
+  ["health-intact-support", "HEALTH INTACT PERIODONTAL SUPPORT"],
+  ["gingivitis-intact-support", "GINGIVITIS INTACT PERIODONTAL SUPPORT"],
+  ["health-reduced-support", "HEALTH- REDUCED PERIODONTAL SUPPORT"],
+  ["gingivitis-reduced-support", "GINGIVITIS- REDUCED PERIODONTAL SUPPORT"],
+]);
 
 const ohiAidsReviewedSeeds = catalogueSeeds("oral-hygiene.aids-reviewed", [
   ["sulcabrush", "SULCABRUSH"],
@@ -205,31 +211,25 @@ const ohiAidsReviewedSeeds = catalogueSeeds("oral-hygiene.aids-reviewed", [
   ["proper-use-etb", "PROPER USE OF ETB"],
 ]);
 
-const oralHygieneComplianceSeeds = catalogueSeeds(
-  "oral-hygiene.compliance",
-  [
-    ["poor", "Poor"],
-    ["fair", "Fair"],
-    ["good", "Good"],
-    ["excellent", "Excellent"],
-    ["poor-fair", "Poor–fair"],
-    ["fair-good", "Fair–good"],
-  ],
-);
+const oralHygieneComplianceSeeds = catalogueSeeds("oral-hygiene.compliance", [
+  ["poor", "Poor"],
+  ["fair", "Fair"],
+  ["good", "Good"],
+  ["excellent", "Excellent"],
+  ["poor-fair", "Poor–fair"],
+  ["fair-good", "Fair–good"],
+]);
 
-const treatmentCompletedSeeds = catalogueSeeds(
-  "hygiene-treatment.completed",
-  [
-    ["1u-scale", "1U scale (cavitron and hand scaling)"],
-    ["2u-scale", "2U scale (cavitron and hand scaling)"],
-    ["3u-scale", "3U scale (cavitron and hand scaling)"],
-    ["4u-scale", "4U scale (cavitron and hand scaling)"],
-    ["fmp", "FMP"],
-    ["1u-polish", "1U polish"],
-    ["fluoride-varnish", "Fluoride varnish"],
-    ["crystal-x-pur", "Crystal X-PUR"],
-  ],
-);
+const treatmentCompletedSeeds = catalogueSeeds("hygiene-treatment.completed", [
+  ["1u-scale", "1U scale (cavitron and hand scaling)"],
+  ["2u-scale", "2U scale (cavitron and hand scaling)"],
+  ["3u-scale", "3U scale (cavitron and hand scaling)"],
+  ["4u-scale", "4U scale (cavitron and hand scaling)"],
+  ["fmp", "FMP"],
+  ["1u-polish", "1U polish"],
+  ["fluoride-varnish", "Fluoride varnish"],
+  ["crystal-x-pur", "Crystal X-PUR"],
+]);
 
 const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
   ["hygiene-maintenance", "Hygiene maintenance"],
@@ -312,6 +312,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Skeletal occlusion",
     fieldLabels: ["Skeletal occlusion"],
     seeds: occlusionSeeds("skeletal"),
+    lifecycle: "pilot",
+  },
+  {
+    key: "clinical-exam.additional-occlusal-findings",
+    section: "Clinical Exam",
+    title: "Additional occlusal findings",
+    fieldLabels: ["Additional occlusal findings"],
+    seeds: additionalOcclusalFindingSeeds,
     lifecycle: "pilot",
   },
   {
@@ -429,15 +437,15 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
 ];
 
 export function getCatalogueDefinitionsForBuild(
-  environment: string | undefined,
+  environment: string | undefined
 ): CatalogueDefinition[] {
   return CATALOGUE_DEFINITIONS.filter((definition) =>
-    isTemplateAvailableForBuild(definition.lifecycle, environment),
+    isTemplateAvailableForBuild(definition.lifecycle, environment)
   );
 }
 
 const catalogueDefinitionsByKey = new Map(
-  CATALOGUE_DEFINITIONS.map((definition) => [definition.key, definition]),
+  CATALOGUE_DEFINITIONS.map((definition) => [definition.key, definition])
 );
 
 const seedsById = new Map(
@@ -445,8 +453,8 @@ const seedsById = new Map(
     definition.seeds.map((seed) => [
       seed.id,
       { ...seed, catalogueKey: definition.key },
-    ]),
-  ),
+    ])
+  )
 );
 
 export class CatalogueValidationError extends Error {
@@ -472,12 +480,12 @@ export function isCatalogueKey(value: unknown): value is CatalogueKey {
 }
 
 export function getCatalogueDefinition(
-  catalogueKey: CatalogueKey,
+  catalogueKey: CatalogueKey
 ): CatalogueDefinition {
   const definition = catalogueDefinitionsByKey.get(catalogueKey);
   if (!definition) {
     throw new CatalogueValidationError(
-      `Unknown catalogue key: ${catalogueKey}`,
+      `Unknown catalogue key: ${catalogueKey}`
     );
   }
   return definition;
@@ -494,7 +502,7 @@ export function validateCatalogueLabel(value: string): string {
   }
   if (label.length > MAX_CATALOGUE_LABEL_LENGTH) {
     throw new CatalogueValidationError(
-      `Catalogue values must be ${MAX_CATALOGUE_LABEL_LENGTH} characters or fewer.`,
+      `Catalogue values must be ${MAX_CATALOGUE_LABEL_LENGTH} characters or fewer.`
     );
   }
   return label;
@@ -504,10 +512,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function readBoolean(
-  record: Record<string, unknown>,
-  key: string,
-): boolean {
+function readBoolean(record: Record<string, unknown>, key: string): boolean {
   const value = record[key];
   if (typeof value !== "boolean") {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
@@ -518,23 +523,16 @@ function readBoolean(
 function readString(
   record: Record<string, unknown>,
   key: string,
-  maximumLength = 250,
+  maximumLength = 250
 ): string {
   const value = record[key];
-  if (
-    typeof value !== "string" ||
-    !value ||
-    value.length > maximumLength
-  ) {
+  if (typeof value !== "string" || !value || value.length > maximumLength) {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
   }
   return value;
 }
 
-function readIdentifier(
-  record: Record<string, unknown>,
-  key: string,
-): string {
+function readIdentifier(record: Record<string, unknown>, key: string): string {
   const value = readString(record, key, 200);
   if (!/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(value)) {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
@@ -544,20 +542,13 @@ function readIdentifier(
 
 function readSortOrder(record: Record<string, unknown>): number {
   const value = record.sortOrder;
-  if (
-    typeof value !== "number" ||
-    !Number.isSafeInteger(value) ||
-    value < 0
-  ) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new CatalogueValidationError("Invalid sortOrder value.");
   }
   return value;
 }
 
-function readTimestamp(
-  record: Record<string, unknown>,
-  key: string,
-): string {
+function readTimestamp(record: Record<string, unknown>, key: string): string {
   const value = readString(record, key, 50);
   if (Number.isNaN(Date.parse(value))) {
     throw new CatalogueValidationError(`Invalid ${key} timestamp.`);
@@ -604,31 +595,33 @@ function parseSeedPreference(value: unknown): SeedPreference {
 function assertNoDuplicateStateRecords(
   userItems: UserCatalogueItem[],
   seedPreferences: SeedPreference[],
-  options: { allowSeedDuplicates?: boolean } = {},
+  options: { allowSeedDuplicates?: boolean } = {}
 ): void {
   const itemIds = new Set<string>();
   const labels = new Set<string>();
   for (const item of userItems) {
     if (itemIds.has(item.id) || seedsById.has(item.id)) {
       throw new CatalogueValidationError(
-        `Duplicate catalogue item id: ${item.id}`,
+        `Duplicate catalogue item id: ${item.id}`
       );
     }
     itemIds.add(item.id);
-    const labelKey = `${item.catalogueKey}:${normalizeCatalogueLabel(item.label)}`;
+    const labelKey = `${item.catalogueKey}:${normalizeCatalogueLabel(
+      item.label
+    )}`;
     if (labels.has(labelKey)) {
       throw new CatalogueValidationError(
-        `Duplicate value in ${item.catalogueKey}.`,
+        `Duplicate value in ${item.catalogueKey}.`
       );
     }
     const matchingSeed = getCatalogueDefinition(item.catalogueKey).seeds.some(
       (seed) =>
         normalizeCatalogueLabel(seed.label) ===
-        normalizeCatalogueLabel(item.label),
+        normalizeCatalogueLabel(item.label)
     );
     if (matchingSeed && !options.allowSeedDuplicates) {
       throw new CatalogueValidationError(
-        `Duplicate starter value in ${item.catalogueKey}.`,
+        `Duplicate starter value in ${item.catalogueKey}.`
       );
     }
     labels.add(labelKey);
@@ -638,7 +631,7 @@ function assertNoDuplicateStateRecords(
   for (const preference of seedPreferences) {
     if (preferenceIds.has(preference.seedId)) {
       throw new CatalogueValidationError(
-        `Duplicate seed preference: ${preference.seedId}`,
+        `Duplicate seed preference: ${preference.seedId}`
       );
     }
     preferenceIds.add(preference.seedId);
@@ -647,24 +640,21 @@ function assertNoDuplicateStateRecords(
 
 function migrateUserItemsMatchingSeeds(
   userItems: UserCatalogueItem[],
-  seedPreferences: SeedPreference[],
+  seedPreferences: SeedPreference[]
 ): {
   userItems: UserCatalogueItem[];
   seedPreferences: SeedPreference[];
 } {
   const retainedUserItems: UserCatalogueItem[] = [];
   const preferencesBySeedId = new Map(
-    seedPreferences.map((preference) => [
-      preference.seedId,
-      preference,
-    ]),
+    seedPreferences.map((preference) => [preference.seedId, preference])
   );
 
   for (const item of userItems) {
     const matchingSeed = getCatalogueDefinition(item.catalogueKey).seeds.find(
       (seed) =>
         normalizeCatalogueLabel(seed.label) ===
-        normalizeCatalogueLabel(item.label),
+        normalizeCatalogueLabel(item.label)
     );
     if (!matchingSeed) {
       retainedUserItems.push(item);
@@ -689,7 +679,7 @@ function migrateUserItemsMatchingSeeds(
 export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new CatalogueValidationError(
-      "Unsupported catalogue storage version.",
+      "Unsupported catalogue storage version."
     );
   }
   if (!Array.isArray(value.userItems)) {
@@ -704,14 +694,8 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   assertNoDuplicateStateRecords(userItems, seedPreferences, {
     allowSeedDuplicates: true,
   });
-  const migrated = migrateUserItemsMatchingSeeds(
-    userItems,
-    seedPreferences,
-  );
-  assertNoDuplicateStateRecords(
-    migrated.userItems,
-    migrated.seedPreferences,
-  );
+  const migrated = migrateUserItemsMatchingSeeds(userItems, seedPreferences);
+  assertNoDuplicateStateRecords(migrated.userItems, migrated.seedPreferences);
 
   return {
     schemaVersion: 1,
@@ -731,14 +715,12 @@ export function parseStoredCatalogueJson(raw: string): StoredCatalogueStateV1 {
   }
 }
 
-export function serializeCatalogueState(
-  state: StoredCatalogueStateV1,
-): string {
+export function serializeCatalogueState(state: StoredCatalogueStateV1): string {
   return JSON.stringify(parseCatalogueState(state));
 }
 
 export function readCatalogueState(
-  storage: Pick<Storage, "getItem">,
+  storage: Pick<Storage, "getItem">
 ): StoredCatalogueStateV1 {
   const raw = storage.getItem(CATALOGUE_STORAGE_KEY);
   return raw ? parseStoredCatalogueJson(raw) : createEmptyCatalogueState();
@@ -746,24 +728,24 @@ export function readCatalogueState(
 
 export function writeCatalogueState(
   storage: Pick<Storage, "setItem">,
-  state: StoredCatalogueStateV1,
+  state: StoredCatalogueStateV1
 ): void {
   storage.setItem(CATALOGUE_STORAGE_KEY, serializeCatalogueState(state));
 }
 
 function getSeedPreference(
   state: StoredCatalogueStateV1,
-  seedId: string,
+  seedId: string
 ): SeedPreference | undefined {
   return state.seedPreferences.find(
-    (preference) => preference.seedId === seedId,
+    (preference) => preference.seedId === seedId
   );
 }
 
 export function listCatalogueItems(
   state: StoredCatalogueStateV1,
   catalogueKey: CatalogueKey,
-  options: { includeHidden?: boolean } = {},
+  options: { includeHidden?: boolean } = {}
 ): CatalogueItem[] {
   const definition = getCatalogueDefinition(catalogueKey);
   const seedItems = definition.seeds.map((seed, index): CatalogueItem => {
@@ -789,7 +771,7 @@ export function listCatalogueItems(
         hidden: item.hidden,
         favorite: item.favorite,
         sortOrder: item.sortOrder,
-      }),
+      })
     );
 
   return [...seedItems, ...userItems]
@@ -798,14 +780,14 @@ export function listCatalogueItems(
       (left, right) =>
         Number(right.favorite) - Number(left.favorite) ||
         left.sortOrder - right.sortOrder ||
-        left.label.localeCompare(right.label, "en-CA"),
+        left.label.localeCompare(right.label, "en-CA")
     );
 }
 
 export function findEquivalentCatalogueItem(
   state: StoredCatalogueStateV1,
   catalogueKey: CatalogueKey,
-  label: string,
+  label: string
 ): CatalogueItem | undefined {
   const normalized = normalizeCatalogueLabel(label);
   if (!normalized) {
@@ -819,7 +801,7 @@ export function findEquivalentCatalogueItem(
 function updateSeedPreference(
   state: StoredCatalogueStateV1,
   seedId: string,
-  changes: Partial<Omit<SeedPreference, "seedId">>,
+  changes: Partial<Omit<SeedPreference, "seedId">>
 ): StoredCatalogueStateV1 {
   const seed = seedsById.get(seedId);
   if (!seed) {
@@ -828,7 +810,7 @@ function updateSeedPreference(
   const existing = getSeedPreference(state, seedId);
   const definition = getCatalogueDefinition(seed.catalogueKey);
   const defaultOrder = definition.seeds.findIndex(
-    (candidate) => candidate.id === seedId,
+    (candidate) => candidate.id === seedId
   );
   const next: SeedPreference = {
     seedId,
@@ -841,7 +823,7 @@ function updateSeedPreference(
     ...state,
     seedPreferences: [
       ...state.seedPreferences.filter(
-        (preference) => preference.seedId !== seedId,
+        (preference) => preference.seedId !== seedId
       ),
       next,
     ],
@@ -858,7 +840,7 @@ export function rememberCatalogueValue(
   state: StoredCatalogueStateV1,
   catalogueKey: CatalogueKey,
   value: string,
-  options: { id?: string; now?: Date } = {},
+  options: { id?: string; now?: Date } = {}
 ): RememberCatalogueValueResult {
   getCatalogueDefinition(catalogueKey);
   const label = validateCatalogueLabel(value);
@@ -871,7 +853,7 @@ export function rememberCatalogueValue(
       state,
       existing.id,
       existing.owner,
-      false,
+      false
     );
     return {
       state: nextState,
@@ -909,7 +891,7 @@ export function updateUserCatalogueItem(
   state: StoredCatalogueStateV1,
   itemId: string,
   labelValue: string,
-  now = new Date(),
+  now = new Date()
 ): StoredCatalogueStateV1 {
   const item = state.userItems.find((candidate) => candidate.id === itemId);
   if (!item) {
@@ -922,11 +904,11 @@ export function updateUserCatalogueItem(
     (candidate) =>
       candidate.id !== itemId &&
       normalizeCatalogueLabel(candidate.label) ===
-        normalizeCatalogueLabel(label),
+        normalizeCatalogueLabel(label)
   );
   if (duplicate) {
     throw new CatalogueValidationError(
-      "That value already exists in this catalogue.",
+      "That value already exists in this catalogue."
     );
   }
   return {
@@ -934,7 +916,7 @@ export function updateUserCatalogueItem(
     userItems: state.userItems.map((candidate) =>
       candidate.id === itemId
         ? { ...candidate, label, updatedAt: now.toISOString() }
-        : candidate,
+        : candidate
     ),
   };
 }
@@ -943,7 +925,7 @@ export function setCatalogueItemHidden(
   state: StoredCatalogueStateV1,
   itemId: string,
   owner: CatalogueOwner,
-  hidden: boolean,
+  hidden: boolean
 ): StoredCatalogueStateV1 {
   if (owner === "seed") {
     return updateSeedPreference(state, itemId, { hidden });
@@ -954,7 +936,7 @@ export function setCatalogueItemHidden(
   return {
     ...state,
     userItems: state.userItems.map((item) =>
-      item.id === itemId ? { ...item, hidden } : item,
+      item.id === itemId ? { ...item, hidden } : item
     ),
   };
 }
@@ -963,7 +945,7 @@ export function setCatalogueItemFavorite(
   state: StoredCatalogueStateV1,
   itemId: string,
   owner: CatalogueOwner,
-  favorite: boolean,
+  favorite: boolean
 ): StoredCatalogueStateV1 {
   if (owner === "seed") {
     return updateSeedPreference(state, itemId, { favorite });
@@ -974,7 +956,7 @@ export function setCatalogueItemFavorite(
   return {
     ...state,
     userItems: state.userItems.map((item) =>
-      item.id === itemId ? { ...item, favorite } : item,
+      item.id === itemId ? { ...item, favorite } : item
     ),
   };
 }
@@ -982,19 +964,19 @@ export function setCatalogueItemFavorite(
 export function favoriteAndUnhideCatalogueItem(
   state: StoredCatalogueStateV1,
   itemId: string,
-  owner: CatalogueOwner,
+  owner: CatalogueOwner
 ): StoredCatalogueStateV1 {
   return setCatalogueItemHidden(
     setCatalogueItemFavorite(state, itemId, owner, true),
     itemId,
     owner,
-    false,
+    false
   );
 }
 
 export function deleteUserCatalogueItem(
   state: StoredCatalogueStateV1,
-  itemId: string,
+  itemId: string
 ): StoredCatalogueStateV1 {
   if (!state.userItems.some((item) => item.id === itemId)) {
     throw new CatalogueValidationError("The catalogue item no longer exists.");
@@ -1008,7 +990,7 @@ export function deleteUserCatalogueItem(
 function setItemSortOrder(
   state: StoredCatalogueStateV1,
   item: CatalogueItem,
-  sortOrder: number,
+  sortOrder: number
 ): StoredCatalogueStateV1 {
   if (item.owner === "seed") {
     return updateSeedPreference(state, item.id, { sortOrder });
@@ -1016,7 +998,7 @@ function setItemSortOrder(
   return {
     ...state,
     userItems: state.userItems.map((candidate) =>
-      candidate.id === item.id ? { ...candidate, sortOrder } : candidate,
+      candidate.id === item.id ? { ...candidate, sortOrder } : candidate
     ),
   };
 }
@@ -1025,7 +1007,7 @@ export function moveCatalogueItem(
   state: StoredCatalogueStateV1,
   catalogueKey: CatalogueKey,
   itemId: string,
-  direction: "up" | "down",
+  direction: "up" | "down"
 ): StoredCatalogueStateV1 {
   const items = listCatalogueItems(state, catalogueKey, {
     includeHidden: true,
@@ -1035,9 +1017,7 @@ export function moveCatalogueItem(
     throw new CatalogueValidationError("The catalogue item no longer exists.");
   }
   const current = items[index];
-  const sameGroup = items.filter(
-    (item) => item.favorite === current.favorite,
-  );
+  const sameGroup = items.filter((item) => item.favorite === current.favorite);
   const groupIndex = sameGroup.findIndex((item) => item.id === itemId);
   const targetIndex = direction === "up" ? groupIndex - 1 : groupIndex + 1;
   if (targetIndex < 0 || targetIndex >= sameGroup.length) {
@@ -1051,13 +1031,13 @@ export function moveCatalogueItem(
   return reordered.reduce(
     (nextState, item, sortOrder) =>
       setItemSortOrder(nextState, item, sortOrder),
-    state,
+    state
   );
 }
 
 export function createCatalogueExport(
   state: StoredCatalogueStateV1,
-  exportedAt = new Date(),
+  exportedAt = new Date()
 ): CatalogueExportV1 {
   return {
     format: CATALOGUE_EXPORT_FORMAT,
@@ -1069,15 +1049,19 @@ export function createCatalogueExport(
 
 export function serializeCatalogueExport(
   state: StoredCatalogueStateV1,
-  exportedAt = new Date(),
+  exportedAt = new Date()
 ): string {
-  return `${JSON.stringify(createCatalogueExport(state, exportedAt), null, 2)}\n`;
+  return `${JSON.stringify(
+    createCatalogueExport(state, exportedAt),
+    null,
+    2
+  )}\n`;
 }
 
 export function parseCatalogueExport(raw: string): CatalogueExportV1 {
   if (new TextEncoder().encode(raw).byteLength > MAX_CATALOGUE_IMPORT_BYTES) {
     throw new CatalogueValidationError(
-      "Catalogue files must be 1 MiB or smaller.",
+      "Catalogue files must be 1 MiB or smaller."
     );
   }
   let value: unknown;
@@ -1094,14 +1078,11 @@ export function parseCatalogueExport(raw: string): CatalogueExportV1 {
   }
   if (value.formatVersion !== CATALOGUE_EXPORT_FORMAT_VERSION) {
     throw new CatalogueValidationError(
-      "This catalogue export version is not supported.",
+      "This catalogue export version is not supported."
     );
   }
   const exportedAt = value.exportedAt;
-  if (
-    typeof exportedAt !== "string" ||
-    Number.isNaN(Date.parse(exportedAt))
-  ) {
+  if (typeof exportedAt !== "string" || Number.isNaN(Date.parse(exportedAt))) {
     throw new CatalogueValidationError("Invalid export timestamp.");
   }
   return {
@@ -1114,10 +1095,10 @@ export function parseCatalogueExport(raw: string): CatalogueExportV1 {
 
 export function previewCatalogueImport(
   localState: StoredCatalogueStateV1,
-  importedState: StoredCatalogueStateV1,
+  importedState: StoredCatalogueStateV1
 ): CatalogueImportPreview {
   const itemsByCatalogue = Object.fromEntries(
-    CATALOGUE_KEYS.map((key) => [key, 0]),
+    CATALOGUE_KEYS.map((key) => [key, 0])
   ) as Record<CatalogueKey, number>;
   let additions = 0;
   let equivalentItems = 0;
@@ -1128,13 +1109,11 @@ export function previewCatalogueImport(
     const equivalent = findEquivalentCatalogueItem(
       localState,
       imported.catalogueKey,
-      imported.label,
+      imported.label
     );
     if (equivalent) {
       equivalentItems += 1;
-    } else if (
-      localState.userItems.some((local) => local.id === imported.id)
-    ) {
+    } else if (localState.userItems.some((local) => local.id === imported.id)) {
       idConflicts += 1;
     } else {
       additions += 1;
@@ -1153,7 +1132,7 @@ export function previewCatalogueImport(
 
 export function mergeCatalogueStates(
   localState: StoredCatalogueStateV1,
-  importedState: StoredCatalogueStateV1,
+  importedState: StoredCatalogueStateV1
 ): StoredCatalogueStateV1 {
   let nextState = parseCatalogueState(localState);
 
@@ -1161,7 +1140,7 @@ export function mergeCatalogueStates(
     const equivalent = findEquivalentCatalogueItem(
       nextState,
       imported.catalogueKey,
-      imported.label,
+      imported.label
     );
     if (equivalent) {
       if (imported.favorite && !equivalent.favorite) {
@@ -1169,7 +1148,7 @@ export function mergeCatalogueStates(
           nextState,
           equivalent.id,
           equivalent.owner,
-          true,
+          true
         );
       }
       continue;

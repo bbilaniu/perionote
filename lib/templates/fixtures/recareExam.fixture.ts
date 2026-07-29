@@ -30,8 +30,19 @@ export const recareExamFixture: RecareExamForm = {
   masseterFindings: "",
   tmjLoadStatus: "wnl",
   tmjLoadFindings: "",
-  intraoralStatus: "wnl",
+  intraoralStatus: "findings",
   intraoralFindings: "",
+  structuredIntraoralFindings: [
+    {
+      optionId: "ioe.tongue.fissured",
+      structureId: "ioe.tongue",
+      comment: "Synthetic observation",
+    },
+    {
+      optionId: "ioe.saliva.normal_flow",
+      structureId: "ioe.saliva",
+    },
+  ],
   oralHabits: "Synthetic clenching history.",
   rightMolarOcclusion: "Synthetic Class I.",
   rightMolarOcclusionNotApplicable: false,
@@ -41,6 +52,14 @@ export const recareExamFixture: RecareExamForm = {
   skeletalOcclusionNotApplicable: true,
   overjetMm: "2",
   overbitePercent: "30",
+  overbiteMm: "3",
+  additionalOcclusalFindings: [
+    {
+      id: "fixture-occlusal-1",
+      finding: "Crossbite",
+      locations: ["Posterior", "Left"],
+    },
+  ],
   cpapStatus: "no",
   cpapUseStatus: "not-documented",
   occlusalSplintStatus: "yes",

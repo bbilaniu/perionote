@@ -15,6 +15,10 @@
   - [ADR 0004: Colocate Clinical Conversions with Source Templates](../adr/0004-colocate-clinical-conversions-with-source-templates.md)
 - Catalogue implementation:
   [Recare Exam Local Catalogue Pilot Proposal](../requests/2026-07-25_recare-exam-local-catalogue-pilot-proposal.md)
+- Additive Slice 2 provenance:
+  [Recare Intraoral and Occlusal Findings](../requests/2026-07-28_gingival-description-and-ioe/slice-2-recare-intraoral-and-occlusal-findings.md), using the reviewed
+  [`hygienenote-gingival-ioe.catalog.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json)
+  normalized IOE catalogue.
 
 ## Purpose
 
@@ -94,15 +98,15 @@ before copying.
 
 ### Patient and Visit Context
 
-| ID  | Source                                               | Control                                                                            | Classification     | Generated output                   |
-| --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ | ---------------------------------- |
-| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                                             | `patient-specific` | `PATIENT ID: {text}`                                     |
-| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `----- {Month D, YYYY h:mm:ss AM/PM} -----`              |
+| ID  | Source                                               | Control                                                                            | Classification     | Generated output                            |
+| --- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------ | ------------------------------------------- |
+| R00 | User-requested extension; not in the source template | Required editable text: **Patient ID**                                             | `patient-specific` | `PATIENT ID: {text}`                        |
+| R35 | User-requested extension; not in the source template | Read-only browser-local **Note started** timestamp at page load or confirmed reset | `administrative`   | `----- {Month D, YYYY h:mm:ss AM/PM} -----` |
 
 ### Visit Team
 
-| ID  | Source                               | Control                                     | Classification | Generated output               |
-| --- | ------------------------------------ | ------------------------------------------- | -------------- | ------------------------------ |
+| ID  | Source                               | Control                                     | Classification | Generated output  |
+| --- | ------------------------------------ | ------------------------------------------- | -------------- | ----------------- |
 | R01 | `DENTIST: [SELECT/INSERT: Dentists]` | Catalogue-backed editable text: **Dentist** | `catalogue`    | `DENTIST: {text}` |
 | R02 | `RDA: [SELECT/INSERT: RDA]`          | Catalogue-backed editable text: **RDA**     | `catalogue`    | `RDA: {text}`     |
 | R03 | `RDH: [SELECT/INSERT: Hygienist]`    | Catalogue-backed editable text: **RDH**     | `catalogue`    | `RDH: {text}`     |
@@ -138,10 +142,10 @@ state.
 
 ### Records and Chief Concern
 
-| ID  | Source                                         | Control                                                              | Classification                                                       | Generated output                                                         |
-| --- | ---------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once | Current selections: `patient-specific`; reusable values: `catalogue` | `Radiographs: {selected and entered values, including repeats}` |
-| R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details** | Status: `appCore`; details: `patient-specific`                       | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.` |
+| ID  | Source                                         | Control                                                                                                                                            | Classification                                                                                                           | Generated output                                                                                         |
+| --- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
+| R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once                                          | Current selections: `patient-specific`; reusable values: `catalogue`                                                     | `Radiographs: {selected and entered values, including repeats}`                                          |
+| R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details**                                                                               | Status: `appCore`; details: `patient-specific`                                                                           | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.`                                 |
 | R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue; format: `administrative` | Inline `Patient's chief concern: {values joined with "; "}` by default, or heading plus indented bullets |
 
 Radiographs uses the complete visible options from the reviewed local JSON
@@ -173,6 +177,59 @@ bullet style.
 | R20 | `Skeletal Occlusion- N/A`             | Catalogue-backed editable text: **Skeletal occlusion** with an explicit **N/A** action                                 | Text: `catalogue`; N/A: `appCore`                | `Skeletal occlusion: N/A.` or `Skeletal occlusion: {text}`                       |
 | R21 | `Overjet- mm`                         | Optional numeric input: **Overjet (mm)**                                                                               | Measurement: `patient-specific`; unit: `appCore` | `Overjet: {number} mm.`                                                          |
 | R22 | `Overbite- %`                         | Optional numeric input: **Overbite (%)**                                                                               | Measurement: `patient-specific`; unit: `appCore` | `Overbite: {number}%.`                                                           |
+
+#### Slice 2 additive Intraoral and occlusal detail
+
+The accepted R17 Intraoral owner now also contains optional structured
+observations for Buccal mucosa, Tongue, Floor of mouth, Palate, Oropharynx,
+and Saliva. Encounter state stores only normalized option and structure IDs
+plus supported location, laterality, measurement/unit, and comment values.
+Catalogue wording is resolved when the note is generated; unknown or retired
+IDs are ignored. Gingiva and Teeth are deliberately excluded.
+
+Selecting or editing any finding changes the shared R17 status to Findings,
+including normal and normal-variation observations. WNL is never inferred.
+Choosing WNL while free text or structured observations exist asks for
+confirmation: confirmation clears only both kinds of Intraoral findings and
+sets WNL; cancellation changes nothing. Existing WNL output remains exactly
+`Intraoral: WNL.`, and free-text-only Findings retain the legacy one-line
+output. Structured output is one block in catalogue order:
+
+```text
+Intraoral:
+  - {Structure}: {catalogue noteFragment}; location: {location}; measurement: {value unit}; notes: {comment}.
+  Observations: {existing free text}.
+```
+
+Unsupported and empty annotations are omitted. Saliva observations never
+alter the separate caries-risk factors.
+
+R22 keeps its optional percent value and adds independent **Overbite (mm)**.
+Percent alone remains `Overbite: 30%.`; millimetres alone produces
+`Overbite: 3 mm.`; both produce `Overbite: 30%; 3 mm.`. Neither measurement
+selects a finding.
+
+After the measurements, one catalogue-backed multi-value control owns
+**Additional occlusal findings**. Its public starters map to normalized source
+IDs as follows: Open bite → `ioe.occlusion.open_bite`; Crossbite →
+`ioe.occlusion.crossbite`; Slight malocclusion →
+`ioe.occlusion.slight_malocclusion`; Increased overjet →
+`ioe.occlusion.increased_overjet`; Increased overbite →
+`ioe.occlusion.increased_overbite`. No Class I/II/III starters are duplicated.
+Free entry is valid, while browser-local reuse requires the existing explicit
+Remember action. Each selected text snapshot owns optional encounter-only
+locations (Anterior, Posterior, Right, Left, Maxilla, Mandible, and editable
+tooth/area or region text), emitted in selection order as:
+`Additional occlusal findings: {finding} (location: {locations}); {finding}.`
+Locations are never part of catalogue storage or exports.
+
+Synthetic transition examples: an empty R17 remains Not assessed and emits
+nothing; selecting Fissured tongue yields Findings and `Tongue: fissured`
+without a pathology label; an Open bite at Anterior yields
+`Additional occlusal findings: Open bite (location: Anterior).`; and entering
+30 percent plus 3 mm yields the dual-unit output above. All pre-Slice-2 Recare
+fields, ordering, N/A actions, catalogue ownership, and output remain
+compatible when these additions are unused.
 
 All five exam-status controls start at **Not assessed**. Choosing **Findings**
 reveals an editable textarea. WNL must be actively selected and is never inferred
@@ -211,12 +268,12 @@ occlusal splint, orthodontic history, retainers, and removable dentures.
 
 ### Odontogram and Caries Risk
 
-| ID  | Source | Control | Classification | Generated output |
-| --- | --- | --- | --- | --- |
-| R36 | User-requested extension based on frequently entered Additional Comments text | Unchecked checkbox: **Odontogram up to date** | `appCore` | `ODONTOGRAM UP TO DATE` only when explicitly checked |
-| R37 | Caries Risk card reused from the Very Short template | Fixed **Caries risk level**: None selected / Low / Moderate / High | `appCore` | `{level} caries risk` when selected |
-| R38 | Caries Risk card reused from the Very Short template | Ordered catalogue-backed multi-value **Caries risk factors** | Current selections: `patient-specific`; reusable factors: `catalogue` | Append `due to {ordered factors}` |
-| R39 | Caries Risk card reused from the Very Short template | Textarea: **Caries risk notes** | `patient-specific` | Append the entered rationale |
+| ID  | Source                                                                        | Control                                                            | Classification                                                        | Generated output                                     |
+| --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------- |
+| R36 | User-requested extension based on frequently entered Additional Comments text | Unchecked checkbox: **Odontogram up to date**                      | `appCore`                                                             | `ODONTOGRAM UP TO DATE` only when explicitly checked |
+| R37 | Caries Risk card reused from the Very Short template                          | Fixed **Caries risk level**: None selected / Low / Moderate / High | `appCore`                                                             | `{level} caries risk` when selected                  |
+| R38 | Caries Risk card reused from the Very Short template                          | Ordered catalogue-backed multi-value **Caries risk factors**       | Current selections: `patient-specific`; reusable factors: `catalogue` | Append `due to {ordered factors}`                    |
+| R39 | Caries Risk card reused from the Very Short template                          | Textarea: **Caries risk notes**                                    | `patient-specific`                                                    | Append the entered rationale                         |
 
 The odontogram checkbox and all Caries Risk controls start empty. The factor
 catalogue uses the seven factors already present in the Very Short template as
@@ -230,12 +287,12 @@ selections, and notes remain encounter-specific.
 
 ### Treatment and Next Visit
 
-| ID  | Source                                             | Control                                                                                                                 | Classification                                                                                                                    | Generated output                                                                                     |
-| --- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ID  | Source                                             | Control                                                                                                                                                        | Classification                                                                                                                | Generated output                                                                      |
+| --- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | R31 | `Treatment Options:` and `1) HYGIENE MAINTENANCE`  | Ordered editable rows with a catalogue-backed **Treatment type**, optional encounter-only **Tooth/area**, and checked-by-default per-note list-format checkbox | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Options:` list by default, or a semicolon-separated inline line |
-| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields and format checkbox; while empty, offer **Copy Treatment Options to Treatment Plan** | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Plan:` list by default, or a semicolon-separated inline line |
-| R33 | `Next Visit: [UNRESOLVED PLACEHOLDER: NEXT VISIT]` | Editable text: **Next visit**                                                                                           | `patient-specific`                                                                                                                | `Next Visit: {text}`                                                                                 |
-| R34 | `Date Booked:`                                     | Optional date input: **Date booked**                                                                                    | `administrative`                                                                                                                  | `Date Booked: {YYYY-MM-DD}`                                                                          |
+| R32 | `Treatment Plan:` and `1) HYGIENE MAINTENANCE`     | Independent ordered editable rows with the same fields and format checkbox; while empty, offer **Copy Treatment Options to Treatment Plan**                    | Treatment type: `catalogue` when explicitly remembered; each row and tooth/area: `patient-specific`; format: `administrative` | A numbered `Treatment Plan:` list by default, or a semicolon-separated inline line    |
+| R33 | `Next Visit: [UNRESOLVED PLACEHOLDER: NEXT VISIT]` | Editable text: **Next visit**                                                                                                                                  | `patient-specific`                                                                                                            | `Next Visit: {text}`                                                                  |
+| R34 | `Date Booked:`                                     | Optional date input: **Date booked**                                                                                                                           | `administrative`                                                                                                              | `Date Booked: {YYYY-MM-DD}`                                                           |
 
 The shared treatment-type catalogue has only one public starter: **Hygiene
 maintenance**. It is an explicit option, not a default or recommendation.
