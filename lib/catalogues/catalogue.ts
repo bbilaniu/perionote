@@ -208,10 +208,10 @@ const ohiAidsReviewedSeeds = catalogueSeeds("oral-hygiene.aids-reviewed", [
   ["superfloss", "SUPERFLOSS"],
   ["floss-threaders", "FLOSS THREADERS"],
   ["c-shape-flossing", "C-SHAPE FLOSSING"],
-  ["proper-tb-technique", "PROPER TB TECHNIQUE"],
+  ["proper-tb-technique", "PROPER TOOTHBRUSHING TECHNIQUE"],
   ["interproximal-brush", "INTERPROXIMAL BRUSH"],
   ["soft-picks", "SOFT PICKS"],
-  ["proper-use-etb", "PROPER USE OF ETB"],
+  ["proper-use-etb", "PROPER USE OF ELECTRIC TOOTHBRUSH"],
 ]);
 
 const oralHygieneComplianceSeeds = catalogueSeeds("oral-hygiene.compliance", [
@@ -259,12 +259,12 @@ const hygieneIntervalSeeds = catalogueSeeds("scheduling.hygiene-interval", [
 ]);
 
 const nextVisitSeeds = catalogueSeeds("scheduling.next-visit", [
-  ["6-mos-scale", "6 MOS SCALE"],
-  ["12-mrc", "12 MRC"],
-  ["3-mos-scale", "3 MOS SCALE"],
-  ["4-mos-scale", "4 MOS SCALE"],
-  ["6-mrc", "6 MRC"],
-  ["9-mrc", "9 MRC"],
+  ["6-mos-scale", "6 MONTH SCALE"],
+  ["12-mrc", "12 MONTH RECALL"],
+  ["3-mos-scale", "3 MONTH SCALE"],
+  ["4-mos-scale", "4 MONTH SCALE"],
+  ["6-mrc", "6 MONTH RECALL"],
+  ["9-mrc", "9 MONTH RECALL"],
   ["follow-up-hygiene", "FOLLOW-UP HYGIENE"],
 ]);
 

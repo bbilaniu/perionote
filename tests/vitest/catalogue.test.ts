@@ -196,10 +196,10 @@ describe("local catalogues", () => {
       "SUPERFLOSS",
       "FLOSS THREADERS",
       "C-SHAPE FLOSSING",
-      "PROPER TB TECHNIQUE",
+      "PROPER TOOTHBRUSHING TECHNIQUE",
       "INTERPROXIMAL BRUSH",
       "SOFT PICKS",
-      "PROPER USE OF ETB",
+      "PROPER USE OF ELECTRIC TOOTHBRUSH",
     ]);
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.completed").map(
@@ -248,12 +248,12 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
-      "6 MOS SCALE",
-      "12 MRC",
-      "3 MOS SCALE",
-      "4 MOS SCALE",
-      "6 MRC",
-      "9 MRC",
+      "6 MONTH SCALE",
+      "12 MONTH RECALL",
+      "3 MONTH SCALE",
+      "4 MONTH SCALE",
+      "6 MONTH RECALL",
+      "9 MONTH RECALL",
       "FOLLOW-UP HYGIENE",
     ]);
 

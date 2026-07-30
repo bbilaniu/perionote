@@ -109,12 +109,12 @@ The exact public starter labels are:
 - **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
 - **Oral hygiene compliance:** `Poor`; `Fair`; `Good`; `Excellent`; `Poor–fair`; `Fair–good`.
-- **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TB TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ETB`.
+- **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TOOTHBRUSHING TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ELECTRIC TOOTHBRUSH`.
 - **Treatment completed today:** `1U scale (cavitron and hand scaling)`; `2U scale (cavitron and hand scaling)`; `3U scale (cavitron and hand scaling)`; `4U scale (cavitron and hand scaling)`; `FMP`; `1U polish`; `Fluoride varnish`; `Crystal X-PUR`.
 - **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
 - **Recommended recall interval:** `12-month recall`; `6-month recall`; `9-month recall`.
 - **Recommended hygiene interval:** `3-month scale`; `4-month scale`; `6-month scale`; `N/A`.
-- **Next visit:** `6 MOS SCALE`; `12 MRC`; `3 MOS SCALE`; `4 MOS SCALE`; `6 MRC`; `9 MRC`; `FOLLOW-UP HYGIENE`.
+- **Next visit:** `6 MONTH SCALE`; `12 MONTH RECALL`; `3 MONTH SCALE`; `4 MONTH SCALE`; `6 MONTH RECALL`; `9 MONTH RECALL`; `FOLLOW-UP HYGIENE`.
 
 These starter values are suggestions only and are never preselected. The two
 truncated Health/Gingivitis entries and one truncated OHI-aids entry remain
