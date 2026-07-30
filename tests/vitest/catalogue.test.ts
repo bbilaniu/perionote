@@ -162,7 +162,7 @@ describe("local catalogues", () => {
       "NO, COMPLETED WITHIN A YEAR",
       "NO, IN ORTHO",
       "NO, NOT APPLICABLE",
-      "NO, RAN OUT OF TIME",
+      "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT",
     ]);
     expect(
       listCatalogueItems(

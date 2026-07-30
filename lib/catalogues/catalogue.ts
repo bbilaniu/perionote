@@ -190,7 +190,10 @@ const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
   ["completed-within-year", "NO, COMPLETED WITHIN A YEAR"],
   ["in-ortho", "NO, IN ORTHO"],
   ["not-applicable", "NO, NOT APPLICABLE"],
-  ["ran-out-of-time", "NO, RAN OUT OF TIME"],
+  [
+    "ran-out-of-time",
+    "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT",
+  ],
 ]);
 
 const healthGingivitisSeeds = catalogueSeeds("periodontal.health-gingivitis", [

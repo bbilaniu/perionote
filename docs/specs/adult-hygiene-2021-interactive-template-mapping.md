@@ -106,7 +106,7 @@ The exact public starter labels are:
 
 - **Patient chief concern:** `Nothing`; `Sore gums upon brushing/flossing`; `Dissatisfaction with the appearance of teeth due to yellowing/stain`; `Food catches between teeth`; `Sensitivity to hot and cold`.
 - **Medical history reviewed:** `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS`.
-- **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME`.
+- **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
 - **Oral hygiene compliance:** `Poor`; `Fair`; `Good`; `Excellent`; `Poor–fair`; `Fair–good`.
 - **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TB TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ETB`.
