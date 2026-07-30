@@ -473,7 +473,6 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   for (const label of [
     "Open bite",
     "Crossbite",
-    "Slight malocclusion",
     "Increased overjet",
     "Increased overbite",
   ]) {
@@ -484,6 +483,12 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
       }),
     ).toBeVisible();
   }
+  await expect(
+    page.getByRole("option", {
+      name: "Slight malocclusion Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   for (const duplicate of ["Cl I", "Cl II", "Cl III"]) {
     await expect(
       page.getByRole("option", {

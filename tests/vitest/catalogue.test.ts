@@ -115,6 +115,17 @@ describe("local catalogues", () => {
       ).map((item) => item.label),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
     expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.additional-occlusal-findings",
+      ).map((item) => item.label),
+    ).toEqual([
+      "Open bite",
+      "Crossbite",
+      "Increased overjet",
+      "Increased overbite",
+    ]);
+    expect(
       listCatalogueItems(emptyState, "imaging.radiographs").map(
         (item) => item.label,
       ),

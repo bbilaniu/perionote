@@ -232,17 +232,20 @@ Add a new allowlisted browser-local catalogue key:
 
 `clinical-exam.additional-occlusal-findings`
 
-Approved public starters:
+Approved public starters after the 2026-07-30 clinical wording review:
 
 - Open bite
 - Crossbite
-- Slight malocclusion
 - Increased overjet
 - Increased overbite
 
 Map each public starter to its normalized catalogue source ID for provenance.
 Do not preselect a starter and do not visually imply that starters are
 preferred findings.
+
+The source phrase `Slight malocclusion` remains in the raw audit transcription
+only. It is clinically non-specific and must not appear as a normalized option
+or public starter.
 
 Users may type an additional finding that is not in the starter list. Follow
 the existing ADR 0001 catalogue contract:

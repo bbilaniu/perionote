@@ -246,10 +246,12 @@ selects a finding.
 After the measurements, one catalogue-backed multi-value control owns
 **Additional occlusal findings**. Its public starters map to normalized source
 IDs as follows: Open bite → `ioe.occlusion.open_bite`; Crossbite →
-`ioe.occlusion.crossbite`; Slight malocclusion →
-`ioe.occlusion.slight_malocclusion`; Increased overjet →
+`ioe.occlusion.crossbite`; Increased overjet →
 `ioe.occlusion.increased_overjet`; Increased overbite →
 `ioe.occlusion.increased_overbite`. No Class I/II/III starters are duplicated.
+Following clinical wording review on 2026-07-30, the non-specific source phrase
+`Slight malocclusion` remains audit-only and is excluded from normalized and
+runtime choices.
 Free entry is valid, while browser-local reuse requires the existing explicit
 Remember action. Each selected text snapshot owns optional encounter-only
 locations (Anterior, Posterior, Right, Left, Maxilla, Mandible, and editable

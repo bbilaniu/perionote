@@ -122,10 +122,6 @@ const additionalOcclusalFindingSeeds: CatalogueSeed[] = [
   { id: "seed.additional-occlusion.open-bite", label: "Open bite" },
   { id: "seed.additional-occlusion.crossbite", label: "Crossbite" },
   {
-    id: "seed.additional-occlusion.slight-malocclusion",
-    label: "Slight malocclusion",
-  },
-  {
     id: "seed.additional-occlusion.increased-overjet",
     label: "Increased overjet",
   },

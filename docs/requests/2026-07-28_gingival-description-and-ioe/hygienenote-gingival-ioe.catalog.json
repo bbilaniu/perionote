@@ -1540,22 +1540,13 @@
               "supportsMeasurement": true,
               "measurementUnits": ["percent", "mm"],
               "allowMultipleMeasurements": true
-            },
-            {
-              "id": "ioe.occlusion.slight_malocclusion",
-              "label": "Slight malocclusion",
-              "classification": "normal_variation",
-              "noteFragment": "slight malocclusion",
-              "sourceCategory": "common_variations",
-              "sourceTerm": "Slight malocclusion",
-              "supportsLocation": true,
-              "reviewStatus": "definition_review_recommended"
             }
           ],
           "supportsComment": true,
           "duplicateCheck": ["occlusion", "overjet", "overbite", "crossbite"],
           "notes": [
-            "Do not create duplicate occlusion state if equivalent fields already exist."
+            "Do not create duplicate occlusion state if equivalent fields already exist.",
+            "The raw source wording 'Slight malocclusion' is retained in sourceTables for audit only and is deliberately excluded from normalized and runtime choices as clinically non-specific."
           ]
         },
         {
