@@ -14,6 +14,7 @@ export type GingivalDescriptionFinding = {
 export type GingivalDescriptionAssessment = {
   status: GingivalDescriptionStatus;
   findings: GingivalDescriptionFinding[];
+  customFindings?: string;
 };
 
 export const gingivalDescriptionCatalog =
@@ -29,12 +30,15 @@ export const gingivalCatalogOptions =
   );
 
 export function createEmptyGingivalDescriptionAssessment(): GingivalDescriptionAssessment {
-  return { status: "not_assessed", findings: [] };
+  return { status: "not_assessed", findings: [], customFindings: "" };
 }
 
-export function createGingivalDescriptionWnlAssessment(): GingivalDescriptionAssessment {
+function createGingivalDescriptionPresetAssessment(
+  status: GingivalDescriptionStatus
+): GingivalDescriptionAssessment {
   return {
-    status: "wnl",
+    status,
+    customFindings: "",
     findings: gingivalDescriptionCatalog.wnlPreset.selectedOptionIds.map(
       (optionId) => ({
         optionId,
@@ -47,12 +51,17 @@ export function createGingivalDescriptionWnlAssessment(): GingivalDescriptionAss
   };
 }
 
+export function createGingivalDescriptionWnlAssessment(): GingivalDescriptionAssessment {
+  return createGingivalDescriptionPresetAssessment("wnl");
+}
+
 export function copyGingivalDescriptionAssessment(
   assessment: GingivalDescriptionAssessment | undefined
 ): GingivalDescriptionAssessment {
   if (!assessment) return createEmptyGingivalDescriptionAssessment();
   return {
     status: assessment.status,
+    customFindings: assessment.customFindings ?? "",
     findings: assessment.findings.map((finding) => ({
       ...finding,
       locations: [...finding.locations],

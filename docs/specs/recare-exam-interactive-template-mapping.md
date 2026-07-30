@@ -187,22 +187,56 @@ plus supported location, laterality, measurement/unit, and comment values.
 Catalogue wording is resolved when the note is generated; unknown or retired
 IDs are ignored. Gingiva and Teeth are deliberately excluded.
 
+The existing shared **Intraoral** status dropdown and conditional legacy
+findings field remain aligned with Extraoral, TMJ, masseter palpation, and TMJ
+load testing in the main Clinical Exam flow. The separate **Structured
+intraoral observations** fieldset owns only its explanatory text, normal
+shortcut, and detailed structure controls. Those controls are visible only
+while the shared status is Findings. Not assessed hides them without
+discarding their values, so selecting Findings again restores them; hidden
+values do not appear in the note. WNL also hides them and retains the existing
+confirmation-before-clear transition described below.
+
 Selecting or editing any finding changes the shared R17 status to Findings,
 including normal and normal-variation observations. WNL is never inferred.
 Choosing WNL while free text or structured observations exist asks for
 confirmation: confirmation clears only both kinds of Intraoral findings and
 sets WNL; cancellation changes nothing. Existing WNL output remains exactly
 `Intraoral: WNL.`, and free-text-only Findings retain the legacy one-line
-output. Structured output is one block in catalogue order:
+output.
+
+**Apply normal structured observations** is an explicit shortcut within the
+same fieldset. It sets the shared R17 status to Findings and selects these
+reviewed catalogue observations: Buccal mucosa—Pink, Moist, No lesions, No
+swelling; Tongue—Pink, Moist, Symmetrical, No lesions; Floor of mouth—Pink,
+Smooth, No swelling, No discoloration; Palate—Pink, Intact, No lesions, No
+abnormal growths; Oropharynx—Uvula midline, No redness, No swelling, No
+exudate; Saliva—Clear, Normal flow. The implementation stores these exact 22
+option IDs rather than inferring them from catalogue classification. When
+free text or structured observations already exist, the action asks for
+confirmation before replacing only those Intraoral values; cancellation
+changes nothing.
+
+**Clear intraoral observations** is an explicit destructive action in the
+same fieldset. When free text or structured observations exist, it asks for
+confirmation before clearing both, returns the shared status to Not assessed,
+and leaves all unrelated Recare fields unchanged. Cancellation changes
+nothing.
+
+Structured output is one compact bullet per selected structure. Structures
+and their selected options use catalogue order regardless of selection order.
+Supported annotations remain attached to their option in parentheses:
 
 ```text
 Intraoral:
-  - {Structure}: {catalogue noteFragment}; location: {location}; measurement: {value unit}; notes: {comment}.
+  - {Structure}: {catalogue noteFragment}; {catalogue noteFragment} (location: {location}; measurement: {value unit}; notes: {comment}).
   Observations: {existing free text}.
 ```
 
-Unsupported and empty annotations are omitted. Saliva observations never
-alter the separate caries-risk factors.
+Unsupported and empty annotations are omitted. The normal shortcut therefore
+produces six structure bullets, for example
+`Buccal mucosa: pink; moist; no lesions; no swelling.` Saliva observations
+never alter the separate caries-risk factors.
 
 R22 keeps its optional percent value and adds independent **Overbite (mm)**.
 Percent alone remains `Overbite: 30%.`; millimetres alone produces

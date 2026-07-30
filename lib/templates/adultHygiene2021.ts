@@ -182,13 +182,13 @@ export interface AdultHygiene2021Form {
   listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
-  plaqueOther: string;
+  plaqueComment: string;
   stainChoice: string;
-  stainOther: string;
+  stainComment: string;
   calculusChoice: string;
-  calculusOther: string;
+  calculusComment: string;
   bleedingChoice: string;
-  bleedingOther: string;
+  bleedingComment: string;
   psrPocketing: [string, string, string, string, string, string];
   recession: string;
   fmpDone: string;
@@ -247,13 +247,13 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     listChiefConcerns: false,
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
-    plaqueOther: "",
+    plaqueComment: "",
     stainChoice: "",
-    stainOther: "",
+    stainComment: "",
     calculusChoice: "",
-    calculusOther: "",
+    calculusComment: "",
     bleedingChoice: "",
-    bleedingOther: "",
+    bleedingComment: "",
     psrPocketing: ["", "", "", "", "", ""],
     recession: "",
     fmpDone: "",

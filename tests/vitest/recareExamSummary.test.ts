@@ -6,6 +6,10 @@ import {
   hasRequiredRecareExamFields,
 } from "@/lib/templates/recareExam";
 import {
+  createRecareNormalStructuredIntraoralFindings,
+  recareNormalStructuredObservationIds,
+} from "@/lib/templates/recareIntraoralCatalog";
+import {
   buildRecareExamSummary,
   formatNoteHeaderLocalTimestamp,
   formatRecareExamLocalTimestamp,
@@ -47,7 +51,7 @@ Palpation of the masseter test: WNL.
 Load TMJ joint test: WNL.
 
 Intraoral:
-  - Tongue: fissured; notes: Synthetic observation.
+  - Tongue: fissured (notes: Synthetic observation).
   - Saliva: normal flow.
 Oral habits: Synthetic clenching history.
 Molar occlusion—right: Synthetic Class I.
@@ -236,6 +240,24 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
         intraoralStatus: "wnl",
       })
     ).toBe("Intraoral: WNL.");
+    const hiddenStructuredFinding = {
+      optionId: "ioe.saliva.normal_flow",
+      structureId: "ioe.saliva",
+    };
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "not-assessed",
+        structuredIntraoralFindings: [hiddenStructuredFinding],
+      })
+    ).toBe("");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "wnl",
+        structuredIntraoralFindings: [hiddenStructuredFinding],
+      })
+    ).toBe("Intraoral: WNL.");
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
@@ -265,8 +287,87 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
         ],
       })
     ).toBe(`Intraoral:
-  - Buccal mucosa: ulcer; location: Right posterior; measurement: 4 mm; notes: Synthetic note.
+  - Buccal mucosa: ulcer (location: Right posterior; measurement: 4 mm; notes: Synthetic note).
   Observations: Free text.`);
+  });
+
+  it("applies the explicit reviewed normal observations with compact per-structure output", () => {
+    expect(recareNormalStructuredObservationIds).toEqual([
+      "ioe.buccal_mucosa.pink",
+      "ioe.buccal_mucosa.moist",
+      "ioe.buccal_mucosa.no_lesions",
+      "ioe.buccal_mucosa.no_swelling",
+      "ioe.tongue.pink",
+      "ioe.tongue.moist",
+      "ioe.tongue.symmetrical",
+      "ioe.tongue.no_lesions",
+      "ioe.floor_of_mouth.pink",
+      "ioe.floor_of_mouth.smooth",
+      "ioe.floor_of_mouth.no_swelling",
+      "ioe.floor_of_mouth.no_discoloration",
+      "ioe.palate.pink",
+      "ioe.palate.intact",
+      "ioe.palate.no_lesions",
+      "ioe.palate.no_abnormal_growths",
+      "ioe.oropharynx.uvula_midline",
+      "ioe.oropharynx.no_redness",
+      "ioe.oropharynx.no_swelling",
+      "ioe.oropharynx.no_exudate",
+      "ioe.saliva.clear",
+      "ioe.saliva.normal_flow",
+    ]);
+
+    const structuredIntraoralFindings =
+      createRecareNormalStructuredIntraoralFindings();
+    expect(structuredIntraoralFindings).toHaveLength(22);
+    expect(structuredIntraoralFindings.map(({ optionId }) => optionId)).toEqual(
+      recareNormalStructuredObservationIds
+    );
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        structuredIntraoralFindings,
+      })
+    ).toBe(`Intraoral:
+  - Buccal mucosa: pink; moist; no lesions; no swelling.
+  - Tongue: pink; moist; symmetrical; no lesions.
+  - Floor of mouth: pink; smooth; no swelling; no discoloration.
+  - Palate (hard/soft): pink; intact; no lesions; no abnormal growths.
+  - Oropharynx: uvula midline; no redness; no swelling; no exudate.
+  - Saliva: clear; normal flow.`);
+  });
+
+  it("groups structured observations in catalogue order regardless of selection order", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        structuredIntraoralFindings: [
+          {
+            optionId: "ioe.saliva.normal_flow",
+            structureId: "ioe.saliva",
+          },
+          {
+            optionId: "ioe.buccal_mucosa.ulcer",
+            structureId: "ioe.buccal_mucosa",
+            locations: ["Right"],
+            comment: "monitor",
+          },
+          {
+            optionId: "ioe.buccal_mucosa.pink",
+            structureId: "ioe.buccal_mucosa",
+          },
+          {
+            optionId: "ioe.tongue.fissured",
+            structureId: "ioe.tongue",
+          },
+        ],
+      })
+    ).toBe(`Intraoral:
+  - Buccal mucosa: pink; ulcer (location: Right; notes: monitor).
+  - Tongue: fissured.
+  - Saliva: normal flow.`);
   });
 
   it("supports percent, millimetre, and dual overbite output", () => {

@@ -136,6 +136,142 @@ test("Recare Exam documents CPAP ownership and conditional use", async ({
   await expect(page.locator("#recare-summary")).toHaveValue(/CPAP: No\./);
 });
 
+test("Recare Exam aligns Intraoral with the primary exam and conditionally shows structured details", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredIntraoral = page.getByRole("group", {
+    name: "Structured intraoral observations",
+    exact: true,
+  });
+  const intraoralStatus = page.getByRole("button", {
+    name: "Intraoral",
+    exact: true,
+  });
+  const freeText = page.getByRole("textbox", {
+    name: "Intraoral findings",
+    exact: true,
+  });
+  const normalFlow = structuredIntraoral.getByRole("checkbox", {
+    name: "Normal flow",
+    exact: true,
+  });
+
+  await expect(intraoralStatus).toBeVisible();
+  await expect(
+    structuredIntraoral.getByRole("button", {
+      name: "Intraoral",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(normalFlow).toHaveCount(0);
+  await expect(freeText).toHaveCount(0);
+
+  await intraoralStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await expect(freeText).toBeVisible();
+  await expect(normalFlow).toBeVisible();
+  await normalFlow.check();
+
+  await intraoralStatus.click();
+  await page
+    .getByRole("option", { name: "Not assessed", exact: true })
+    .click();
+  await expect(normalFlow).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).toHaveValue("");
+
+  await intraoralStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await expect(normalFlow).toBeChecked();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Mark Intraoral WNL and clear all entered intraoral findings?"
+    );
+    await dialog.accept();
+  });
+  await intraoralStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(normalFlow).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).toHaveValue("Intraoral: WNL.");
+});
+
+test("Recare Exam applies reviewed normal intraoral observations with compact output", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredIntraoral = page.getByRole("group", {
+    name: "Structured intraoral observations",
+    exact: true,
+  });
+  const intraoralStatus = page.getByRole("button", {
+    name: "Intraoral",
+    exact: true,
+  });
+  await intraoralStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  const freeText = page.getByRole("textbox", {
+    name: "Intraoral findings",
+    exact: true,
+  });
+  await freeText.fill("Legacy observation");
+
+  const normalFlow = structuredIntraoral.getByRole("checkbox", {
+    name: "Normal flow",
+    exact: true,
+  });
+  page.once("dialog", async (dialog) => {
+    await dialog.dismiss();
+  });
+  await structuredIntraoral
+    .getByRole("button", {
+      name: "Apply normal structured observations",
+      exact: true,
+    })
+    .click();
+  await expect(freeText).toHaveValue("Legacy observation");
+  await expect(normalFlow).not.toBeChecked();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Replace all entered intraoral findings with the reviewed normal structured observations?"
+    );
+    await dialog.accept();
+  });
+  await structuredIntraoral
+    .getByRole("button", {
+      name: "Apply normal structured observations",
+      exact: true,
+    })
+    .click();
+
+  await expect(intraoralStatus).toContainText("Findings");
+  await expect(freeText).toHaveValue("");
+  await expect(normalFlow).toBeChecked();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Intraoral:\n  - Buccal mucosa: pink; moist; no lesions; no swelling\.\n  - Tongue: pink; moist; symmetrical; no lesions\.\n  - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n  - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n  - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n  - Saliva: clear; normal flow\./
+  );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all entered intraoral observations and return Intraoral to Not assessed?"
+    );
+    await dialog.accept();
+  });
+  await structuredIntraoral
+    .getByRole("button", {
+      name: "Clear intraoral observations",
+      exact: true,
+    })
+    .click();
+  await expect(intraoralStatus).toContainText("Not assessed");
+  await expect(freeText).toHaveCount(0);
+  await expect(normalFlow).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).toHaveValue("");
+});
+
 test("Recare Exam treatment rows allow duplicate types, note-only areas, inline edits, and independent plan copies", async ({
   page,
 }) => {
