@@ -5,8 +5,10 @@ import {
 import {
   choiceLabel,
   formatDiabetesModifier,
+  formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
   formatSmokingModifier,
+  periodontalStageEvidence,
   periodontalStatusChoices,
   type PeriodontalClassification,
 } from "@/lib/templates/periodontalClassification";
@@ -234,7 +236,10 @@ function formatPeriodontalClassification(
       ? `${extentLabels[classification.extent]} ${diagnosis.toLocaleLowerCase(
           "en-CA"
         )}`
-      : diagnosis,
+      : classification.diagnosis === "periodontitis" ||
+        classification.diagnosis === "other"
+      ? diagnosis
+      : "",
     classification.stageConfirmed && classification.stage
       ? `Stage ${classification.stage}`
       : "",
@@ -244,7 +249,7 @@ function formatPeriodontalClassification(
   ].filter(Boolean);
   const stageBasis =
     classification.stageConfirmed && classification.stage
-      ? classification.stageBasis
+      ? periodontalStageEvidence(classification)
           .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
           .filter(Boolean)
       : [];
@@ -380,7 +385,7 @@ export function buildAdultHygiene2021Summary(
     psrPocketingLine(form.psrPocketing),
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
-    labelledLine("Health/Gingivitis", form.healthGingivitis),
+    formatHealthGingivitisBlock(form.periodontalClassification),
     formatGingivalDescription(form.gingivalDescription),
     ...formatPeriodontalClassification(form.periodontalClassification),
   ];

@@ -389,8 +389,8 @@ are loaded.
 | A17  | `PSR/Pocketing: _ _ _ / _ _ _`                                                                                                                                                                                                                                              | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4**        | `patient-specific`                                                                                                                           | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants                                                                      |
 | A18  | `Recession:`                                                                                                                                                                                                                                                                | Editable text: **Recession**                                                                                                               | `patient-specific`                                                                                                                           | `Recession: {text}`                                                                                                                    |
 | A19  | `FMP Done: [SELECT/INSERT: FMP DONE]`                                                                                                                                                                                                                                       | Catalogue-backed editable text: **FMP done**                                                                                               | Current value: `patient-specific`; reusable complete phrases: `catalogue`                                                                    | `FMP Done: {selected or entered text}`                                                                                                 |
-| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]`                                                                                                                                                                                                                                | Catalogue-backed editable text: **Health/Gingivitis**                                                                                      | Current value: `patient-specific`; reusable options: `catalogue`                                                                             | `Health/Gingivitis: {text}`                                                                                                            |
-| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Explicit **Gingival Description** status followed by a progressive structured multi-finding fieldset, immediately after Health/Gingivitis | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed` | Omitted when absent or Not assessed; one WNL line or one compact per-dimension findings block before periodontal classification |
+| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` and the [reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md) | Conditional structured Health/Gingivitis classification using periodontium, exact BOP and maximum PPD, attachment loss, RBL, and treated-periodontitis stability findings | Stable context IDs, semantic measurements, and assessment states: `appCore`; entered evidence, confirmation, and overrides: `patient-specific` | A confirmed candidate preserves the familiar `Health/Gingivitis:` heading and uppercase ClearDent criterion block using ASCII `<=` and `>=`; overrides use actual entered evidence |
+| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Explicit **Gingival Description** status followed by a progressive structured multi-finding fieldset, before the diagnosis category and Health/Gingivitis classification | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed` | Omitted when absent or Not assessed; one WNL line or one compact per-dimension findings block |
 | A21  | [Reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md) | Diagnosis category and separate extent/distribution choices | Choices: `appCore`; encounter selection: `patient-specific` | `Periodontal diagnosis: {extent} periodontitis...` when documented |
 | A22  | Stage severity and complexity criteria | Exact typed measurements and explicit patient-specific finding checkboxes | Stable criterion IDs and units: `appCore`; entered evidence: `patient-specific` | Confirmed evidence is generated from the checked-in criterion catalogue |
 | A23  | Grade progression criteria and modifiers | Direct, indirect, and phenotype evidence plus smoking and diabetes controls | Stable criterion IDs, semantic operators, and units: `appCore`; entered evidence: `patient-specific` | Confirmed grade basis and entered modifiers are generated from structured state |
@@ -401,9 +401,11 @@ The six PSR/Pocketing inputs preserve the source's six-position shape and use
 the clinically approved clockwise order `1 2 3 / 6 5 4`, without imposing an
 undocumented numeric range or automatically calculating a result.
 All five visible FMP phrases are now complete and are public starter values.
-Four of the six visible Health/Gingivitis phrases are complete; the other two
-remain unresolved and are excluded until their full wording is known. The four
-complete phrases are public starter values.
+The legacy editable `periodontal.health-gingivitis` catalogue is no longer an
+encounter control and cannot contribute free text to generated notes. Its
+storage key remains readable for backward-compatible catalogue imports and
+existing browser-local data. The six reviewed replacement contexts are fixed
+application vocabulary and are generated only from confirmed structured state.
 
 Periodontal evidence uses the checked-in catalogue and candidate rules in
 `lib/templates/periodontalClassification.ts`, documented by the
@@ -414,14 +416,14 @@ classification never writes to the note by itself.
 #### Additive Gingival Description contract
 
 The Slice 1 extension does not rename, move, synchronize, or replace Bleeding,
-Recession, FMP Done, or Health/Gingivitis. In particular, the existing
-`periodontal.health-gingivitis` browser-local catalogue remains unchanged; the
-new vocabulary is fixed checked-in application data and cannot be remembered
-or edited. An absent extension property is treated exactly like Not assessed,
-so an old-shaped form produces byte-for-byte pre-extension output.
+Recession, or FMP Done. Structured gingival observations now precede the
+periodontal diagnosis category. The retired
+`periodontal.health-gingivitis` browser-local catalogue remains unchanged for
+backward-compatible data handling, but is not rendered in the encounter form.
+An absent Gingival Description property is treated exactly like Not assessed.
 
 The primary **Gingival Description** status control is aligned with the other
-Periodontal Assessment fields immediately after Health/Gingivitis. It exposes
+Periodontal Assessment fields immediately before periodontal classification. It exposes
 the single shared Not assessed / WNL / Findings state. A separate
 **Structured gingival observations** fieldset owns the explanatory text,
 normal-observation shortcut, clear action, and detailed observations. Findings

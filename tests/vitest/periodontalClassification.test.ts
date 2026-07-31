@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
   createEmptyPeriodontalClassification,
+  formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
+  type GingivalHealthAssessment,
+  type HealthGingivitisContext,
+  type PeriodontalDiagnosis,
   type PeriodontalClassification,
 } from "@/lib/templates/periodontalClassification";
 
@@ -166,5 +171,155 @@ describe("classifyPeriodontalCandidate", () => {
         "ascii"
       )
     ).toBe("maximum PPD >=6 mm");
+  });
+});
+
+describe("Health/Gingivitis classification", () => {
+  const cases: Array<{
+    diagnosis: PeriodontalDiagnosis;
+    assessment: Partial<GingivalHealthAssessment>;
+    expected: HealthGingivitisContext;
+  }> = [
+    {
+      diagnosis: "health",
+      assessment: {
+        periodontium: "intact",
+        bopPercent: { operator: "eq", value: 6, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+        attachmentLoss: "absent",
+        radiographicBoneLoss: "absent",
+      },
+      expected: "health-intact",
+    },
+    {
+      diagnosis: "gingivitis",
+      assessment: {
+        periodontium: "intact",
+        bopPercent: { operator: "eq", value: 18, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+        attachmentLoss: "absent",
+        radiographicBoneLoss: "absent",
+      },
+      expected: "gingivitis-intact",
+    },
+    {
+      diagnosis: "health",
+      assessment: {
+        periodontium: "reduced-non-periodontitis",
+        bopPercent: { operator: "eq", value: 5, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+        attachmentLoss: "present",
+        radiographicBoneLoss: "absent",
+      },
+      expected: "health-reduced-non-periodontitis",
+    },
+    {
+      diagnosis: "gingivitis",
+      assessment: {
+        periodontium: "reduced-non-periodontitis",
+        bopPercent: { operator: "eq", value: 20, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+        attachmentLoss: "present",
+        radiographicBoneLoss: "present",
+      },
+      expected: "gingivitis-reduced-non-periodontitis",
+    },
+    {
+      diagnosis: "periodontitis",
+      assessment: {
+        periodontium: "reduced-treated-periodontitis",
+        bopPercent: { operator: "eq", value: 5, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 4, unit: "mm" },
+        attachmentLoss: "present",
+        radiographicBoneLoss: "present",
+        ppd4OrGreaterWithBop: "no",
+        progressiveDestruction: "no",
+      },
+      expected: "health-treated-stable-periodontitis",
+    },
+    {
+      diagnosis: "periodontitis",
+      assessment: {
+        periodontium: "reduced-treated-periodontitis",
+        bopPercent: { operator: "eq", value: 18, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 5, unit: "mm" },
+        attachmentLoss: "present",
+        radiographicBoneLoss: "present",
+        ppd4OrGreaterWithBop: "no",
+        progressiveDestruction: "no",
+      },
+      expected: "inflammation-periodontitis-history",
+    },
+  ];
+
+  it.each(cases)("calculates $expected", ({ diagnosis, assessment, expected }) => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = diagnosis;
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      ...assessment,
+    };
+
+    expect(classifyGingivalHealthCandidate(classification)).toEqual({
+      context: expected,
+      warnings: [],
+    });
+  });
+
+  it("uses shared maximum PPD for stage without duplicating encounter state", () => {
+    const classification = periodontitis({
+      gingivalHealth: {
+        ...createEmptyPeriodontalClassification().gingivalHealth,
+        maximumPpd: { operator: "eq", value: 6, unit: "mm" },
+      },
+    });
+
+    expect(classifyPeriodontalCandidate(classification).stage).toBe("III");
+  });
+
+  it("formats confirmed candidates like the ClearDent field", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "intact",
+      bopPercent: { operator: "eq", value: 6, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+      attachmentLoss: "absent",
+      radiographicBoneLoss: "absent",
+      context: "health-intact",
+      confirmed: true,
+    };
+
+    expect(formatHealthGingivitisBlock(classification))
+      .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
+- NO PROBING ATTACHMENT LOSS
+- PPD <=3 MM
+- BOP <10%
+- NO RADIOGRAPHIC BONE LOSS`);
+  });
+
+  it("formats overrides from actual evidence instead of claiming reference criteria", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "intact",
+      bopPercent: { operator: "eq", value: 12, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+      attachmentLoss: "absent",
+      radiographicBoneLoss: "absent",
+      context: "health-intact",
+      confirmed: true,
+      overrideReason: "Clinician-confirmed exception",
+    };
+
+    expect(formatHealthGingivitisBlock(classification))
+      .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
+- NO PROBING ATTACHMENT LOSS
+- MAXIMUM PPD: 3 MM
+- BOP: 12%
+- NO RADIOGRAPHIC BONE LOSS
+- CLINICIAN OVERRIDE: Clinician-confirmed exception`);
   });
 });

@@ -41,6 +41,64 @@ export const periodontalStatusChoices = [
   },
 ] as const;
 
+export const periodontalPeriodontiumChoices = [
+  { value: "", label: "Not assessed" },
+  { value: "intact", label: "Intact periodontium" },
+  {
+    value: "reduced-non-periodontitis",
+    label: "Reduced periodontium, non-periodontitis patient",
+  },
+  {
+    value: "reduced-treated-periodontitis",
+    label: "Reduced periodontium, treated periodontitis patient",
+  },
+] as const;
+
+export const healthGingivitisContextChoices = [
+  {
+    value: "health-intact",
+    label: "HEALTH - INTACT PERIODONTIUM",
+    diagnosis: "health",
+  },
+  {
+    value: "gingivitis-intact",
+    label: "GINGIVITIS - INTACT PERIODONTIUM",
+    diagnosis: "gingivitis",
+  },
+  {
+    value: "health-reduced-non-periodontitis",
+    label: "HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+    diagnosis: "health",
+  },
+  {
+    value: "gingivitis-reduced-non-periodontitis",
+    label: "GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+    diagnosis: "gingivitis",
+  },
+  {
+    value: "health-treated-stable-periodontitis",
+    label: "HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT",
+    diagnosis: "periodontitis",
+  },
+  {
+    value: "inflammation-periodontitis-history",
+    label: "GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS",
+    diagnosis: "periodontitis",
+  },
+] as const;
+
+export const assessedPresenceChoices = [
+  { value: "not-assessed", label: "Not assessed" },
+  { value: "absent", label: "Absent" },
+  { value: "present", label: "Present" },
+] as const;
+
+export const assessedBooleanChoices = [
+  { value: "not-assessed", label: "Not assessed" },
+  { value: "no", label: "No" },
+  { value: "yes", label: "Yes" },
+] as const;
+
 export type PeriodontalDiagnosis =
   (typeof periodontalDiagnosisChoices)[number]["value"];
 export type PeriodontalExtent =
@@ -51,6 +109,15 @@ export type PeriodontitisGrade =
   (typeof periodontalGradeChoices)[number]["value"];
 export type PeriodontalStatus =
   (typeof periodontalStatusChoices)[number]["value"];
+export type PeriodontalPeriodontium =
+  (typeof periodontalPeriodontiumChoices)[number]["value"];
+export type HealthGingivitisContext =
+  | ""
+  | (typeof healthGingivitisContextChoices)[number]["value"];
+export type AssessedPresence =
+  (typeof assessedPresenceChoices)[number]["value"];
+export type AssessedBoolean =
+  (typeof assessedBooleanChoices)[number]["value"];
 
 export type ClinicalOperator = "eq" | "lt" | "lte" | "gt" | "gte";
 export type ClinicalUnit =
@@ -320,6 +387,19 @@ export type DiabetesModifier =
       measurement?: ClinicalMeasurement & { unit: "percent" };
     };
 
+export interface GingivalHealthAssessment {
+  periodontium: PeriodontalPeriodontium;
+  bopPercent?: ClinicalMeasurement & { unit: "percent" };
+  maximumPpd?: ClinicalMeasurement & { unit: "mm" };
+  attachmentLoss: AssessedPresence;
+  radiographicBoneLoss: AssessedPresence;
+  ppd4OrGreaterWithBop: AssessedBoolean;
+  progressiveDestruction: AssessedBoolean;
+  context: HealthGingivitisContext;
+  confirmed: boolean;
+  overrideReason: string;
+}
+
 export interface PeriodontalClassification {
   diagnosis: PeriodontalDiagnosis;
   extent: PeriodontalExtent;
@@ -334,6 +414,20 @@ export interface PeriodontalClassification {
   gradeBasis: PeriodontalCriterionEvidence<PeriodontalGradeCriterionId>[];
   smoking: SmokingModifier;
   diabetes: DiabetesModifier;
+  gingivalHealth: GingivalHealthAssessment;
+}
+
+export function createEmptyGingivalHealthAssessment(): GingivalHealthAssessment {
+  return {
+    periodontium: "",
+    attachmentLoss: "not-assessed",
+    radiographicBoneLoss: "not-assessed",
+    ppd4OrGreaterWithBop: "not-assessed",
+    progressiveDestruction: "not-assessed",
+    context: "",
+    confirmed: false,
+    overrideReason: "",
+  };
 }
 
 export function createEmptyPeriodontalClassification(): PeriodontalClassification {
@@ -351,7 +445,13 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
     gradeBasis: [],
     smoking: { status: "not-assessed" },
     diabetes: { status: "not-assessed" },
+    gingivalHealth: createEmptyGingivalHealthAssessment(),
   };
+}
+
+export interface GingivalHealthCandidate {
+  context: HealthGingivitisContext;
+  warnings: string[];
 }
 
 const stageRank: Record<Exclude<PeriodontitisStage, "">, number> = {
@@ -392,6 +492,194 @@ function exactMeasurement(
     return undefined;
   }
   return measurement.value;
+}
+
+function exactMeasurementValue(
+  measurement: ClinicalMeasurement | undefined,
+  unit: ClinicalUnit
+): number | undefined {
+  return exactMeasurement({ criterionId: "measurement", measurement }, unit);
+}
+
+export function periodontalStageEvidence(
+  classification: PeriodontalClassification
+): PeriodontalCriterionEvidence<PeriodontalStageCriterionId>[] {
+  const evidenceById = new Map(
+    classification.stageBasis
+      .filter((evidence) => evidence.criterionId !== "stage.max-ppd")
+      .map((evidence) => [evidence.criterionId, evidence])
+  );
+  if (classification.gingivalHealth.maximumPpd) {
+    evidenceById.set("stage.max-ppd", {
+      criterionId: "stage.max-ppd",
+      measurement: classification.gingivalHealth.maximumPpd,
+    });
+  }
+  return periodontalStageCriterionCatalogue.flatMap(({ id }) => {
+    const evidence = evidenceById.get(id);
+    return evidence ? [evidence] : [];
+  });
+}
+
+export function classifyGingivalHealthCandidate(
+  classification: PeriodontalClassification
+): GingivalHealthCandidate {
+  const assessment = classification.gingivalHealth;
+  if (
+    classification.diagnosis !== "health" &&
+    classification.diagnosis !== "gingivitis" &&
+    classification.diagnosis !== "periodontitis"
+  ) {
+    return { context: "", warnings: [] };
+  }
+
+  const bop = exactMeasurementValue(assessment.bopPercent, "percent");
+  const maximumPpd = exactMeasurementValue(assessment.maximumPpd, "mm");
+  const missing = [
+    ...(!assessment.periodontium ? ["periodontium"] : []),
+    ...(bop === undefined ? ["BOP percentage"] : []),
+    ...(maximumPpd === undefined ? ["maximum PPD"] : []),
+    ...(assessment.attachmentLoss === "not-assessed"
+      ? ["attachment loss"]
+      : []),
+    ...(assessment.radiographicBoneLoss === "not-assessed"
+      ? ["radiographic bone loss"]
+      : []),
+  ];
+  if (classification.diagnosis === "periodontitis") {
+    if (assessment.ppd4OrGreaterWithBop === "not-assessed") {
+      missing.push("sites with PPD >=4 mm and BOP");
+    }
+    if (assessment.progressiveDestruction === "not-assessed") {
+      missing.push("progressive destruction");
+    }
+  }
+  if (missing.length) {
+    return {
+      context: "",
+      warnings: [`Complete ${missing.join(", ")} to calculate a candidate.`],
+    };
+  }
+  if (
+    bop === undefined ||
+    maximumPpd === undefined ||
+    bop < 0 ||
+    bop > 100 ||
+    maximumPpd <= 0
+  ) {
+    return {
+      context: "",
+      warnings: ["Entered Health/Gingivitis measurements are outside supported ranges."],
+    };
+  }
+
+  if (classification.diagnosis === "periodontitis") {
+    if (assessment.periodontium !== "reduced-treated-periodontitis") {
+      return {
+        context: "",
+        warnings: [
+          "A periodontitis diagnosis requires the treated-periodontitis context for this calculation.",
+        ],
+      };
+    }
+    if (
+      assessment.attachmentLoss !== "present" ||
+      assessment.radiographicBoneLoss !== "present"
+    ) {
+      return {
+        context: "",
+        warnings: [
+          "Treated periodontitis context requires confirmed reduced attachment and bone levels.",
+        ],
+      };
+    }
+    if (
+      assessment.ppd4OrGreaterWithBop === "yes" ||
+      assessment.progressiveDestruction === "yes"
+    ) {
+      return {
+        context: "",
+        warnings: [
+          "Findings may indicate unstable or recurrent periodontitis; no Health/Gingivitis candidate is suggested.",
+        ],
+      };
+    }
+    if (bop < 10 && maximumPpd <= 4) {
+      return {
+        context: "health-treated-stable-periodontitis",
+        warnings: [],
+      };
+    }
+    if (bop >= 10 && assessment.ppd4OrGreaterWithBop === "no") {
+      return {
+        context: "inflammation-periodontitis-history",
+        warnings: [],
+      };
+    }
+    return {
+      context: "",
+      warnings: [
+        "Entered findings do not match a supported treated-periodontitis Health/Gingivitis context.",
+      ],
+    };
+  }
+
+  const expectedPeriodontium =
+    assessment.periodontium === "intact"
+      ? {
+          attachmentLoss: "absent",
+          radiographicBoneLoss: "absent",
+          health: "health-intact",
+          gingivitis: "gingivitis-intact",
+        }
+      : assessment.periodontium === "reduced-non-periodontitis"
+      ? {
+          attachmentLoss: "present",
+          radiographicBoneLoss: assessment.radiographicBoneLoss,
+          health: "health-reduced-non-periodontitis",
+          gingivitis: "gingivitis-reduced-non-periodontitis",
+        }
+      : undefined;
+  if (
+    !expectedPeriodontium ||
+    assessment.attachmentLoss !== expectedPeriodontium.attachmentLoss ||
+    assessment.radiographicBoneLoss !==
+      expectedPeriodontium.radiographicBoneLoss
+  ) {
+    return {
+      context: "",
+      warnings: [
+        "Attachment and bone-loss findings do not match the selected periodontium.",
+      ],
+    };
+  }
+  if (maximumPpd > 3) {
+    return {
+      context: "",
+      warnings: [
+        "Maximum PPD exceeds the supported health/gingivitis threshold for this periodontium.",
+      ],
+    };
+  }
+
+  if (classification.diagnosis === "health" && bop < 10) {
+    return {
+      context: expectedPeriodontium.health as HealthGingivitisContext,
+      warnings: [],
+    };
+  }
+  if (classification.diagnosis === "gingivitis" && bop >= 10) {
+    return {
+      context: expectedPeriodontium.gingivitis as HealthGingivitisContext,
+      warnings: [],
+    };
+  }
+  return {
+    context: "",
+    warnings: [
+      `BOP ${bop}% does not support the selected ${classification.diagnosis} category.`,
+    ],
+  };
 }
 
 function stageFromEvidence(
@@ -536,7 +824,8 @@ export function classifyPeriodontalCandidate(
         : [],
     };
   }
-  const stageEvidence = classification.stageBasis
+  const allStageEvidence = periodontalStageEvidence(classification);
+  const stageEvidence = allStageEvidence
     .map((evidence) => ({ evidence, value: stageFromEvidence(evidence) }))
     .filter(
       (
@@ -550,7 +839,7 @@ export function classifyPeriodontalCandidate(
     stageEvidence.map(({ value }) => ({ value, rank: stageRank[value] }))
   ) as PeriodontitisStage;
   const stageLevels = new Set(stageEvidence.map(({ value }) => value));
-  if (classification.stageBasis.length && !stageEvidence.length) {
+  if (allStageEvidence.length && !stageEvidence.length) {
     warnings.push(
       "Entered stage evidence does not cross a supported classification threshold."
     );
@@ -560,7 +849,7 @@ export function classifyPeriodontalCandidate(
       "Stage evidence spans multiple levels; the candidate uses the highest applicable stage."
     );
   }
-  if (!classification.stageBasis.length) {
+  if (!allStageEvidence.length) {
     warnings.push("Stage cannot be suggested without patient-specific evidence.");
   }
 
@@ -706,6 +995,111 @@ export function formatPeriodontalEvidence(
   return notation === "ascii"
     ? wording.replaceAll("≤", "<=").replaceAll("≥", ">=")
     : wording;
+}
+
+const healthGingivitisCanonicalLines: Record<
+  Exclude<HealthGingivitisContext, "">,
+  readonly string[]
+> = {
+  "health-intact": [
+    "NO PROBING ATTACHMENT LOSS",
+    "PPD <=3 MM",
+    "BOP <10%",
+    "NO RADIOGRAPHIC BONE LOSS",
+  ],
+  "gingivitis-intact": [
+    "NO PROBING ATTACHMENT LOSS",
+    "PPD <=3 MM",
+    "BOP >=10%",
+    "NO RADIOGRAPHIC BONE LOSS",
+  ],
+  "health-reduced-non-periodontitis": [
+    "PROBING ATTACHMENT LOSS PRESENT",
+    "PPD <=3 MM",
+    "BOP <10%",
+    "RADIOGRAPHIC BONE LOSS MAY BE PRESENT",
+  ],
+  "gingivitis-reduced-non-periodontitis": [
+    "PROBING ATTACHMENT LOSS PRESENT",
+    "PPD <=3 MM",
+    "BOP >=10%",
+    "RADIOGRAPHIC BONE LOSS MAY BE PRESENT",
+  ],
+  "health-treated-stable-periodontitis": [
+    "HISTORY OF PERIODONTITIS WITH REDUCED ATTACHMENT/BONE LEVELS",
+    "PPD <=4 MM",
+    "NO SITE WITH PPD >=4 MM AND BOP",
+    "BOP <10%",
+    "NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION",
+  ],
+  "inflammation-periodontitis-history": [
+    "PROBING ATTACHMENT LOSS AND RADIOGRAPHIC BONE LOSS PRESENT",
+    "BLEEDING SITES USED FOR THIS CATEGORY HAVE PPD <=3 MM",
+    "BOP >=10%",
+    "ASSESS SITES WITH PPD >=4 MM AND BOP FOR RECURRENT OR UNSTABLE PERIODONTITIS",
+  ],
+};
+
+export function formatHealthGingivitisBlock(
+  classification: PeriodontalClassification
+): string {
+  const assessment = classification.gingivalHealth;
+  if (!assessment.confirmed || !assessment.context) return "";
+  const contextLabel = choiceLabel(
+    healthGingivitisContextChoices,
+    assessment.context
+  );
+  const candidate = classifyGingivalHealthCandidate(classification);
+  if (candidate.context === assessment.context) {
+    return [
+      `Health/Gingivitis: ${contextLabel}`,
+      ...healthGingivitisCanonicalLines[assessment.context].map(
+        (line) => `- ${line}`
+      ),
+    ].join("\n");
+  }
+
+  const evidenceLines = [
+    assessment.attachmentLoss === "absent"
+      ? "NO PROBING ATTACHMENT LOSS"
+      : assessment.attachmentLoss === "present"
+      ? "PROBING ATTACHMENT LOSS PRESENT"
+      : "",
+    assessment.maximumPpd
+      ? `MAXIMUM PPD: ${formatClinicalMeasurement(
+          assessment.maximumPpd,
+          "ascii"
+        ).toUpperCase()}`
+      : "",
+    assessment.bopPercent
+      ? `BOP: ${formatClinicalMeasurement(
+          assessment.bopPercent,
+          "ascii"
+        ).toUpperCase()}`
+      : "",
+    assessment.radiographicBoneLoss === "absent"
+      ? "NO RADIOGRAPHIC BONE LOSS"
+      : assessment.radiographicBoneLoss === "present"
+      ? "RADIOGRAPHIC BONE LOSS PRESENT"
+      : "",
+    assessment.ppd4OrGreaterWithBop === "no"
+      ? "NO SITE WITH PPD >=4 MM AND BOP"
+      : assessment.ppd4OrGreaterWithBop === "yes"
+      ? "SITE WITH PPD >=4 MM AND BOP PRESENT"
+      : "",
+    assessment.progressiveDestruction === "no"
+      ? "NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION"
+      : assessment.progressiveDestruction === "yes"
+      ? "EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION PRESENT"
+      : "",
+    assessment.overrideReason.trim()
+      ? `CLINICIAN OVERRIDE: ${assessment.overrideReason.trim()}`
+      : "",
+  ].filter(Boolean);
+  return [
+    `Health/Gingivitis: ${contextLabel}`,
+    ...evidenceLines.map((line) => `- ${line}`),
+  ].join("\n");
 }
 
 export function formatSmokingModifier(

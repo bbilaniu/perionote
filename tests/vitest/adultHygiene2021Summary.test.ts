@@ -43,7 +43,11 @@ Bleeding: Localized mild.
 PSR/Pocketing: 1 2 2 / 2 1 2
 Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
-Health/Gingivitis: Synthetic gingival-health documentation.
+Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
+- PROBING ATTACHMENT LOSS AND RADIOGRAPHIC BONE LOSS PRESENT
+- BLEEDING SITES USED FOR THIS CATEGORY HAVE PPD <=3 MM
+- BOP >=10%
+- ASSESS SITES WITH PPD >=4 MM AND BOP FOR RECURRENT OR UNSTABLE PERIODONTITIS
 Gingival Description:
   - Color: coral pink (extent: generalized).
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
@@ -81,14 +85,11 @@ Date Booked: 2026-11-15`);
     expect(summary).not.toContain("Not documented");
   });
 
-  it("preserves old-shaped output when gingival description is absent", () => {
+  it("preserves output when the optional gingival description is absent", () => {
     const current = createEmptyAdultHygiene2021Form();
-    current.healthGingivitis = "Health intact";
     const oldShape = { ...current };
     delete oldShape.gingivalDescription;
-    expect(buildAdultHygiene2021Summary(oldShape)).toBe(
-      "Health/Gingivitis: Health intact."
-    );
+    expect(buildAdultHygiene2021Summary(oldShape)).toBe("");
     current.gingivalDescription = {
       status: "not_assessed",
       customFindings: "Retained custom observation",
@@ -102,9 +103,7 @@ Date Booked: 2026-11-15`);
         },
       ],
     };
-    expect(buildAdultHygiene2021Summary(current)).toBe(
-      "Health/Gingivitis: Health intact."
-    );
+    expect(buildAdultHygiene2021Summary(current)).toBe("");
   });
 
   it("suppresses periodontitis modifiers for another diagnosis category", () => {
@@ -122,9 +121,7 @@ Date Booked: 2026-11-15`);
       },
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Periodontal diagnosis: Gingivitis."
-    );
+    expect(buildAdultHygiene2021Summary(form)).toBe("");
   });
 
   it("formats explicit gingival WNL from the reviewed preset", () => {
@@ -167,7 +164,6 @@ Date Booked: 2026-11-15`);
     const form = createEmptyAdultHygiene2021Form();
     form.bleedingChoice = "Localized mild";
     form.recession = "Existing unrestricted recession";
-    form.healthGingivitis = "Existing health value";
     form.gingivalDescription = {
       status: "findings",
       findings: [
@@ -205,7 +201,6 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(form)).toBe(`Bleeding: Localized mild.
 
 Recession: Existing unrestricted recession.
-Health/Gingivitis: Existing health value.
 Gingival Description:
   - Color: coral pink; physiologic pigmentation (extent: generalized; notes: normal variation).
   - Position / Size: gingival recession (extent: localized; location: Q1, tooth 13 facial; measurement: 1.5 mm; notes: monitored).`);

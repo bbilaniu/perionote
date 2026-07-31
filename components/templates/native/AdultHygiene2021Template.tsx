@@ -50,19 +50,28 @@ import {
   type GingivalDescriptionStatus,
 } from "@/lib/templates/gingivalDescriptionCatalog";
 import {
+  assessedBooleanChoices,
+  assessedPresenceChoices,
+  choiceLabel,
+  classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
   formatDiabetesModifier,
   formatPeriodontalEvidence,
   formatSmokingModifier,
+  healthGingivitisContextChoices,
   periodontalDiagnosisChoices,
   periodontalExtentChoices,
   periodontalGradeChoices,
   periodontalGradeCriterionCatalogue,
+  periodontalPeriodontiumChoices,
+  periodontalStageEvidence,
   periodontalStageChoices,
   periodontalStageCriterionCatalogue,
   periodontalStatusChoices,
   type ClinicalMeasurement,
   type DiabetesModifier,
+  type GingivalHealthAssessment,
+  type HealthGingivitisContext,
   type PeriodontalClassification,
   type PeriodontalCriterionEvidence,
   type PeriodontalGradeCriterionId,
@@ -477,7 +486,8 @@ function PeriodontalClassificationControl({
   onChange: (value: PeriodontalClassification) => void;
 }) {
   const candidate = classifyPeriodontalCandidate(value);
-  const stageReasons = value.stageBasis
+  const gingivalHealthCandidate = classifyGingivalHealthCandidate(value);
+  const stageReasons = periodontalStageEvidence(value)
     .filter((evidence) =>
       candidate.stageReasonIds.includes(evidence.criterionId)
     )
@@ -495,9 +505,32 @@ function PeriodontalClassificationControl({
       ? [formatDiabetesModifier(value.diabetes)]
       : []),
   ].filter(Boolean);
+  const healthGingivitisOptions = [
+    { value: "" as HealthGingivitisContext, label: "Not assessed" },
+    ...healthGingivitisContextChoices
+      .filter((choice) => choice.diagnosis === value.diagnosis)
+      .map(({ value: contextValue, label }) => ({
+        value: contextValue as HealthGingivitisContext,
+        label,
+      })),
+  ];
 
   function update(patch: Partial<PeriodontalClassification>) {
     onChange({ ...value, ...patch });
+  }
+
+  function updateGingivalHealth(
+    patch: Partial<GingivalHealthAssessment>,
+    { invalidatesStage = false } = {}
+  ) {
+    update({
+      gingivalHealth: {
+        ...value.gingivalHealth,
+        ...patch,
+        confirmed: false,
+      },
+      ...(invalidatesStage ? { stageConfirmed: false } : {}),
+    });
   }
 
   function updateMeasurement<
@@ -590,6 +623,12 @@ function PeriodontalClassificationControl({
           onChange={(diagnosis) =>
             update({
               diagnosis,
+              gingivalHealth: {
+                ...value.gingivalHealth,
+                context: "",
+                confirmed: false,
+                overrideReason: "",
+              },
               ...(diagnosis !== "periodontitis"
                 ? {
                     extent: "",
@@ -612,6 +651,200 @@ function PeriodontalClassificationControl({
         />
       </div>
 
+      {value.diagnosis === "health" ||
+      value.diagnosis === "gingivitis" ||
+      value.diagnosis === "periodontitis" ? (
+        <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <legend className="font-semibold">
+            Health/Gingivitis classification
+          </legend>
+          <div className="grid gap-3 md:grid-cols-2">
+            <FixedChoiceListbox
+              id="adult-hygiene-periodontium"
+              label="Periodontium"
+              value={value.gingivalHealth.periodontium}
+              options={periodontalPeriodontiumChoices}
+              onChange={(periodontium) =>
+                updateGingivalHealth({ periodontium })
+              }
+            />
+            <label className="block text-sm font-medium">
+              Bleeding on probing (%)
+              <input
+                id="adult-hygiene-bop-percent"
+                className={inputClass}
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={numericValue(value.gingivalHealth.bopPercent)}
+                onChange={(event) => {
+                  const raw = event.target.value;
+                  updateGingivalHealth({
+                    ...(raw
+                      ? {
+                          bopPercent: {
+                            operator: "eq",
+                            value: Number(raw),
+                            unit: "percent",
+                          },
+                        }
+                      : { bopPercent: undefined }),
+                  });
+                }}
+              />
+            </label>
+            <label className="block text-sm font-medium">
+              Maximum PPD (mm)
+              <input
+                id="adult-hygiene-maximum-ppd"
+                className={inputClass}
+                type="number"
+                min={0}
+                step={1}
+                value={numericValue(value.gingivalHealth.maximumPpd)}
+                onChange={(event) => {
+                  const raw = event.target.value;
+                  updateGingivalHealth(
+                    {
+                      ...(raw
+                        ? {
+                            maximumPpd: {
+                              operator: "eq",
+                              value: Number(raw),
+                              unit: "mm",
+                            },
+                          }
+                        : { maximumPpd: undefined }),
+                    },
+                    { invalidatesStage: true }
+                  );
+                }}
+              />
+            </label>
+            <FixedChoiceListbox
+              id="adult-hygiene-attachment-loss"
+              label="Probing attachment loss"
+              value={value.gingivalHealth.attachmentLoss}
+              options={assessedPresenceChoices}
+              onChange={(attachmentLoss) =>
+                updateGingivalHealth({ attachmentLoss })
+              }
+            />
+            <FixedChoiceListbox
+              id="adult-hygiene-radiographic-bone-loss"
+              label="Radiographic bone loss"
+              value={value.gingivalHealth.radiographicBoneLoss}
+              options={assessedPresenceChoices}
+              onChange={(radiographicBoneLoss) =>
+                updateGingivalHealth({ radiographicBoneLoss })
+              }
+            />
+            {value.diagnosis === "periodontitis" ? (
+              <>
+                <FixedChoiceListbox
+                  id="adult-hygiene-ppd4-bop"
+                  label="Any site with PPD ≥4 mm and BOP"
+                  value={value.gingivalHealth.ppd4OrGreaterWithBop}
+                  options={assessedBooleanChoices}
+                  onChange={(ppd4OrGreaterWithBop) =>
+                    updateGingivalHealth({ ppd4OrGreaterWithBop })
+                  }
+                />
+                <FixedChoiceListbox
+                  id="adult-hygiene-progressive-destruction"
+                  label="Evidence of progressive periodontal destruction"
+                  value={value.gingivalHealth.progressiveDestruction}
+                  options={assessedBooleanChoices}
+                  onChange={(progressiveDestruction) =>
+                    updateGingivalHealth({ progressiveDestruction })
+                  }
+                />
+              </>
+            ) : null}
+          </div>
+
+          <div className="border-l-4 border-sky-600 pl-4">
+            <h3 className="font-semibold">Candidate Health/Gingivitis</h3>
+            <p className="mt-1 text-sm">
+              {gingivalHealthCandidate.context
+                ? choiceLabel(
+                    healthGingivitisContextChoices,
+                    gingivalHealthCandidate.context
+                  )
+                : "Not available"}
+            </p>
+            {gingivalHealthCandidate.warnings.length ? (
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                {gingivalHealthCandidate.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
+            {gingivalHealthCandidate.context ? (
+              <button
+                type="button"
+                className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
+                onClick={() =>
+                  updateGingivalHealth({
+                    context: gingivalHealthCandidate.context,
+                    overrideReason: "",
+                  })
+                }
+              >
+                Use candidate
+              </button>
+            ) : null}
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-3">
+              <FixedChoiceListbox
+                id="adult-hygiene-health-gingivitis-context"
+                label="Health/Gingivitis"
+                value={value.gingivalHealth.context}
+                options={healthGingivitisOptions}
+                onChange={(context) =>
+                  updateGingivalHealth({ context, overrideReason: "" })
+                }
+              />
+              <CheckboxField
+                id="adult-hygiene-health-gingivitis-confirmed"
+                label="Confirm selected Health/Gingivitis classification"
+                checked={value.gingivalHealth.confirmed}
+                disabled={
+                  !value.gingivalHealth.context ||
+                  (value.gingivalHealth.context !==
+                    gingivalHealthCandidate.context &&
+                    !value.gingivalHealth.overrideReason.trim())
+                }
+                onChange={(confirmed) =>
+                  update({
+                    gingivalHealth: {
+                      ...value.gingivalHealth,
+                      confirmed:
+                        Boolean(value.gingivalHealth.context) && confirmed,
+                    },
+                  })
+                }
+              />
+            </div>
+            {value.gingivalHealth.context &&
+            value.gingivalHealth.context !==
+              gingivalHealthCandidate.context ? (
+              <TextField
+                id="adult-hygiene-health-gingivitis-override"
+                label="Health/Gingivitis override reason"
+                value={value.gingivalHealth.overrideReason}
+                onChange={(overrideReason) =>
+                  updateGingivalHealth({ overrideReason })
+                }
+              />
+            ) : null}
+          </div>
+        </fieldset>
+      ) : null}
+
       {value.diagnosis === "periodontitis" ? (
         <>
       <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
@@ -621,7 +854,11 @@ function PeriodontalClassificationControl({
             <h3 className="mb-2 text-sm font-semibold capitalize">{group}</h3>
             <div className="grid gap-3 md:grid-cols-2">
               {periodontalStageCriterionCatalogue
-                .filter((criterion) => criterion.group === group)
+                .filter(
+                  (criterion) =>
+                    criterion.group === group &&
+                    criterion.id !== "stage.max-ppd"
+                )
                 .map((criterion) =>
                   criterion.input === "measurement" ? (
                     <label
@@ -1494,6 +1731,25 @@ export function AdultHygiene2021Template({
         ),
         smoking: { ...fixture.periodontalClassification.smoking },
         diabetes: { ...fixture.periodontalClassification.diabetes },
+        gingivalHealth: {
+          ...fixture.periodontalClassification.gingivalHealth,
+          ...(fixture.periodontalClassification.gingivalHealth.bopPercent
+            ? {
+                bopPercent: {
+                  ...fixture.periodontalClassification.gingivalHealth
+                    .bopPercent,
+                },
+              }
+            : {}),
+          ...(fixture.periodontalClassification.gingivalHealth.maximumPpd
+            ? {
+                maximumPpd: {
+                  ...fixture.periodontalClassification.gingivalHealth
+                    .maximumPpd,
+                },
+              }
+            : {}),
+        },
       },
       psrPocketing: [...fixture.psrPocketing],
       patientChiefConcern: [...fixture.patientChiefConcern],
@@ -1863,13 +2119,6 @@ export function AdultHygiene2021Template({
               catalogueKey="periodontal.fmp-done"
               value={form.fmpDone}
               onChange={(value) => updateField("fmpDone", value)}
-            />
-            <CatalogueCombobox
-              id="adult-hygiene-health-gingivitis"
-              label="Health/Gingivitis"
-              catalogueKey="periodontal.health-gingivitis"
-              value={form.healthGingivitis}
-              onChange={(value) => updateField("healthGingivitis", value)}
             />
             <GingivalDescriptionControl
               value={form.gingivalDescription}

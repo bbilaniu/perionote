@@ -32,7 +32,6 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
   psrPocketing: ["1", "2", "2", "2", "1", "2"],
   recession: "Synthetic localized recession.",
   fmpDone: "Synthetic FMP documentation.",
-  healthGingivitis: "Synthetic gingival-health documentation.",
   gingivalDescription: {
     status: "findings",
     findings: [
@@ -71,10 +70,6 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
         criterionId: "stage.rbl-percent",
         measurement: { operator: "eq", value: 20, unit: "percent" },
       },
-      {
-        criterionId: "stage.max-ppd",
-        measurement: { operator: "eq", value: 5, unit: "mm" },
-      },
       { criterionId: "stage.horizontal-bone-loss" },
     ],
     gradeBasis: [
@@ -86,6 +81,18 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
     ],
     smoking: { status: "non-smoker" },
     diabetes: { status: "no-diabetes" },
+    gingivalHealth: {
+      periodontium: "reduced-treated-periodontitis",
+      bopPercent: { operator: "eq", value: 18, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 5, unit: "mm" },
+      attachmentLoss: "present",
+      radiographicBoneLoss: "present",
+      ppd4OrGreaterWithBop: "no",
+      progressiveDestruction: "no",
+      context: "inflammation-periodontitis-history",
+      confirmed: true,
+      overrideReason: "",
+    },
   },
   oralHygieneCompliance: "Good",
   oralHygieneComplianceComment: "",

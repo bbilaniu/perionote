@@ -181,7 +181,6 @@ export interface AdultHygiene2021Form {
   psrPocketing: [string, string, string, string, string, string];
   recession: string;
   fmpDone: string;
-  healthGingivitis: string;
   gingivalDescription?: GingivalDescriptionAssessment;
   periodontalClassification: PeriodontalClassification;
   oralHygieneCompliance: string;
@@ -243,7 +242,6 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     psrPocketing: ["", "", "", "", "", ""],
     recession: "",
     fmpDone: "",
-    healthGingivitis: "",
     gingivalDescription: createEmptyGingivalDescriptionAssessment(),
     periodontalClassification: createEmptyPeriodontalClassification(),
     oralHygieneCompliance: "",

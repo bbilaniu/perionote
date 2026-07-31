@@ -10,6 +10,7 @@ selects and confirms the stage and grade.
 
 - [AAP staging and grading overview](https://www.perio.org/wp-content/uploads/2019/08/Staging-and-Grading-Periodontitis.pdf)
 - [Tonetti, Greenwell, and Kornman 2018 framework](https://aap.onlinelibrary.wiley.com/doi/10.1002/JPER.18-0006)
+- [Chapple, Mealey, and colleagues 2018 health and gingivitis consensus](https://aap.onlinelibrary.wiley.com/doi/full/10.1002/JPER.17-0719)
 - [Reviewed ClearDent periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)
 
 The checked-in implementation is in
@@ -29,6 +30,26 @@ catalogue in that module.
 | Missing grade data | For a periodontitis diagnosis, Grade B is shown as a working assumption with a warning. It is not confirmed or charted automatically. |
 | Unsupported exposure | Non-cigarette nicotine exposure is documented separately and never converted to cigarettes/day. |
 | Unknown HbA1c | Diabetes with unknown current HbA1c does not modify the candidate grade. |
+| Health/Gingivitis compatibility | Structured evidence is calculated and confirmed, while generated output retains the familiar ClearDent field heading and criterion-block style. |
+
+## Health/Gingivitis Table
+
+Maximum PPD is a shared measurement used by both this table and periodontitis
+staging. Unassessed negative findings never count as confirmed absence.
+
+| Diagnosis and periodontium | Required evidence | Candidate |
+| --- | --- | --- |
+| Health; intact | BOP <10%; maximum PPD <=3 mm; attachment loss absent; RBL absent | Health - intact periodontium |
+| Gingivitis; intact | BOP >=10%; maximum PPD <=3 mm; attachment loss absent; RBL absent | Gingivitis - intact periodontium |
+| Health; reduced non-periodontitis | BOP <10%; maximum PPD <=3 mm; attachment loss present; RBL assessed | Health - reduced periodontium, non-periodontitis patient |
+| Gingivitis; reduced non-periodontitis | BOP >=10%; maximum PPD <=3 mm; attachment loss present; RBL assessed | Gingivitis - reduced periodontium, non-periodontitis patient |
+| Periodontitis; reduced treated | BOP <10%; maximum PPD <=4 mm; attachment and RBL present; no site with PPD >=4 mm and BOP; no progressive destruction | Health - successfully treated, stable periodontitis patient |
+| Periodontitis; reduced treated | BOP >=10%; attachment and RBL present; no site with PPD >=4 mm and BOP; no progressive destruction | Gingival inflammation - patient with history of periodontitis |
+
+A site with PPD >=4 mm and BOP or evidence of progressive destruction suppresses
+the Health/Gingivitis candidate and prompts assessment for unstable or recurrent
+periodontitis. A treated periodontitis patient is never relabelled as a simple
+gingivitis patient.
 
 ## Stage Table
 
@@ -117,4 +138,5 @@ Modifiers can raise the evidence-based or assumed grade. They never lower it.
 - [ ] Confirm Grade B working-assumption behavior when progression data are absent.
 - [ ] Confirm smoking and HbA1c modifier behavior.
 - [ ] Confirm generated wording and override documentation.
+- [ ] Confirm all six Health/Gingivitis candidate rows and ClearDent-compatible output blocks.
 - [ ] Record reviewer, review date, and approved implementation revision.

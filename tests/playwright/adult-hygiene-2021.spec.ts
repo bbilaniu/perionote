@@ -317,7 +317,7 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   );
 });
 
-test("Adult Hygiene adds explicit gingival findings and WNL without changing existing periodontal fields", async ({
+test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
@@ -341,9 +341,6 @@ test("Adult Hygiene adds explicit gingival findings and WNL without changing exi
     })
   ).toHaveCount(0);
   await expect(recession).toHaveCount(0);
-  await page
-    .getByRole("combobox", { name: "Health/Gingivitis" })
-    .fill("Existing health value");
   await gingivalStatus.click();
   await page.getByRole("option", { name: "Findings", exact: true }).click();
   await recession.check();
@@ -353,7 +350,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL without changing exi
   await page.getByLabel("Gingival recession measurement (mm)").fill("2");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: tooth 13 facial; measurement: 2 mm\)\./
+    /Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: tooth 13 facial; measurement: 2 mm\)\./
   );
 
   await gingivalStatus.click();
@@ -380,7 +377,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL without changing exi
   await expect(gingivalStatus).toContainText("WNL");
   await expect(recession).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
   );
 
   page.once("dialog", async (dialog) => {
@@ -409,7 +406,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL without changing exi
   });
   await expect(noOvergrowth).toBeChecked();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: Existing health value\.[\s\S]*Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
   );
 
   await noOvergrowth.uncheck();
@@ -422,6 +419,62 @@ test("Adult Hygiene adds explicit gingival findings and WNL without changing exi
   await customFindings.fill("Custom gingival observation");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Gingival Description:\n  - Color: coral pink\.[\s\S]*  - Position \/ Size: no recession\.\n  Observations: Custom gingival observation\./
+  );
+});
+
+test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis output", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await expect(page.locator("#adult-hygiene-health-gingivitis")).toHaveCount(0);
+  const structuredObservations = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const diagnosis = page.locator("#adult-hygiene-periodontal-diagnosis");
+  const structuredBox = await structuredObservations.boundingBox();
+  const diagnosisBox = await diagnosis.boundingBox();
+  expect(structuredBox).not.toBeNull();
+  expect(diagnosisBox).not.toBeNull();
+  expect(structuredBox!.y).toBeLessThan(diagnosisBox!.y);
+
+  await diagnosis.click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", { name: "Intact periodontium", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-bop-percent").fill("6");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("3");
+  await page.locator("#adult-hygiene-attachment-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+  await page.locator("#adult-hygiene-radiographic-bone-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+
+  await expect(
+    page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
+  );
+
+  await page.getByRole("button", { name: "Use candidate", exact: true }).click();
+  await page
+    .getByLabel("Confirm selected Health/Gingivitis classification")
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- PPD <=3 MM\n- BOP <10%\n- NO RADIOGRAPHIC BONE LOSS/
+  );
+
+  await page.locator("#adult-hygiene-bop-percent").fill("12");
+  await expect(
+    page.getByLabel("Confirm selected Health/Gingivitis classification")
+  ).not.toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
   );
 });
 
@@ -531,7 +584,6 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
 
   for (const [controlId, starter] of [
     ["#adult-hygiene-fmp-done", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
-    ["#adult-hygiene-health-gingivitis", "HEALTH INTACT PERIODONTAL SUPPORT"],
     ["#adult-hygiene-compliance", "Good"],
     ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
     ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
@@ -803,7 +855,7 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
     .getByRole("option", { name: "Generalized", exact: true })
     .click();
   await page.locator("#adult-hygiene-stage-interdental-cal").fill("5");
-  await page.locator("#adult-hygiene-stage-max-ppd").fill("6");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("6");
   await page.locator("#adult-hygiene-grade-bone-loss-age-ratio").fill("0.72");
 
   await expect(
