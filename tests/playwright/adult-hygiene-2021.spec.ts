@@ -1090,6 +1090,48 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
   );
 });
 
+test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .getByRole("button", { name: /Structured periodontal observations/ })
+    .click();
+
+  const rblPercent = page.getByLabel("Radiographic bone loss (RBL) (%)", {
+    exact: true,
+  });
+  const rblExtent = page.getByRole("button", {
+    name: "Radiographic bone loss (RBL) extent",
+    exact: true,
+  });
+
+  await expect(rblPercent).toHaveAttribute("min", "0");
+  await expect(rblPercent).toHaveAttribute("max", "100");
+  await expect(rblExtent).toContainText("Not assessed");
+  await rblPercent.fill("20");
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontitis", exact: true })
+    .click();
+  await expect(page.getByText(/Stage II; Grade B/)).toBeVisible();
+
+  await rblPercent.fill("");
+  await rblExtent.click();
+  await page
+    .getByRole("option", { name: "Middle third or beyond", exact: true })
+    .click();
+
+  await expect(rblExtent).toContainText("Middle third or beyond");
+  await expect(page.getByText(/Stage III; Grade B/)).toBeVisible();
+  await expect(
+    page.getByText(
+      /radiographic bone loss \(RBL\) extends to the middle third of the root or beyond/
+    )
+  ).toBeVisible();
+});
+
 test("Adult Hygiene keeps compliance and interval comments independent", async ({
   page,
 }) => {

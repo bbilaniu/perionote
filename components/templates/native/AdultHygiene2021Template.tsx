@@ -100,6 +100,13 @@ const gingivalDescriptionStatusOptions: Array<{
   { value: "wnl", label: "WNL" },
   { value: "findings", label: "Findings" },
 ];
+const rblExtentOptions = [
+  { value: "", label: "Not assessed" },
+  {
+    value: "middle-third-or-beyond",
+    label: "Middle third or beyond",
+  },
+] as const;
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
 const treatmentToothAreaChoiceGroups = [
   {
@@ -829,6 +836,11 @@ function PeriodontalClassificationControl({
                               className={inputClass}
                               type="number"
                               min={criterion.minimum}
+                              max={
+                                "maximum" in criterion
+                                  ? criterion.maximum
+                                  : undefined
+                              }
                               step={criterion.step}
                               value={numericValue(
                                 measurementFor(value.stageBasis, criterion.id)
@@ -843,6 +855,32 @@ function PeriodontalClassificationControl({
                               }
                             />
                           </label>
+                        ) : criterion.id ===
+                          "stage.rbl-middle-third-or-beyond" ? (
+                          <FixedChoiceListbox
+                            key={criterion.id}
+                            id={`adult-hygiene-${criterion.id.replaceAll(
+                              ".",
+                              "-"
+                            )}`}
+                            label={criterion.label}
+                            value={
+                              value.stageBasis.some(
+                                (evidence) =>
+                                  evidence.criterionId === criterion.id
+                              )
+                                ? "middle-third-or-beyond"
+                                : ""
+                            }
+                            options={rblExtentOptions}
+                            onChange={(extent) =>
+                              updateBoolean(
+                                "stageBasis",
+                                criterion.id,
+                                extent === "middle-third-or-beyond"
+                              )
+                            }
+                          />
                         ) : (
                           <CheckboxField
                             key={criterion.id}

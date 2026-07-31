@@ -142,6 +142,7 @@ type StageCriterionDefinition = {
   input: "measurement" | "boolean";
   unit?: ClinicalUnit;
   minimum?: number;
+  maximum?: number;
   step?: number;
 };
 
@@ -159,18 +160,20 @@ export const periodontalStageCriterionCatalogue = [
   {
     id: "stage.rbl-percent",
     group: "severity",
-    label: "Radiographic bone loss",
+    label: "Radiographic bone loss (RBL)",
     noteLabel: "radiographic bone loss",
     input: "measurement",
     unit: "percent",
     minimum: 0,
+    maximum: 100,
     step: 1,
   },
   {
     id: "stage.rbl-middle-third-or-beyond",
     group: "severity",
-    label: "RBL extends to middle third or beyond",
-    noteLabel: "RBL extends to the middle third of the root or beyond",
+    label: "Radiographic bone loss (RBL) extent",
+    noteLabel:
+      "radiographic bone loss (RBL) extends to the middle third of the root or beyond",
     input: "boolean",
   },
   {
