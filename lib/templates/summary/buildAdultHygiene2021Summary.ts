@@ -2,6 +2,14 @@ import {
   type AdultHygiene2021Form,
   orderTreatmentToothAreas,
 } from "@/lib/templates/adultHygiene2021";
+import {
+  choiceLabel,
+  formatDiabetesModifier,
+  formatPeriodontalEvidence,
+  formatSmokingModifier,
+  periodontalStatusChoices,
+  type PeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
 import type {
   DocumentationStatus,
   RetainerStatus,
@@ -204,6 +212,85 @@ function psrPocketingLine(
     .join(" ")}`;
 }
 
+function formatPeriodontalClassification(
+  classification: PeriodontalClassification
+): string[] {
+  const diagnosisLabels = {
+    health: "Periodontal health",
+    gingivitis: "Gingivitis",
+    periodontitis: "Periodontitis",
+    other: "Other periodontal condition",
+  } as const;
+  const extentLabels = {
+    localized: "Localized",
+    generalized: "Generalized",
+    "molar-incisor": "Molar/incisor pattern",
+  } as const;
+  const diagnosis = classification.diagnosis
+    ? diagnosisLabels[classification.diagnosis]
+    : "";
+  const diagnosisParts = [
+    classification.diagnosis === "periodontitis" && classification.extent
+      ? `${extentLabels[classification.extent]} ${diagnosis.toLocaleLowerCase(
+          "en-CA"
+        )}`
+      : diagnosis,
+    classification.stageConfirmed && classification.stage
+      ? `Stage ${classification.stage}`
+      : "",
+    classification.gradeConfirmed && classification.grade
+      ? `Grade ${classification.grade}`
+      : "",
+  ].filter(Boolean);
+  const stageBasis =
+    classification.stageConfirmed && classification.stage
+      ? classification.stageBasis
+          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+          .filter(Boolean)
+      : [];
+  const gradeBasis =
+    classification.gradeConfirmed && classification.grade
+      ? classification.gradeBasis
+          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+          .filter(Boolean)
+      : [];
+  const modifiers =
+    classification.diagnosis === "periodontitis"
+      ? [
+          formatSmokingModifier(classification.smoking, "ascii"),
+          formatDiabetesModifier(classification.diabetes, "ascii"),
+        ].filter(Boolean)
+      : [];
+
+  return [
+    diagnosisParts.length
+      ? `Periodontal diagnosis: ${withTerminalPunctuation(
+          diagnosisParts.join(", ")
+        )}`
+      : "",
+    stageBasis.length ? `Stage basis: ${stageBasis.join("; ")}.` : "",
+    classification.stageConfirmed &&
+    trimmed(classification.stageOverrideReason)
+      ? `Stage override: ${withTerminalPunctuation(
+          classification.stageOverrideReason
+        )}`
+      : "",
+    gradeBasis.length ? `Grade basis: ${gradeBasis.join("; ")}.` : "",
+    classification.gradeConfirmed &&
+    trimmed(classification.gradeOverrideReason)
+      ? `Grade override: ${withTerminalPunctuation(
+          classification.gradeOverrideReason
+        )}`
+      : "",
+    modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
+    classification.status
+      ? `Periodontal status: ${withTerminalPunctuation(
+          choiceLabel(periodontalStatusChoices, classification.status)
+        )}`
+      : "",
+  ].filter(Boolean);
+}
+
 export function buildAdultHygiene2021Summary(
   form: AdultHygiene2021Form,
   options: BuildAdultHygiene2021SummaryOptions = {}
@@ -295,16 +382,7 @@ export function buildAdultHygiene2021Summary(
     labelledLine("FMP Done", form.fmpDone),
     labelledLine("Health/Gingivitis", form.healthGingivitis),
     formatGingivalDescription(form.gingivalDescription),
-    labelledLine("Periodontitis Stage", form.periodontitisStageChoice),
-    labelledLine(
-      "Periodontitis stage comments",
-      form.periodontitisStageComments
-    ),
-    labelledLine("Periodontitis Grade", form.periodontitisGradeChoice),
-    labelledLine(
-      "Periodontitis grade comments",
-      form.periodontitisGradeComments
-    ),
+    ...formatPeriodontalClassification(form.periodontalClassification),
   ];
 
   const currentHabits = [

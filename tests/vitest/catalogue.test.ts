@@ -118,8 +118,11 @@ describe("local catalogues", () => {
       listCatalogueItems(
         emptyState,
         "clinical-exam.additional-occlusal-findings",
-      ).map((item) => item.label),
+    ).map((item) => item.label),
     ).toEqual([
+      "Crowding",
+      "Spacing",
+      "Rotations",
       "Open bite",
       "Crossbite",
       "Increased overjet",

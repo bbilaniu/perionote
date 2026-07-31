@@ -789,29 +789,61 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
   );
 });
 
-test("Adult Hygiene keeps comments independent from their main values", async ({
+test("Adult Hygiene requires confirmation for structured periodontal candidates", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
 
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByLabel("Periodontitis stage comments", { exact: true })
-    .fill("Synthetic stage context");
-  await page.locator("#adult-hygiene-periodontitis-stage-choice").click();
-  await page
-    .getByRole("option", { name: "Stage II (P2)", exact: true })
+    .getByRole("option", { name: "Periodontitis", exact: true })
     .click();
+  await page.locator("#adult-hygiene-periodontal-extent").click();
+  await page
+    .getByRole("option", { name: "Generalized", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-stage-interdental-cal").fill("5");
+  await page.locator("#adult-hygiene-stage-max-ppd").fill("6");
+  await page.locator("#adult-hygiene-grade-bone-loss-age-ratio").fill("0.72");
 
+  await expect(
+    page.getByText("Stage III; Grade B.", { exact: false })
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Stage evidence: interdental CAL 5 mm; maximum PPD 6 mm\./)
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Stage III|Grade B/
+  );
+
+  await page.getByRole("button", { name: "Use candidates" }).click();
+  await expect(
+    page.locator("#adult-hygiene-periodontitis-stage")
+  ).toHaveAttribute("data-value", "III");
+  await expect(
+    page.locator("#adult-hygiene-periodontitis-grade")
+  ).toHaveAttribute("data-value", "B");
+  await page.getByLabel("Confirm selected stage").check();
+  await page.getByLabel("Confirm selected grade").check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\.[\s\S]*Stage basis: interdental CAL 5 mm; maximum PPD 6 mm\.[\s\S]*Grade basis: bone-loss\/age ratio 0\.72\./
+  );
+
+  await page.locator("#adult-hygiene-periodontitis-stage").click();
   await page
-    .getByLabel("Periodontitis grade comments", { exact: true })
-    .fill("Synthetic grade context");
-  await page.locator("#adult-hygiene-periodontitis-grade-choice").click();
-  await page
-    .getByRole("option", {
-      name: "Grade B: moderate rate",
-      exact: true,
-    })
+    .getByRole("option", { name: "Stage IV (P4)", exact: true })
     .click();
+  await expect(page.getByLabel("Confirm selected stage")).not.toBeChecked();
+  await expect(page.getByLabel("Stage override reason")).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Stage IV|Stage basis:/
+  );
+});
+
+test("Adult Hygiene keeps compliance and interval comments independent", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
 
   await page
     .getByLabel("Oral hygiene compliance comment", { exact: true })
@@ -833,6 +865,6 @@ test("Adult Hygiene keeps comments independent from their main values", async ({
     .fill("4-month scale");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontitis Stage: Stage II \(P2\)\.[\s\S]*Periodontitis stage comments: Synthetic stage context\.[\s\S]*Periodontitis Grade: Grade B: moderate rate\.[\s\S]*Periodontitis grade comments: Synthetic grade context\.[\s\S]*Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
+    /Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
   );
 });

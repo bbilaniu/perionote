@@ -47,8 +47,11 @@ Health/Gingivitis: Synthetic gingival-health documentation.
 Gingival Description:
   - Color: coral pink (extent: generalized).
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
-Periodontitis Stage: Stage II (P2).
-Periodontitis Grade: Grade B: moderate rate.
+Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
+Stage basis: interdental CAL 3 mm; radiographic bone loss 20%; maximum PPD 5 mm; mostly horizontal bone loss.
+Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
+Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
+Periodontal status: Periodontal disease stability.
 
 Oral hygiene compliance: Good.
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -101,6 +104,26 @@ Date Booked: 2026-11-15`);
     };
     expect(buildAdultHygiene2021Summary(current)).toBe(
       "Health/Gingivitis: Health intact."
+    );
+  });
+
+  it("suppresses periodontitis modifiers for another diagnosis category", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "gingivitis",
+      smoking: {
+        status: "cigarettes",
+        measurement: {
+          operator: "eq",
+          value: 12,
+          unit: "cigarettes-per-day",
+        },
+      },
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Periodontal diagnosis: Gingivitis."
     );
   });
 
@@ -339,13 +362,20 @@ OHE notes: Demonstrated brushing modifications.`);
     );
   });
 
-  it("keeps stage, grade, compliance, and interval comments independent", () => {
+  it("keeps classification overrides, compliance, and interval comments independent", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
-      periodontitisStageChoice: "Stage II (P2)",
-      periodontitisStageComments: "Synthetic stage context",
-      periodontitisGradeChoice: "Grade B: moderate rate",
-      periodontitisGradeComments: "Synthetic grade context",
+      periodontalClassification: {
+        ...createEmptyAdultHygiene2021Form().periodontalClassification,
+        diagnosis: "periodontitis" as const,
+        extent: "generalized" as const,
+        stage: "II" as const,
+        grade: "B" as const,
+        stageConfirmed: true,
+        gradeConfirmed: true,
+        stageOverrideReason: "Synthetic stage context",
+        gradeOverrideReason: "Synthetic grade context",
+      },
       oralHygieneCompliance: "Good",
       oralHygieneComplianceComment: "Synthetic compliance context",
       recallInterval: "6-month recall",
@@ -355,10 +385,9 @@ OHE notes: Demonstrated brushing modifications.`);
     };
 
     expect(buildAdultHygiene2021Summary(form))
-      .toBe(`Periodontitis Stage: Stage II (P2).
-Periodontitis stage comments: Synthetic stage context.
-Periodontitis Grade: Grade B: moderate rate.
-Periodontitis grade comments: Synthetic grade context.
+      .toBe(`Periodontal diagnosis: Generalized periodontitis, Stage II, Grade B.
+Stage override: Synthetic stage context.
+Grade override: Synthetic grade context.
 
 Oral hygiene compliance: Good.
 Oral hygiene compliance comment: Synthetic compliance context.
