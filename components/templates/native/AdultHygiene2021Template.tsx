@@ -107,6 +107,55 @@ const rblExtentOptions = [
     label: "Middle third or beyond",
   },
 ] as const;
+const boneLossPatternOptions = [
+  { value: "", label: "Not assessed" },
+  { value: "horizontal", label: "Mostly horizontal" },
+  { value: "vertical", label: "Vertical" },
+  { value: "mixed", label: "Mixed horizontal and vertical" },
+] as const;
+const furcationInvolvementOptions = [
+  { value: "", label: "Not assessed" },
+  { value: "stage.furcation-class-ii", label: "Class II" },
+  { value: "stage.furcation-class-iii", label: "Class III" },
+] as const;
+const ridgeDefectOptions = [
+  { value: "", label: "Not assessed" },
+  { value: "stage.ridge-defect-moderate", label: "Moderate" },
+  { value: "stage.ridge-defect-severe", label: "Severe" },
+] as const;
+const advancedFunctionalComplexityOptions = [
+  {
+    value: "stage.masticatory-dysfunction",
+    label: "Masticatory dysfunction",
+  },
+  {
+    value: "stage.secondary-occlusal-trauma",
+    label: "Secondary occlusal trauma",
+  },
+  { value: "stage.mobility-degree-2", label: "Tooth mobility degree ≥2" },
+  { value: "stage.bite-collapse", label: "Bite collapse" },
+  { value: "stage.pathologic-drifting", label: "Pathologic drifting" },
+  { value: "stage.pathologic-flaring", label: "Pathologic flaring" },
+] as const;
+const furcationCriterionIds = [
+  "stage.furcation-class-ii",
+  "stage.furcation-class-iii",
+] as const satisfies readonly PeriodontalStageCriterionId[];
+const ridgeDefectCriterionIds = [
+  "stage.ridge-defect-moderate",
+  "stage.ridge-defect-severe",
+] as const satisfies readonly PeriodontalStageCriterionId[];
+const advancedFunctionalComplexityCriterionIds: readonly PeriodontalStageCriterionId[] =
+  advancedFunctionalComplexityOptions.map((option) => option.value);
+const consolidatedComplexityCriterionIds = new Set<PeriodontalStageCriterionId>(
+  [
+    "stage.horizontal-bone-loss",
+    "stage.vertical-bone-loss",
+    ...furcationCriterionIds,
+    ...ridgeDefectCriterionIds,
+    ...advancedFunctionalComplexityCriterionIds,
+  ],
+);
 const gradePhenotypeOptions = [
   { value: "", label: "Not assessed" },
   {
@@ -554,15 +603,55 @@ function PeriodontalClassificationControl({
         label,
       })),
   ];
-  const selectedGradePhenotype = [...gradePhenotypeOptions]
-    .reverse()
-    .find(
-      (option) =>
-        option.value &&
-        value.gradeBasis.some(
+  const hasHorizontalBoneLoss = value.stageBasis.some(
+    (evidence) => evidence.criterionId === "stage.horizontal-bone-loss",
+  );
+  const hasVerticalBoneLoss = value.stageBasis.some(
+    (evidence) => evidence.criterionId === "stage.vertical-bone-loss",
+  );
+  const selectedBoneLossPattern = hasHorizontalBoneLoss
+    ? hasVerticalBoneLoss
+      ? "mixed"
+      : "horizontal"
+    : hasVerticalBoneLoss
+    ? "vertical"
+    : "";
+  const selectedFurcationInvolvement = value.stageBasis.some(
+    (evidence) => evidence.criterionId === "stage.furcation-class-iii",
+  )
+    ? "stage.furcation-class-iii"
+    : value.stageBasis.some(
+        (evidence) => evidence.criterionId === "stage.furcation-class-ii",
+      )
+    ? "stage.furcation-class-ii"
+    : "";
+  const selectedRidgeDefect = value.stageBasis.some(
+    (evidence) => evidence.criterionId === "stage.ridge-defect-severe",
+  )
+    ? "stage.ridge-defect-severe"
+    : value.stageBasis.some(
+        (evidence) => evidence.criterionId === "stage.ridge-defect-moderate",
+      )
+    ? "stage.ridge-defect-moderate"
+    : "";
+  const selectedAdvancedFunctionalComplexity =
+    advancedFunctionalComplexityOptions
+      .filter((option) =>
+        value.stageBasis.some(
           (evidence) => evidence.criterionId === option.value,
         ),
-    )?.value ?? "";
+      )
+      .map((option) => option.label);
+  const selectedGradePhenotype =
+    [...gradePhenotypeOptions]
+      .reverse()
+      .find(
+        (option) =>
+          option.value &&
+          value.gradeBasis.some(
+            (evidence) => evidence.criterionId === option.value,
+          ),
+      )?.value ?? "";
   const structuredObservationCount =
     Number(Boolean(value.gingivalHealth.periodontium)) +
     Number(Boolean(value.gingivalHealth.bopPercent)) +
@@ -685,6 +774,91 @@ function PeriodontalClassificationControl({
         ? [...withoutPhenotype, { criterionId }]
         : withoutPhenotype,
       gradeConfirmed: false,
+    });
+  }
+
+  function replaceStageCriterionGroup(
+    criterionIds: readonly PeriodontalStageCriterionId[],
+    criterionId: PeriodontalStageCriterionId | "",
+  ) {
+    const withoutGroup = value.stageBasis.filter(
+      (evidence) => !criterionIds.includes(evidence.criterionId),
+    );
+    update({
+      stageBasis: criterionId
+        ? [...withoutGroup, { criterionId }]
+        : withoutGroup,
+      stageConfirmed: false,
+    });
+  }
+
+  function updateBoneLossPattern(
+    pattern: (typeof boneLossPatternOptions)[number]["value"],
+  ) {
+    const verticalEvidence = value.stageBasis.find(
+      (evidence) => evidence.criterionId === "stage.vertical-bone-loss",
+    );
+    const stageBasis = value.stageBasis.filter(
+      (evidence) =>
+        evidence.criterionId !== "stage.horizontal-bone-loss" &&
+        evidence.criterionId !== "stage.vertical-bone-loss",
+    );
+
+    if (pattern === "horizontal" || pattern === "mixed") {
+      stageBasis.push({ criterionId: "stage.horizontal-bone-loss" });
+    }
+    if (pattern === "vertical" || pattern === "mixed") {
+      stageBasis.push(
+        verticalEvidence ?? { criterionId: "stage.vertical-bone-loss" },
+      );
+    }
+    update({ stageBasis, stageConfirmed: false });
+  }
+
+  function updateVerticalBoneLoss(rawValue: string) {
+    const withoutVerticalBoneLoss = value.stageBasis.filter(
+      (evidence) => evidence.criterionId !== "stage.vertical-bone-loss",
+    );
+    if (!rawValue.trim()) {
+      update({
+        stageBasis: [
+          ...withoutVerticalBoneLoss,
+          { criterionId: "stage.vertical-bone-loss" },
+        ],
+        stageConfirmed: false,
+      });
+      return;
+    }
+    const nextValue = Number(rawValue);
+    if (!Number.isFinite(nextValue)) return;
+    update({
+      stageBasis: [
+        ...withoutVerticalBoneLoss,
+        {
+          criterionId: "stage.vertical-bone-loss",
+          measurement: { operator: "eq", value: nextValue, unit: "mm" },
+        },
+      ],
+      stageConfirmed: false,
+    });
+  }
+
+  function updateAdvancedFunctionalComplexity(selectedLabels: string[]) {
+    const selected = new Set(selectedLabels);
+    const withoutAdvancedFunctionalComplexity = value.stageBasis.filter(
+      (evidence) =>
+        !advancedFunctionalComplexityCriterionIds.includes(
+          evidence.criterionId,
+        ),
+    );
+    update({
+      stageBasis: [
+        ...withoutAdvancedFunctionalComplexity,
+        ...advancedFunctionalComplexityOptions
+          .filter((option) => selected.has(option.label))
+          .map((option) => ({ criterionId: option.value })),
+      ],
+      stageConfirmed: false,
     });
   }
 
@@ -850,11 +1024,81 @@ function PeriodontalClassificationControl({
                     {group}
                   </h3>
                   <div className="grid gap-3 md:grid-cols-2">
+                    {group === "complexity" ? (
+                      <>
+                        <FixedChoiceListbox
+                          id="adult-hygiene-stage-bone-loss-pattern"
+                          label="Bone-loss pattern"
+                          value={selectedBoneLossPattern}
+                          options={boneLossPatternOptions}
+                          onChange={updateBoneLossPattern}
+                        />
+                        {hasVerticalBoneLoss ? (
+                          <label className="block text-sm font-medium">
+                            Vertical bone loss (mm)
+                            <input
+                              id="adult-hygiene-stage-vertical-bone-loss"
+                              className={inputClass}
+                              type="number"
+                              min={0}
+                              step={1}
+                              value={numericValue(
+                                measurementFor(
+                                  value.stageBasis,
+                                  "stage.vertical-bone-loss",
+                                ),
+                              )}
+                              onChange={(event) =>
+                                updateVerticalBoneLoss(event.target.value)
+                              }
+                            />
+                          </label>
+                        ) : null}
+                        <FixedChoiceListbox
+                          id="adult-hygiene-stage-furcation-involvement"
+                          label="Highest furcation involvement"
+                          value={selectedFurcationInvolvement}
+                          options={furcationInvolvementOptions}
+                          onChange={(criterionId) =>
+                            replaceStageCriterionGroup(
+                              furcationCriterionIds,
+                              criterionId,
+                            )
+                          }
+                        />
+                        <FixedChoiceListbox
+                          id="adult-hygiene-stage-ridge-defect"
+                          label="Worst ridge defect"
+                          value={selectedRidgeDefect}
+                          options={ridgeDefectOptions}
+                          onChange={(criterionId) =>
+                            replaceStageCriterionGroup(
+                              ridgeDefectCriterionIds,
+                              criterionId,
+                            )
+                          }
+                        />
+                        <FixedChoiceMultiCombobox
+                          id="adult-hygiene-stage-advanced-functional-complexity"
+                          label="Advanced functional complexity"
+                          choices={advancedFunctionalComplexityOptions.map(
+                            (option) => option.label,
+                          )}
+                          values={selectedAdvancedFunctionalComplexity}
+                          onChange={updateAdvancedFunctionalComplexity}
+                          customPlaceholder="Search complexity findings"
+                          customHelpText=""
+                          showSelectedChips={false}
+                          allowCustomValues={false}
+                        />
+                      </>
+                    ) : null}
                     {periodontalStageCriterionCatalogue
                       .filter(
                         (criterion) =>
                           criterion.group === group &&
-                          criterion.id !== "stage.max-ppd",
+                          criterion.id !== "stage.max-ppd" &&
+                          !consolidatedComplexityCriterionIds.has(criterion.id),
                       )
                       .map((criterion) =>
                         criterion.input === "measurement" ? (

@@ -1132,6 +1132,90 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
   ).toBeVisible();
 });
 
+test("Adult Hygiene consolidates mutually exclusive complexity findings", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await structuredPeriodontalObservations.click();
+
+  await expect(
+    page.locator("#adult-hygiene-stage-furcation-class-ii")
+  ).toHaveCount(0);
+  await expect(
+    page.locator("#adult-hygiene-stage-masticatory-dysfunction")
+  ).toHaveCount(0);
+
+  const boneLossPattern = page.getByRole("button", {
+    name: "Bone-loss pattern",
+    exact: true,
+  });
+  await expect(boneLossPattern).toContainText("Not assessed");
+  await boneLossPattern.click();
+  await page.getByRole("option", { name: "Vertical", exact: true }).click();
+  await page.getByLabel("Vertical bone loss (mm)", { exact: true }).fill("3");
+  await expect(structuredPeriodontalObservations).toContainText(
+    "1 observation documented"
+  );
+
+  const furcation = page.getByRole("button", {
+    name: "Highest furcation involvement",
+    exact: true,
+  });
+  await furcation.click();
+  await page.getByRole("option", { name: "Class II", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "2 observations documented"
+  );
+  await furcation.click();
+  await page.getByRole("option", { name: "Class III", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "2 observations documented"
+  );
+
+  const ridgeDefect = page.getByRole("button", {
+    name: "Worst ridge defect",
+    exact: true,
+  });
+  await ridgeDefect.click();
+  await page.getByRole("option", { name: "Moderate", exact: true }).click();
+  await ridgeDefect.click();
+  await page.getByRole("option", { name: "Severe", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "3 observations documented"
+  );
+
+  const advancedComplexity = page.getByRole("button", {
+    name: "Advanced functional complexity",
+    exact: true,
+  });
+  await advancedComplexity.click();
+  const complexityOptions = page.getByRole("dialog", {
+    name: "Advanced functional complexity options",
+  });
+  await complexityOptions
+    .getByText("Masticatory dysfunction", { exact: true })
+    .click();
+  await complexityOptions.getByText("Bite collapse", { exact: true }).click();
+  await advancedComplexity.click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "5 observations documented"
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontitis", exact: true })
+    .click();
+  await expect(page.getByText(/Stage IV; Grade B/)).toBeVisible();
+  await expect(
+    page.getByText(
+      /severe ridge defects; masticatory dysfunction; bite collapse/
+    )
+  ).toBeVisible();
+});
+
 test("Adult Hygiene keeps grade phenotype evidence mutually exclusive", async ({
   page,
 }) => {
