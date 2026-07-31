@@ -424,6 +424,13 @@ or demo observations load. PSR/Pocketing, Recession, and FMP Done remain visible
 their familiar positions outside this disclosure. Candidate interpretation and
 clinician confirmation also remain outside it so they stay available when the
 supporting findings are collapsed.
+Patient-specific Stage and Grade evidence are separate nested disclosures with
+their own documented-observation summaries. Both remain available before a
+diagnosis is selected and never infer Periodontitis. Selecting Periodontitis
+opens Structured periodontal observations and Stage evidence; Grade remains
+collapsed unless the clinician opens it or grade evidence/modifiers are already
+documented. Candidate interpretation, confirmation, and generated Stage/Grade
+output remain conditional on the Periodontitis diagnosis category.
 Complexity findings use a bone-loss pattern selector with a conditional vertical
 bone-loss measurement, a highest-furcation selector, a worst-ridge-defect
 selector, and an advanced functional complexity multi-select. These controls

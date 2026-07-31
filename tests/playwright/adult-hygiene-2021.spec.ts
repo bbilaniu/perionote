@@ -416,6 +416,50 @@ test("Adult Hygiene keeps WNL gingival observations collapsed", async ({
   ).toBeChecked();
 });
 
+test("Adult Hygiene progressively discloses stage and grade evidence", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontitis", exact: true })
+    .click();
+
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  const stageEvidence = page.getByRole("button", {
+    name: /Patient-specific stage evidence/,
+  });
+  const gradeEvidence = page.getByRole("button", {
+    name: /Patient-specific grade evidence/,
+  });
+  await expect(stageEvidence).toHaveAttribute("aria-expanded", "true");
+  await expect(stageEvidence).toContainText("Not assessed");
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toBeVisible();
+  await expect(gradeEvidence).toHaveAttribute("aria-expanded", "false");
+  await expect(gradeEvidence).toContainText("Not assessed");
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toHaveCount(0);
+
+  await gradeEvidence.click();
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toBeVisible();
+});
+
 test("Adult Hygiene prevents conflicting gingival menu selections", async ({
   page,
 }) => {
@@ -678,6 +722,22 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     page.getByText("Periodontal assessment findings", { exact: true })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-periodontium")).toBeVisible();
+  const stageEvidence = page.getByRole("button", {
+    name: /Patient-specific stage evidence/,
+  });
+  const gradeEvidence = page.getByRole("button", {
+    name: /Patient-specific grade evidence/,
+  });
+  await expect(stageEvidence).toHaveAttribute("aria-expanded", "false");
+  await expect(gradeEvidence).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toHaveCount(0);
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toHaveCount(0);
+  await stageEvidence.click();
+  await gradeEvidence.click();
   await expect(
     page.locator("#adult-hygiene-stage-interdental-cal")
   ).toBeVisible();
@@ -697,6 +757,8 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(structuredPeriodontalObservations).toContainText(
     "5 observations documented"
   );
+  await expect(stageEvidence).toContainText("1 observation documented");
+  await expect(gradeEvidence).toContainText("Not assessed");
 
   await expect(
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
@@ -1158,6 +1220,12 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
   await page.locator("#adult-hygiene-periodontal-extent").click();
   await page.getByRole("option", { name: "Generalized", exact: true }).click();
   await structuredPeriodontalObservations.click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
+  await page
+    .getByRole("button", { name: /Patient-specific grade evidence/ })
+    .click();
   await page.locator("#adult-hygiene-stage-interdental-cal").fill("5");
   await page.locator("#adult-hygiene-maximum-ppd").fill("6");
   await page.locator("#adult-hygiene-grade-bone-loss-age-ratio").fill("0.72");
@@ -1218,6 +1286,9 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
   await page
     .getByRole("button", { name: /Structured periodontal observations/ })
     .click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
 
   const rblPercent = page.getByLabel("Radiographic bone loss (RBL) (%)", {
     exact: true,
@@ -1261,6 +1332,9 @@ test("Adult Hygiene consolidates mutually exclusive complexity findings", async 
     name: /Structured periodontal observations/,
   });
   await structuredPeriodontalObservations.click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
 
   await expect(
     page.locator("#adult-hygiene-stage-furcation-class-ii")
@@ -1345,6 +1419,9 @@ test("Adult Hygiene keeps grade phenotype evidence mutually exclusive", async ({
     name: /Structured periodontal observations/,
   });
   await structuredPeriodontalObservations.click();
+  await page
+    .getByRole("button", { name: /Patient-specific grade evidence/ })
+    .click();
 
   const phenotype = page.getByRole("button", {
     name: "Destruction relative to biofilm",

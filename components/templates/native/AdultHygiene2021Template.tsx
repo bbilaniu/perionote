@@ -692,6 +692,55 @@ function CheckboxField({
   );
 }
 
+function ObservationDisclosure({
+  id,
+  label,
+  summary,
+  open,
+  onToggle,
+  children,
+}: {
+  id: string;
+  label: string;
+  summary: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  const contentId = `${id}-content`;
+  return (
+    <fieldset
+      className="border-t border-slate-200 pt-3 dark:border-slate-700"
+      aria-label={label}
+    >
+      <button
+        id={id}
+        type="button"
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+        aria-expanded={open}
+        aria-controls={contentId}
+        onClick={onToggle}
+      >
+        <span className="min-w-0">{label}</span>
+        <span className="flex shrink-0 items-center gap-3">
+          <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
+            {summary}
+          </span>
+          <DropdownChevron open={open} />
+        </span>
+        <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
+          {summary}
+        </span>
+      </button>
+      {open ? (
+        <div id={contentId} className="space-y-4 pt-3">
+          {children}
+        </div>
+      ) : null}
+    </fieldset>
+  );
+}
+
 function measurementFor(
   evidence: readonly PeriodontalCriterionEvidence[],
   criterionId: string,
@@ -703,6 +752,12 @@ function numericValue(measurement: ClinicalMeasurement | undefined): string {
   return measurement ? String(measurement.value) : "";
 }
 
+function documentedObservationSummary(count: number) {
+  return count
+    ? `${count} ${count === 1 ? "observation" : "observations"} documented`
+    : "Not assessed";
+}
+
 function PeriodontalClassificationControl({
   value,
   onChange,
@@ -712,7 +767,8 @@ function PeriodontalClassificationControl({
 }) {
   const candidate = classifyPeriodontalCandidate(value);
   const gingivalHealthCandidate = classifyGingivalHealthCandidate(value);
-  const stageReasons = periodontalStageEvidence(value)
+  const stageEvidence = periodontalStageEvidence(value);
+  const stageReasons = stageEvidence
     .filter((evidence) =>
       candidate.stageReasonIds.includes(evidence.criterionId),
     )
@@ -788,6 +844,12 @@ function PeriodontalClassificationControl({
             (evidence) => evidence.criterionId === option.value,
           ),
       )?.value ?? "";
+  const stageObservationCount = stageEvidence.length;
+  const hasStageSectionObservations = value.stageBasis.length > 0;
+  const gradeObservationCount =
+    value.gradeBasis.length +
+    Number(value.smoking.status !== "not-assessed") +
+    Number(value.diabetes.status !== "not-assessed");
   const structuredObservationCount =
     Number(Boolean(value.gingivalHealth.periodontium)) +
     Number(Boolean(value.gingivalHealth.bopPercent)) +
@@ -801,18 +863,42 @@ function PeriodontalClassificationControl({
     Number(value.smoking.status !== "not-assessed") +
     Number(value.diabetes.status !== "not-assessed");
   const hasStructuredObservations = structuredObservationCount > 0;
-  const structuredObservationSummary = structuredObservationCount
-    ? `${structuredObservationCount} ${
-        structuredObservationCount === 1 ? "observation" : "observations"
-      } documented`
-    : "Not assessed";
+  const structuredObservationSummary = documentedObservationSummary(
+    structuredObservationCount,
+  );
+  const stageObservationSummary = documentedObservationSummary(
+    stageObservationCount,
+  );
+  const gradeObservationSummary = documentedObservationSummary(
+    gradeObservationCount,
+  );
   const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
     hasStructuredObservations,
+  );
+  const [stageEvidenceOpen, setStageEvidenceOpen] = useState(
+    hasStageSectionObservations || value.diagnosis === "periodontitis",
+  );
+  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
+    gradeObservationCount > 0,
   );
 
   useEffect(() => {
     if (hasStructuredObservations) setStructuredObservationsOpen(true);
   }, [hasStructuredObservations]);
+
+  useEffect(() => {
+    if (hasStageSectionObservations) setStageEvidenceOpen(true);
+  }, [hasStageSectionObservations]);
+
+  useEffect(() => {
+    if (gradeObservationCount > 0) setGradeEvidenceOpen(true);
+  }, [gradeObservationCount]);
+
+  useEffect(() => {
+    if (value.diagnosis !== "periodontitis") return;
+    setStructuredObservationsOpen(true);
+    setStageEvidenceOpen(true);
+  }, [value.diagnosis]);
 
   function update(patch: Partial<PeriodontalClassification>) {
     onChange({ ...value, ...patch });
@@ -1150,10 +1236,13 @@ function PeriodontalClassificationControl({
               </div>
             </fieldset>
 
-            <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-              <legend className="font-semibold">
-                Patient-specific stage evidence
-              </legend>
+            <ObservationDisclosure
+              id="adult-hygiene-patient-specific-stage-evidence"
+              label="Patient-specific stage evidence"
+              summary={stageObservationSummary}
+              open={stageEvidenceOpen}
+              onToggle={() => setStageEvidenceOpen((open) => !open)}
+            >
               {(["severity", "complexity"] as const).map((group) => (
                 <div key={group}>
                   <h3 className="mb-2 text-sm font-semibold capitalize">
@@ -1323,175 +1412,183 @@ function PeriodontalClassificationControl({
                   </div>
                 </div>
               ))}
-            </fieldset>
+            </ObservationDisclosure>
 
-            <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-              <legend className="font-semibold">
-                Patient-specific grade evidence
-              </legend>
-              <div className="grid gap-3 md:grid-cols-2">
-                {periodontalGradeCriterionCatalogue
-                  .filter((criterion) => criterion.input === "measurement")
-                  .map((criterion) => (
-                    <label
-                      key={criterion.id}
-                      className="block text-sm font-medium"
-                    >
-                      {criterion.label} ({criterion.unit})
-                      <input
-                        id={`adult-hygiene-${criterion.id.replaceAll(
-                          ".",
-                          "-",
-                        )}`}
-                        className={inputClass}
-                        type="number"
-                        min={criterion.minimum}
-                        step={criterion.step}
-                        value={numericValue(
-                          measurementFor(value.gradeBasis, criterion.id),
-                        )}
-                        onChange={(event) =>
-                          updateMeasurement(
-                            "gradeBasis",
-                            criterion.id,
-                            criterion.unit,
-                            event.target.value,
-                          )
+            <ObservationDisclosure
+              id="adult-hygiene-patient-specific-grade-evidence"
+              label="Patient-specific grade evidence"
+              summary={gradeObservationSummary}
+              open={gradeEvidenceOpen}
+              onToggle={() => setGradeEvidenceOpen((open) => !open)}
+            >
+              <div>
+                <h3 className="mb-2 text-sm font-semibold">
+                  Progression evidence
+                </h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {periodontalGradeCriterionCatalogue
+                    .filter((criterion) => criterion.input === "measurement")
+                    .map((criterion) => (
+                      <label
+                        key={criterion.id}
+                        className="block text-sm font-medium"
+                      >
+                        {criterion.label} ({criterion.unit})
+                        <input
+                          id={`adult-hygiene-${criterion.id.replaceAll(
+                            ".",
+                            "-",
+                          )}`}
+                          className={inputClass}
+                          type="number"
+                          min={criterion.minimum}
+                          step={criterion.step}
+                          value={numericValue(
+                            measurementFor(value.gradeBasis, criterion.id),
+                          )}
+                          onChange={(event) =>
+                            updateMeasurement(
+                              "gradeBasis",
+                              criterion.id,
+                              criterion.unit,
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
+                    ))}
+                  <FixedChoiceListbox
+                    id="adult-hygiene-grade-phenotype"
+                    label="Destruction relative to biofilm"
+                    value={selectedGradePhenotype}
+                    options={gradePhenotypeOptions}
+                    onChange={updateGradePhenotype}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
+                <h3 className="font-semibold">Grade modifiers</h3>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div>
+                    <FixedChoiceListbox
+                      id="adult-hygiene-smoking-modifier"
+                      label="Smoking and tobacco/nicotine exposure"
+                      value={value.smoking.status}
+                      options={[
+                        { value: "not-assessed", label: "Not assessed" },
+                        { value: "non-smoker", label: "Non-smoker" },
+                        {
+                          value: "cigarettes",
+                          label: "Smokes cigarettes",
+                        },
+                        {
+                          value: "other-exposure",
+                          label: "Other exposure",
+                        },
+                      ]}
+                      onChange={updateSmokingStatus}
+                    />
+                    {value.smoking.status === "cigarettes" ? (
+                      <label className="mt-3 block text-sm font-medium">
+                        Cigarettes per day
+                        <input
+                          id="adult-hygiene-cigarettes-per-day"
+                          className={inputClass}
+                          type="number"
+                          min={0}
+                          step={1}
+                          value={numericValue(value.smoking.measurement)}
+                          onChange={(event) => {
+                            const raw = event.target.value;
+                            update({
+                              smoking: {
+                                status: "cigarettes",
+                                ...(raw
+                                  ? {
+                                      measurement: {
+                                        operator: "eq",
+                                        value: Number(raw),
+                                        unit: "cigarettes-per-day",
+                                      },
+                                    }
+                                  : {}),
+                              },
+                              gradeConfirmed: false,
+                            });
+                          }}
+                        />
+                      </label>
+                    ) : value.smoking.status === "other-exposure" ? (
+                      <TextField
+                        id="adult-hygiene-other-nicotine-exposure"
+                        label="Other exposure details"
+                        value={value.smoking.details}
+                        onChange={(details) =>
+                          update({
+                            smoking: { status: "other-exposure", details },
+                          })
                         }
                       />
-                    </label>
-                  ))}
-                <FixedChoiceListbox
-                  id="adult-hygiene-grade-phenotype"
-                  label="Destruction relative to biofilm"
-                  value={selectedGradePhenotype}
-                  options={gradePhenotypeOptions}
-                  onChange={updateGradePhenotype}
-                />
-              </div>
-            </fieldset>
-
-            <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-              <legend className="font-semibold">Grade modifiers</legend>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div>
-                  <FixedChoiceListbox
-                    id="adult-hygiene-smoking-modifier"
-                    label="Smoking and tobacco/nicotine exposure"
-                    value={value.smoking.status}
-                    options={[
-                      { value: "not-assessed", label: "Not assessed" },
-                      { value: "non-smoker", label: "Non-smoker" },
-                      {
-                        value: "cigarettes",
-                        label: "Smokes cigarettes",
-                      },
-                      {
-                        value: "other-exposure",
-                        label: "Other exposure",
-                      },
-                    ]}
-                    onChange={updateSmokingStatus}
-                  />
-                  {value.smoking.status === "cigarettes" ? (
-                    <label className="mt-3 block text-sm font-medium">
-                      Cigarettes per day
-                      <input
-                        id="adult-hygiene-cigarettes-per-day"
-                        className={inputClass}
-                        type="number"
-                        min={0}
-                        step={1}
-                        value={numericValue(value.smoking.measurement)}
-                        onChange={(event) => {
-                          const raw = event.target.value;
-                          update({
-                            smoking: {
-                              status: "cigarettes",
-                              ...(raw
-                                ? {
-                                    measurement: {
-                                      operator: "eq",
-                                      value: Number(raw),
-                                      unit: "cigarettes-per-day",
-                                    },
-                                  }
-                                : {}),
-                            },
-                            gradeConfirmed: false,
-                          });
-                        }}
-                      />
-                    </label>
-                  ) : value.smoking.status === "other-exposure" ? (
-                    <TextField
-                      id="adult-hygiene-other-nicotine-exposure"
-                      label="Other exposure details"
-                      value={value.smoking.details}
-                      onChange={(details) =>
-                        update({
-                          smoking: { status: "other-exposure", details },
-                        })
-                      }
+                    ) : null}
+                  </div>
+                  <div>
+                    <FixedChoiceListbox
+                      id="adult-hygiene-diabetes-modifier"
+                      label="Diabetes modifier"
+                      value={value.diabetes.status}
+                      options={[
+                        { value: "not-assessed", label: "Not assessed" },
+                        {
+                          value: "no-diabetes",
+                          label: "No diagnosis / normoglycemic",
+                        },
+                        {
+                          value: "diabetes",
+                          label: "Diabetes with current HbA1c",
+                        },
+                        {
+                          value: "diabetes-hba1c-unknown",
+                          label: "Diabetes; HbA1c unknown",
+                        },
+                      ]}
+                      onChange={updateDiabetesStatus}
                     />
-                  ) : null}
-                </div>
-                <div>
-                  <FixedChoiceListbox
-                    id="adult-hygiene-diabetes-modifier"
-                    label="Diabetes modifier"
-                    value={value.diabetes.status}
-                    options={[
-                      { value: "not-assessed", label: "Not assessed" },
-                      {
-                        value: "no-diabetes",
-                        label: "No diagnosis / normoglycemic",
-                      },
-                      {
-                        value: "diabetes",
-                        label: "Diabetes with current HbA1c",
-                      },
-                      {
-                        value: "diabetes-hba1c-unknown",
-                        label: "Diabetes; HbA1c unknown",
-                      },
-                    ]}
-                    onChange={updateDiabetesStatus}
-                  />
-                  {value.diabetes.status === "diabetes" ? (
-                    <label className="mt-3 block text-sm font-medium">
-                      HbA1c (%)
-                      <input
-                        id="adult-hygiene-hba1c"
-                        className={inputClass}
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={numericValue(value.diabetes.measurement)}
-                        onChange={(event) => {
-                          const raw = event.target.value;
-                          update({
-                            diabetes: {
-                              status: "diabetes",
-                              ...(raw
-                                ? {
-                                    measurement: {
-                                      operator: "eq",
-                                      value: Number(raw),
-                                      unit: "percent",
-                                    },
-                                  }
-                                : {}),
-                            },
-                            gradeConfirmed: false,
-                          });
-                        }}
-                      />
-                    </label>
-                  ) : null}
+                    {value.diabetes.status === "diabetes" ? (
+                      <label className="mt-3 block text-sm font-medium">
+                        HbA1c (%)
+                        <input
+                          id="adult-hygiene-hba1c"
+                          className={inputClass}
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          value={numericValue(value.diabetes.measurement)}
+                          onChange={(event) => {
+                            const raw = event.target.value;
+                            update({
+                              diabetes: {
+                                status: "diabetes",
+                                ...(raw
+                                  ? {
+                                      measurement: {
+                                        operator: "eq",
+                                        value: Number(raw),
+                                        unit: "percent",
+                                      },
+                                    }
+                                  : {}),
+                              },
+                              gradeConfirmed: false,
+                            });
+                          }}
+                        />
+                      </label>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </fieldset>
+            </ObservationDisclosure>
           </div>
         ) : null}
       </fieldset>
