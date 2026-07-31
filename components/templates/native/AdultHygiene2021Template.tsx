@@ -107,6 +107,21 @@ const rblExtentOptions = [
     label: "Middle third or beyond",
   },
 ] as const;
+const gradePhenotypeOptions = [
+  { value: "", label: "Not assessed" },
+  {
+    value: "grade.phenotype-low",
+    label: "Destruction low relative to biofilm",
+  },
+  {
+    value: "grade.phenotype-commensurate",
+    label: "Destruction commensurate with biofilm",
+  },
+  {
+    value: "grade.phenotype-exceeds",
+    label: "Destruction exceeds expectations given biofilm",
+  },
+] as const;
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
 const treatmentToothAreaChoiceGroups = [
   {
@@ -377,21 +392,21 @@ function parseFacetedChoice(choice: string, facetChoices: readonly string[]) {
       .trim()
       .toLocaleLowerCase("en-CA")
       .split(/[\s/]+/)
-      .filter(Boolean)
+      .filter(Boolean),
   );
   return facetChoices.filter((facet) =>
     selectedTokens.has(
-      facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA")
-    )
+      facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA"),
+    ),
   );
 }
 
 function formatChoiceWithJoinedLocations(
   values: string[],
-  locationFacetChoices: readonly string[]
+  locationFacetChoices: readonly string[],
 ) {
   const locationValues = values.filter((value) =>
-    locationFacetChoices.includes(value)
+    locationFacetChoices.includes(value),
   );
   return [
     ...values.filter((value) => !locationFacetChoices.includes(value)),
@@ -494,7 +509,7 @@ function CheckboxField({
 
 function measurementFor(
   evidence: readonly PeriodontalCriterionEvidence[],
-  criterionId: string
+  criterionId: string,
 ) {
   return evidence.find((item) => item.criterionId === criterionId)?.measurement;
 }
@@ -514,13 +529,13 @@ function PeriodontalClassificationControl({
   const gingivalHealthCandidate = classifyGingivalHealthCandidate(value);
   const stageReasons = periodontalStageEvidence(value)
     .filter((evidence) =>
-      candidate.stageReasonIds.includes(evidence.criterionId)
+      candidate.stageReasonIds.includes(evidence.criterionId),
     )
     .map((evidence) => formatPeriodontalEvidence(evidence));
   const gradeReasons = [
     ...value.gradeBasis
       .filter((evidence) =>
-        candidate.gradeReasonIds.includes(evidence.criterionId)
+        candidate.gradeReasonIds.includes(evidence.criterionId),
       )
       .map((evidence) => formatPeriodontalEvidence(evidence)),
     ...(candidate.gradeReasonIds.includes("modifier.smoking")
@@ -539,6 +554,15 @@ function PeriodontalClassificationControl({
         label,
       })),
   ];
+  const selectedGradePhenotype = [...gradePhenotypeOptions]
+    .reverse()
+    .find(
+      (option) =>
+        option.value &&
+        value.gradeBasis.some(
+          (evidence) => evidence.criterionId === option.value,
+        ),
+    )?.value ?? "";
   const structuredObservationCount =
     Number(Boolean(value.gingivalHealth.periodontium)) +
     Number(Boolean(value.gingivalHealth.bopPercent)) +
@@ -558,7 +582,7 @@ function PeriodontalClassificationControl({
       } documented`
     : "Not assessed";
   const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    hasStructuredObservations
+    hasStructuredObservations,
   );
 
   useEffect(() => {
@@ -571,7 +595,7 @@ function PeriodontalClassificationControl({
 
   function updateGingivalHealth(
     patch: Partial<GingivalHealthAssessment>,
-    { invalidatesStage = false } = {}
+    { invalidatesStage = false } = {},
   ) {
     update({
       gingivalHealth: {
@@ -586,16 +610,16 @@ function PeriodontalClassificationControl({
   function updateMeasurement<
     TCriterionId extends
       | PeriodontalStageCriterionId
-      | PeriodontalGradeCriterionId
+      | PeriodontalGradeCriterionId,
   >(
     key: "stageBasis" | "gradeBasis",
     criterionId: TCriterionId,
     unit: ClinicalMeasurement["unit"],
-    rawValue: string
+    rawValue: string,
   ) {
     const current = value[key] as PeriodontalCriterionEvidence<TCriterionId>[];
     const withoutCriterion = current.filter(
-      (evidence) => evidence.criterionId !== criterionId
+      (evidence) => evidence.criterionId !== criterionId,
     );
     if (!rawValue.trim()) {
       update({
@@ -625,18 +649,18 @@ function PeriodontalClassificationControl({
   function updateBoolean<
     TCriterionId extends
       | PeriodontalStageCriterionId
-      | PeriodontalGradeCriterionId
+      | PeriodontalGradeCriterionId,
   >(
     key: "stageBasis" | "gradeBasis",
     criterionId: TCriterionId,
-    checked: boolean
+    checked: boolean,
   ) {
     const current = value[key] as PeriodontalCriterionEvidence<TCriterionId>[];
     update({
       [key]: checked
         ? [
             ...current.filter(
-              (evidence) => evidence.criterionId !== criterionId
+              (evidence) => evidence.criterionId !== criterionId,
             ),
             { criterionId },
           ]
@@ -644,6 +668,23 @@ function PeriodontalClassificationControl({
       ...(key === "stageBasis"
         ? { stageConfirmed: false }
         : { gradeConfirmed: false }),
+    });
+  }
+
+  function updateGradePhenotype(
+    criterionId: (typeof gradePhenotypeOptions)[number]["value"],
+  ) {
+    const withoutPhenotype = value.gradeBasis.filter(
+      (evidence) =>
+        !gradePhenotypeOptions.some(
+          (option) => option.value === evidence.criterionId,
+        ),
+    );
+    update({
+      gradeBasis: criterionId
+        ? [...withoutPhenotype, { criterionId }]
+        : withoutPhenotype,
+      gradeConfirmed: false,
     });
   }
 
@@ -692,7 +733,7 @@ function PeriodontalClassificationControl({
             id="adult-hygiene-structured-periodontal-observations-content"
             className="space-y-4 pt-2"
           >
-            <fieldset className="space-y-4">
+            <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
               <legend className="font-semibold">
                 Health/Gingivitis findings
               </legend>
@@ -755,7 +796,7 @@ function PeriodontalClassificationControl({
                               }
                             : { maximumPpd: undefined }),
                         },
-                        { invalidatesStage: true }
+                        { invalidatesStage: true },
                       );
                     }}
                   />
@@ -813,7 +854,7 @@ function PeriodontalClassificationControl({
                       .filter(
                         (criterion) =>
                           criterion.group === group &&
-                          criterion.id !== "stage.max-ppd"
+                          criterion.id !== "stage.max-ppd",
                       )
                       .map((criterion) =>
                         criterion.input === "measurement" ? (
@@ -831,7 +872,7 @@ function PeriodontalClassificationControl({
                             <input
                               id={`adult-hygiene-${criterion.id.replaceAll(
                                 ".",
-                                "-"
+                                "-",
                               )}`}
                               className={inputClass}
                               type="number"
@@ -843,14 +884,14 @@ function PeriodontalClassificationControl({
                               }
                               step={criterion.step}
                               value={numericValue(
-                                measurementFor(value.stageBasis, criterion.id)
+                                measurementFor(value.stageBasis, criterion.id),
                               )}
                               onChange={(event) =>
                                 updateMeasurement(
                                   "stageBasis",
                                   criterion.id,
                                   criterion.unit,
-                                  event.target.value
+                                  event.target.value,
                                 )
                               }
                             />
@@ -861,13 +902,13 @@ function PeriodontalClassificationControl({
                             key={criterion.id}
                             id={`adult-hygiene-${criterion.id.replaceAll(
                               ".",
-                              "-"
+                              "-",
                             )}`}
                             label={criterion.label}
                             value={
                               value.stageBasis.some(
                                 (evidence) =>
-                                  evidence.criterionId === criterion.id
+                                  evidence.criterionId === criterion.id,
                               )
                                 ? "middle-third-or-beyond"
                                 : ""
@@ -877,7 +918,7 @@ function PeriodontalClassificationControl({
                               updateBoolean(
                                 "stageBasis",
                                 criterion.id,
-                                extent === "middle-third-or-beyond"
+                                extent === "middle-third-or-beyond",
                               )
                             }
                           />
@@ -886,18 +927,18 @@ function PeriodontalClassificationControl({
                             key={criterion.id}
                             id={`adult-hygiene-${criterion.id.replaceAll(
                               ".",
-                              "-"
+                              "-",
                             )}`}
                             label={criterion.label}
                             checked={value.stageBasis.some(
                               (evidence) =>
-                                evidence.criterionId === criterion.id
+                                evidence.criterionId === criterion.id,
                             )}
                             onChange={(checked) =>
                               updateBoolean("stageBasis", criterion.id, checked)
                             }
                           />
-                        )
+                        ),
                       )}
                   </div>
                 </div>
@@ -909,8 +950,9 @@ function PeriodontalClassificationControl({
                 Patient-specific grade evidence
               </legend>
               <div className="grid gap-3 md:grid-cols-2">
-                {periodontalGradeCriterionCatalogue.map((criterion) =>
-                  criterion.input === "measurement" ? (
+                {periodontalGradeCriterionCatalogue
+                  .filter((criterion) => criterion.input === "measurement")
+                  .map((criterion) => (
                     <label
                       key={criterion.id}
                       className="block text-sm font-medium"
@@ -919,39 +961,33 @@ function PeriodontalClassificationControl({
                       <input
                         id={`adult-hygiene-${criterion.id.replaceAll(
                           ".",
-                          "-"
+                          "-",
                         )}`}
                         className={inputClass}
                         type="number"
                         min={criterion.minimum}
                         step={criterion.step}
                         value={numericValue(
-                          measurementFor(value.gradeBasis, criterion.id)
+                          measurementFor(value.gradeBasis, criterion.id),
                         )}
                         onChange={(event) =>
                           updateMeasurement(
                             "gradeBasis",
                             criterion.id,
                             criterion.unit,
-                            event.target.value
+                            event.target.value,
                           )
                         }
                       />
                     </label>
-                  ) : (
-                    <CheckboxField
-                      key={criterion.id}
-                      id={`adult-hygiene-${criterion.id.replaceAll(".", "-")}`}
-                      label={criterion.label}
-                      checked={value.gradeBasis.some(
-                        (evidence) => evidence.criterionId === criterion.id
-                      )}
-                      onChange={(checked) =>
-                        updateBoolean("gradeBasis", criterion.id, checked)
-                      }
-                    />
-                  )
-                )}
+                  ))}
+                <FixedChoiceListbox
+                  id="adult-hygiene-grade-phenotype"
+                  label="Destruction relative to biofilm"
+                  value={selectedGradePhenotype}
+                  options={gradePhenotypeOptions}
+                  onChange={updateGradePhenotype}
+                />
               </div>
             </fieldset>
 
@@ -1125,7 +1161,7 @@ function PeriodontalClassificationControl({
               {gingivalHealthCandidate.context
                 ? choiceLabel(
                     healthGingivitisContextChoices,
-                    gingivalHealthCandidate.context
+                    gingivalHealthCandidate.context,
                   )
                 : "Not available"}
             </p>
@@ -1349,7 +1385,7 @@ function GingivalDescriptionControl({
 }) {
   const assessment = value ?? createEmptyGingivalDescriptionAssessment();
   const selected = new Map(
-    assessment.findings.map((finding) => [finding.optionId, finding])
+    assessment.findings.map((finding) => [finding.optionId, finding]),
   );
   const hasObservations =
     assessment.findings.length > 0 ||
@@ -1367,7 +1403,7 @@ function GingivalDescriptionControl({
     ? "WNL"
     : "Not assessed";
   const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations
+    shouldAutoExpandStructuredObservations,
   );
 
   useEffect(() => {
@@ -1378,7 +1414,7 @@ function GingivalDescriptionControl({
 
   function updateFinding(
     optionId: string,
-    patch: Partial<Omit<GingivalDescriptionFinding, "optionId">>
+    patch: Partial<Omit<GingivalDescriptionFinding, "optionId">>,
   ) {
     const current = selected.get(optionId);
     if (!current) return;
@@ -1386,7 +1422,7 @@ function GingivalDescriptionControl({
       ...assessment,
       status: "findings",
       findings: assessment.findings.map((finding) =>
-        finding.optionId === optionId ? { ...finding, ...patch } : finding
+        finding.optionId === optionId ? { ...finding, ...patch } : finding,
       ),
     });
   }
@@ -1398,7 +1434,7 @@ function GingivalDescriptionControl({
       findings: checked
         ? [
             ...assessment.findings.filter(
-              (finding) => finding.optionId !== optionId
+              (finding) => finding.optionId !== optionId,
             ),
             {
               optionId,
@@ -1409,7 +1445,7 @@ function GingivalDescriptionControl({
             },
           ]
         : assessment.findings.filter(
-            (finding) => finding.optionId !== optionId
+            (finding) => finding.optionId !== optionId,
           ),
     });
   }
@@ -1419,7 +1455,7 @@ function GingivalDescriptionControl({
       assessment.status !== "wnl" &&
       hasObservations &&
       !window.confirm(
-        "Clear the documented Gingival Description findings and set this assessment to WNL?"
+        "Clear the documented Gingival Description findings and set this assessment to WNL?",
       )
     ) {
       return;
@@ -1440,7 +1476,7 @@ function GingivalDescriptionControl({
       assessment.status !== "wnl" &&
       hasObservations &&
       !window.confirm(
-        "Replace all documented Gingival Description observations with the reviewed normal structured observations?"
+        "Replace all documented Gingival Description observations with the reviewed normal structured observations?",
       )
     ) {
       return;
@@ -1452,7 +1488,7 @@ function GingivalDescriptionControl({
     if (
       hasObservations &&
       !window.confirm(
-        "Clear all documented Gingival Description observations and return this assessment to Not assessed?"
+        "Clear all documented Gingival Description observations and return this assessment to Not assessed?",
       )
     ) {
       return;
@@ -1570,7 +1606,7 @@ function GingivalDescriptionControl({
                             <FixedChoiceListbox
                               id={`adult-hygiene-${option.id.replaceAll(
                                 ".",
-                                "-"
+                                "-",
                               )}-extent`}
                               label={`${option.label} extent`}
                               value={finding.extent}
@@ -1591,7 +1627,7 @@ function GingivalDescriptionControl({
                               <TextField
                                 id={`adult-hygiene-${option.id.replaceAll(
                                   ".",
-                                  "-"
+                                  "-",
                                 )}-location`}
                                 label={`${option.label} location`}
                                 value={finding.locations.join(", ")}
@@ -1610,7 +1646,7 @@ function GingivalDescriptionControl({
                               <TextField
                                 id={`adult-hygiene-${option.id.replaceAll(
                                   ".",
-                                  "-"
+                                  "-",
                                 )}-measurement`}
                                 label={`${option.label} measurement (mm)`}
                                 value={finding.measurement}
@@ -1622,7 +1658,7 @@ function GingivalDescriptionControl({
                             <TextField
                               id={`adult-hygiene-${option.id.replaceAll(
                                 ".",
-                                "-"
+                                "-",
                               )}-comment`}
                               label={`${option.label} notes`}
                               value={finding.comment}
@@ -1657,12 +1693,12 @@ function TreatmentCompletedList({
 }) {
   function updateEntry(
     entryId: string,
-    patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>
+    patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>,
   ) {
     onChange(
       entries.map((entry) =>
-        entry.id === entryId ? { ...entry, ...patch } : entry
-      )
+        entry.id === entryId ? { ...entry, ...patch } : entry,
+      ),
     );
   }
 
@@ -1748,7 +1784,9 @@ function TreatmentCompletedList({
                     ariaLabel={`Remove treatment completed item ${index + 1}`}
                     onClick={() =>
                       onChange(
-                        entries.filter((candidate) => candidate.id !== entry.id)
+                        entries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        ),
                       )
                     }
                   >
@@ -1799,7 +1837,7 @@ export function AdultHygiene2021Template({
   summary: string;
 }) {
   const [form, setForm] = useState<AdultHygiene2021Form>(
-    createEmptyAdultHygiene2021Form
+    createEmptyAdultHygiene2021Form,
   );
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [patientIdError, setPatientIdError] = useState("");
@@ -1825,12 +1863,12 @@ export function AdultHygiene2021Template({
       buildAdultHygiene2021Summary(form, {
         ...(startedAt ? { startedAt } : {}),
       }),
-    [form, startedAt]
+    [form, startedAt],
   );
 
   function updateField<TKey extends keyof AdultHygiene2021Form>(
     key: TKey,
-    value: AdultHygiene2021Form[TKey]
+    value: AdultHygiene2021Form[TKey],
   ) {
     setForm((current) => ({ ...current, [key]: value }));
     setCopyMessage("");
@@ -1848,11 +1886,11 @@ export function AdultHygiene2021Template({
   async function copyNote() {
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rdh, form.rda].some((value) =>
-      Boolean(value.trim())
+      Boolean(value.trim()),
     );
     setPatientIdError(missingPatientId ? "Enter a Patient ID." : "");
     setProviderError(
-      missingProvider ? "Enter at least one of Dentist, RDH, or RDA." : ""
+      missingProvider ? "Enter at least one of Dentist, RDH, or RDA." : "",
     );
     setCopyMessage("");
     if (
@@ -1869,7 +1907,7 @@ export function AdultHygiene2021Template({
     setCopyMessage(
       copied
         ? "Note copied."
-        : "The note could not be copied. Select the preview and copy it manually."
+        : "The note could not be copied. Select the preview and copy it manually.",
     );
   }
 
@@ -1877,7 +1915,7 @@ export function AdultHygiene2021Template({
     setForm({
       ...fixture,
       gingivalDescription: copyGingivalDescriptionAssessment(
-        fixture.gingivalDescription
+        fixture.gingivalDescription,
       ),
       periodontalClassification: {
         ...fixture.periodontalClassification,
@@ -1887,7 +1925,7 @@ export function AdultHygiene2021Template({
             ...(evidence.measurement
               ? { measurement: { ...evidence.measurement } }
               : {}),
-          })
+          }),
         ),
         gradeBasis: fixture.periodontalClassification.gradeBasis.map(
           (evidence) => ({
@@ -1895,7 +1933,7 @@ export function AdultHygiene2021Template({
             ...(evidence.measurement
               ? { measurement: { ...evidence.measurement } }
               : {}),
-          })
+          }),
         ),
         smoking: { ...fixture.periodontalClassification.smoking },
         diabetes: { ...fixture.periodontalClassification.diabetes },
@@ -2063,7 +2101,7 @@ export function AdultHygiene2021Template({
                   onChange={(value) =>
                     updateField(
                       "class5IndicatorStatus",
-                      value ? "yes" : "not-documented"
+                      value ? "yes" : "not-documented",
                     )
                   }
                 />
@@ -2164,8 +2202,8 @@ export function AdultHygiene2021Template({
                   "patientChiefConcern",
                   applyPatientChiefConcernSelectionRules(
                     form.patientChiefConcern,
-                    values
-                  )
+                    values,
+                  ),
                 )
               }
               roomySelectionActions
@@ -2194,7 +2232,7 @@ export function AdultHygiene2021Template({
               formatChoice={(values) =>
                 formatChoiceWithJoinedLocations(
                   values,
-                  plaqueLocationFacetChoices
+                  plaqueLocationFacetChoices,
                 )
               }
             />
@@ -2221,7 +2259,7 @@ export function AdultHygiene2021Template({
               formatChoice={(values) =>
                 formatChoiceWithJoinedLocations(
                   values,
-                  calculusLocationFacetChoices
+                  calculusLocationFacetChoices,
                 )
               }
             />

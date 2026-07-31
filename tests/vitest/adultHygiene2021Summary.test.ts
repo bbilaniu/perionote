@@ -52,7 +52,7 @@ Gingival Description:
   - Color: coral pink (extent: generalized).
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
-Stage basis: interdental CAL 3 mm; radiographic bone loss 20%; maximum PPD 5 mm; mostly horizontal bone loss.
+Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 5 mm; mostly horizontal bone loss.
 Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
 Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
 Periodontal status: Periodontal disease stability.

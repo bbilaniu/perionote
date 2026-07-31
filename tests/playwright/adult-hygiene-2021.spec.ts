@@ -1132,6 +1132,60 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
   ).toBeVisible();
 });
 
+test("Adult Hygiene keeps grade phenotype evidence mutually exclusive", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await structuredPeriodontalObservations.click();
+
+  const phenotype = page.getByRole("button", {
+    name: "Destruction relative to biofilm",
+    exact: true,
+  });
+  await expect(phenotype).toContainText("Not assessed");
+  await expect(
+    page.getByRole("checkbox", {
+      name: "Destruction low relative to biofilm",
+      exact: true,
+    })
+  ).toHaveCount(0);
+
+  await phenotype.click();
+  await page
+    .getByRole("option", {
+      name: "Destruction low relative to biofilm",
+      exact: true,
+    })
+    .click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "1 observation documented"
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontitis", exact: true })
+    .click();
+  await expect(page.getByText(/Stage not available; Grade A/)).toBeVisible();
+
+  await phenotype.click();
+  await page
+    .getByRole("option", {
+      name: "Destruction exceeds expectations given biofilm",
+      exact: true,
+    })
+    .click();
+  await expect(phenotype).toContainText(
+    "Destruction exceeds expectations given biofilm"
+  );
+  await expect(structuredPeriodontalObservations).toContainText(
+    "1 observation documented"
+  );
+  await expect(page.getByText(/Stage not available; Grade C/)).toBeVisible();
+});
+
 test("Adult Hygiene keeps compliance and interval comments independent", async ({
   page,
 }) => {
