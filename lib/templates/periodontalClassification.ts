@@ -116,8 +116,7 @@ export type HealthGingivitisContext =
   | (typeof healthGingivitisContextChoices)[number]["value"];
 export type AssessedPresence =
   (typeof assessedPresenceChoices)[number]["value"];
-export type AssessedBoolean =
-  (typeof assessedBooleanChoices)[number]["value"];
+export type AssessedBoolean = (typeof assessedBooleanChoices)[number]["value"];
 
 export type ClinicalOperator = "eq" | "lt" | "lte" | "gt" | "gte";
 export type ClinicalUnit =
@@ -148,16 +147,6 @@ type StageCriterionDefinition = {
 
 export const periodontalStageCriterionCatalogue = [
   {
-    id: "stage.interdental-cal",
-    group: "severity",
-    label: "Greatest interdental CAL",
-    noteLabel: "interdental CAL",
-    input: "measurement",
-    unit: "mm",
-    minimum: 0,
-    step: 1,
-  },
-  {
     id: "stage.rbl-percent",
     group: "severity",
     label: "Radiographic bone loss (RBL)",
@@ -175,6 +164,16 @@ export const periodontalStageCriterionCatalogue = [
     noteLabel:
       "radiographic bone loss (RBL) extends to the middle third of the root or beyond",
     input: "boolean",
+  },
+  {
+    id: "stage.interdental-cal",
+    group: "severity",
+    label: "Greatest interdental CAL",
+    noteLabel: "interdental CAL",
+    input: "measurement",
+    unit: "mm",
+    minimum: 0,
+    step: 1,
   },
   {
     id: "stage.tooth-loss",
@@ -366,7 +365,7 @@ export type PeriodontalGradeCriterionId =
   (typeof periodontalGradeCriterionCatalogue)[number]["id"];
 
 export interface PeriodontalCriterionEvidence<
-  CriterionId extends string = string
+  CriterionId extends string = string,
 > {
   criterionId: CriterionId;
   measurement?: ClinicalMeasurement;
@@ -483,7 +482,7 @@ export interface CandidateClassification {
 
 function exactMeasurement(
   evidence: PeriodontalCriterionEvidence,
-  unit: ClinicalUnit
+  unit: ClinicalUnit,
 ): number | undefined {
   const measurement = evidence.measurement;
   if (
@@ -499,18 +498,18 @@ function exactMeasurement(
 
 function exactMeasurementValue(
   measurement: ClinicalMeasurement | undefined,
-  unit: ClinicalUnit
+  unit: ClinicalUnit,
 ): number | undefined {
   return exactMeasurement({ criterionId: "measurement", measurement }, unit);
 }
 
 export function periodontalStageEvidence(
-  classification: PeriodontalClassification
+  classification: PeriodontalClassification,
 ): PeriodontalCriterionEvidence<PeriodontalStageCriterionId>[] {
   const evidenceById = new Map(
     classification.stageBasis
       .filter((evidence) => evidence.criterionId !== "stage.max-ppd")
-      .map((evidence) => [evidence.criterionId, evidence])
+      .map((evidence) => [evidence.criterionId, evidence]),
   );
   if (classification.gingivalHealth.maximumPpd) {
     evidenceById.set("stage.max-ppd", {
@@ -525,7 +524,7 @@ export function periodontalStageEvidence(
 }
 
 export function classifyGingivalHealthCandidate(
-  classification: PeriodontalClassification
+  classification: PeriodontalClassification,
 ): GingivalHealthCandidate {
   const assessment = classification.gingivalHealth;
   if (
@@ -572,7 +571,9 @@ export function classifyGingivalHealthCandidate(
   ) {
     return {
       context: "",
-      warnings: ["Entered Health/Gingivitis measurements are outside supported ranges."],
+      warnings: [
+        "Entered Health/Gingivitis measurements are outside supported ranges.",
+      ],
     };
   }
 
@@ -686,7 +687,7 @@ export function classifyGingivalHealthCandidate(
 }
 
 function stageFromEvidence(
-  evidence: PeriodontalCriterionEvidence<PeriodontalStageCriterionId>
+  evidence: PeriodontalCriterionEvidence<PeriodontalStageCriterionId>,
 ): Exclude<PeriodontitisStage, ""> | undefined {
   const id = evidence.criterionId;
   if (id === "stage.interdental-cal") {
@@ -748,7 +749,7 @@ function stageFromEvidence(
 }
 
 function gradeFromEvidence(
-  evidence: PeriodontalCriterionEvidence<PeriodontalGradeCriterionId>
+  evidence: PeriodontalCriterionEvidence<PeriodontalGradeCriterionId>,
 ): Exclude<PeriodontitisGrade, ""> | undefined {
   if (evidence.criterionId === "grade.progression-five-years") {
     const value = exactMeasurement(evidence, "mm");
@@ -768,13 +769,13 @@ function gradeFromEvidence(
 }
 
 function smokingGrade(
-  modifier: SmokingModifier
+  modifier: SmokingModifier,
 ): Exclude<PeriodontitisGrade, ""> | undefined {
   if (modifier.status === "non-smoker") return "A";
   if (modifier.status !== "cigarettes") return undefined;
   const value = exactMeasurement(
     { criterionId: "modifier.smoking", measurement: modifier.measurement },
-    "cigarettes-per-day"
+    "cigarettes-per-day",
   );
   if (value === undefined || value < 0) return undefined;
   if (value === 0) return "A";
@@ -782,30 +783,30 @@ function smokingGrade(
 }
 
 function diabetesGrade(
-  modifier: DiabetesModifier
+  modifier: DiabetesModifier,
 ): Exclude<PeriodontitisGrade, ""> | undefined {
   if (modifier.status === "no-diabetes") return "A";
   if (modifier.status !== "diabetes") return undefined;
   const value = exactMeasurement(
     { criterionId: "modifier.diabetes", measurement: modifier.measurement },
-    "percent"
+    "percent",
   );
   if (value === undefined || value < 0) return undefined;
   return value < 7 ? "B" : "C";
 }
 
 function highest<T extends string>(
-  entries: Array<{ value: T; rank: number }>
+  entries: Array<{ value: T; rank: number }>,
 ): T | "" {
   return entries.reduce<{ value: T | ""; rank: number }>(
     (highestEntry, entry) =>
       entry.rank > highestEntry.rank ? entry : highestEntry,
-    { value: "", rank: 0 }
+    { value: "", rank: 0 },
   ).value;
 }
 
 export function classifyPeriodontalCandidate(
-  classification: PeriodontalClassification
+  classification: PeriodontalClassification,
 ): CandidateClassification {
   const warnings: string[] = [];
   if (classification.diagnosis !== "periodontitis") {
@@ -832,95 +833,93 @@ export function classifyPeriodontalCandidate(
     .map((evidence) => ({ evidence, value: stageFromEvidence(evidence) }))
     .filter(
       (
-        entry
+        entry,
       ): entry is {
         evidence: PeriodontalCriterionEvidence<PeriodontalStageCriterionId>;
         value: Exclude<PeriodontitisStage, "">;
-      } => Boolean(entry.value)
+      } => Boolean(entry.value),
     );
   const stage = highest(
-    stageEvidence.map(({ value }) => ({ value, rank: stageRank[value] }))
+    stageEvidence.map(({ value }) => ({ value, rank: stageRank[value] })),
   ) as PeriodontitisStage;
   const stageLevels = new Set(stageEvidence.map(({ value }) => value));
   if (allStageEvidence.length && !stageEvidence.length) {
     warnings.push(
-      "Entered stage evidence does not cross a supported classification threshold."
+      "Entered stage evidence does not cross a supported classification threshold.",
     );
   }
   if (stageLevels.size > 1) {
     warnings.push(
-      "Stage evidence spans multiple levels; the candidate uses the highest applicable stage."
+      "Stage evidence spans multiple levels; the candidate uses the highest applicable stage.",
     );
   }
   if (!allStageEvidence.length) {
-    warnings.push("Stage cannot be suggested without patient-specific evidence.");
+    warnings.push(
+      "Stage cannot be suggested without patient-specific evidence.",
+    );
   }
 
   const gradeEntries = classification.gradeBasis
     .map((evidence) => ({ evidence, value: gradeFromEvidence(evidence) }))
     .filter(
       (
-        entry
+        entry,
       ): entry is {
         evidence: PeriodontalCriterionEvidence<PeriodontalGradeCriterionId>;
         value: Exclude<PeriodontitisGrade, "">;
-      } => Boolean(entry.value)
+      } => Boolean(entry.value),
     );
   const groupedGradeEvidence = {
     direct: gradeEntries.filter(({ evidence }) =>
-      evidence.criterionId.startsWith("grade.progression-")
+      evidence.criterionId.startsWith("grade.progression-"),
     ),
     indirect: gradeEntries.filter(({ evidence }) =>
-      evidence.criterionId.startsWith("grade.bone-loss-age-")
+      evidence.criterionId.startsWith("grade.bone-loss-age-"),
     ),
     phenotype: gradeEntries.filter(({ evidence }) =>
-      evidence.criterionId.startsWith("grade.phenotype-")
+      evidence.criterionId.startsWith("grade.phenotype-"),
     ),
   };
   const gradeSource = (["direct", "indirect", "phenotype"] as const).find(
-    (source) => groupedGradeEvidence[source].length
+    (source) => groupedGradeEvidence[source].length,
   );
   const baseEntries = gradeSource ? groupedGradeEvidence[gradeSource] : [];
   const baseGrade =
     (highest(
-      baseEntries.map(({ value }) => ({ value, rank: gradeRank[value] }))
+      baseEntries.map(({ value }) => ({ value, rank: gradeRank[value] })),
     ) as PeriodontitisGrade) ||
     (classification.diagnosis === "periodontitis" ? "B" : "");
   const smoking = smokingGrade(classification.smoking);
   const diabetes = diabetesGrade(classification.diabetes);
-  const grade = highest(
-    [
-      ...(baseGrade
-        ? [{ value: baseGrade, rank: gradeRank[baseGrade] }]
-        : []),
-      ...(smoking ? [{ value: smoking, rank: gradeRank[smoking] }] : []),
-      ...(diabetes ? [{ value: diabetes, rank: gradeRank[diabetes] }] : []),
-    ]
-  ) as PeriodontitisGrade;
+  const grade = highest([
+    ...(baseGrade ? [{ value: baseGrade, rank: gradeRank[baseGrade] }] : []),
+    ...(smoking ? [{ value: smoking, rank: gradeRank[smoking] }] : []),
+    ...(diabetes ? [{ value: diabetes, rank: gradeRank[diabetes] }] : []),
+  ]) as PeriodontitisGrade;
 
   if (!gradeSource && classification.diagnosis === "periodontitis") {
     warnings.push(
-      "Grade B is a working assumption because direct, indirect, and phenotype evidence are missing."
+      "Grade B is a working assumption because direct, indirect, and phenotype evidence are missing.",
     );
   }
   if (gradeSource) {
     const sourceLevels = new Set(
-      groupedGradeEvidence[gradeSource].map(({ value }) => value)
+      groupedGradeEvidence[gradeSource].map(({ value }) => value),
     );
     if (sourceLevels.size > 1) {
       warnings.push(
-        `Conflicting ${gradeSource} grade evidence is present; the candidate uses the highest applicable grade.`
+        `Conflicting ${gradeSource} grade evidence is present; the candidate uses the highest applicable grade.`,
       );
     }
   }
   if (classification.smoking.status === "other-exposure") {
     warnings.push(
-      "Other tobacco/nicotine exposure is documented but is not converted to a cigarette-equivalent grade."
+      "Other tobacco/nicotine exposure is documented but is not converted to a cigarette-equivalent grade.",
     );
   }
   if (classification.diabetes.status === "diabetes-hba1c-unknown") {
     warnings.push(
-      "Diabetes is present, but grade cannot be modified without a current HbA1c."
+      "Diabetes is present, but grade cannot be modified without a current HbA1c.",
     );
   }
 
@@ -948,7 +947,9 @@ export function classifyPeriodontalCandidate(
 }
 
 function formattedNumber(value: number): string {
-  return Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
+  return Number.isInteger(value)
+    ? String(value)
+    : String(Number(value.toFixed(2)));
 }
 
 function unitLabel(unit: ClinicalUnit): string {
@@ -962,7 +963,7 @@ function unitLabel(unit: ClinicalUnit): string {
 
 function operatorLabel(
   operator: ClinicalOperator,
-  notation: "clinical" | "ascii"
+  notation: "clinical" | "ascii",
 ): string {
   return notation === "ascii"
     ? { eq: "", lt: "<", lte: "<=", gt: ">", gte: ">=" }[operator]
@@ -971,10 +972,10 @@ function operatorLabel(
 
 export function formatClinicalMeasurement(
   measurement: ClinicalMeasurement,
-  notation: "clinical" | "ascii" = "clinical"
+  notation: "clinical" | "ascii" = "clinical",
 ): string {
   return `${operatorLabel(measurement.operator, notation)}${formattedNumber(
-    measurement.value
+    measurement.value,
   )}${unitLabel(measurement.unit)}`;
 }
 
@@ -982,7 +983,7 @@ export function formatPeriodontalEvidence(
   evidence: PeriodontalCriterionEvidence<
     PeriodontalStageCriterionId | PeriodontalGradeCriterionId
   >,
-  notation: "clinical" | "ascii" = "clinical"
+  notation: "clinical" | "ascii" = "clinical",
 ): string {
   const definition = [
     ...periodontalStageCriterionCatalogue,
@@ -992,7 +993,7 @@ export function formatPeriodontalEvidence(
   const wording = evidence.measurement
     ? `${definition.noteLabel} ${formatClinicalMeasurement(
         evidence.measurement,
-        notation
+        notation,
       )}`
     : definition.noteLabel;
   return notation === "ascii"
@@ -1044,20 +1045,20 @@ const healthGingivitisCanonicalLines: Record<
 };
 
 export function formatHealthGingivitisBlock(
-  classification: PeriodontalClassification
+  classification: PeriodontalClassification,
 ): string {
   const assessment = classification.gingivalHealth;
   if (!assessment.confirmed || !assessment.context) return "";
   const contextLabel = choiceLabel(
     healthGingivitisContextChoices,
-    assessment.context
+    assessment.context,
   );
   const candidate = classifyGingivalHealthCandidate(classification);
   if (candidate.context === assessment.context) {
     return [
       `Health/Gingivitis: ${contextLabel}`,
       ...healthGingivitisCanonicalLines[assessment.context].map(
-        (line) => `- ${line}`
+        (line) => `- ${line}`,
       ),
     ].join("\n");
   }
@@ -1071,13 +1072,13 @@ export function formatHealthGingivitisBlock(
     assessment.maximumPpd
       ? `MAXIMUM PPD: ${formatClinicalMeasurement(
           assessment.maximumPpd,
-          "ascii"
+          "ascii",
         ).toUpperCase()}`
       : "",
     assessment.bopPercent
       ? `BOP: ${formatClinicalMeasurement(
           assessment.bopPercent,
-          "ascii"
+          "ascii",
         ).toUpperCase()}`
       : "",
     assessment.radiographicBoneLoss === "absent"
@@ -1107,7 +1108,7 @@ export function formatHealthGingivitisBlock(
 
 export function formatSmokingModifier(
   modifier: SmokingModifier,
-  notation: "clinical" | "ascii" = "clinical"
+  notation: "clinical" | "ascii" = "clinical",
 ): string {
   if (modifier.status === "non-smoker") return "non-smoker";
   if (modifier.status === "cigarettes") {
@@ -1126,7 +1127,7 @@ export function formatSmokingModifier(
 
 export function formatDiabetesModifier(
   modifier: DiabetesModifier,
-  notation: "clinical" | "ascii" = "clinical"
+  notation: "clinical" | "ascii" = "clinical",
 ): string {
   if (modifier.status === "no-diabetes") {
     return "no diagnosis of diabetes / normoglycemic";
@@ -1138,7 +1139,7 @@ export function formatDiabetesModifier(
     return modifier.measurement
       ? `diabetes present; HbA1c ${formatClinicalMeasurement(
           modifier.measurement,
-          notation
+          notation,
         )}`
       : "diabetes present; HbA1c not entered";
   }
@@ -1147,7 +1148,7 @@ export function formatDiabetesModifier(
 
 export function choiceLabel<T extends string>(
   choices: readonly { value: T; label: string }[],
-  value: T
+  value: T,
 ): string {
   return choices.find((choice) => choice.value === value)?.label ?? "";
 }
