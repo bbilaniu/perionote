@@ -444,27 +444,27 @@ normal-observation shortcut, clear action, and detailed observations. Findings
 also reveals an optional patient-specific **Gingival Description findings**
 field beside the primary status for custom observations not represented by the
 fixed catalogue. The fieldset uses the same disclosure treatment as Structured
-periodontal findings: it starts collapsed as **Not assessed** for a blank
+periodontal observations: it starts collapsed as **Not assessed** for a blank
 encounter, shows the number of documented structured observations (including
-custom text as one observation), and automatically expands when a status or
-existing observations are populated.
+custom text as one observation), and automatically expands for Findings.
+Selecting WNL while the disclosure is collapsed leaves it collapsed while the
+header reports the ten documented normal observations.
 
-The detailed controls are visible while the shared status is Findings or when
-the normal-observation shortcut explicitly expands its WNL preset for
-inspection. They render Color, Contour / Shape, Consistency, Surface / Texture,
-and Position / Size in reviewed catalogue order. Each selected option is an
-independent finding with optional generalized/localized extent, supported
-location, optional encounter note, and a measurement only where catalogue
-metadata permits it. Gingival recession is the only current option with an
-`mm` measurement. Selecting or editing an observation sets Findings; removing
-the last observation does not silently change the explicit status.
+Expanding the disclosure always shows the detailed controls, independently of
+the shared status. They render Color, Contour / Shape, Consistency, Surface /
+Texture, and Position / Size in reviewed catalogue order. Each selected option
+is an independent finding with optional generalized/localized extent,
+supported location, optional encounter note, and a measurement only where
+catalogue metadata permits it. Gingival recession is the only current option
+with an `mm` measurement. Selecting or editing an observation sets Findings;
+removing the last observation does not silently change the explicit status.
 
-Not assessed hides detailed controls without discarding their values and
-suppresses them from the note; selecting Findings again restores them. The
-explicit **Clear gingival description** action permanently clears the
-structured and custom values and returns to Not assessed only after
-confirmation when values exist. Unknown or retired IDs are ignored rather
-than converted to invented prose.
+Not assessed retains structured values and suppresses them from the note; they
+remain available whenever the disclosure is open. Selecting Findings again
+restores their output. The explicit **Clear gingival description** action
+permanently clears the structured and custom values and returns to Not assessed
+only after confirmation when values exist. Unknown or retired IDs are ignored
+rather than converted to invented prose.
 
 **WNL:** Choosing WNL from the shared status control stores the ten reviewed
 preset IDs. If retained findings exist, confirmation is required before only

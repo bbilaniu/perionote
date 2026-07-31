@@ -1310,7 +1310,6 @@ function GingivalDescriptionControl({
   onChange: (value: GingivalDescriptionAssessment) => void;
 }) {
   const assessment = value ?? createEmptyGingivalDescriptionAssessment();
-  const [showWnlDetails, setShowWnlDetails] = useState(false);
   const selected = new Map(
     assessment.findings.map((finding) => [finding.optionId, finding])
   );
@@ -1320,8 +1319,8 @@ function GingivalDescriptionControl({
   const structuredObservationCount =
     assessment.findings.length +
     Number(Boolean((assessment.customFindings ?? "").trim()));
-  const hasStructuredDocumentation =
-    assessment.status !== "not_assessed" || structuredObservationCount > 0;
+  const shouldAutoExpandStructuredObservations =
+    assessment.status === "findings";
   const structuredObservationSummary = structuredObservationCount
     ? `${structuredObservationCount} ${
         structuredObservationCount === 1 ? "observation" : "observations"
@@ -1330,12 +1329,14 @@ function GingivalDescriptionControl({
     ? "WNL"
     : "Not assessed";
   const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    hasStructuredDocumentation
+    shouldAutoExpandStructuredObservations
   );
 
   useEffect(() => {
-    if (hasStructuredDocumentation) setStructuredObservationsOpen(true);
-  }, [hasStructuredDocumentation]);
+    if (shouldAutoExpandStructuredObservations) {
+      setStructuredObservationsOpen(true);
+    }
+  }, [shouldAutoExpandStructuredObservations]);
 
   function updateFinding(
     optionId: string,
@@ -1385,7 +1386,6 @@ function GingivalDescriptionControl({
     ) {
       return;
     }
-    setShowWnlDetails(false);
     onChange(createGingivalDescriptionWnlAssessment());
   }
 
@@ -1394,7 +1394,6 @@ function GingivalDescriptionControl({
       setWnl();
       return;
     }
-    setShowWnlDetails(false);
     onChange({ ...assessment, status });
   }
 
@@ -1409,7 +1408,6 @@ function GingivalDescriptionControl({
       return;
     }
     onChange(createGingivalDescriptionWnlAssessment());
-    setShowWnlDetails(true);
   }
 
   function clearAssessment() {
@@ -1421,7 +1419,6 @@ function GingivalDescriptionControl({
     ) {
       return;
     }
-    setShowWnlDetails(false);
     onChange(createEmptyGingivalDescriptionAssessment());
   }
 
@@ -1481,7 +1478,7 @@ function GingivalDescriptionControl({
           >
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Apply the reviewed normal observations or document individual
-              findings. Detailed controls are shown for Findings.
+              findings.
             </p>
             <div className="flex flex-wrap gap-2">
               <button
@@ -1502,114 +1499,108 @@ function GingivalDescriptionControl({
                 Clear gingival description
               </button>
             </div>
-            {assessment.status === "findings" || showWnlDetails
-              ? gingivalDescriptionCatalog.dimensions.map((dimension) => (
-                  <fieldset
-                    key={dimension.id}
-                    className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
-                  >
-                    <legend className="font-medium">{dimension.label}</legend>
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {dimension.options.map((option) => {
-                        const finding = selected.get(option.id);
-                        const supportsLocation =
-                          dimension.supportsLocation ||
-                          ("supportsLocation" in option &&
-                            option.supportsLocation);
-                        const supportsMeasurement =
-                          "supportsMeasurement" in option &&
-                          option.supportsMeasurement;
-                        return (
-                          <div
-                            key={option.id}
-                            className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-                          >
-                            <CheckboxField
+            {gingivalDescriptionCatalog.dimensions.map((dimension) => (
+              <fieldset
+                key={dimension.id}
+                className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+              >
+                <legend className="font-medium">{dimension.label}</legend>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {dimension.options.map((option) => {
+                    const finding = selected.get(option.id);
+                    const supportsLocation =
+                      dimension.supportsLocation ||
+                      ("supportsLocation" in option && option.supportsLocation);
+                    const supportsMeasurement =
+                      "supportsMeasurement" in option &&
+                      option.supportsMeasurement;
+                    return (
+                      <div
+                        key={option.id}
+                        className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                      >
+                        <CheckboxField
+                          id={`adult-hygiene-${option.id.replaceAll(".", "-")}`}
+                          label={option.label}
+                          checked={Boolean(finding)}
+                          onChange={(checked) =>
+                            toggleFinding(option.id, checked)
+                          }
+                        />
+                        {finding ? (
+                          <div className="mt-3 grid gap-3">
+                            <FixedChoiceListbox
                               id={`adult-hygiene-${option.id.replaceAll(
                                 ".",
                                 "-"
-                              )}`}
-                              label={option.label}
-                              checked={Boolean(finding)}
-                              onChange={(checked) =>
-                                toggleFinding(option.id, checked)
+                              )}-extent`}
+                              label={`${option.label} extent`}
+                              value={finding.extent}
+                              options={[
+                                { value: "", label: "Not specified" },
+                                {
+                                  value: "generalized",
+                                  label: "Generalized",
+                                },
+                                { value: "localized", label: "Localized" },
+                              ]}
+                              onChange={(extent) =>
+                                updateFinding(option.id, { extent })
                               }
+                              compact
                             />
-                            {finding ? (
-                              <div className="mt-3 grid gap-3">
-                                <FixedChoiceListbox
-                                  id={`adult-hygiene-${option.id.replaceAll(
-                                    ".",
-                                    "-"
-                                  )}-extent`}
-                                  label={`${option.label} extent`}
-                                  value={finding.extent}
-                                  options={[
-                                    { value: "", label: "Not specified" },
-                                    {
-                                      value: "generalized",
-                                      label: "Generalized",
-                                    },
-                                    { value: "localized", label: "Localized" },
-                                  ]}
-                                  onChange={(extent) =>
-                                    updateFinding(option.id, { extent })
-                                  }
-                                  compact
-                                />
-                                {supportsLocation ? (
-                                  <TextField
-                                    id={`adult-hygiene-${option.id.replaceAll(
-                                      ".",
-                                      "-"
-                                    )}-location`}
-                                    label={`${option.label} location`}
-                                    value={finding.locations.join(", ")}
-                                    onChange={(locations) =>
-                                      updateFinding(option.id, {
-                                        locations: locations
-                                          .split(/[,;\n]/)
-                                          .map((item) => item.trim())
-                                          .filter(Boolean),
-                                      })
-                                    }
-                                    placeholder="Arch, quadrant, sextant, tooth, surface, or region"
-                                  />
-                                ) : null}
-                                {supportsMeasurement ? (
-                                  <TextField
-                                    id={`adult-hygiene-${option.id.replaceAll(
-                                      ".",
-                                      "-"
-                                    )}-measurement`}
-                                    label={`${option.label} measurement (mm)`}
-                                    value={finding.measurement}
-                                    onChange={(measurement) =>
-                                      updateFinding(option.id, { measurement })
-                                    }
-                                  />
-                                ) : null}
-                                <TextField
-                                  id={`adult-hygiene-${option.id.replaceAll(
-                                    ".",
-                                    "-"
-                                  )}-comment`}
-                                  label={`${option.label} notes`}
-                                  value={finding.comment}
-                                  onChange={(comment) =>
-                                    updateFinding(option.id, { comment })
-                                  }
-                                  placeholder="Optional encounter-specific note"
-                                />
-                              </div>
+                            {supportsLocation ? (
+                              <TextField
+                                id={`adult-hygiene-${option.id.replaceAll(
+                                  ".",
+                                  "-"
+                                )}-location`}
+                                label={`${option.label} location`}
+                                value={finding.locations.join(", ")}
+                                onChange={(locations) =>
+                                  updateFinding(option.id, {
+                                    locations: locations
+                                      .split(/[,;\n]/)
+                                      .map((item) => item.trim())
+                                      .filter(Boolean),
+                                  })
+                                }
+                                placeholder="Arch, quadrant, sextant, tooth, surface, or region"
+                              />
                             ) : null}
+                            {supportsMeasurement ? (
+                              <TextField
+                                id={`adult-hygiene-${option.id.replaceAll(
+                                  ".",
+                                  "-"
+                                )}-measurement`}
+                                label={`${option.label} measurement (mm)`}
+                                value={finding.measurement}
+                                onChange={(measurement) =>
+                                  updateFinding(option.id, { measurement })
+                                }
+                              />
+                            ) : null}
+                            <TextField
+                              id={`adult-hygiene-${option.id.replaceAll(
+                                ".",
+                                "-"
+                              )}-comment`}
+                              label={`${option.label} notes`}
+                              value={finding.comment}
+                              onChange={(comment) =>
+                                updateFinding(option.id, { comment })
+                              }
+                              placeholder="Optional encounter-specific note"
+                            />
                           </div>
-                        );
-                      })}
-                    </div>
-                  </fieldset>
-                ))
-              : null}
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            ))}
           </div>
         ) : null}
       </fieldset>

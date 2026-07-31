@@ -364,6 +364,47 @@ test("Adult Hygiene expands populated structured observations", async ({
   );
 });
 
+test("Adult Hygiene keeps WNL gingival observations collapsed", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredGingival = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const structuredGingivalDisclosure = structuredGingival.getByRole("button", {
+    name: /Structured gingival observations/,
+  });
+  const gingivalStatus = page.getByRole("button", {
+    name: "Gingival Description",
+    exact: true,
+  });
+
+  await expect(structuredGingivalDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+
+  await expect(gingivalStatus).toContainText("WNL");
+  await expect(structuredGingivalDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await expect(structuredGingivalDisclosure).toContainText(
+    "10 observations documented"
+  );
+  await expect(
+    structuredGingival.getByLabel("Coral pink", { exact: true })
+  ).toHaveCount(0);
+
+  await structuredGingivalDisclosure.click();
+  await expect(
+    structuredGingival.getByLabel("Coral pink", { exact: true })
+  ).toBeChecked();
+});
+
 test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   page,
 }) => {
@@ -396,13 +437,15 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
     })
   ).toHaveCount(0);
   await expect(recession).toHaveCount(0);
-  await gingivalStatus.click();
-  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await structuredGingivalDisclosure.click();
   await expect(structuredGingivalDisclosure).toHaveAttribute(
     "aria-expanded",
     "true"
   );
+  await expect(recession).toBeVisible();
+  await expect(recession).not.toBeChecked();
   await recession.check();
+  await expect(gingivalStatus).toContainText("Findings");
   await expect(structuredGingivalDisclosure).toContainText(
     "1 observation documented"
   );
@@ -417,7 +460,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
 
   await gingivalStatus.click();
   await page.getByRole("option", { name: "Not assessed", exact: true }).click();
-  await expect(recession).toHaveCount(0);
+  await expect(recession).toBeChecked();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Gingival Description/
   );
@@ -435,7 +478,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await gingivalStatus.click();
   await page.getByRole("option", { name: "WNL", exact: true }).click();
   await expect(gingivalStatus).toContainText("WNL");
-  await expect(recession).toHaveCount(0);
+  await expect(recession).not.toBeChecked();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
   );
