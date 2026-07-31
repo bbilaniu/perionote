@@ -396,13 +396,86 @@ test("Adult Hygiene keeps WNL gingival observations collapsed", async ({
     "10 observations documented"
   );
   await expect(
-    structuredGingival.getByLabel("Coral pink", { exact: true })
+    structuredGingival.getByRole("button", {
+      name: "Color observations",
+      exact: true,
+    })
   ).toHaveCount(0);
 
   await structuredGingivalDisclosure.click();
+  const colorObservations = structuredGingival.getByRole("button", {
+    name: "Color observations",
+    exact: true,
+  });
+  await expect(colorObservations).toContainText("Coral pink");
+  await colorObservations.click();
   await expect(
-    structuredGingival.getByLabel("Coral pink", { exact: true })
+    structuredGingival
+      .getByRole("dialog", { name: "Color observations options" })
+      .getByLabel("Coral pink", { exact: true })
   ).toBeChecked();
+});
+
+test("Adult Hygiene prevents conflicting gingival menu selections", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredGingival = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const structuredGingivalDisclosure = structuredGingival.getByRole("button", {
+    name: /Structured gingival observations/,
+  });
+  await structuredGingivalDisclosure.click();
+
+  const colorObservations = structuredGingival.getByRole("button", {
+    name: "Color observations",
+    exact: true,
+  });
+  await colorObservations.click();
+  const colorOptions = structuredGingival.getByRole("dialog", {
+    name: "Color observations options",
+  });
+  await colorOptions.getByText("Coral pink", { exact: true }).click();
+  await colorOptions.getByText("Red / erythematous", { exact: true }).click();
+  await expect(
+    colorOptions.getByLabel("Coral pink", { exact: true })
+  ).not.toBeChecked();
+  await expect(
+    colorOptions.getByLabel("Red / erythematous", { exact: true })
+  ).toBeChecked();
+  await colorObservations.click();
+
+  const positionObservations = structuredGingival.getByRole("button", {
+    name: "Position / Size observations",
+    exact: true,
+  });
+  await positionObservations.click();
+  const positionOptions = structuredGingival.getByRole("dialog", {
+    name: "Position / Size observations options",
+  });
+  await positionOptions.getByText("No recession", { exact: true }).click();
+  await positionOptions.getByText("Root exposure", { exact: true }).click();
+  await expect(
+    positionOptions.getByLabel("No recession", { exact: true })
+  ).not.toBeChecked();
+  await positionOptions
+    .getByText("Gingival recession", { exact: true })
+    .click();
+  await expect(
+    positionOptions.getByLabel("Root exposure", { exact: true })
+  ).toBeChecked();
+  await positionOptions.getByText("No recession", { exact: true }).click();
+  await expect(
+    positionOptions.getByLabel("Gingival recession", { exact: true })
+  ).not.toBeChecked();
+  await expect(
+    positionOptions.getByLabel("Root exposure", { exact: true })
+  ).not.toBeChecked();
+  await expect(structuredGingivalDisclosure).toContainText(
+    "2 observations documented"
+  );
 });
 
 test("Adult Hygiene adds explicit gingival findings and WNL", async ({
@@ -420,10 +493,6 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   const structuredGingivalDisclosure = structuredGingival.getByRole("button", {
     name: /Structured gingival observations/,
   });
-  const recession = structuredGingival.getByLabel("Gingival recession", {
-    exact: true,
-  });
-
   await expect(gingivalStatus).toContainText("Not assessed");
   await expect(structuredGingivalDisclosure).toHaveAttribute(
     "aria-expanded",
@@ -436,38 +505,83 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
       exact: true,
     })
   ).toHaveCount(0);
-  await expect(recession).toHaveCount(0);
+  await expect(
+    structuredGingival.getByRole("button", {
+      name: "Position / Size observations",
+      exact: true,
+    })
+  ).toHaveCount(0);
   await structuredGingivalDisclosure.click();
   await expect(structuredGingivalDisclosure).toHaveAttribute(
     "aria-expanded",
     "true"
   );
-  await expect(recession).toBeVisible();
-  await expect(recession).not.toBeChecked();
-  await recession.check();
+  const positionObservations = structuredGingival.getByRole("button", {
+    name: "Position / Size observations",
+    exact: true,
+  });
+  await positionObservations.click();
+  await structuredGingival
+    .getByRole("dialog", { name: "Position / Size observations options" })
+    .getByText("Gingival recession", { exact: true })
+    .click();
+  await positionObservations.click();
   await expect(gingivalStatus).toContainText("Findings");
   await expect(structuredGingivalDisclosure).toContainText(
     "1 observation documented"
   );
   await page.getByRole("button", { name: "Gingival recession extent" }).click();
   await page.getByRole("option", { name: "Localized", exact: true }).click();
-  await page.getByLabel("Gingival recession location").fill("tooth 13 facial");
+  const recessionLocation = page.getByRole("button", {
+    name: "Gingival recession location",
+    exact: true,
+  });
+  await recessionLocation.click();
+  const recessionLocationOptions = page.getByRole("dialog", {
+    name: "Gingival recession location options",
+    exact: true,
+  });
+  await expect(
+    recessionLocationOptions.getByRole("checkbox", {
+      name: "full mouth",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await recessionLocationOptions.getByText("Q1", { exact: true }).click();
+  await recessionLocationOptions
+    .getByText("facial/buccal", { exact: true })
+    .click();
+  await recessionLocationOptions
+    .getByRole("textbox", {
+      name: "Search or add custom Gingival recession location",
+      exact: true,
+    })
+    .fill("tooth 13");
+  await recessionLocationOptions
+    .getByRole("button", {
+      name: "Add “tooth 13” to this note",
+      exact: true,
+    })
+    .click();
+  await recessionLocationOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
   await page.getByLabel("Gingival recession measurement (mm)").fill("2");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: tooth 13 facial; measurement: 2 mm\)\./
+    /Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: Q1, facial\/buccal, tooth 13; measurement: 2 mm\)\./
   );
 
   await gingivalStatus.click();
   await page.getByRole("option", { name: "Not assessed", exact: true }).click();
-  await expect(recession).toBeChecked();
+  await expect(positionObservations).toContainText("Gingival recession");
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Gingival Description/
   );
 
   await gingivalStatus.click();
   await page.getByRole("option", { name: "Findings", exact: true }).click();
-  await expect(recession).toBeChecked();
+  await expect(positionObservations).toContainText("Gingival recession");
 
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
@@ -478,7 +592,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await gingivalStatus.click();
   await page.getByRole("option", { name: "WNL", exact: true }).click();
   await expect(gingivalStatus).toContainText("WNL");
-  await expect(recession).not.toBeChecked();
+  await expect(positionObservations).not.toContainText("Gingival recession");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
   );
@@ -501,18 +615,22 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
     })
     .click();
   await expect(gingivalStatus).toContainText("WNL");
-  await expect(
-    structuredGingival.getByLabel("Coral pink", { exact: true })
-  ).toBeChecked();
-  const noOvergrowth = structuredGingival.getByLabel("No overgrowth", {
+  const colorObservations = structuredGingival.getByRole("button", {
+    name: "Color observations",
     exact: true,
   });
-  await expect(noOvergrowth).toBeChecked();
+  await expect(colorObservations).toContainText("Coral pink");
+  await expect(positionObservations).toContainText("No overgrowth");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
   );
 
-  await noOvergrowth.uncheck();
+  await positionObservations.click();
+  await structuredGingival
+    .getByRole("dialog", { name: "Position / Size observations options" })
+    .getByText("No overgrowth", { exact: true })
+    .click();
+  await positionObservations.click();
   await expect(gingivalStatus).toContainText("Findings");
   const customFindings = page.getByRole("textbox", {
     name: "Gingival Description findings",
@@ -556,6 +674,9 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   expect(periodontalObservationsBox!.y).toBeLessThan(diagnosisBox!.y);
 
   await structuredPeriodontalObservations.click();
+  await expect(
+    page.getByText("Periodontal assessment findings", { exact: true })
+  ).toBeVisible();
   await expect(page.locator("#adult-hygiene-periodontium")).toBeVisible();
   await expect(
     page.locator("#adult-hygiene-stage-interdental-cal")
@@ -878,10 +999,10 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   ).toHaveCount(3);
   await expect(
     completedRow.getByRole("button", {
-      name: "Q2, Q3, teeth 14–16",
+      name: "Tooth/area",
       exact: true,
     })
-  ).toBeVisible();
+  ).toContainText("Q2, Q3, teeth 14–16");
   await expect(
     completedRow.getByRole("list", {
       name: "Tooth/area selected values",

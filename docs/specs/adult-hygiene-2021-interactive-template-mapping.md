@@ -389,7 +389,7 @@ are loaded.
 | A17  | `PSR/Pocketing: _ _ _ / _ _ _`                                                                                                                                                                                                                                              | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4**                                                                    | `patient-specific`                                                                                                                             | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants                                                                                                                  |
 | A18  | `Recession:`                                                                                                                                                                                                                                                                | Editable text: **Recession**                                                                                                                                                                           | `patient-specific`                                                                                                                             | `Recession: {text}`                                                                                                                                                                |
 | A19  | `FMP Done: [SELECT/INSERT: FMP DONE]`                                                                                                                                                                                                                                       | Catalogue-backed editable text: **FMP done**                                                                                                                                                           | Current value: `patient-specific`; reusable complete phrases: `catalogue`                                                                      | `FMP Done: {selected or entered text}`                                                                                                                                             |
-| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` and the [reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)                                                                                                             | Diagnosis-independent Health/Gingivitis findings using periodontium, exact BOP and maximum PPD, attachment loss, RBL, and treated-periodontitis stability findings; classification remains conditional | Stable context IDs, semantic measurements, and assessment states: `appCore`; entered evidence, confirmation, and overrides: `patient-specific` | A confirmed candidate preserves the familiar `Health/Gingivitis:` heading and uppercase ClearDent criterion block using ASCII `<=` and `>=`; overrides use actual entered evidence |
+| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` and the [reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)                                                                                                             | Diagnosis-independent **Periodontal assessment findings** using periodontium, exact BOP and maximum PPD, attachment loss, RBL, and treated-periodontitis stability findings; classification remains conditional | Stable context IDs, semantic measurements, and assessment states: `appCore`; entered evidence, confirmation, and overrides: `patient-specific` | A confirmed candidate preserves the familiar `Health/Gingivitis:` heading and uppercase ClearDent criterion block using ASCII `<=` and `>=`; overrides use actual entered evidence |
 | A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Explicit **Gingival Description** status followed by a progressive structured multi-finding fieldset, before the diagnosis category and Health/Gingivitis classification                               | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed`   | Omitted when absent or Not assessed; one WNL line or one compact per-dimension findings block                                                                                      |
 | A21  | [Reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)                                                                                                                                                                  | Diagnosis category and separate extent/distribution choices                                                                                                                                            | Choices: `appCore`; encounter selection: `patient-specific`                                                                                    | `Periodontal diagnosis: {extent} periodontitis...` when documented                                                                                                                 |
 | A22  | Stage severity and complexity criteria                                                                                                                                                                                                                                      | Exact typed measurements; mutually exclusive bone-loss pattern, furcation, and ridge-defect selectors; and a multi-select for advanced functional complexity findings                                  | Stable criterion IDs and units: `appCore`; entered evidence: `patient-specific`                                                                | Confirmed evidence is generated from the checked-in criterion catalogue                                                                                                            |
@@ -410,13 +410,13 @@ application vocabulary and are generated only from confirmed structured state.
 Periodontal evidence uses the checked-in catalogue and candidate rules in
 `lib/templates/periodontalClassification.ts`, documented by the
 [candidate-classification decision table](periodontal-classification-decision-table.md).
-Health/Gingivitis findings, extent/distribution, stage evidence, grade evidence,
+Periodontal assessment findings, extent/distribution, stage evidence, grade evidence,
 and grade modifiers remain available while the diagnosis category is Not
 assessed. Entering those findings does not select or imply a diagnosis and does
 not add periodontal classification text to the note. Diagnosis-specific
 candidates, clinician confirmation, and generated output remain gated by the
 selected diagnosis category.
-The Health/Gingivitis, stage, grade, and modifier controls are grouped in a
+The periodontal assessment, stage, grade, and modifier controls are grouped in a
 **Structured periodontal observations** disclosure before the diagnosis category.
 It is collapsed as **Not assessed** for a blank encounter, reports the number of
 documented observations when populated, and automatically expands when existing
@@ -457,12 +457,24 @@ header reports the ten documented normal observations.
 
 Expanding the disclosure always shows the detailed controls, independently of
 the shared status. They render Color, Contour / Shape, Consistency, Surface /
-Texture, and Position / Size in reviewed catalogue order. Each selected option
-is an independent finding with optional generalized/localized extent,
-supported location, optional encounter note, and a measurement only where
-catalogue metadata permits it. Gingival recession is the only current option
-with an `mm` measurement. Selecting or editing an observation sets Findings;
-removing the last observation does not silently change the explicit status.
+Texture, and Position / Size in reviewed catalogue order. Each dimension uses a
+grouped multi-select menu. Clinically exclusive subgroups replace their prior
+selection, while compatible findings remain additive; selecting No recession
+also removes recession and root exposure, and selecting either abnormal finding
+removes No recession. Each selected option is an independent finding with
+optional generalized/localized extent, supported location, optional encounter
+note, and a measurement only where catalogue metadata permits it. Gingival
+recession is the only current option with an `mm` measurement. Selecting or
+editing an observation sets Findings; removing the last observation does not
+silently change the explicit status.
+
+Supported gingival locations use the same shared multi-combobox interaction as
+Treatment completed today's Tooth/area field, with a gingival-specific preset.
+Fixed choices include maxilla, mandible, quadrants, sextants, facial/buccal,
+lingual/palatal, interproximal, marginal, and attached gingiva; encounter-only
+custom locations support tooth numbers and other specific regions. Full mouth
+is omitted because Generalized extent already expresses that scope. Existing
+location arrays and custom strings remain compatible.
 
 Not assessed retains structured values and suppresses them from the note; they
 remain available whenever the disclosure is open. Selecting Findings again

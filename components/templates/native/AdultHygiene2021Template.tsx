@@ -10,6 +10,7 @@ import {
 } from "react";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
+import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import {
   DropdownChevron,
   formControlClass,
@@ -33,7 +34,6 @@ import {
   homeCareOheTopicChoices,
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
-  treatmentToothAreaChoices,
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import type {
@@ -48,6 +48,7 @@ import {
   createEmptyGingivalDescriptionAssessment,
   createGingivalDescriptionWnlAssessment,
   gingivalDescriptionCatalog,
+  type GingivalCatalogDimension,
   type GingivalDescriptionAssessment,
   type GingivalDescriptionFinding,
   type GingivalDescriptionStatus,
@@ -100,6 +101,158 @@ const gingivalDescriptionStatusOptions: Array<{
   { value: "wnl", label: "WNL" },
   { value: "findings", label: "Findings" },
 ];
+type GingivalChoiceGroupDefinition = {
+  label: string;
+  optionIds: readonly string[];
+  selectionMode?: "multiple" | "single";
+};
+const gingivalChoiceGroupDefinitions = {
+  "gingiva.color": [
+    {
+      label: "Primary color",
+      optionIds: [
+        "gingiva.color.coral_pink",
+        "gingiva.color.red_erythematous",
+        "gingiva.color.bright_red",
+        "gingiva.color.bluish_red",
+        "gingiva.color.pale_pink",
+      ],
+      selectionMode: "single",
+    },
+    {
+      label: "Additional findings",
+      optionIds: [
+        "gingiva.color.physiologic_pigmentation",
+        "gingiva.color.white_patch",
+      ],
+    },
+  ],
+  "gingiva.contour": [
+    {
+      label: "Marginal form",
+      optionIds: [
+        "gingiva.contour.knife_edged_margins",
+        "gingiva.contour.rounded_margins",
+        "gingiva.contour.rolled_margins",
+        "gingiva.contour.bulbous_margins",
+      ],
+      selectionMode: "single",
+    },
+    {
+      label: "Marginal adaptation",
+      optionIds: ["gingiva.contour.flat_against_teeth"],
+    },
+    {
+      label: "Papillae",
+      optionIds: [
+        "gingiva.contour.papillae_fill_embrasures",
+        "gingiva.contour.blunted_papillae",
+        "gingiva.contour.cratered_papillae",
+        "gingiva.contour.enlarged_papillae",
+      ],
+      selectionMode: "single",
+    },
+  ],
+  "gingiva.consistency": [
+    {
+      label: "Tissue character",
+      optionIds: [
+        "gingiva.consistency.firm",
+        "gingiva.consistency.soft",
+        "gingiva.consistency.spongy",
+        "gingiva.consistency.fibrotic",
+        "gingiva.consistency.edematous",
+      ],
+      selectionMode: "single",
+    },
+    {
+      label: "Tissue response",
+      optionIds: [
+        "gingiva.consistency.resilient",
+        "gingiva.consistency.easily_displaced",
+      ],
+      selectionMode: "single",
+    },
+  ],
+  "gingiva.surface": [
+    {
+      label: "Attached gingiva",
+      optionIds: [
+        "gingiva.surface.stippled_attached",
+        "gingiva.surface.smooth_attached",
+        "gingiva.surface.loss_of_stippling",
+        "gingiva.surface.excessive_stippling_fibrotic",
+      ],
+      selectionMode: "single",
+    },
+    {
+      label: "Marginal gingiva",
+      optionIds: ["gingiva.surface.smooth_marginal", "gingiva.surface.shiny"],
+      selectionMode: "single",
+    },
+  ],
+  "gingiva.position": [
+    {
+      label: "Recession",
+      optionIds: [
+        "gingiva.position.no_recession",
+        "gingiva.position.recession",
+      ],
+      selectionMode: "single",
+    },
+    {
+      label: "Exposure",
+      optionIds: ["gingiva.position.root_exposure"],
+    },
+    {
+      label: "Size",
+      optionIds: [
+        "gingiva.position.no_overgrowth",
+        "gingiva.position.enlargement",
+        "gingiva.position.overgrowth",
+      ],
+      selectionMode: "single",
+    },
+  ],
+} as const satisfies Record<string, readonly GingivalChoiceGroupDefinition[]>;
+const gingivalOptionConflicts: Record<string, readonly string[]> = {
+  "gingiva.position.no_recession": [
+    "gingiva.position.recession",
+    "gingiva.position.root_exposure",
+  ],
+  "gingiva.position.recession": ["gingiva.position.no_recession"],
+  "gingiva.position.root_exposure": ["gingiva.position.no_recession"],
+};
+
+function gingivalChoiceGroups(
+  dimension: GingivalCatalogDimension,
+): FixedChoiceMultiComboboxGroup[] {
+  const definitions =
+    gingivalChoiceGroupDefinitions[
+      dimension.id as keyof typeof gingivalChoiceGroupDefinitions
+    ] ?? [];
+  const configuredOptionIds = new Set<string>(
+    definitions.flatMap((definition) => definition.optionIds),
+  );
+  const groups = definitions.map((definition) => ({
+    label: definition.label,
+    choices: definition.optionIds.flatMap((optionId) => {
+      const option = dimension.options.find(
+        (candidate) => candidate.id === optionId,
+      );
+      return option ? [option.label] : [];
+    }),
+    ...("selectionMode" in definition
+      ? { selectionMode: definition.selectionMode }
+      : {}),
+  }));
+  const ungroupedChoices = dimension.options
+    .filter((option) => !configuredOptionIds.has(option.id))
+    .map((option) => option.label);
+  return ungroupedChoices.length
+    ? [...groups, { label: "Other", choices: ungroupedChoices }]
+    : groups;
+}
 const rblExtentOptions = [
   { value: "", label: "Not assessed" },
   {
@@ -172,23 +325,6 @@ const gradePhenotypeOptions = [
   },
 ] as const;
 const psrSextantOrder = [1, 2, 3, 6, 5, 4] as const;
-const treatmentToothAreaChoiceGroups = [
-  {
-    choices: ["full mouth", "maxilla", "mandible"],
-    columns: 1,
-  },
-  {
-    label: "Quadrants",
-    choices: ["Q1", "Q2", "Q4", "Q3"],
-    columns: 2,
-  },
-  {
-    label: "Sextants",
-    choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
-    columns: 3,
-  },
-] as const;
-
 const oheTopicChoiceGroups = [
   {
     label: "Home-care techniques",
@@ -909,7 +1045,7 @@ function PeriodontalClassificationControl({
           >
             <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
               <legend className="font-semibold">
-                Health/Gingivitis findings
+                Periodontal assessment findings
               </legend>
               <div className="grid gap-3 md:grid-cols-2">
                 <FixedChoiceListbox
@@ -1671,26 +1807,47 @@ function GingivalDescriptionControl({
     });
   }
 
-  function toggleFinding(optionId: string, checked: boolean) {
+  function updateDimensionFindings(
+    dimension: GingivalCatalogDimension,
+    selectedLabels: string[],
+  ) {
+    const dimensionOptionIds = new Set(
+      dimension.options.map((option) => option.id),
+    );
+    const currentOptionIds = assessment.findings
+      .filter((finding) => dimensionOptionIds.has(finding.optionId))
+      .map((finding) => finding.optionId);
+    let nextOptionIds = dimension.options
+      .filter((option) => selectedLabels.includes(option.label))
+      .map((option) => option.id);
+    const addedOptionId = nextOptionIds.find(
+      (optionId) => !currentOptionIds.includes(optionId),
+    );
+    if (addedOptionId) {
+      const conflicts = new Set(gingivalOptionConflicts[addedOptionId] ?? []);
+      nextOptionIds = nextOptionIds.filter(
+        (optionId) => !conflicts.has(optionId),
+      );
+    }
+
     onChange({
       ...assessment,
       status: "findings",
-      findings: checked
-        ? [
-            ...assessment.findings.filter(
-              (finding) => finding.optionId !== optionId,
-            ),
-            {
+      findings: [
+        ...assessment.findings.filter(
+          (finding) => !dimensionOptionIds.has(finding.optionId),
+        ),
+        ...nextOptionIds.map(
+          (optionId) =>
+            selected.get(optionId) ?? {
               optionId,
-              extent: "",
+              extent: "" as const,
               locations: [],
               measurement: "",
               comment: "",
             },
-          ]
-        : assessment.findings.filter(
-            (finding) => finding.optionId !== optionId,
-          ),
+        ),
+      ],
     });
   }
 
@@ -1817,108 +1974,123 @@ function GingivalDescriptionControl({
                 Clear gingival description
               </button>
             </div>
-            {gingivalDescriptionCatalog.dimensions.map((dimension) => (
-              <fieldset
-                key={dimension.id}
-                className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
-              >
-                <legend className="font-medium">{dimension.label}</legend>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {dimension.options.map((option) => {
-                    const finding = selected.get(option.id);
-                    const supportsLocation =
-                      dimension.supportsLocation ||
-                      ("supportsLocation" in option && option.supportsLocation);
-                    const supportsMeasurement =
-                      "supportsMeasurement" in option &&
-                      option.supportsMeasurement;
-                    return (
-                      <div
-                        key={option.id}
-                        className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-                      >
-                        <CheckboxField
-                          id={`adult-hygiene-${option.id.replaceAll(".", "-")}`}
-                          label={option.label}
-                          checked={Boolean(finding)}
-                          onChange={(checked) =>
-                            toggleFinding(option.id, checked)
-                          }
-                        />
-                        {finding ? (
-                          <div className="mt-3 grid gap-3">
-                            <FixedChoiceListbox
-                              id={`adult-hygiene-${option.id.replaceAll(
-                                ".",
-                                "-",
-                              )}-extent`}
-                              label={`${option.label} extent`}
-                              value={finding.extent}
-                              options={[
-                                { value: "", label: "Not specified" },
-                                {
-                                  value: "generalized",
-                                  label: "Generalized",
-                                },
-                                { value: "localized", label: "Localized" },
-                              ]}
-                              onChange={(extent) =>
-                                updateFinding(option.id, { extent })
-                              }
-                              compact
-                            />
-                            {supportsLocation ? (
+            {gingivalDescriptionCatalog.dimensions.map((dimension) => {
+              const selectedOptions = dimension.options.filter((option) =>
+                selected.has(option.id),
+              );
+              return (
+                <fieldset
+                  key={dimension.id}
+                  className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+                >
+                  <legend className="font-medium">{dimension.label}</legend>
+                  <FixedChoiceMultiCombobox
+                    id={`adult-hygiene-${dimension.id.replaceAll(
+                      ".",
+                      "-",
+                    )}-observations`}
+                    label={`${dimension.label} observations`}
+                    choices={dimension.options.map((option) => option.label)}
+                    choiceGroups={gingivalChoiceGroups(dimension)}
+                    values={selectedOptions.map((option) => option.label)}
+                    onChange={(selectedLabels) =>
+                      updateDimensionFindings(dimension, selectedLabels)
+                    }
+                    customPlaceholder={`Search ${dimension.label.toLocaleLowerCase(
+                      "en-CA",
+                    )} observations`}
+                    customHelpText=""
+                    showSelectedChips={false}
+                    allowCustomValues={false}
+                  />
+                  {selectedOptions.length ? (
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {selectedOptions.map((option) => {
+                        const finding = selected.get(option.id)!;
+                        const supportsLocation =
+                          dimension.supportsLocation ||
+                          ("supportsLocation" in option &&
+                            option.supportsLocation);
+                        const supportsMeasurement =
+                          "supportsMeasurement" in option &&
+                          option.supportsMeasurement;
+                        return (
+                          <div
+                            key={option.id}
+                            className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                          >
+                            <h4 className="text-sm font-semibold">
+                              {option.label}
+                            </h4>
+                            <div className="mt-3 grid gap-3">
+                              <FixedChoiceListbox
+                                id={`adult-hygiene-${option.id.replaceAll(
+                                  ".",
+                                  "-",
+                                )}-extent`}
+                                label={`${option.label} extent`}
+                                value={finding.extent}
+                                options={[
+                                  { value: "", label: "Not specified" },
+                                  {
+                                    value: "generalized",
+                                    label: "Generalized",
+                                  },
+                                  { value: "localized", label: "Localized" },
+                                ]}
+                                onChange={(extent) =>
+                                  updateFinding(option.id, { extent })
+                                }
+                                compact
+                              />
+                              {supportsLocation ? (
+                                <ClinicalLocationMultiCombobox
+                                  id={`adult-hygiene-${option.id.replaceAll(
+                                    ".",
+                                    "-",
+                                  )}-location`}
+                                  label={`${option.label} location`}
+                                  preset="gingival"
+                                  values={finding.locations}
+                                  onChange={(locations) =>
+                                    updateFinding(option.id, { locations })
+                                  }
+                                />
+                              ) : null}
+                              {supportsMeasurement ? (
+                                <TextField
+                                  id={`adult-hygiene-${option.id.replaceAll(
+                                    ".",
+                                    "-",
+                                  )}-measurement`}
+                                  label={`${option.label} measurement (mm)`}
+                                  value={finding.measurement}
+                                  onChange={(measurement) =>
+                                    updateFinding(option.id, { measurement })
+                                  }
+                                />
+                              ) : null}
                               <TextField
                                 id={`adult-hygiene-${option.id.replaceAll(
                                   ".",
                                   "-",
-                                )}-location`}
-                                label={`${option.label} location`}
-                                value={finding.locations.join(", ")}
-                                onChange={(locations) =>
-                                  updateFinding(option.id, {
-                                    locations: locations
-                                      .split(/[,;\n]/)
-                                      .map((item) => item.trim())
-                                      .filter(Boolean),
-                                  })
+                                )}-comment`}
+                                label={`${option.label} notes`}
+                                value={finding.comment}
+                                onChange={(comment) =>
+                                  updateFinding(option.id, { comment })
                                 }
-                                placeholder="Arch, quadrant, sextant, tooth, surface, or region"
+                                placeholder="Optional encounter-specific note"
                               />
-                            ) : null}
-                            {supportsMeasurement ? (
-                              <TextField
-                                id={`adult-hygiene-${option.id.replaceAll(
-                                  ".",
-                                  "-",
-                                )}-measurement`}
-                                label={`${option.label} measurement (mm)`}
-                                value={finding.measurement}
-                                onChange={(measurement) =>
-                                  updateFinding(option.id, { measurement })
-                                }
-                              />
-                            ) : null}
-                            <TextField
-                              id={`adult-hygiene-${option.id.replaceAll(
-                                ".",
-                                "-",
-                              )}-comment`}
-                              label={`${option.label} notes`}
-                              value={finding.comment}
-                              onChange={(comment) =>
-                                updateFinding(option.id, { comment })
-                              }
-                              placeholder="Optional encounter-specific note"
-                            />
+                            </div>
                           </div>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </fieldset>
-            ))}
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </fieldset>
+              );
+            })}
           </div>
         ) : null}
       </fieldset>
@@ -1987,17 +2159,14 @@ function TreatmentCompletedList({
                   unhideActionLabel="Unhide treatment type"
                   roomyActions
                 />
-                <FixedChoiceMultiCombobox
+                <ClinicalLocationMultiCombobox
                   id={`adult-hygiene-treatment-completed-${entry.id}-tooth-area`}
                   label="Tooth/area"
-                  choices={treatmentToothAreaChoices}
-                  choiceGroups={treatmentToothAreaChoiceGroups}
+                  preset="treatment"
                   values={entry.toothAreas}
                   onChange={(values) =>
                     updateEntry(entry.id, { toothAreas: values })
                   }
-                  customPlaceholder="Search or add a Tooth/area"
-                  showSelectedChips={false}
                 />
                 <div className="flex flex-wrap items-start gap-2 md:col-span-2">
                   <TooltipActionButton
