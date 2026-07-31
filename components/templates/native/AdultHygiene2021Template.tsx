@@ -155,7 +155,7 @@ const plaqueFacetGroups = [
     label: "Location",
     choices: plaqueLocationFacetChoices,
     columns: 2,
-    selectionMode: "single",
+    selectionMode: "multiple",
   },
 ] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
 
@@ -374,6 +374,21 @@ function parseFacetedChoice(choice: string, facetChoices: readonly string[]) {
       facet.normalize("NFKC").trim().toLocaleLowerCase("en-CA")
     )
   );
+}
+
+function formatChoiceWithJoinedLocations(
+  values: string[],
+  locationFacetChoices: readonly string[]
+) {
+  const locationValues = values.filter((value) =>
+    locationFacetChoices.includes(value)
+  );
+  return [
+    ...values.filter((value) => !locationFacetChoices.includes(value)),
+    locationValues.join("/"),
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function FacetedChoiceWithComment({
@@ -2023,6 +2038,12 @@ export function AdultHygiene2021Template({
               facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
               onCommentChange={(value) => updateField("plaqueComment", value)}
+              formatChoice={(values) =>
+                formatChoiceWithJoinedLocations(
+                  values,
+                  plaqueLocationFacetChoices
+                )
+              }
             />
             <FacetedChoiceWithComment
               id="adult-hygiene-stain"
@@ -2046,24 +2067,12 @@ export function AdultHygiene2021Template({
               onCommentChange={(value) =>
                 updateField("calculusComment", value)
               }
-              formatChoice={(values) => {
-                const locationValues = values.filter((value) =>
-                  calculusLocationFacetChoices.includes(
-                    value as (typeof calculusLocationFacetChoices)[number]
-                  )
-                );
-                return [
-                  ...values.filter(
-                    (value) =>
-                      !calculusLocationFacetChoices.includes(
-                        value as (typeof calculusLocationFacetChoices)[number]
-                      )
-                  ),
-                  locationValues.join("/"),
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-              }}
+              formatChoice={(values) =>
+                formatChoiceWithJoinedLocations(
+                  values,
+                  calculusLocationFacetChoices
+                )
+              }
             />
             <FacetedChoiceWithComment
               id="adult-hygiene-bleeding"

@@ -342,7 +342,7 @@ valid.
 | --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
 | A12 | `Hygiene Area of Concern:`                           | Textarea: **Hygiene area of concern**                                                                                                                                      | `patient-specific`                                                                         | `Hygiene Area of Concern: {text}`                                                                      |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped facets for **Extent**, **Intensity**, and **Location**, with independent **Plaque comment**                                                                        | Facets: `appCore`; comment: `patient-specific`                                             | `Plaque: {extent intensity location}; {comment}.`; comment-only state uses `Plaque comment:`            |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped **Extent** and **Intensity** facets plus multi-value **Location**, with independent **Plaque comment**                                                              | Facets: `appCore`; comment: `patient-specific`                                             | `Plaque: {extent intensity location(s)}; {comment}.`; comment-only state uses `Plaque comment:`         |
 | A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with independent **Stain comment**                                                                               | Facets: `appCore`; comment: `patient-specific`                                             | `Stain: {extent intensity}; {comment}.`; comment-only state uses `Stain comment:`                       |
 | A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with independent **Calculus comment**                                                              | Facets: `appCore`; comment: `patient-specific`                                             | `Calculus: {extent intensity location(s)}; {comment}.`; comment-only state uses `Calculus comment:`     |
 | A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with independent **Bleeding comment**                                                                                          | Facets: `appCore`; comment: `patient-specific`                                             | `Bleeding: {extent severity}; {comment}.`; comment-only state uses `Bleeding comment:`                  |
@@ -373,9 +373,9 @@ finding's output line. A comment may also be documented without a structured
 finding. No finding is selected by default or saved automatically.
 
 The interactive controls reuse the grouped fixed-choice menu. Extent,
-intensity, and severity sections permit one selection each. Plaque location
-permits one selection; Calculus location permits both **marginal** and
-**interproximal**, emitted as `marginal/interproximal`. This initial
+intensity, and severity sections permit one selection each. Plaque and
+Calculus location permit both **marginal** and **interproximal**, emitted as
+`marginal/interproximal`. This initial
 implementation intentionally permits every cross-section combination instead
 of encoding clinical compatibility rules. Selecting **None** for Stain clears
 its other facets, and selecting another Stain facet clears **None**. Existing

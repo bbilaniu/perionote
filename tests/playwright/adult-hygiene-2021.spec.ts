@@ -483,6 +483,41 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
 }) => {
   await page.goto(adultHygieneUrl);
 
+  await page.locator("#adult-hygiene-plaque-choice").click();
+  const plaqueOptions = page.getByRole("dialog", {
+    name: "Plaque options",
+    exact: true,
+  });
+  await plaqueOptions
+    .getByRole("group", { name: "Extent Plaque choices", exact: true })
+    .getByText("Localized", { exact: true })
+    .click();
+  await plaqueOptions
+    .getByRole("group", { name: "Intensity Plaque choices", exact: true })
+    .getByText("moderate", { exact: true })
+    .click();
+  const plaqueLocation = plaqueOptions.getByRole("group", {
+    name: "Location Plaque choices",
+    exact: true,
+  });
+  await plaqueLocation.getByText("marginal", { exact: true }).click();
+  await plaqueLocation.getByText("interproximal", { exact: true }).click();
+  await expect(
+    plaqueLocation.getByRole("checkbox", {
+      name: "marginal",
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    plaqueLocation.getByRole("checkbox", {
+      name: "interproximal",
+      exact: true,
+    })
+  ).toBeChecked();
+  await plaqueOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+
   await page.locator("#adult-hygiene-stain-choice").click();
   const stainOptions = page.getByRole("dialog", {
     name: "Stain options",
@@ -555,7 +590,7 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     .click();
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./
+    /Plaque: Localized moderate marginal\/interproximal\.[\s\S]*Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./
   );
 });
 
