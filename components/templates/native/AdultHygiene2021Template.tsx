@@ -532,7 +532,7 @@ function PeriodontalClassificationControl({
         label,
       })),
   ];
-  const structuredFindingCount =
+  const structuredObservationCount =
     Number(Boolean(value.gingivalHealth.periodontium)) +
     Number(Boolean(value.gingivalHealth.bopPercent)) +
     Number(Boolean(value.gingivalHealth.maximumPpd)) +
@@ -544,19 +544,19 @@ function PeriodontalClassificationControl({
     value.gradeBasis.length +
     Number(value.smoking.status !== "not-assessed") +
     Number(value.diabetes.status !== "not-assessed");
-  const hasStructuredFindings = structuredFindingCount > 0;
-  const structuredFindingSummary = structuredFindingCount
-    ? `${structuredFindingCount} ${
-        structuredFindingCount === 1 ? "finding" : "findings"
+  const hasStructuredObservations = structuredObservationCount > 0;
+  const structuredObservationSummary = structuredObservationCount
+    ? `${structuredObservationCount} ${
+        structuredObservationCount === 1 ? "observation" : "observations"
       } documented`
     : "Not assessed";
-  const [structuredFindingsOpen, setStructuredFindingsOpen] = useState(
-    hasStructuredFindings
+  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
+    hasStructuredObservations
   );
 
   useEffect(() => {
-    if (hasStructuredFindings) setStructuredFindingsOpen(true);
-  }, [hasStructuredFindings]);
+    if (hasStructuredObservations) setStructuredObservationsOpen(true);
+  }, [hasStructuredObservations]);
 
   function update(patch: Partial<PeriodontalClassification>) {
     onChange({ ...value, ...patch });
@@ -659,30 +659,30 @@ function PeriodontalClassificationControl({
     <div className="space-y-5">
       <fieldset
         className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
-        aria-label="Structured periodontal findings"
+        aria-label="Structured periodontal observations"
       >
         <button
-          id="adult-hygiene-structured-periodontal-findings"
+          id="adult-hygiene-structured-periodontal-observations"
           type="button"
           className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-          aria-expanded={structuredFindingsOpen}
-          aria-controls="adult-hygiene-structured-periodontal-findings-content"
-          onClick={() => setStructuredFindingsOpen((open) => !open)}
+          aria-expanded={structuredObservationsOpen}
+          aria-controls="adult-hygiene-structured-periodontal-observations-content"
+          onClick={() => setStructuredObservationsOpen((open) => !open)}
         >
-          <span className="min-w-0">Structured periodontal findings</span>
+          <span className="min-w-0">Structured periodontal observations</span>
           <span className="flex shrink-0 items-center gap-3">
             <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-              {structuredFindingSummary}
+              {structuredObservationSummary}
             </span>
-            <DropdownChevron open={structuredFindingsOpen} />
+            <DropdownChevron open={structuredObservationsOpen} />
           </span>
           <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-            {structuredFindingSummary}
+            {structuredObservationSummary}
           </span>
         </button>
-        {structuredFindingsOpen ? (
+        {structuredObservationsOpen ? (
           <div
-            id="adult-hygiene-structured-periodontal-findings-content"
+            id="adult-hygiene-structured-periodontal-observations-content"
             className="space-y-4 pt-2"
           >
             <fieldset className="space-y-4">

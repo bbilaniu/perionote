@@ -317,32 +317,43 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   );
 });
 
-test("Adult Hygiene expands populated structured findings", async ({
+test("Adult Hygiene expands populated structured observations", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
-  const structuredPeriodontalFindings = page.getByRole("button", {
-    name: /Structured periodontal findings/,
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
   });
   const structuredGingivalObservations = page.getByRole("button", {
     name: /Structured gingival observations/,
   });
 
-  await expect(structuredPeriodontalFindings).toHaveAttribute(
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
     "false"
+  );
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "id",
+    "adult-hygiene-structured-periodontal-observations"
+  );
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-controls",
+    "adult-hygiene-structured-periodontal-observations-content"
   );
   await expect(structuredGingivalObservations).toHaveAttribute(
     "aria-expanded",
     "false"
   );
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
-  await expect(structuredPeriodontalFindings).toHaveAttribute(
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
     "true"
   );
-  await expect(structuredPeriodontalFindings).toContainText(
-    "14 findings documented"
+  await expect(
+    page.locator("#adult-hygiene-structured-periodontal-observations-content")
+  ).toBeVisible();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "14 observations documented"
   );
   await expect(structuredGingivalObservations).toHaveAttribute(
     "aria-expanded",
@@ -476,8 +487,8 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
 }) => {
   await page.goto(adultHygieneUrl);
 
-  const structuredPeriodontalFindings = page.getByRole("button", {
-    name: /Structured periodontal findings/,
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
   });
   const structuredObservations = page.getByRole("group", {
     name: "Structured gingival observations",
@@ -490,18 +501,18 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   expect(diagnosisBox).not.toBeNull();
   expect(structuredBox!.y).toBeLessThan(diagnosisBox!.y);
 
-  await expect(structuredPeriodontalFindings).toHaveAttribute(
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
     "false"
   );
-  await expect(structuredPeriodontalFindings).toContainText("Not assessed");
+  await expect(structuredPeriodontalObservations).toContainText("Not assessed");
   await expect(page.locator("#adult-hygiene-periodontium")).toHaveCount(0);
-  const periodontalFindingsBox =
-    await structuredPeriodontalFindings.boundingBox();
-  expect(periodontalFindingsBox).not.toBeNull();
-  expect(periodontalFindingsBox!.y).toBeLessThan(diagnosisBox!.y);
+  const periodontalObservationsBox =
+    await structuredPeriodontalObservations.boundingBox();
+  expect(periodontalObservationsBox).not.toBeNull();
+  expect(periodontalObservationsBox!.y).toBeLessThan(diagnosisBox!.y);
 
-  await structuredPeriodontalFindings.click();
+  await structuredPeriodontalObservations.click();
   await expect(page.locator("#adult-hygiene-periodontium")).toBeVisible();
   await expect(
     page.locator("#adult-hygiene-stage-interdental-cal")
@@ -519,8 +530,8 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await page.getByRole("option", { name: "Absent", exact: true }).click();
   await page.locator("#adult-hygiene-radiographic-bone-loss").click();
   await page.getByRole("option", { name: "Absent", exact: true }).click();
-  await expect(structuredPeriodontalFindings).toContainText(
-    "5 findings documented"
+  await expect(structuredPeriodontalObservations).toContainText(
+    "5 observations documented"
   );
 
   await expect(
@@ -538,8 +549,8 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toBeVisible();
-  await structuredPeriodontalFindings.click();
-  await expect(structuredPeriodontalFindings).toHaveAttribute(
+  await structuredPeriodontalObservations.click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
     "false"
   );
@@ -561,7 +572,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- PPD <=3 MM\n- BOP <10%\n- NO RADIOGRAPHIC BONE LOSS/
   );
 
-  await structuredPeriodontalFindings.click();
+  await structuredPeriodontalObservations.click();
   await page.locator("#adult-hygiene-bop-percent").fill("12");
   await expect(
     page.getByLabel("Confirm selected Health/Gingivitis classification")
@@ -974,22 +985,22 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
 }) => {
   await page.goto(adultHygieneUrl);
 
-  const structuredPeriodontalFindings = page.getByRole("button", {
-    name: /Structured periodontal findings/,
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
   });
   await expect(
     page.getByRole("heading", { name: "Candidate classification", exact: true })
   ).toHaveCount(0);
   await page.locator("#adult-hygiene-periodontal-extent").click();
   await page.getByRole("option", { name: "Generalized", exact: true }).click();
-  await structuredPeriodontalFindings.click();
+  await structuredPeriodontalObservations.click();
   await page.locator("#adult-hygiene-stage-interdental-cal").fill("5");
   await page.locator("#adult-hygiene-maximum-ppd").fill("6");
   await page.locator("#adult-hygiene-grade-bone-loss-age-ratio").fill("0.72");
-  await expect(structuredPeriodontalFindings).toContainText(
-    "3 findings documented"
+  await expect(structuredPeriodontalObservations).toContainText(
+    "3 observations documented"
   );
-  await structuredPeriodontalFindings.click();
+  await structuredPeriodontalObservations.click();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Periodontal diagnosis:|Stage III|Grade B/
   );

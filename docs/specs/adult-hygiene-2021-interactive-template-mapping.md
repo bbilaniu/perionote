@@ -417,10 +417,10 @@ not add periodontal classification text to the note. Diagnosis-specific
 candidates, clinician confirmation, and generated output remain gated by the
 selected diagnosis category.
 The Health/Gingivitis, stage, grade, and modifier controls are grouped in a
-**Structured periodontal findings** disclosure before the diagnosis category.
+**Structured periodontal observations** disclosure before the diagnosis category.
 It is collapsed as **Not assessed** for a blank encounter, reports the number of
-documented findings when populated, and automatically expands when existing or
-demo findings load. PSR/Pocketing, Recession, and FMP Done remain visible in
+documented observations when populated, and automatically expands when existing
+or demo observations load. PSR/Pocketing, Recession, and FMP Done remain visible in
 their familiar positions outside this disclosure. Candidate interpretation and
 clinician confirmation also remain outside it so they stay available when the
 supporting findings are collapsed.
