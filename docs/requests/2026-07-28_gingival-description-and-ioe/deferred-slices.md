@@ -15,12 +15,12 @@ approved slice. Promote an item into a new dated request with its own mapping,
 clinical review, generated-output contract, tests, changeset, and rollback
 boundary.
 
-## Candidate Slice 3: Recare Tooth-Level Findings
+## Promoted Slice 3: Recare Tooth-Level Findings
 
-Draft proposal created for clinical review:
-[Slice 3 Proposal: Recare Tooth-Level Findings](../2026-08-01_recare-tooth-level-findings.md).
-The item remains deferred until the proposal's remaining clinical decisions
-and generated-output contract are approved.
+Promoted to an approved independent request:
+[Slice 3: Recare Tooth-Level Findings](../2026-08-01_recare-tooth-level-findings.md).
+Implementation belongs to that request's separate mapping, tests, changeset,
+pull request, and rollback boundary.
 
 ### Catalogue concepts
 
@@ -35,21 +35,21 @@ and generated-output contract are approved.
 - Enamel hypoplasia
 - Fluorosis
 
-### Proposed owner
+### Approved owner
 
 Recare Exam, within the existing Odontogram and Caries Risk area.
 
 Do not add these fields to Adult Hygiene merely because they appear in the IOE
 source table.
 
-### Why deferred
+### Why it was deferred
 
 The current Recare control records only whether the odontogram is up to date.
 Its Caries Risk controls document risk, not tooth-level clinical findings.
 Neither is equivalent state that can safely absorb all Teeth options without a
 reviewed extension.
 
-The deferred design must resolve:
+The deferred design had to resolve:
 
 - whether Teeth receives its own Not assessed / WNL / Findings status;
 - whether `Teeth intact, with no caries or mobility noted` is an approved WNL

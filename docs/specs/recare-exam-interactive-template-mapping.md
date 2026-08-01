@@ -3,6 +3,7 @@
 - Status: Accepted for implementation
 - Date: 2026-07-24
 - Clinical review status: Accepted 2026-07-25
+- Slice 3 clinical review status: Accepted 2026-08-01
 - Source template: `recare-exam`
 - Interactive slug: `recare-exam`
 - Interactive route: `/templates/clinic/recare-exam/interactive`
@@ -19,6 +20,11 @@
   [Recare Intraoral and Occlusal Findings](../requests/2026-07-28_gingival-description-and-ioe/slice-2-recare-intraoral-and-occlusal-findings.md), using the reviewed
   [`hygienenote-gingival-ioe.catalog.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json)
   normalized IOE catalogue.
+- Additive Slice 3 provenance:
+  [Recare Tooth-Level Findings](../requests/2026-08-01_recare-tooth-level-findings.md), clinically approved 2026-08-01 using the reviewed normalized
+  [`hygienenote-gingival-ioe.catalog.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json)
+  catalogue and
+  [`hygienenote-gingival-ioe.schema.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.schema.json).
 
 ## Purpose
 
@@ -44,7 +50,9 @@ The pilot will:
 - use synthetic fixtures and test values;
 - provide browser-local catalogues for the approved provider, radiograph,
   occlusion, caries-risk-factor, and reusable treatment-item fields;
-- provide deliberate local catalogue import and export; and
+- provide deliberate local catalogue import and export;
+- add an independent structured Teeth assessment within the existing
+  Odontogram and Caries Risk owner; and
 - establish the provenance, lifecycle, and testing pattern for later
   conversions.
 
@@ -304,12 +312,85 @@ occlusal splint, orthodontic history, retainers, and removable dentures.
 
 ### Odontogram and Caries Risk
 
-| ID  | Source                                                                        | Control                                                            | Classification                                                        | Generated output                                     |
-| --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------- |
-| R36 | User-requested extension based on frequently entered Additional Comments text | Unchecked checkbox: **Odontogram up to date**                      | `appCore`                                                             | `ODONTOGRAM UP TO DATE` only when explicitly checked |
-| R37 | Caries Risk card reused from the Very Short template                          | Fixed **Caries risk level**: None selected / Low / Moderate / High | `appCore`                                                             | `{level} caries risk` when selected                  |
-| R38 | Caries Risk card reused from the Very Short template                          | Ordered catalogue-backed multi-value **Caries risk factors**       | Current selections: `patient-specific`; reusable factors: `catalogue` | Append `due to {ordered factors}`                    |
-| R39 | Caries Risk card reused from the Very Short template                          | Textarea: **Caries risk notes**                                    | `patient-specific`                                                    | Append the entered rationale                         |
+| ID  | Source                                                                        | Control                                                                                                            | Classification                                                               | Generated output                                       |
+| --- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
+| R40 | Approved Slice 3 Teeth extension                                              | **Teeth** Not assessed / WNL / Findings plus **Structured tooth-level observations** and Additional tooth findings | Fixed vocabulary: `appCore`; all entries and annotations: `patient-specific` | Approved WNL sentence or one structured `Teeth:` block |
+| R36 | User-requested extension based on frequently entered Additional Comments text | Unchecked checkbox: **Odontogram up to date**, moved to the bottom of the structured Teeth area                    | `appCore`                                                                    | `ODONTOGRAM UP TO DATE` only when explicitly checked   |
+| R37 | Caries Risk card reused from the Very Short template                          | Fixed **Caries risk level**: None selected / Low / Moderate / High                                                 | `appCore`                                                                    | `{level} caries risk` when selected                    |
+| R38 | Caries Risk card reused from the Very Short template                          | Ordered catalogue-backed multi-value **Caries risk factors**                                                       | Current selections: `patient-specific`; reusable factors: `catalogue`        | Append `due to {ordered factors}`                      |
+| R39 | Caries Risk card reused from the Very Short template                          | Textarea: **Caries risk notes**                                                                                    | `patient-specific`                                                           | Append the entered rationale                           |
+
+R40 is additive and backward-compatible. A missing Teeth property is Not
+assessed and emits nothing. Its primary status and disclosure follow the Adult
+Hygiene **Gingival Description** and **Structured gingival observations**
+interaction: blank state is Not assessed, WNL requires an explicit action,
+Findings reveals detailed controls, and clearing documented values requires
+confirmation. The approved **Additional tooth findings** text remains
+encounter-only and is never a catalogue value.
+
+The explicit normal shortcut stores `ioe.teeth.intact`,
+`ioe.teeth.no_caries`, and `ioe.teeth.no_mobility`. It emits exactly:
+
+```text
+Teeth intact, with no caries or mobility noted.
+```
+
+Findings use stable option IDs from the normalized catalogue. Caries,
+Initial/noncavitated caries lesion, and Mobility are repeatable rows. Each row
+owns its supported Tooth/area values, free-text Surface(s), optional activity,
+required Miller grade, and comment. Tooth/area is required for Caries,
+Initial/noncavitated caries lesion, Fracture, and Mobility. It is optional for
+Discoloration, Enamel hypoplasia, and Fluorosis. Tooth/area accepts multiple
+values and encounter-only custom text without validating, translating, or
+assuming a tooth-numbering system.
+
+Initial/noncavitated caries lesion supports optional Active or Inactive
+activity with no default. The application never infers activity from another
+field. It also never derives monitoring, nonrestorative care, restorative
+care, another management decision, or Caries Risk from lesion stage or
+activity. This slice adds no structured management field.
+
+M0 is the structured Miller Index representation of No mobility. Each Mobility
+row requires M1, M2, or M3. No mobility/M0 and Mobility M1–M3 cannot coexist.
+The application does not infer mobility from periodontal evidence or use it to
+change periodontal classification.
+
+Apply these option conflicts bidirectionally:
+
+- No caries conflicts with Caries and Initial/noncavitated caries lesion;
+- No mobility/M0 conflicts with Mobility M1–M3;
+- Intact conflicts with Caries, Initial/noncavitated caries lesion, and
+  Fracture; and
+- Intact may coexist with Discoloration, Mobility, Enamel hypoplasia, and
+  Fluorosis when explicitly documented.
+
+When an incompatible selection would discard documented annotations, confirm
+before clearing it. Cancellation leaves state unchanged. Unknown or retired
+fixed IDs are ignored safely and never generate invented prose.
+
+Findings output is one block in catalogue order before odontogram and Caries
+Risk output. Repeatable rows retain encounter order within their fixed option:
+
+```text
+Teeth:
+  - {Observation} (tooth/area: {values}; surface: {text}; activity: {active/inactive}; Miller Index: {M1/M2/M3}; notes: {comment}).
+  Additional observations: {entered Additional tooth findings text}.
+```
+
+Unsupported and empty clauses are omitted. Examples of the approved contract:
+
+```text
+Teeth:
+  - Caries (tooth/area: 14; surface: DO).
+  - Initial/noncavitated caries lesion (tooth/area: 15; surface: O; activity: inactive).
+  - Mobility (tooth/area: 31, 41; Miller Index: M2).
+```
+
+The Teeth assessment, odontogram checkbox, and Caries Risk controls remain
+independent in both directions. A tooth finding never checks the odontogram,
+changes caries risk, or creates a Treatment Option or Treatment Plan. Moving
+the checkbox changes only its visual placement and preserves its state and
+exact output.
 
 The odontogram checkbox and all Caries Risk controls start empty. The factor
 catalogue uses the seven factors already present in the Very Short template as
@@ -371,7 +452,7 @@ note-start timestamp and Patient ID extensions:
 9. Clinical exam
 10. Appliances and relevant history
 11. Patient improvement request and additional comments
-12. Odontogram status and caries risk
+12. Teeth findings, odontogram status, and caries risk
 13. Treatment options
 14. Treatment plan
 15. Next visit and date booked
@@ -427,6 +508,9 @@ Partial/complete removable dentures: {documented answer}
 Patient would like to improve: {entered text}
 Additional comments: {entered text}
 
+Teeth:
+  - {observation}{supported tooth/area, surface, activity, Miller Index, and notes}.
+  Additional observations: {entered text}.
 ODONTOGRAM UP TO DATE
 Caries risk: {level} caries risk due to {ordered factors}. {entered notes}
 
@@ -479,6 +563,9 @@ does not leave extra blank lines when an entire group is omitted.
 - Selected caries risk factors remain encounter-specific even when they
   originated in a catalogue. Caries risk level and notes are never catalogue
   candidates.
+- Teeth status, fixed-option selections, repeated finding rows, Tooth/area,
+  Surface(s), activity, Miller grades, comments, and Additional tooth findings
+  remain encounter-specific. None is a reusable catalogue candidate.
 - Other patient-specific, administrative, measurement, findings, and
   next-visit values are never catalogue candidates under this mapping.
 
@@ -510,8 +597,8 @@ contract are genuinely the same, not only because two fields look similar.
 
 ## Acceptance Criteria
 
-- All 40 mapping IDs—34 source mappings plus the Patient ID, note-start,
-  odontogram, and Caries Risk extensions—are
+- All 41 mapping IDs—34 source mappings plus the Patient ID, note-start,
+  odontogram, Caries Risk, and Teeth extensions—are
   implemented or explicitly removed through an approved revision of this
   specification.
 - The source consent duplication is resolved and produces no accidental
@@ -540,6 +627,17 @@ contract are genuinely the same, not only because two fields look similar.
 - The UI and generated note use **Partial/complete removable dentures**.
 - Odontogram status is not inferred and appears as `ODONTOGRAM UP TO DATE`
   only when explicitly checked.
+- Teeth starts Not assessed, WNL requires explicit action, and an absent or
+  unused Teeth assessment emits nothing.
+- Teeth WNL emits exactly
+  `Teeth intact, with no caries or mobility noted.`
+- Caries, Initial/noncavitated caries lesion, and Mobility support repeatable
+  rows with independent annotations.
+- Required Tooth/area, Miller Index, activity, repeatability, and conflict
+  behavior matches the approved Slice 3 contract.
+- Initial-lesion stage or activity never infers management, treatment,
+  monitoring, recommendations, or Caries Risk.
+- Tooth findings, odontogram status, and Caries Risk remain independent.
 - Caries Risk provides the same fixed levels and notes field as the Very Short
   template, plus ordered catalogue-backed factors with the seven existing
   factors as starters.
