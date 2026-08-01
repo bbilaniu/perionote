@@ -15,6 +15,7 @@ export const CATALOGUE_KEYS = [
   "patient.chief-concerns",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
+  "clinical-exam.additional-occlusal-findings",
   "clinical-exam.caries-risk-factors",
   "imaging.radiographs",
   "medical-history.review",
@@ -117,6 +118,22 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
 ];
 
+const additionalOcclusalFindingSeeds: CatalogueSeed[] = [
+  { id: "seed.additional-occlusion.crowding", label: "Crowding" },
+  { id: "seed.additional-occlusion.spacing", label: "Spacing" },
+  { id: "seed.additional-occlusion.rotations", label: "Rotations" },
+  { id: "seed.additional-occlusion.open-bite", label: "Open bite" },
+  { id: "seed.additional-occlusion.crossbite", label: "Crossbite" },
+  {
+    id: "seed.additional-occlusion.increased-overjet",
+    label: "Increased overjet",
+  },
+  {
+    id: "seed.additional-occlusion.increased-overbite",
+    label: "Increased overbite",
+  },
+];
+
 function catalogueSeeds(
   prefix: string,
   values: ReadonlyArray<readonly [id: string, label: string]>,
@@ -162,10 +179,7 @@ const cariesRiskFactorSeeds = catalogueSeeds(
     ["insufficient-fluoride", "Insufficient exposure to fluoride"],
     ["heavily-restored-dentition", "Heavily restored dentition"],
     ["hyposalivation", "Hyposalivation"],
-    [
-      "caries-history-36-months",
-      "History of caries in the last 36 months",
-    ],
+    ["caries-history-36-months", "History of caries in the last 36 months"],
     ["symptom-driven-visits", "Symptomatically driven dental visits"],
   ],
 );
@@ -175,61 +189,46 @@ const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [
   ["completed-within-year", "NO, COMPLETED WITHIN A YEAR"],
   ["in-ortho", "NO, IN ORTHO"],
   ["not-applicable", "NO, NOT APPLICABLE"],
-  ["ran-out-of-time", "NO, RAN OUT OF TIME"],
+  ["ran-out-of-time", "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT"],
 ]);
 
-const healthGingivitisSeeds = catalogueSeeds(
-  "periodontal.health-gingivitis",
-  [
-    ["health-intact-support", "HEALTH INTACT PERIODONTAL SUPPORT"],
-    [
-      "gingivitis-intact-support",
-      "GINGIVITIS INTACT PERIODONTAL SUPPORT",
-    ],
-    ["health-reduced-support", "HEALTH- REDUCED PERIODONTAL SUPPORT"],
-    [
-      "gingivitis-reduced-support",
-      "GINGIVITIS- REDUCED PERIODONTAL SUPPORT",
-    ],
-  ],
-);
+const healthGingivitisSeeds = catalogueSeeds("periodontal.health-gingivitis", [
+  ["health-intact-support", "HEALTH INTACT PERIODONTAL SUPPORT"],
+  ["gingivitis-intact-support", "GINGIVITIS INTACT PERIODONTAL SUPPORT"],
+  ["health-reduced-support", "HEALTH- REDUCED PERIODONTAL SUPPORT"],
+  ["gingivitis-reduced-support", "GINGIVITIS- REDUCED PERIODONTAL SUPPORT"],
+]);
 
 const ohiAidsReviewedSeeds = catalogueSeeds("oral-hygiene.aids-reviewed", [
   ["sulcabrush", "SULCABRUSH"],
   ["superfloss", "SUPERFLOSS"],
   ["floss-threaders", "FLOSS THREADERS"],
   ["c-shape-flossing", "C-SHAPE FLOSSING"],
-  ["proper-tb-technique", "PROPER TB TECHNIQUE"],
+  ["proper-tb-technique", "PROPER TOOTHBRUSHING TECHNIQUE"],
   ["interproximal-brush", "INTERPROXIMAL BRUSH"],
   ["soft-picks", "SOFT PICKS"],
-  ["proper-use-etb", "PROPER USE OF ETB"],
+  ["proper-use-etb", "PROPER USE OF ELECTRIC TOOTHBRUSH"],
 ]);
 
-const oralHygieneComplianceSeeds = catalogueSeeds(
-  "oral-hygiene.compliance",
-  [
-    ["poor", "Poor"],
-    ["fair", "Fair"],
-    ["good", "Good"],
-    ["excellent", "Excellent"],
-    ["poor-fair", "Poor–fair"],
-    ["fair-good", "Fair–good"],
-  ],
-);
+const oralHygieneComplianceSeeds = catalogueSeeds("oral-hygiene.compliance", [
+  ["poor", "Poor"],
+  ["fair", "Fair"],
+  ["good", "Good"],
+  ["excellent", "Excellent"],
+  ["poor-fair", "Poor–fair"],
+  ["fair-good", "Fair–good"],
+]);
 
-const treatmentCompletedSeeds = catalogueSeeds(
-  "hygiene-treatment.completed",
-  [
-    ["1u-scale", "1U scale (cavitron and hand scaling)"],
-    ["2u-scale", "2U scale (cavitron and hand scaling)"],
-    ["3u-scale", "3U scale (cavitron and hand scaling)"],
-    ["4u-scale", "4U scale (cavitron and hand scaling)"],
-    ["fmp", "FMP"],
-    ["1u-polish", "1U polish"],
-    ["fluoride-varnish", "Fluoride varnish"],
-    ["crystal-x-pur", "Crystal X-PUR"],
-  ],
-);
+const treatmentCompletedSeeds = catalogueSeeds("hygiene-treatment.completed", [
+  ["1u-scale", "1U scale (cavitron and hand scaling)"],
+  ["2u-scale", "2U scale (cavitron and hand scaling)"],
+  ["3u-scale", "3U scale (cavitron and hand scaling)"],
+  ["4u-scale", "4U scale (cavitron and hand scaling)"],
+  ["fmp", "FMP"],
+  ["1u-polish", "1U polish"],
+  ["fluoride-varnish", "Fluoride varnish"],
+  ["crystal-x-pur", "Crystal X-PUR"],
+]);
 
 const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
   ["hygiene-maintenance", "Hygiene maintenance"],
@@ -256,12 +255,12 @@ const hygieneIntervalSeeds = catalogueSeeds("scheduling.hygiene-interval", [
 ]);
 
 const nextVisitSeeds = catalogueSeeds("scheduling.next-visit", [
-  ["6-mos-scale", "6 MOS SCALE"],
-  ["12-mrc", "12 MRC"],
-  ["3-mos-scale", "3 MOS SCALE"],
-  ["4-mos-scale", "4 MOS SCALE"],
-  ["6-mrc", "6 MRC"],
-  ["9-mrc", "9 MRC"],
+  ["6-mos-scale", "6 MONTH SCALE"],
+  ["12-mrc", "12 MONTH RECALL"],
+  ["3-mos-scale", "3 MONTH SCALE"],
+  ["4-mos-scale", "4 MONTH SCALE"],
+  ["6-mrc", "6 MONTH RECALL"],
+  ["9-mrc", "9 MONTH RECALL"],
   ["follow-up-hygiene", "FOLLOW-UP HYGIENE"],
 ]);
 
@@ -312,6 +311,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Skeletal occlusion",
     fieldLabels: ["Skeletal occlusion"],
     seeds: occlusionSeeds("skeletal"),
+    lifecycle: "pilot",
+  },
+  {
+    key: "clinical-exam.additional-occlusal-findings",
+    section: "Clinical Exam",
+    title: "Additional occlusal findings",
+    fieldLabels: ["Additional occlusal findings"],
+    seeds: additionalOcclusalFindingSeeds,
     lifecycle: "pilot",
   },
   {
@@ -504,10 +511,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function readBoolean(
-  record: Record<string, unknown>,
-  key: string,
-): boolean {
+function readBoolean(record: Record<string, unknown>, key: string): boolean {
   const value = record[key];
   if (typeof value !== "boolean") {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
@@ -521,20 +525,13 @@ function readString(
   maximumLength = 250,
 ): string {
   const value = record[key];
-  if (
-    typeof value !== "string" ||
-    !value ||
-    value.length > maximumLength
-  ) {
+  if (typeof value !== "string" || !value || value.length > maximumLength) {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
   }
   return value;
 }
 
-function readIdentifier(
-  record: Record<string, unknown>,
-  key: string,
-): string {
+function readIdentifier(record: Record<string, unknown>, key: string): string {
   const value = readString(record, key, 200);
   if (!/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(value)) {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
@@ -544,20 +541,13 @@ function readIdentifier(
 
 function readSortOrder(record: Record<string, unknown>): number {
   const value = record.sortOrder;
-  if (
-    typeof value !== "number" ||
-    !Number.isSafeInteger(value) ||
-    value < 0
-  ) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) {
     throw new CatalogueValidationError("Invalid sortOrder value.");
   }
   return value;
 }
 
-function readTimestamp(
-  record: Record<string, unknown>,
-  key: string,
-): string {
+function readTimestamp(record: Record<string, unknown>, key: string): string {
   const value = readString(record, key, 50);
   if (Number.isNaN(Date.parse(value))) {
     throw new CatalogueValidationError(`Invalid ${key} timestamp.`);
@@ -615,7 +605,9 @@ function assertNoDuplicateStateRecords(
       );
     }
     itemIds.add(item.id);
-    const labelKey = `${item.catalogueKey}:${normalizeCatalogueLabel(item.label)}`;
+    const labelKey = `${item.catalogueKey}:${normalizeCatalogueLabel(
+      item.label,
+    )}`;
     if (labels.has(labelKey)) {
       throw new CatalogueValidationError(
         `Duplicate value in ${item.catalogueKey}.`,
@@ -654,10 +646,7 @@ function migrateUserItemsMatchingSeeds(
 } {
   const retainedUserItems: UserCatalogueItem[] = [];
   const preferencesBySeedId = new Map(
-    seedPreferences.map((preference) => [
-      preference.seedId,
-      preference,
-    ]),
+    seedPreferences.map((preference) => [preference.seedId, preference]),
   );
 
   for (const item of userItems) {
@@ -704,14 +693,8 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   assertNoDuplicateStateRecords(userItems, seedPreferences, {
     allowSeedDuplicates: true,
   });
-  const migrated = migrateUserItemsMatchingSeeds(
-    userItems,
-    seedPreferences,
-  );
-  assertNoDuplicateStateRecords(
-    migrated.userItems,
-    migrated.seedPreferences,
-  );
+  const migrated = migrateUserItemsMatchingSeeds(userItems, seedPreferences);
+  assertNoDuplicateStateRecords(migrated.userItems, migrated.seedPreferences);
 
   return {
     schemaVersion: 1,
@@ -731,9 +714,7 @@ export function parseStoredCatalogueJson(raw: string): StoredCatalogueStateV1 {
   }
 }
 
-export function serializeCatalogueState(
-  state: StoredCatalogueStateV1,
-): string {
+export function serializeCatalogueState(state: StoredCatalogueStateV1): string {
   return JSON.stringify(parseCatalogueState(state));
 }
 
@@ -1035,9 +1016,7 @@ export function moveCatalogueItem(
     throw new CatalogueValidationError("The catalogue item no longer exists.");
   }
   const current = items[index];
-  const sameGroup = items.filter(
-    (item) => item.favorite === current.favorite,
-  );
+  const sameGroup = items.filter((item) => item.favorite === current.favorite);
   const groupIndex = sameGroup.findIndex((item) => item.id === itemId);
   const targetIndex = direction === "up" ? groupIndex - 1 : groupIndex + 1;
   if (targetIndex < 0 || targetIndex >= sameGroup.length) {
@@ -1071,7 +1050,11 @@ export function serializeCatalogueExport(
   state: StoredCatalogueStateV1,
   exportedAt = new Date(),
 ): string {
-  return `${JSON.stringify(createCatalogueExport(state, exportedAt), null, 2)}\n`;
+  return `${JSON.stringify(
+    createCatalogueExport(state, exportedAt),
+    null,
+    2,
+  )}\n`;
 }
 
 export function parseCatalogueExport(raw: string): CatalogueExportV1 {
@@ -1098,10 +1081,7 @@ export function parseCatalogueExport(raw: string): CatalogueExportV1 {
     );
   }
   const exportedAt = value.exportedAt;
-  if (
-    typeof exportedAt !== "string" ||
-    Number.isNaN(Date.parse(exportedAt))
-  ) {
+  if (typeof exportedAt !== "string" || Number.isNaN(Date.parse(exportedAt))) {
     throw new CatalogueValidationError("Invalid export timestamp.");
   }
   return {
@@ -1132,9 +1112,7 @@ export function previewCatalogueImport(
     );
     if (equivalent) {
       equivalentItems += 1;
-    } else if (
-      localState.userItems.some((local) => local.id === imported.id)
-    ) {
+    } else if (localState.userItems.some((local) => local.id === imported.id)) {
       idConflicts += 1;
     } else {
       additions += 1;

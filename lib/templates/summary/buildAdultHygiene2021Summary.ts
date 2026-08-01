@@ -2,6 +2,17 @@ import {
   type AdultHygiene2021Form,
   orderTreatmentToothAreas,
 } from "@/lib/templates/adultHygiene2021";
+import {
+  choiceLabel,
+  formatDiabetesModifier,
+  formatHealthGingivitisBlock,
+  formatPeriodontalEvidence,
+  formatSmokingModifier,
+  isPeriodontalStatusCompatibleWithContext,
+  periodontalStageEvidence,
+  periodontalStatusChoices,
+  type PeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
 import type {
   DocumentationStatus,
   RetainerStatus,
@@ -9,7 +20,6 @@ import type {
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import {
-  gingivalCatalogOptions,
   gingivalDescriptionCatalog,
   type GingivalDescriptionAssessment,
 } from "@/lib/templates/gingivalDescriptionCatalog";
@@ -26,10 +36,6 @@ function withTerminalPunctuation(value: string): string {
   const cleanValue = trimmed(value);
   if (!cleanValue) return "";
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
-}
-
-function selectedValue(choice: string, other: string): string {
-  return trimmed(other) || trimmed(choice);
 }
 
 function oheTopicLine(values: string[]): string {
@@ -72,6 +78,23 @@ function labelledLine(label: string, value: string): string {
   return cleanValue ? `${label}: ${withTerminalPunctuation(cleanValue)}` : "";
 }
 
+function findingWithCommentLine(
+  label: string,
+  finding: string,
+  comment: string
+): string {
+  const cleanFinding = trimmed(finding);
+  const cleanComment = trimmed(comment);
+  if (cleanFinding && cleanComment) {
+    return `${label}: ${withTerminalPunctuation(
+      `${cleanFinding}; ${cleanComment}`
+    )}`;
+  }
+  return cleanFinding
+    ? labelledLine(label, cleanFinding)
+    : labelledLine(`${label} comment`, cleanComment);
+}
+
 export function formatGingivalDescription(
   assessment: GingivalDescriptionAssessment | undefined
 ): string {
@@ -82,37 +105,67 @@ export function formatGingivalDescription(
     )}`;
   }
 
+  const customFindings = trimmed(assessment.customFindings ?? "");
   const selected = new Map(
     assessment.findings.map((finding) => [finding.optionId, finding])
   );
-  const lines = gingivalCatalogOptions.flatMap(({ dimension, option }) => {
-    const finding = selected.get(option.id);
-    if (!finding) return [];
-    const clauses = [`${dimension.label}: ${option.noteFragment}`];
-    if (finding.extent) clauses.push(`extent: ${finding.extent}`);
-    if (
-      (dimension.supportsLocation ||
-        ("supportsLocation" in option && option.supportsLocation)) &&
-      finding.locations.length
-    ) {
-      clauses.push(
-        `location: ${finding.locations.map(trimmed).filter(Boolean).join(", ")}`
-      );
-    }
-    if (
-      "supportsMeasurement" in option &&
-      option.supportsMeasurement &&
-      trimmed(finding.measurement)
-    ) {
-      clauses.push(
-        `measurement: ${trimmed(finding.measurement)} ${option.measurementUnit}`
-      );
-    }
-    if (trimmed(finding.comment))
-      clauses.push(`notes: ${trimmed(finding.comment)}`);
-    return [`  - ${withTerminalPunctuation(clauses.join("; "))}`];
+  const lines = gingivalDescriptionCatalog.dimensions.flatMap((dimension) => {
+    const optionFragments = dimension.options.flatMap((option) => {
+      const finding = selected.get(option.id);
+      if (!finding) return [];
+      const annotations: string[] = [];
+      if (finding.extent) annotations.push(`extent: ${finding.extent}`);
+      if (
+        (dimension.supportsLocation ||
+          ("supportsLocation" in option && option.supportsLocation)) &&
+        finding.locations.length
+      ) {
+        annotations.push(
+          `location: ${finding.locations
+            .map(trimmed)
+            .filter(Boolean)
+            .join(", ")}`
+        );
+      }
+      if (
+        "supportsMeasurement" in option &&
+        option.supportsMeasurement &&
+        trimmed(finding.measurement)
+      ) {
+        annotations.push(
+          `measurement: ${trimmed(finding.measurement)} ${
+            option.measurementUnit
+          }`
+        );
+      }
+      if (trimmed(finding.comment))
+        annotations.push(`notes: ${trimmed(finding.comment)}`);
+      return [
+        annotations.length
+          ? `${option.noteFragment} (${annotations.join("; ")})`
+          : option.noteFragment,
+      ];
+    });
+    return optionFragments.length
+      ? [
+          `  - ${dimension.label}: ${withTerminalPunctuation(
+            optionFragments.join("; ")
+          )}`,
+        ]
+      : [];
   });
-  return lines.length ? ["Gingival Description:", ...lines].join("\n") : "";
+  if (!lines.length) {
+    return customFindings
+      ? `Gingival Description: ${withTerminalPunctuation(customFindings)}`
+      : "";
+  }
+  return [
+    "Gingival Description:",
+    ...lines,
+    ...(customFindings
+      ? [`  Observations: ${withTerminalPunctuation(customFindings)}`]
+      : []),
+  ].join("\n");
 }
 
 function documentationStatusLine(
@@ -160,6 +213,93 @@ function psrPocketingLine(
   return `PSR/Pocketing: ${positions.slice(0, 3).join(" ")} / ${positions
     .slice(3)
     .join(" ")}`;
+}
+
+function formatPeriodontalClassification(
+  classification: PeriodontalClassification
+): string[] {
+  const diagnosisLabels = {
+    health: "Periodontal health",
+    gingivitis: "Gingivitis",
+    periodontitis: "Periodontitis",
+    other: "Other periodontal condition",
+  } as const;
+  const extentLabels = {
+    localized: "Localized",
+    generalized: "Generalized",
+    "molar-incisor": "Molar/incisor pattern",
+  } as const;
+  const diagnosis = classification.diagnosis
+    ? diagnosisLabels[classification.diagnosis]
+    : "";
+  const diagnosisParts = [
+    classification.diagnosis === "periodontitis" && classification.extent
+      ? `${extentLabels[classification.extent]} ${diagnosis.toLocaleLowerCase(
+          "en-CA"
+        )}`
+      : classification.diagnosis === "periodontitis" ||
+        classification.diagnosis === "other"
+      ? diagnosis
+      : "",
+    classification.stageConfirmed && classification.stage
+      ? `Stage ${classification.stage}`
+      : "",
+    classification.gradeConfirmed && classification.grade
+      ? `Grade ${classification.grade}`
+      : "",
+  ].filter(Boolean);
+  const stageBasis =
+    classification.stageConfirmed && classification.stage
+      ? periodontalStageEvidence(classification)
+          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+          .filter(Boolean)
+      : [];
+  const gradeBasis =
+    classification.gradeConfirmed && classification.grade
+      ? classification.gradeBasis
+          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+          .filter(Boolean)
+      : [];
+  const modifiers =
+    classification.diagnosis === "periodontitis"
+      ? [
+          formatSmokingModifier(classification.smoking, "ascii"),
+          formatDiabetesModifier(classification.diabetes, "ascii"),
+        ].filter(Boolean)
+      : [];
+
+  return [
+    diagnosisParts.length
+      ? `Periodontal diagnosis: ${withTerminalPunctuation(
+          diagnosisParts.join(", ")
+        )}`
+      : "",
+    stageBasis.length ? `Stage basis: ${stageBasis.join("; ")}.` : "",
+    classification.stageConfirmed &&
+    trimmed(classification.stageOverrideReason)
+      ? `Stage override: ${withTerminalPunctuation(
+          classification.stageOverrideReason
+        )}`
+      : "",
+    gradeBasis.length ? `Grade basis: ${gradeBasis.join("; ")}.` : "",
+    classification.gradeConfirmed &&
+    trimmed(classification.gradeOverrideReason)
+      ? `Grade override: ${withTerminalPunctuation(
+          classification.gradeOverrideReason
+        )}`
+      : "",
+    modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
+    classification.status &&
+    isPeriodontalStatusCompatibleWithContext(
+      classification.status,
+      classification.gingivalHealth.context,
+      classification.gingivalHealth.confirmed
+    )
+      ? `Periodontal status: ${withTerminalPunctuation(
+          choiceLabel(periodontalStatusChoices, classification.status)
+        )}`
+      : "",
+  ].filter(Boolean);
 }
 
 export function buildAdultHygiene2021Summary(
@@ -233,15 +373,17 @@ export function buildAdultHygiene2021Summary(
       form.listChiefConcerns
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
-    labelledLine("Plaque", selectedValue(form.plaqueChoice, form.plaqueOther)),
-    labelledLine("Stain", selectedValue(form.stainChoice, form.stainOther)),
-    labelledLine(
+    findingWithCommentLine("Plaque", form.plaqueChoice, form.plaqueComment),
+    findingWithCommentLine("Stain", form.stainChoice, form.stainComment),
+    findingWithCommentLine(
       "Calculus",
-      selectedValue(form.calculusChoice, form.calculusOther)
+      form.calculusChoice,
+      form.calculusComment
     ),
-    labelledLine(
+    findingWithCommentLine(
       "Bleeding",
-      selectedValue(form.bleedingChoice, form.bleedingOther)
+      form.bleedingChoice,
+      form.bleedingComment
     ),
   ];
 
@@ -249,18 +391,9 @@ export function buildAdultHygiene2021Summary(
     psrPocketingLine(form.psrPocketing),
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
-    labelledLine("Health/Gingivitis", form.healthGingivitis),
+    formatHealthGingivitisBlock(form.periodontalClassification),
     formatGingivalDescription(form.gingivalDescription),
-    labelledLine("Periodontitis Stage", form.periodontitisStageChoice),
-    labelledLine(
-      "Periodontitis stage comments",
-      form.periodontitisStageComments
-    ),
-    labelledLine("Periodontitis Grade", form.periodontitisGradeChoice),
-    labelledLine(
-      "Periodontitis grade comments",
-      form.periodontitisGradeComments
-    ),
+    ...formatPeriodontalClassification(form.periodontalClassification),
   ];
 
   const currentHabits = [

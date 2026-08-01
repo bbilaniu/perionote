@@ -106,15 +106,15 @@ The exact public starter labels are:
 
 - **Patient chief concern:** `Nothing`; `Sore gums upon brushing/flossing`; `Dissatisfaction with the appearance of teeth due to yellowing/stain`; `Food catches between teeth`; `Sensitivity to hot and cold`.
 - **Medical history reviewed:** `YES- NO CHANGES`; `YES- NP- CLEARED, NO CONTRAINDICATIONS TO TX`; `YES- UPDATED, BUT NO CONTRAINDICATIONS TO TX`; `YES- UPDATED MEDS`.
-- **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME`.
+- **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
 - **Oral hygiene compliance:** `Poor`; `Fair`; `Good`; `Excellent`; `Poor–fair`; `Fair–good`.
-- **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TB TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ETB`.
+- **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TOOTHBRUSHING TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ELECTRIC TOOTHBRUSH`.
 - **Treatment completed today:** `1U scale (cavitron and hand scaling)`; `2U scale (cavitron and hand scaling)`; `3U scale (cavitron and hand scaling)`; `4U scale (cavitron and hand scaling)`; `FMP`; `1U polish`; `Fluoride varnish`; `Crystal X-PUR`.
 - **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
 - **Recommended recall interval:** `12-month recall`; `6-month recall`; `9-month recall`.
 - **Recommended hygiene interval:** `3-month scale`; `4-month scale`; `6-month scale`; `N/A`.
-- **Next visit:** `6 MOS SCALE`; `12 MRC`; `3 MOS SCALE`; `4 MOS SCALE`; `6 MRC`; `9 MRC`; `FOLLOW-UP HYGIENE`.
+- **Next visit:** `6 MONTH SCALE`; `12 MONTH RECALL`; `3 MONTH SCALE`; `4 MONTH SCALE`; `6 MONTH RECALL`; `9 MONTH RECALL`; `FOLLOW-UP HYGIENE`.
 
 These starter values are suggestions only and are never preselected. The two
 truncated Health/Gingivitis entries and one truncated OHI-aids entry remain
@@ -342,10 +342,10 @@ valid.
 | --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
 | A12 | `Hygiene Area of Concern:`                           | Textarea: **Hygiene area of concern**                                                                                                                                      | `patient-specific`                                                                         | `Hygiene Area of Concern: {text}`                                                                      |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped facets for **Extent**, **Intensity**, and **Location**, with editable **Other**                                                                                    | Facets: `appCore`; Other: `patient-specific`                                               | `Plaque: {extent intensity location}` or entered text                                                  |
-| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with editable **Other**                                                                                          | Facets: `appCore`; Other: `patient-specific`                                               | `Stain: {extent intensity}` or entered text                                                            |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with editable **Other**                                                                            | Facets: `appCore`; Other: `patient-specific`                                               | `Calculus: {extent intensity location(s)}` or entered text                                             |
-| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with editable **Other**                                                                                                        | Facets: `appCore`; Other: `patient-specific`                                               | `Bleeding: {extent severity}` or entered text                                                          |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped **Extent** and **Intensity** facets plus multi-value **Location**, with independent **Plaque comment**                                                             | Facets: `appCore`; comment: `patient-specific`                                             | `Plaque: {extent intensity location(s)}; {comment}.`; comment-only state uses `Plaque comment:`        |
+| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with independent **Stain comment**                                                                               | Facets: `appCore`; comment: `patient-specific`                                             | `Stain: {extent intensity}; {comment}.`; comment-only state uses `Stain comment:`                      |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with independent **Calculus comment**                                                              | Facets: `appCore`; comment: `patient-specific`                                             | `Calculus: {extent intensity location(s)}; {comment}.`; comment-only state uses `Calculus comment:`    |
+| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with independent **Bleeding comment**                                                                                          | Facets: `appCore`; comment: `patient-specific`                                             | `Bleeding: {extent severity}; {comment}.`; comment-only state uses `Bleeding comment:`                 |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
@@ -366,15 +366,16 @@ reviewed generic choices rather than private clinic catalogue values:
 
 The labels above expand the remaining ClearDent shorthand: `LOC` to
 **Localized**, `GEN` to **Generalized**, `MOD` to **Moderate**, and `MARG` to
-**Marginal**. Generated output uses these expanded labels. Each control retains
-an editable **Other** value because unknown documentation must remain valid and
-the Plaque screenshot scrollbar means additional values may not have been
-captured. No finding is selected by default or saved automatically.
+**Marginal**. Generated output uses these expanded labels. Each control has an
+independent encounter-specific comment that neither clears nor replaces its
+structured finding. When both are present, the comment is appended to the
+finding's output line. A comment may also be documented without a structured
+finding. No finding is selected by default or saved automatically.
 
 The interactive controls reuse the grouped fixed-choice menu. Extent,
-intensity, and severity sections permit one selection each. Plaque location
-permits one selection; Calculus location permits both **marginal** and
-**interproximal**, emitted as `marginal/interproximal`. This initial
+intensity, and severity sections permit one selection each. Plaque and
+Calculus location permit both **marginal** and **interproximal**, emitted as
+`marginal/interproximal`. This initial
 implementation intentionally permits every cross-section combination instead
 of encoding clinical compatibility rules. Selecting **None** for Stain clears
 its other facets, and selecting another Stain facet clears **None**. Existing
@@ -383,65 +384,145 @@ are loaded.
 
 ### Periodontal Assessment
 
-| ID   | Source                                                                                                                                                                                                                                                                      | Proposed control                                                                                                                           | Classification                                                                                                                               | Generated output                                                                                                                       |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| A17  | `PSR/Pocketing: _ _ _ / _ _ _`                                                                                                                                                                                                                                              | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4**        | `patient-specific`                                                                                                                           | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants                                                                      |
-| A18  | `Recession:`                                                                                                                                                                                                                                                                | Editable text: **Recession**                                                                                                               | `patient-specific`                                                                                                                           | `Recession: {text}`                                                                                                                    |
-| A19  | `FMP Done: [SELECT/INSERT: FMP DONE]`                                                                                                                                                                                                                                       | Catalogue-backed editable text: **FMP done**                                                                                               | Current value: `patient-specific`; reusable complete phrases: `catalogue`                                                                    | `FMP Done: {selected or entered text}`                                                                                                 |
-| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]`                                                                                                                                                                                                                                | Catalogue-backed editable text: **Health/Gingivitis**                                                                                      | Current value: `patient-specific`; reusable options: `catalogue`                                                                             | `Health/Gingivitis: {text}`                                                                                                            |
-| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Structured multi-finding **Gingival Description**, immediately after Health/Gingivitis                                                     | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed` | Omitted when absent or Not assessed; one WNL line or one ordered findings block after Health/Gingivitis and before Periodontitis Stage |
-| A21  | `Periodontitis Stage: [SELECT/INSERT: PERIODONTITIS: STAGING]`                                                                                                                                                                                                              | Optional structured choice: **Not documented** or an approved Periodontitis stage value, plus independent **Periodontitis stage comments** | Choice: `appCore`; comments: `patient-specific`                                                                                              | Separate `Periodontitis Stage: {selected stage}.` and `Periodontitis stage comments: {comments}.` lines when documented                |
-| A22  | `Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]`                                                                                                                                                                                                              | Optional structured choice: **Not documented** or an approved Periodontitis grade value, plus independent **Periodontitis grade comments** | Choice: `appCore`; comments: `patient-specific`                                                                                              | Separate `Periodontitis Grade: {selected grade}.` and `Periodontitis grade comments: {comments}.` lines when documented                |
+| ID   | Source                                                                                                                                                                                                                                                                      | Proposed control                                                                                                                                                                                       | Classification                                                                                                                                 | Generated output                                                                                                                                                                   |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A17  | `PSR/Pocketing: _ _ _ / _ _ _`                                                                                                                                                                                                                                              | Six optional short text inputs grouped as **PSR/Pocketing**, labelled clockwise as **Sextant 1**, **2**, **3**, **6**, **5**, **4**                                                                    | `patient-specific`                                                                                                                             | `PSR/Pocketing: {1} {2} {3} / {6} {5} {4}` using entered sextants                                                                                                                  |
+| A18  | `Recession:`                                                                                                                                                                                                                                                                | Editable text: **Recession**                                                                                                                                                                           | `patient-specific`                                                                                                                             | `Recession: {text}`                                                                                                                                                                |
+| A19  | `FMP Done: [SELECT/INSERT: FMP DONE]`                                                                                                                                                                                                                                       | Catalogue-backed editable text: **FMP done**                                                                                                                                                           | Current value: `patient-specific`; reusable complete phrases: `catalogue`                                                                      | `FMP Done: {selected or entered text}`                                                                                                                                             |
+| A20  | `Health/Gingivitis: [SELECT/INSERT: HEALTH]` and the [reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)                                                                                                             | Diagnosis-independent **Periodontal assessment findings** using periodontium, exact BOP and maximum PPD, attachment loss, RBL, and treated-periodontitis stability findings; classification remains conditional | Stable context IDs, semantic measurements, and assessment states: `appCore`; entered evidence, confirmation, and overrides: `patient-specific` | A confirmed classification preserves the familiar `Health/Gingivitis:` heading and uppercase ClearDent block while charting actual entered measurements and declared findings       |
+| A20a | Additive [Gingival Description Slice 1](../requests/2026-07-28_gingival-description-and-ioe/slice-1-adult-hygiene-gingival-description.md), using the reviewed fixed [catalogue](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json) | Explicit **Gingival Description** status followed by a progressive structured multi-finding fieldset, before the diagnosis category and Health/Gingivitis classification                               | Stable option IDs: `appCore`; extent, location, measurement, and notes: encounter-only `patient-specific`; status defaults to `not_assessed`   | Omitted when absent or Not assessed; one WNL line or one compact per-dimension findings block                                                                                      |
+| A21  | [Reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)                                                                                                                                                                  | Diagnosis category and separate extent/distribution choices                                                                                                                                            | Choices: `appCore`; encounter selection: `patient-specific`                                                                                    | `Periodontal diagnosis: {extent} periodontitis...` when documented                                                                                                                 |
+| A22  | Stage severity and complexity criteria                                                                                                                                                                                                                                      | Exact typed measurements; synchronized Maximum PPD and deeper-pocket BOP controls shared with Periodontal assessment findings; mutually exclusive bone-loss pattern, furcation, and ridge-defect selectors; and a multi-select for advanced functional complexity findings | Stable criterion IDs and units: `appCore`; entered evidence: `patient-specific`                                                                | Confirmed evidence is generated from the checked-in criterion catalogue                                                                                                            |
+| A23  | Grade progression criteria and modifiers                                                                                                                                                                                                                                    | Direct, indirect, and phenotype evidence plus smoking and diabetes controls                                                                                                                            | Stable criterion IDs, semantic operators, and units: `appCore`; entered evidence: `patient-specific`                                           | Confirmed grade basis and entered modifiers are generated from structured state                                                                                                    |
+| A24  | Stage and grade                                                                                                                                                                                                                                                             | Candidate display followed by independent clinician selections and confirmation checkboxes; override reason appears when the selection differs                                                         | Candidate: derived; selection, confirmation, and override reason: `patient-specific`                                                           | Only confirmed stage/grade and basis are charted; an entered override reason is included                                                                                           |
+| A25  | Current periodontal status                                                                                                                                                                                                                                                  | 2018-aligned fixed choice filtered for compatibility with a confirmed treated-periodontitis context                                                                                                   | Choice: `appCore`; encounter selection: `patient-specific`                                                                                     | `Periodontal status: {selected status}.`; incompatible legacy combinations are omitted                                                                                            |
 
 The six PSR/Pocketing inputs preserve the source's six-position shape and use
 the clinically approved clockwise order `1 2 3 / 6 5 4`, without imposing an
 undocumented numeric range or automatically calculating a result.
 All five visible FMP phrases are now complete and are public starter values.
-Four of the six visible Health/Gingivitis phrases are complete; the other two
-remain unresolved and are excluded until their full wording is known. The four
-complete phrases are public starter values. Stage and grade have complete
-ClearDent lists, including N/A. Stage, grade, and each respective comments
-field remain independent; selecting a structured value never clears comments.
+The legacy editable `periodontal.health-gingivitis` catalogue is no longer an
+encounter control and cannot contribute free text to generated notes. Its
+storage key remains readable for backward-compatible catalogue imports and
+existing browser-local data. The six reviewed replacement contexts are fixed
+application vocabulary and are generated only from confirmed structured state.
+
+Periodontal evidence uses the checked-in catalogue and candidate rules in
+`lib/templates/periodontalClassification.ts`, documented by the
+[candidate-classification decision table](periodontal-classification-decision-table.md).
+Periodontal assessment findings, extent/distribution, stage evidence, grade evidence,
+and grade modifiers remain available while the diagnosis category is Not
+assessed. Entering those findings does not select or imply a diagnosis and does
+not add periodontal classification text to the note. Diagnosis-specific
+candidates, clinician confirmation, and generated output remain gated by the
+selected diagnosis category.
+The periodontal assessment, stage, grade, and modifier controls are grouped in a
+**Structured periodontal observations** disclosure before the diagnosis category.
+It is collapsed as **Not assessed** for a blank encounter, reports the number of
+documented observations when populated, and automatically expands when existing
+or demo observations load. PSR/Pocketing, Recession, and FMP Done remain visible in
+their familiar positions outside this disclosure. Candidate interpretation and
+clinician confirmation also remain outside it so they stay available when the
+supporting findings are collapsed.
+Patient-specific Stage and Grade evidence are separate nested disclosures with
+their own documented-observation summaries. Both remain available before a
+diagnosis is selected and never infer Periodontitis. Selecting Periodontitis
+opens Structured periodontal observations and Stage evidence; Grade remains
+collapsed unless the clinician opens it or grade evidence/modifiers are already
+documented. Candidate interpretation, confirmation, and generated Stage/Grade
+output remain conditional on the Periodontitis diagnosis category.
+Complexity findings use a bone-loss pattern selector with a conditional vertical
+bone-loss measurement, a highest-furcation selector, a worst-ridge-defect
+selector, and an advanced functional complexity multi-select. These controls
+continue to store the original criterion IDs, so classification and generated
+note wording remain compatible with previously saved evidence.
+Changing a selected stage or grade clears its previous confirmation. Candidate
+classification never writes to the note by itself.
 
 #### Additive Gingival Description contract
 
 The Slice 1 extension does not rename, move, synchronize, or replace Bleeding,
-Recession, FMP Done, or Health/Gingivitis. In particular, the existing
-`periodontal.health-gingivitis` browser-local catalogue remains unchanged; the
-new vocabulary is fixed checked-in application data and cannot be remembered
-or edited. An absent extension property is treated exactly like Not assessed,
-so an old-shaped form produces byte-for-byte pre-extension output.
+Recession, or FMP Done. Structured gingival observations now precede the
+periodontal diagnosis category. The retired
+`periodontal.health-gingivitis` browser-local catalogue remains unchanged for
+backward-compatible data handling, but is not rendered in the encounter form.
+An absent Gingival Description property is treated exactly like Not assessed.
 
-The control renders Color, Contour / Shape, Consistency, Surface / Texture, and
-Position / Size in reviewed catalogue order. Each selected option is an
-independent finding with optional generalized/localized extent, supported
-location, optional encounter note, and a measurement only where catalogue
-metadata permits it. Gingival recession is the only current option with an
-`mm` measurement. Unknown or retired IDs are ignored rather than converted to
-invented prose.
+The primary **Gingival Description** status control is aligned with the other
+Periodontal Assessment fields immediately before periodontal classification. It exposes
+the single shared Not assessed / WNL / Findings state. A separate
+**Structured gingival observations** fieldset owns the explanatory text,
+normal-observation shortcut, clear action, and detailed observations. Findings
+also reveals an optional patient-specific **Gingival Description findings**
+field beside the primary status for custom observations not represented by the
+fixed catalogue. The fieldset uses the same disclosure treatment as Structured
+periodontal observations: it starts collapsed as **Not assessed** for a blank
+encounter, shows the number of documented structured observations (including
+custom text as one observation), and automatically expands for Findings.
+Selecting WNL while the disclosure is collapsed leaves it collapsed while the
+header reports the ten documented normal observations.
 
-**WNL:** The explicit **Set gingival description to WNL** action stores the ten
-reviewed preset IDs. If findings exist, confirmation is required before only
-the new assessment is cleared. It emits exactly:
+Expanding the disclosure always shows the detailed controls, independently of
+the shared status. They render Color, Contour / Shape, Consistency, Surface /
+Texture, and Position / Size in reviewed catalogue order. Each dimension uses a
+grouped multi-select menu. Clinically exclusive subgroups replace their prior
+selection, while compatible findings remain additive; selecting No recession
+also removes recession and root exposure, and selecting either abnormal finding
+removes No recession. Each selected option is an independent finding with
+optional generalized/localized extent, supported location, optional encounter
+note, and a measurement only where catalogue metadata permits it. Gingival
+recession is the only current option with an `mm` measurement. Selecting or
+editing an observation sets Findings; removing the last observation does not
+silently change the explicit status.
+
+Supported gingival locations use the same shared multi-combobox interaction as
+Treatment completed today's Tooth/area field, with a gingival-specific preset.
+Fixed choices include maxilla, mandible, quadrants, sextants, facial/buccal,
+lingual/palatal, interproximal, marginal, and attached gingiva; encounter-only
+custom locations support tooth numbers and other specific regions. Full mouth
+is omitted because Generalized extent already expresses that scope. Existing
+location arrays and custom strings remain compatible.
+
+Not assessed retains structured values and suppresses them from the note; they
+remain available whenever the disclosure is open. Selecting Findings again
+restores their output. The explicit **Clear gingival description** action
+permanently clears the structured and custom values and returns to Not assessed
+only after confirmation when values exist. Unknown or retired IDs are ignored
+rather than converted to invented prose.
+
+**WNL:** Choosing WNL from the shared status control stores the ten reviewed
+preset IDs. If retained findings exist, confirmation is required before only
+the new assessment is replaced. WNL hides detailed controls and emits exactly:
 
 ```text
 Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted.
 ```
+
+**Apply normal structured observations** establishes that same reviewed WNL
+preset and reveals its ten detailed selections for inspection. While they
+remain untouched, the status and generated note remain WNL and use the
+canonical sentence above. Editing any option or annotation changes the status
+to Findings and switches to compact structured output. Existing non-WNL
+structured or custom observations require confirmation before replacement.
 
 **Mixed synthetic findings:** a generalized color observation and localized
 measured recession emit:
 
 ```text
 Gingival Description:
-  - Color: coral pink; extent: generalized.
-  - Position / Size: gingival recession; extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding.
+  - Color: coral pink (extent: generalized).
+  - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 ```
 
 Existing explicit periodontal documentation intentionally coexists with this
 block. No independent IOE Gingiva state or output is created. Selecting or
-editing a finding after WNL changes the assessment to Findings; clearing it
-returns to Not assessed. The state is active-page memory only and introduces
-no completed-form storage or JSON import/export.
+editing a finding after WNL changes the assessment to Findings. Findings are
+grouped into one compact bullet per catalogue dimension, with selected options
+in catalogue order and option-specific annotations in parentheses. Custom text
+alone emits `Gingival Description: {custom findings}.`; beside structured
+findings it emits an indented `Observations: {custom findings}.` line. The
+state is active-page memory only and introduces no completed-form storage or
+JSON import/export.
 
 ### Oral Hygiene and Education
 

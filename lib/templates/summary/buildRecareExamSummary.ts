@@ -6,6 +6,10 @@ import type {
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
+import {
+  recareIntraoralOptionById,
+  recareIntraoralStructures,
+} from "@/lib/templates/recareIntraoralCatalog";
 
 type BuildRecareExamSummaryOptions = {
   startedAt?: Date;
@@ -48,7 +52,7 @@ function cariesRiskFactor(value: string): string {
 function cariesRiskLine(
   level: RecareExamForm["cariesRiskLevel"],
   factors: string[],
-  notes: string,
+  notes: string
 ): string {
   const cleanFactors = factors.map(trimmed).filter(Boolean);
   const cleanNotes = trimmed(notes);
@@ -57,14 +61,14 @@ function cariesRiskLine(
   let line = level
     ? `${level} caries risk`
     : cleanFactors.length
-      ? `Factors include ${joinNaturalLanguageList(
-          cleanFactors.map(cariesRiskFactor),
-        )}`
-      : "";
+    ? `Factors include ${joinNaturalLanguageList(
+        cleanFactors.map(cariesRiskFactor)
+      )}`
+    : "";
 
   if (level && cleanFactors.length) {
     line += ` due to ${joinNaturalLanguageList(
-      cleanFactors.map(cariesRiskFactor),
+      cleanFactors.map(cariesRiskFactor)
     )}`;
   }
 
@@ -76,22 +80,122 @@ function cariesRiskLine(
 function yesNoLine(
   label: string,
   status: DocumentationStatus,
-  details = "",
+  details = ""
 ): string {
   if (status === "not-documented") return "";
   return appendDetails(`${label}: ${status === "yes" ? "Yes" : "No"}`, details);
 }
 
-function examLine(
-  label: string,
-  status: ExamStatus,
-  findings: string,
-): string {
+function examLine(label: string, status: ExamStatus, findings: string): string {
   if (status === "wnl") return `${label}: WNL.`;
   if (status === "findings" && trimmed(findings)) {
     return `${label}: ${withTerminalPunctuation(findings)}`;
   }
   return "";
+}
+
+function intraoralLines(form: RecareExamForm): string[] {
+  if (form.intraoralStatus !== "findings") {
+    const statusLine = examLine(
+      "Intraoral",
+      form.intraoralStatus,
+      form.intraoralFindings
+    );
+    return statusLine ? [statusLine] : [];
+  }
+  const selectedByOptionId = new Map(
+    (form.structuredIntraoralFindings ?? []).flatMap((finding) => {
+      const definition = recareIntraoralOptionById.get(finding.optionId);
+      if (!definition || definition.structure.id !== finding.structureId)
+        return [];
+      return [[finding.optionId, finding] as const];
+    })
+  );
+  const findings = recareIntraoralStructures.flatMap((structure) => {
+    const optionFragments = structure.options.flatMap((option) => {
+      const finding = selectedByOptionId.get(option.id);
+      if (!finding) return [];
+      const annotations: string[] = [];
+      const locations = option.supportsLocation
+        ? (finding.locations ?? []).map(trimmed).filter(Boolean)
+        : [];
+      const locationParts = [...locations];
+      if (
+        option.supportsLaterality &&
+        trimmed(finding.laterality ?? "")
+      ) {
+        locationParts.push(trimmed(finding.laterality ?? ""));
+      }
+      if (locationParts.length)
+        annotations.push(`location: ${locationParts.join(", ")}`);
+      if (
+        option.supportsMeasurement &&
+        trimmed(finding.measurement ?? "")
+      ) {
+        const allowedUnit = option.measurementUnits.includes(
+          finding.measurementUnit ?? ""
+        )
+          ? finding.measurementUnit
+          : option.measurementUnits[0];
+        annotations.push(
+          `measurement: ${trimmed(finding.measurement ?? "")}${
+            allowedUnit ? ` ${allowedUnit}` : ""
+          }`
+        );
+      }
+      if (
+        structure.supportsComment &&
+        trimmed(finding.comment ?? "")
+      ) {
+        annotations.push(`notes: ${trimmed(finding.comment ?? "")}`);
+      }
+      return [
+        annotations.length
+          ? `${option.noteFragment} (${annotations.join("; ")})`
+          : option.noteFragment,
+      ];
+    });
+    return optionFragments.length
+      ? [
+          `  - ${structure.label}: ${withTerminalPunctuation(
+            optionFragments.join("; ")
+          )}`,
+        ]
+      : [];
+  });
+  if (!findings.length) {
+    const legacy = examLine(
+      "Intraoral",
+      form.intraoralStatus,
+      form.intraoralFindings
+    );
+    return legacy ? [legacy] : [];
+  }
+  return [
+    "Intraoral:",
+    ...findings,
+    ...(trimmed(form.intraoralFindings)
+      ? [`  Observations: ${withTerminalPunctuation(form.intraoralFindings)}`]
+      : []),
+  ];
+}
+
+function additionalOcclusalFindingLine(form: RecareExamForm): string {
+  const findings = (form.additionalOcclusalFindings ?? []).flatMap((entry) => {
+    const finding = trimmed(entry.finding);
+    if (!finding) return [];
+    const locations = (entry.locations ?? []).map(trimmed).filter(Boolean);
+    return [
+      locations.length
+        ? `${finding} (location: ${locations.join(", ")})`
+        : finding,
+    ];
+  });
+  return findings.length
+    ? `Additional occlusal findings: ${withTerminalPunctuation(
+        findings.join("; ")
+      )}`
+    : "";
 }
 
 function retainerLine(status: RetainerStatus): string {
@@ -108,23 +212,23 @@ function retainerLine(status: RetainerStatus): string {
 function ownershipUseLine(
   label: string,
   ownershipStatus: DocumentationStatus,
-  useStatus: DocumentationStatus,
+  useStatus: DocumentationStatus
 ): string {
   return ownershipStatus === "no"
     ? `${label}: No.`
     : ownershipStatus === "yes"
-      ? useStatus === "yes"
-        ? `${label}: Yes; uses.`
-        : useStatus === "no"
-          ? `${label}: Yes; does not use.`
-          : `${label}: Yes; use not documented.`
-      : "";
+    ? useStatus === "yes"
+      ? `${label}: Yes; uses.`
+      : useStatus === "no"
+      ? `${label}: Yes; does not use.`
+      : `${label}: Yes; use not documented.`
+    : "";
 }
 
 function treatmentBlock(
   label: string,
   values: RecareTreatmentEntry[],
-  asList: boolean,
+  asList: boolean
 ): string[] {
   const entries = values
     .map((entry) => {
@@ -185,7 +289,7 @@ export function formatNoteHeaderLocalTimestamp(date: Date): string {
 
 export function buildRecareExamSummary(
   form: RecareExamForm,
-  options: BuildRecareExamSummaryOptions = {},
+  options: BuildRecareExamSummaryOptions = {}
 ): string {
   const hasPatientOrTeam = [
     form.patientId,
@@ -195,10 +299,10 @@ export function buildRecareExamSummary(
   ].some((value) => Boolean(trimmed(value)));
   const showPatientAndTeam = Boolean(options.startedAt) || hasPatientOrTeam;
   const patientAndTeam = [
-    options.startedAt
-      ? formatNoteHeaderLocalTimestamp(options.startedAt)
+    options.startedAt ? formatNoteHeaderLocalTimestamp(options.startedAt) : "",
+    showPatientAndTeam
+      ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd()
       : "",
-    showPatientAndTeam ? `PATIENT ID: ${trimmed(form.patientId)}`.trimEnd() : "",
     showPatientAndTeam ? `DENTIST: ${trimmed(form.dentist)}`.trimEnd() : "",
     showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
     showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
@@ -211,7 +315,9 @@ export function buildRecareExamSummary(
   ];
   const consentLine = consentSources.length
     ? [
-        `Informed verbal consent given by ${joinNaturalLanguageList(consentSources)} for treatment today.`,
+        `Informed verbal consent given by ${joinNaturalLanguageList(
+          consentSources
+        )} for treatment today.`,
         trimmed(form.consentDetails)
           ? withTerminalPunctuation(form.consentDetails)
           : "",
@@ -223,13 +329,15 @@ export function buildRecareExamSummary(
   const consentHistoryAndSterilization = [
     consentLine,
     trimmed(form.medicalHistoryReview)
-      ? `Medical history reviewed: ${withTerminalPunctuation(form.medicalHistoryReview)}`
+      ? `Medical history reviewed: ${withTerminalPunctuation(
+          form.medicalHistoryReview
+        )}`
       : "",
     form.premedicationStatus === "not-required"
       ? "Premedication required: No."
       : form.premedicationStatus === "required"
-        ? appendDetails("Premedication required: Yes", form.premedicationDetails)
-        : "",
+      ? appendDetails("Premedication required: Yes", form.premedicationDetails)
+      : "",
     form.class5IndicatorsChecked
       ? "Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments."
       : "",
@@ -240,18 +348,16 @@ export function buildRecareExamSummary(
 
   const radiographs = form.radiographs.map(trimmed).filter(Boolean);
   const recordsAndConcern = [
-    radiographs.length
-      ? `Radiographs: ${radiographs.join("; ")}`
-      : "",
+    radiographs.length ? `Radiographs: ${radiographs.join("; ")}` : "",
     yesNoLine(
       "Intraoral photos",
       form.intraoralPhotosStatus,
-      form.intraoralPhotosDetails,
+      form.intraoralPhotosDetails
     ),
     formatPatientChiefConcerns(
       "Patient's chief concern",
       form.chiefConcern,
-      form.listChiefConcerns,
+      form.listChiefConcerns
     ),
   ];
 
@@ -261,39 +367,46 @@ export function buildRecareExamSummary(
     examLine(
       "Palpation of the masseter test",
       form.masseterStatus,
-      form.masseterFindings,
+      form.masseterFindings
     ),
-    examLine(
-      "Load TMJ joint test",
-      form.tmjLoadStatus,
-      form.tmjLoadFindings,
-    ),
+    examLine("Load TMJ joint test", form.tmjLoadStatus, form.tmjLoadFindings),
   ];
 
   const intraoralAndOcclusion = [
-    examLine("Intraoral", form.intraoralStatus, form.intraoralFindings),
+    ...intraoralLines(form),
     trimmed(form.oralHabits)
       ? `Oral habits: ${withTerminalPunctuation(form.oralHabits)}`
       : "",
     form.rightMolarOcclusionNotApplicable
       ? "Molar occlusion—right: N/A."
       : trimmed(form.rightMolarOcclusion)
-        ? `Molar occlusion—right: ${withTerminalPunctuation(form.rightMolarOcclusion)}`
-        : "",
+      ? `Molar occlusion—right: ${withTerminalPunctuation(
+          form.rightMolarOcclusion
+        )}`
+      : "",
     form.leftMolarOcclusionNotApplicable
       ? "Molar occlusion—left: N/A."
       : trimmed(form.leftMolarOcclusion)
-        ? `Molar occlusion—left: ${withTerminalPunctuation(form.leftMolarOcclusion)}`
-        : "",
+      ? `Molar occlusion—left: ${withTerminalPunctuation(
+          form.leftMolarOcclusion
+        )}`
+      : "",
     form.skeletalOcclusionNotApplicable
       ? "Skeletal occlusion: N/A."
       : trimmed(form.skeletalOcclusion)
-        ? `Skeletal occlusion: ${withTerminalPunctuation(form.skeletalOcclusion)}`
-        : "",
-    trimmed(form.overjetMm) ? `Overjet: ${trimmed(form.overjetMm)} mm.` : "",
-    trimmed(form.overbitePercent)
-      ? `Overbite: ${trimmed(form.overbitePercent)}%.`
+      ? `Skeletal occlusion: ${withTerminalPunctuation(form.skeletalOcclusion)}`
       : "",
+    trimmed(form.overjetMm) ? `Overjet: ${trimmed(form.overjetMm)} mm.` : "",
+    trimmed(form.overbitePercent) && trimmed(form.overbiteMm ?? "")
+      ? `Overbite: ${trimmed(form.overbitePercent)}%; ${trimmed(
+          form.overbiteMm ?? ""
+        )} mm.`
+      : trimmed(form.overbitePercent)
+      ? `Overbite: ${trimmed(form.overbitePercent)}%.`
+      : trimmed(form.overbiteMm ?? "")
+      ? `Overbite: ${trimmed(form.overbiteMm ?? "")} mm.`
+      : "",
+    additionalOcclusalFindingLine(form),
   ];
 
   const appliancesAndHistory = [
@@ -301,22 +414,26 @@ export function buildRecareExamSummary(
     ownershipUseLine(
       "Occlusal splint",
       form.occlusalSplintStatus,
-      form.occlusalSplintUseStatus,
+      form.occlusalSplintUseStatus
     ),
     yesNoLine("Orthodontic history", form.orthodonticHistoryStatus),
     retainerLine(form.retainerStatus),
     yesNoLine(
       "Partial/complete removable dentures",
-      form.removableDenturesStatus,
+      form.removableDenturesStatus
     ),
   ];
 
   const patientRequests = [
     trimmed(form.improvementRequest)
-      ? `Patient would like to improve: ${withTerminalPunctuation(form.improvementRequest)}`
+      ? `Patient would like to improve: ${withTerminalPunctuation(
+          form.improvementRequest
+        )}`
       : "",
     trimmed(form.additionalComments)
-      ? `Additional comments: ${withTerminalPunctuation(form.additionalComments)}`
+      ? `Additional comments: ${withTerminalPunctuation(
+          form.additionalComments
+        )}`
       : "",
   ];
 
@@ -325,7 +442,7 @@ export function buildRecareExamSummary(
     cariesRiskLine(
       form.cariesRiskLevel,
       form.cariesRiskFactors,
-      form.cariesRiskNotes,
+      form.cariesRiskNotes
     ),
   ];
 
@@ -346,12 +463,12 @@ export function buildRecareExamSummary(
     treatmentBlock(
       "Treatment Options",
       form.treatmentOptions,
-      form.listTreatmentOptions,
+      form.listTreatmentOptions
     ),
     treatmentBlock(
       "Treatment Plan",
       form.treatmentPlan,
-      form.listTreatmentPlan,
+      form.listTreatmentPlan
     ),
     nextVisit,
   ]

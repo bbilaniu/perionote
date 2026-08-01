@@ -7,6 +7,10 @@ import {
   createEmptyGingivalDescriptionAssessment,
   type GingivalDescriptionAssessment,
 } from "@/lib/templates/gingivalDescriptionCatalog";
+import {
+  createEmptyPeriodontalClassification,
+  type PeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
 
 export const plaqueChoices = [
   "Localized mild interproximal",
@@ -49,21 +53,6 @@ export const bleedingChoices = [
   "Generalized mild",
   "Generalized moderate",
   "Generalized severe",
-] as const;
-
-export const periodontitisStageChoices = [
-  "Stage I (P1)",
-  "Stage II (P2)",
-  "Stage III (P3)",
-  "Stage IV (P4)",
-  "N/A",
-] as const;
-
-export const periodontitisGradeChoices = [
-  "Grade A: slow rate",
-  "Grade B: moderate rate",
-  "Grade C: rapid rate",
-  "N/A",
 ] as const;
 
 export const flossingFrequencyChoices = [
@@ -182,22 +171,18 @@ export interface AdultHygiene2021Form {
   listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
-  plaqueOther: string;
+  plaqueComment: string;
   stainChoice: string;
-  stainOther: string;
+  stainComment: string;
   calculusChoice: string;
-  calculusOther: string;
+  calculusComment: string;
   bleedingChoice: string;
-  bleedingOther: string;
+  bleedingComment: string;
   psrPocketing: [string, string, string, string, string, string];
   recession: string;
   fmpDone: string;
-  healthGingivitis: string;
   gingivalDescription?: GingivalDescriptionAssessment;
-  periodontitisStageChoice: string;
-  periodontitisStageComments: string;
-  periodontitisGradeChoice: string;
-  periodontitisGradeComments: string;
+  periodontalClassification: PeriodontalClassification;
   oralHygieneCompliance: string;
   oralHygieneComplianceComment: string;
   homeCareInstructionReviewed: boolean;
@@ -247,22 +232,18 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     listChiefConcerns: false,
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
-    plaqueOther: "",
+    plaqueComment: "",
     stainChoice: "",
-    stainOther: "",
+    stainComment: "",
     calculusChoice: "",
-    calculusOther: "",
+    calculusComment: "",
     bleedingChoice: "",
-    bleedingOther: "",
+    bleedingComment: "",
     psrPocketing: ["", "", "", "", "", ""],
     recession: "",
     fmpDone: "",
-    healthGingivitis: "",
     gingivalDescription: createEmptyGingivalDescriptionAssessment(),
-    periodontitisStageChoice: "",
-    periodontitisStageComments: "",
-    periodontitisGradeChoice: "",
-    periodontitisGradeComments: "",
+    periodontalClassification: createEmptyPeriodontalClassification(),
     oralHygieneCompliance: "",
     oralHygieneComplianceComment: "",
     homeCareInstructionReviewed: false,

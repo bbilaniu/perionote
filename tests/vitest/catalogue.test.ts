@@ -115,6 +115,20 @@ describe("local catalogues", () => {
       ).map((item) => item.label),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
     expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.additional-occlusal-findings",
+    ).map((item) => item.label),
+    ).toEqual([
+      "Crowding",
+      "Spacing",
+      "Rotations",
+      "Open bite",
+      "Crossbite",
+      "Increased overjet",
+      "Increased overbite",
+    ]);
+    expect(
       listCatalogueItems(emptyState, "imaging.radiographs").map(
         (item) => item.label,
       ),
@@ -162,7 +176,7 @@ describe("local catalogues", () => {
       "NO, COMPLETED WITHIN A YEAR",
       "NO, IN ORTHO",
       "NO, NOT APPLICABLE",
-      "NO, RAN OUT OF TIME",
+      "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT",
     ]);
     expect(
       listCatalogueItems(
@@ -196,10 +210,10 @@ describe("local catalogues", () => {
       "SUPERFLOSS",
       "FLOSS THREADERS",
       "C-SHAPE FLOSSING",
-      "PROPER TB TECHNIQUE",
+      "PROPER TOOTHBRUSHING TECHNIQUE",
       "INTERPROXIMAL BRUSH",
       "SOFT PICKS",
-      "PROPER USE OF ETB",
+      "PROPER USE OF ELECTRIC TOOTHBRUSH",
     ]);
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.completed").map(
@@ -248,12 +262,12 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
-      "6 MOS SCALE",
-      "12 MRC",
-      "3 MOS SCALE",
-      "4 MOS SCALE",
-      "6 MRC",
-      "9 MRC",
+      "6 MONTH SCALE",
+      "12 MONTH RECALL",
+      "3 MONTH SCALE",
+      "4 MONTH SCALE",
+      "6 MONTH RECALL",
+      "9 MONTH RECALL",
       "FOLLOW-UP HYGIENE",
     ]);
 
