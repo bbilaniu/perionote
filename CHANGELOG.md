@@ -1,5 +1,15 @@
 # hygienenote
 
+## 0.5.0
+
+### Minor Changes
+
+- 8e8faf6: Make the Adult Hygiene Plaque, Stain, Calculus, and Bleeding comments independent from their structured findings.
+- a65d2bb: Add a reviewed normal structured-intraoral shortcut, Findings-only detail controls, and compact Recare output by structure.
+- 3cc665a: Remove the clinically non-specific Slight malocclusion option from Recare additional occlusal findings while retaining its raw source transcription for audit.
+- 9dd0d17: Add explicit structured-observation workflows with inspectable Gingival WNL presets, custom findings, compact per-dimension output, and a confirmed Recare intraoral clear action.
+- 7e48176: Add an optional structured Gingival Description assessment to the 2021 Adult Hygiene conversion (part1).
+
 ## 0.4.1
 
 ### Patch Changes
