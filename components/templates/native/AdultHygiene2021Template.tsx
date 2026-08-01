@@ -1351,7 +1351,7 @@ function PeriodontalClassificationControl({
                       id="adult-hygiene-maximum-ppd"
                       className={inputClass}
                       type="number"
-                      min={0}
+                      min={1}
                       step={1}
                       value={numericValue(value.gingivalHealth.maximumPpd)}
                       onChange={(event) => updateMaximumPpd(event.target.value)}
@@ -1448,7 +1448,7 @@ function PeriodontalClassificationControl({
                             id="adult-hygiene-stage-maximum-ppd"
                             className={inputClass}
                             type="number"
-                            min={0}
+                            min={1}
                             step={1}
                             value={numericValue(
                               value.gingivalHealth.maximumPpd,
@@ -1712,7 +1712,7 @@ function PeriodontalClassificationControl({
                           id="adult-hygiene-cigarettes-per-day"
                           className={inputClass}
                           type="number"
-                          min={0}
+                          min={1}
                           step={1}
                           value={numericValue(value.smoking.measurement)}
                           onChange={(event) => {
@@ -1777,7 +1777,7 @@ function PeriodontalClassificationControl({
                           id="adult-hygiene-hba1c"
                           className={inputClass}
                           type="number"
-                          min={0}
+                          min={0.1}
                           step={0.1}
                           value={numericValue(value.diabetes.measurement)}
                           onChange={(event) => {
@@ -1828,6 +1828,7 @@ function PeriodontalClassificationControl({
                 ? {
                     stage: "",
                     grade: "",
+                    status: "",
                     stageConfirmed: false,
                     gradeConfirmed: false,
                   }
@@ -2006,7 +2007,14 @@ function PeriodontalClassificationControl({
                   id="adult-hygiene-periodontitis-stage-confirmed"
                   label="Confirm selected stage"
                   checked={value.stageConfirmed}
-                  disabled={!value.stage}
+                  disabled={
+                    !value.stage ||
+                    Boolean(
+                      candidate.stage &&
+                        value.stage !== candidate.stage &&
+                        !value.stageOverrideReason.trim(),
+                    )
+                  }
                   onChange={(stageConfirmed) =>
                     update({
                       stageConfirmed: Boolean(value.stage) && stageConfirmed,
@@ -2021,7 +2029,12 @@ function PeriodontalClassificationControl({
                     label="Stage override reason"
                     value={value.stageOverrideReason}
                     onChange={(stageOverrideReason) =>
-                      update({ stageOverrideReason })
+                      update({
+                        stageOverrideReason,
+                        ...(!stageOverrideReason.trim()
+                          ? { stageConfirmed: false }
+                          : {}),
+                      })
                     }
                   />
                 ) : null}
@@ -2044,7 +2057,14 @@ function PeriodontalClassificationControl({
                   id="adult-hygiene-periodontitis-grade-confirmed"
                   label="Confirm selected grade"
                   checked={value.gradeConfirmed}
-                  disabled={!value.grade}
+                  disabled={
+                    !value.grade ||
+                    Boolean(
+                      candidate.grade &&
+                        value.grade !== candidate.grade &&
+                        !value.gradeOverrideReason.trim(),
+                    )
+                  }
                   onChange={(gradeConfirmed) =>
                     update({
                       gradeConfirmed: Boolean(value.grade) && gradeConfirmed,
@@ -2059,7 +2079,12 @@ function PeriodontalClassificationControl({
                     label="Grade override reason"
                     value={value.gradeOverrideReason}
                     onChange={(gradeOverrideReason) =>
-                      update({ gradeOverrideReason })
+                      update({
+                        gradeOverrideReason,
+                        ...(!gradeOverrideReason.trim()
+                          ? { gradeConfirmed: false }
+                          : {}),
+                      })
                     }
                   />
                 ) : null}

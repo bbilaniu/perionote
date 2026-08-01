@@ -84,7 +84,7 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
     gingivalHealth: {
       periodontium: "reduced-treated-periodontitis",
       bopPercent: { operator: "eq", value: 18, unit: "percent" },
-      maximumPpd: { operator: "eq", value: 5, unit: "mm" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
       attachmentLoss: "present",
       radiographicBoneLoss: "present",
       ppd4OrGreaterWithBop: "no",

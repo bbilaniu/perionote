@@ -45,7 +45,7 @@ Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
 Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 - PROBING ATTACHMENT LOSS PRESENT
-- MAXIMUM PPD: 5 MM
+- MAXIMUM PPD: 3 MM
 - BOP: 18%
 - RADIOGRAPHIC BONE LOSS PRESENT
 - SITES WITH PPD >=4 MM AND BOP: NONE
@@ -54,7 +54,7 @@ Gingival Description:
   - Color: coral pink (extent: generalized).
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
-Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 5 mm; mostly horizontal bone loss.
+Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 3 mm; mostly horizontal bone loss.
 Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
 Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
 Periodontal status: Periodontal disease remission/control.
@@ -99,6 +99,23 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(form)).not.toContain(
       "Periodontal status:"
     );
+  });
+
+  it("omits a stale periodontal disease status for another diagnosis", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "health",
+      status: "stable",
+      stage: "II",
+      grade: "B",
+      stageConfirmed: true,
+      gradeConfirmed: true,
+    };
+
+    const summary = buildAdultHygiene2021Summary(form);
+    expect(summary).not.toContain("Periodontal status:");
+    expect(summary).not.toMatch(/Stage II|Grade B/);
   });
 
   it("preserves output when the optional gingival description is absent", () => {
@@ -407,5 +424,33 @@ Recommended Recall Interval: 6-month recall.
 Recommended recall interval comments: Synthetic recall context.
 Recommended Hygiene Interval: 4-month scale.
 Recommended hygiene interval comments: Synthetic hygiene context.`);
+  });
+
+  it("does not chart stage or grade overrides without reasons", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "periodontitis",
+      stage: "IV",
+      grade: "C",
+      stageConfirmed: true,
+      gradeConfirmed: true,
+      stageBasis: [
+        {
+          criterionId: "stage.interdental-cal",
+          measurement: { operator: "eq", value: 3, unit: "mm" },
+        },
+      ],
+      gradeBasis: [
+        {
+          criterionId: "grade.bone-loss-age-ratio",
+          measurement: { operator: "eq", value: 0.5, unit: "ratio" },
+        },
+      ],
+    };
+
+    const summary = buildAdultHygiene2021Summary(form);
+    expect(summary).toBe("Periodontal diagnosis: Periodontitis.");
+    expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis|Grade basis/);
   });
 });

@@ -906,7 +906,7 @@ It avoids turning a generic reference list into a false claim that every criteri
   
 - Periodontal health  
 - Gingivitis  
-- Periodontitis  
+- Periodontitis / history of periodontitis
 - Other periodontal condition  
 - Not assessed  
   

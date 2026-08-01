@@ -430,7 +430,10 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByRole("option", { name: "Periodontitis", exact: true })
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
     .click();
 
   await expect(structuredPeriodontalObservations).toHaveAttribute(
@@ -879,7 +882,10 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByRole("option", { name: "Periodontitis", exact: true })
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
     .click();
   await expect(
     page.getByRole("heading", {
@@ -975,6 +981,24 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT\n- PROBING ATTACHMENT LOSS PRESENT\n- MAXIMUM PPD: 4 MM\n- BOP: 5%\n- RADIOGRAPHIC BONE LOSS PRESENT\n- SITES WITH PPD >=4 MM AND BOP: NONE\n- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION[\s\S]*Periodontal status: Periodontal disease stability\./
   );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-periodontal-status")).toHaveCount(
+    0
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Periodontal status:/
+  );
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
 
   await page.locator("#adult-hygiene-periodontium").click();
   await page
@@ -1428,7 +1452,10 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByRole("option", { name: "Periodontitis", exact: true })
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
     .click();
   await expect(
     page.locator("#adult-hygiene-periodontal-extent")
@@ -1463,9 +1490,21 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
     .click();
   await expect(page.getByLabel("Confirm selected stage")).not.toBeChecked();
   await expect(page.getByLabel("Stage override reason")).toBeVisible();
+  await expect(page.getByLabel("Confirm selected stage")).toBeDisabled();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Stage IV|Stage basis:/
   );
+  await page
+    .getByLabel("Stage override reason")
+    .fill("Clinician-confirmed Stage IV complexity");
+  await expect(page.getByLabel("Confirm selected stage")).toBeEnabled();
+  await page.getByLabel("Confirm selected stage").check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Stage IV[\s\S]*Stage override: Clinician-confirmed Stage IV complexity\./
+  );
+  await page.getByLabel("Stage override reason").fill("");
+  await expect(page.getByLabel("Confirm selected stage")).not.toBeChecked();
+  await expect(page.getByLabel("Confirm selected stage")).toBeDisabled();
 });
 
 test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
@@ -1494,7 +1533,10 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByRole("option", { name: "Periodontitis", exact: true })
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
     .click();
   await expect(page.getByText(/Stage II; Grade B/)).toBeVisible();
 
@@ -1539,7 +1581,9 @@ test("Adult Hygiene consolidates mutually exclusive complexity findings", async 
   await expect(boneLossPattern).toContainText("Not assessed");
   await boneLossPattern.click();
   await page.getByRole("option", { name: "Vertical", exact: true }).click();
-  await page.getByLabel("Vertical bone loss (mm)", { exact: true }).fill("3");
+  await page
+    .getByLabel("Vertical (angular) bone loss (mm)", { exact: true })
+    .fill("3");
   await expect(structuredPeriodontalObservations).toContainText(
     "1 observation documented"
   );
@@ -1590,7 +1634,10 @@ test("Adult Hygiene consolidates mutually exclusive complexity findings", async 
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByRole("option", { name: "Periodontitis", exact: true })
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
     .click();
   await expect(page.getByText(/Stage IV; Grade B/)).toBeVisible();
   await expect(
@@ -1637,7 +1684,10 @@ test("Adult Hygiene keeps grade phenotype evidence mutually exclusive", async ({
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
-    .getByRole("option", { name: "Periodontitis", exact: true })
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
     .click();
   await expect(page.getByText(/Stage not available; Grade A/)).toBeVisible();
 

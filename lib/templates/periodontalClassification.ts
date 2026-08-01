@@ -2,7 +2,10 @@ export const periodontalDiagnosisChoices = [
   { value: "", label: "Not assessed" },
   { value: "health", label: "Periodontal health" },
   { value: "gingivitis", label: "Gingivitis" },
-  { value: "periodontitis", label: "Periodontitis" },
+  {
+    value: "periodontitis",
+    label: "Periodontitis / history of periodontitis",
+  },
   { value: "other", label: "Other periodontal condition" },
 ] as const;
 
@@ -627,7 +630,7 @@ export function classifyGingivalHealthCandidate(
     maximumPpd === undefined ||
     bop < 0 ||
     bop > 100 ||
-    maximumPpd <= 0
+    maximumPpd < 1
   ) {
     return {
       context: "",
@@ -679,7 +682,11 @@ export function classifyGingivalHealthCandidate(
         warnings: [],
       };
     }
-    if (bop >= 10 && assessment.ppd4OrGreaterWithBop === "no") {
+    if (
+      bop >= 10 &&
+      maximumPpd < 4 &&
+      assessment.ppd4OrGreaterWithBop === "no"
+    ) {
       return {
         context: "inflammation-periodontitis-history",
         missingFields: [],
@@ -765,14 +772,13 @@ function stageFromEvidence(
   if (id === "stage.interdental-cal") {
     const value = exactMeasurement(evidence, "mm");
     if (value === undefined || value <= 0) return undefined;
-    if (value <= 2) return "I";
-    if (value <= 4) return "II";
-    if (value >= 5) return "III";
-    return undefined;
+    if (value < 3) return "I";
+    if (value < 5) return "II";
+    return "III";
   }
   if (id === "stage.rbl-percent") {
     const value = exactMeasurement(evidence, "percent");
-    if (value === undefined || value <= 0) return undefined;
+    if (value === undefined || value <= 0 || value > 100) return undefined;
     if (value < 15) return "I";
     if (value <= 33) return "II";
     return "III";
@@ -786,11 +792,10 @@ function stageFromEvidence(
   }
   if (id === "stage.max-ppd") {
     const value = exactMeasurement(evidence, "mm");
-    if (value === undefined || value <= 0) return undefined;
-    if (value <= 4) return "I";
-    if (value <= 5) return "II";
-    if (value >= 6) return "III";
-    return undefined;
+    if (value === undefined || value < 1) return undefined;
+    if (value < 5) return "I";
+    if (value < 6) return "II";
+    return "III";
   }
   if (id === "stage.vertical-bone-loss") {
     const value = exactMeasurement(evidence, "mm");
@@ -798,13 +803,19 @@ function stageFromEvidence(
   }
   if (id === "stage.remaining-teeth") {
     const value = exactMeasurement(evidence, "teeth");
-    return value !== undefined && Number.isInteger(value) && value < 20
+    return value !== undefined &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value < 20
       ? "IV"
       : undefined;
   }
   if (id === "stage.opposing-pairs") {
     const value = exactMeasurement(evidence, "opposing-pairs");
-    return value !== undefined && Number.isInteger(value) && value < 10
+    return value !== undefined &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value < 10
       ? "IV"
       : undefined;
   }
@@ -849,8 +860,9 @@ function smokingGrade(
     { criterionId: "modifier.smoking", measurement: modifier.measurement },
     "cigarettes-per-day",
   );
-  if (value === undefined || value < 0) return undefined;
-  if (value === 0) return "A";
+  if (value === undefined || value < 1 || !Number.isInteger(value)) {
+    return undefined;
+  }
   return value < 10 ? "B" : "C";
 }
 
@@ -863,7 +875,7 @@ function diabetesGrade(
     { criterionId: "modifier.diabetes", measurement: modifier.measurement },
     "percent",
   );
-  if (value === undefined || value < 0) return undefined;
+  if (value === undefined || value <= 0) return undefined;
   return value < 7 ? "B" : "C";
 }
 
@@ -989,9 +1001,25 @@ export function classifyPeriodontalCandidate(
       "Other tobacco/nicotine exposure is documented but is not converted to a cigarette-equivalent grade.",
     );
   }
+  if (
+    classification.smoking.status === "cigarettes" &&
+    smoking === undefined
+  ) {
+    warnings.push(
+      "Cigarette exposure is selected, but a positive whole-number cigarettes/day value is missing.",
+    );
+  }
   if (classification.diabetes.status === "diabetes-hba1c-unknown") {
     warnings.push(
       "Diabetes is present, but grade cannot be modified without a current HbA1c.",
+    );
+  }
+  if (
+    classification.diabetes.status === "diabetes" &&
+    diabetes === undefined
+  ) {
+    warnings.push(
+      "Diabetes with current HbA1c is selected, but a positive HbA1c value is missing.",
     );
   }
 
@@ -1078,6 +1106,13 @@ export function formatHealthGingivitisBlock(
 ): string {
   const assessment = classification.gingivalHealth;
   if (!assessment.confirmed || !assessment.context) return "";
+  const candidate = classifyGingivalHealthCandidate(classification);
+  if (
+    assessment.context !== candidate.context &&
+    !assessment.overrideReason.trim()
+  ) {
+    return "";
+  }
   const selectedContext = healthGingivitisContextChoices.find(
     (choice) => choice.value === assessment.context,
   );
