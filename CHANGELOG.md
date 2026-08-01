@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.5.1
+
+### Patch Changes
+
+- c39b840: Clarify Adult Hygiene periodontal classification for previously treated patients, require reasons for candidate overrides, tighten candidate thresholds, and prevent stale periodontal status outside periodontitis.
+
 ## 0.5.0
 
 ### Minor Changes
