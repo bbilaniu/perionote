@@ -17,6 +17,11 @@ boundary.
 
 ## Candidate Slice 3: Recare Tooth-Level Findings
 
+Draft proposal created for clinical review:
+[Slice 3 Proposal: Recare Tooth-Level Findings](../2026-08-01_recare-tooth-level-findings.md).
+The item remains deferred until the proposal's remaining clinical decisions
+and generated-output contract are approved.
+
 ### Catalogue concepts
 
 - Teeth intact
