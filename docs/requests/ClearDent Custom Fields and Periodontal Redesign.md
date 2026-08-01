@@ -8,6 +8,13 @@
 publication on July 30, 2026. This clearance applies to this reviewed document,
 not to the identifiable raw ClearDent exports or original template packages
 described below.
+
+**Implementation status:** Implemented in the Adult Hygiene 2021 interactive
+template. The
+[Periodontal Candidate-Classification Decision Table](../specs/periodontal-classification-decision-table.md)
+is the normative specification for current candidate logic, safety invariants,
+confirmation, and generated-output behavior. Clinical sign-off remains pending
+as recorded in that decision table.
 ⸻  
 ## Start Here  
   
@@ -906,7 +913,7 @@ It avoids turning a generic reference list into a false claim that every criteri
   
 - Periodontal health  
 - Gingivitis  
-- Periodontitis  
+- Periodontitis / history of periodontitis
 - Other periodontal condition  
 - Not assessed  
   
@@ -915,7 +922,7 @@ It avoids turning a generic reference list into a false claim that every criteri
 - Unknown / not yet assessed
 - Intact periodontal support
 - Reduced support (not due to periodontitis)
-- Reduced support (after periodontitis treatment)
+- Reduced support (with a history of treated periodontitis)
   
 ## Section C - Extent/distribution  
   

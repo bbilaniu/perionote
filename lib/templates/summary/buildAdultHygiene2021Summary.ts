@@ -4,6 +4,7 @@ import {
 } from "@/lib/templates/adultHygiene2021";
 import {
   choiceLabel,
+  classifyPeriodontalCandidate,
   formatDiabetesModifier,
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
@@ -232,6 +233,23 @@ function formatPeriodontalClassification(
   const diagnosis = classification.diagnosis
     ? diagnosisLabels[classification.diagnosis]
     : "";
+  const candidate = classifyPeriodontalCandidate(classification);
+  const stageCanBeCharted = Boolean(
+    classification.diagnosis === "periodontitis" &&
+      classification.stageConfirmed &&
+      classification.stage &&
+      (!candidate.stage ||
+        classification.stage === candidate.stage ||
+        trimmed(classification.stageOverrideReason)),
+  );
+  const gradeCanBeCharted = Boolean(
+    classification.diagnosis === "periodontitis" &&
+      classification.gradeConfirmed &&
+      classification.grade &&
+      (!candidate.grade ||
+        classification.grade === candidate.grade ||
+        trimmed(classification.gradeOverrideReason)),
+  );
   const diagnosisParts = [
     classification.diagnosis === "periodontitis" && classification.extent
       ? `${extentLabels[classification.extent]} ${diagnosis.toLocaleLowerCase(
@@ -241,21 +259,21 @@ function formatPeriodontalClassification(
         classification.diagnosis === "other"
       ? diagnosis
       : "",
-    classification.stageConfirmed && classification.stage
+    stageCanBeCharted
       ? `Stage ${classification.stage}`
       : "",
-    classification.gradeConfirmed && classification.grade
+    gradeCanBeCharted
       ? `Grade ${classification.grade}`
       : "",
   ].filter(Boolean);
   const stageBasis =
-    classification.stageConfirmed && classification.stage
+    stageCanBeCharted
       ? periodontalStageEvidence(classification)
           .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
           .filter(Boolean)
       : [];
   const gradeBasis =
-    classification.gradeConfirmed && classification.grade
+    gradeCanBeCharted
       ? classification.gradeBasis
           .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
           .filter(Boolean)
@@ -275,20 +293,21 @@ function formatPeriodontalClassification(
         )}`
       : "",
     stageBasis.length ? `Stage basis: ${stageBasis.join("; ")}.` : "",
-    classification.stageConfirmed &&
+    stageCanBeCharted &&
     trimmed(classification.stageOverrideReason)
       ? `Stage override: ${withTerminalPunctuation(
           classification.stageOverrideReason
         )}`
       : "",
     gradeBasis.length ? `Grade basis: ${gradeBasis.join("; ")}.` : "",
-    classification.gradeConfirmed &&
+    gradeCanBeCharted &&
     trimmed(classification.gradeOverrideReason)
       ? `Grade override: ${withTerminalPunctuation(
           classification.gradeOverrideReason
         )}`
       : "",
     modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
+    classification.diagnosis === "periodontitis" &&
     classification.status &&
     isPeriodontalStatusCompatibleWithContext(
       classification.status,

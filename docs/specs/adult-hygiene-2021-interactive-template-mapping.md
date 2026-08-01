@@ -426,11 +426,16 @@ clinician confirmation also remain outside it so they stay available when the
 supporting findings are collapsed.
 Patient-specific Stage and Grade evidence are separate nested disclosures with
 their own documented-observation summaries. Both remain available before a
-diagnosis is selected and never infer Periodontitis. Selecting Periodontitis
-opens Structured periodontal observations and Stage evidence; Grade remains
-collapsed unless the clinician opens it or grade evidence/modifiers are already
-documented. Candidate interpretation, confirmation, and generated Stage/Grade
-output remain conditional on the Periodontitis diagnosis category.
+diagnosis is selected and never infer Periodontitis. Selecting **Periodontitis /
+history of periodontitis** opens Structured periodontal observations and Stage
+evidence; Grade remains collapsed unless the clinician opens it or grade
+evidence/modifiers are already documented. Candidate interpretation,
+confirmation, and generated Stage/Grade output remain conditional on that
+diagnosis/history category. A successfully treated patient stays in this category
+when current findings meet periodontal health thresholds; health is represented
+by the confirmed treated-periodontitis context and periodontal disease stability
+rather than by relabelling the patient with the simple Periodontal health
+diagnosis category.
 Complexity findings use a bone-loss pattern selector with a conditional vertical
 bone-loss measurement, a highest-furcation selector, a worst-ridge-defect
 selector, and an advanced functional complexity multi-select. These controls

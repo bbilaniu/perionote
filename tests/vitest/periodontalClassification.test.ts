@@ -136,6 +136,96 @@ describe("classifyPeriodontalCandidate", () => {
     );
   });
 
+  it.each([
+    { value: 2.9, expected: "I" },
+    { value: 3, expected: "II" },
+    { value: 4.9, expected: "II" },
+    { value: 5, expected: "III" },
+  ])(
+    "uses continuous CAL boundaries at $value mm",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          stageBasis: [
+            {
+              criterionId: "stage.interdental-cal",
+              measurement: { operator: "eq", value, unit: "mm" },
+            },
+          ],
+        })
+      );
+
+      expect(candidate.stage).toBe(expected);
+    }
+  );
+
+  it.each([
+    { value: 14.9, expected: "I" },
+    { value: 15, expected: "II" },
+    { value: 33, expected: "II" },
+    { value: 33.1, expected: "III" },
+  ])(
+    "uses concrete RBL percentage boundaries at $value%",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          stageBasis: [
+            {
+              criterionId: "stage.rbl-percent",
+              measurement: { operator: "eq", value, unit: "percent" },
+            },
+          ],
+        })
+      );
+
+      expect(candidate.stage).toBe(expected);
+    }
+  );
+
+  it.each([
+    { value: 1, expected: "III" },
+    { value: 4, expected: "III" },
+    { value: 5, expected: "IV" },
+  ])(
+    "uses concrete periodontitis-related tooth-loss boundaries at $value",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          stageBasis: [
+            {
+              criterionId: "stage.tooth-loss",
+              measurement: { operator: "eq", value, unit: "teeth" },
+            },
+          ],
+        })
+      );
+
+      expect(candidate.stage).toBe(expected);
+    }
+  );
+
+  it.each([
+    { value: 0.9, expected: "" },
+    { value: 4.9, expected: "I" },
+    { value: 5, expected: "II" },
+    { value: 5.9, expected: "II" },
+    { value: 6, expected: "III" },
+  ])(
+    "uses continuous maximum-PPD boundaries at $value mm",
+    ({ value, expected }) => {
+      const classification = periodontitis();
+      classification.gingivalHealth.maximumPpd = {
+        operator: "eq",
+        value,
+        unit: "mm",
+      };
+
+      expect(classifyPeriodontalCandidate(classification).stage).toBe(
+        expected
+      );
+    }
+  );
+
   it("does not convert other nicotine exposure or unknown HbA1c", () => {
     const candidate = classifyPeriodontalCandidate(
       periodontitis({
@@ -155,6 +245,112 @@ describe("classifyPeriodontalCandidate", () => {
       ])
     );
   });
+
+  it("warns when selected grade modifiers lack usable measurements", () => {
+    const candidate = classifyPeriodontalCandidate(
+      periodontitis({
+        smoking: { status: "cigarettes" },
+        diabetes: { status: "diabetes" },
+      })
+    );
+
+    expect(candidate.grade).toBe("B");
+    expect(candidate.warnings).toEqual(
+      expect.arrayContaining([
+        "Cigarette exposure is selected, but a positive whole-number cigarettes/day value is missing.",
+        "Diabetes with current HbA1c is selected, but a positive HbA1c value is missing.",
+      ])
+    );
+  });
+
+  it.each([
+    { value: 0, expected: "A" },
+    { value: 0.1, expected: "B" },
+    { value: 1.9, expected: "B" },
+    { value: 2, expected: "C" },
+  ])(
+    "uses concrete direct-progression grade boundaries at $value mm",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          gradeBasis: [
+            {
+              criterionId: "grade.progression-five-years",
+              measurement: { operator: "eq", value, unit: "mm" },
+            },
+          ],
+        })
+      );
+
+      expect(candidate.grade).toBe(expected);
+    }
+  );
+
+  it.each([
+    { value: 0.24, expected: "A" },
+    { value: 0.25, expected: "B" },
+    { value: 1, expected: "B" },
+    { value: 1.01, expected: "C" },
+  ])(
+    "uses concrete bone-loss/age grade boundaries at $value",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          gradeBasis: [
+            {
+              criterionId: "grade.bone-loss-age-ratio",
+              measurement: { operator: "eq", value, unit: "ratio" },
+            },
+          ],
+        })
+      );
+
+      expect(candidate.grade).toBe(expected);
+    }
+  );
+
+  it.each([
+    { value: 1, expected: "B" },
+    { value: 9, expected: "B" },
+    { value: 10, expected: "C" },
+  ])(
+    "uses concrete cigarette modifier boundaries at $value per day",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          smoking: {
+            status: "cigarettes",
+            measurement: {
+              operator: "eq",
+              value,
+              unit: "cigarettes-per-day",
+            },
+          },
+        })
+      );
+
+      expect(candidate.grade).toBe(expected);
+    }
+  );
+
+  it.each([
+    { value: 6.9, expected: "B" },
+    { value: 7, expected: "C" },
+  ])(
+    "uses concrete HbA1c modifier boundaries at $value%",
+    ({ value, expected }) => {
+      const candidate = classifyPeriodontalCandidate(
+        periodontitis({
+          diabetes: {
+            status: "diabetes",
+            measurement: { operator: "eq", value, unit: "percent" },
+          },
+        })
+      );
+
+      expect(candidate.grade).toBe(expected);
+    }
+  );
 
   it("generates evidence wording from the checked-in catalogue", () => {
     expect(
@@ -243,7 +439,7 @@ describe("Health/Gingivitis classification", () => {
       assessment: {
         periodontium: "reduced-treated-periodontitis",
         bopPercent: { operator: "eq", value: 18, unit: "percent" },
-        maximumPpd: { operator: "eq", value: 5, unit: "mm" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
         attachmentLoss: "present",
         radiographicBoneLoss: "present",
         ppd4OrGreaterWithBop: "no",
@@ -263,6 +459,27 @@ describe("Health/Gingivitis classification", () => {
 
     expect(classifyGingivalHealthCandidate(classification)).toEqual({
       context: expected,
+      missingFields: [],
+      warnings: [],
+    });
+  });
+
+  it("returns human-readable missing fields for candidate navigation", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+
+    expect(classifyGingivalHealthCandidate(classification)).toEqual({
+      context: "",
+      missingFields: [
+        { id: "periodontal-support", label: "Periodontal support" },
+        { id: "bop-percentage", label: "BOP percentage" },
+        { id: "maximum-ppd", label: "Maximum PPD" },
+        { id: "attachment-loss", label: "Probing attachment loss" },
+        {
+          id: "radiographic-bone-loss",
+          label: "Radiographic bone loss (RBL)",
+        },
+      ],
       warnings: [],
     });
   });
@@ -276,6 +493,26 @@ describe("Health/Gingivitis classification", () => {
     });
 
     expect(classifyPeriodontalCandidate(classification).stage).toBe("III");
+  });
+
+  it("requires maximum PPD below 4 mm for remission/control context", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "periodontitis";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "reduced-treated-periodontitis",
+      bopPercent: { operator: "eq", value: 18, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 4, unit: "mm" },
+      attachmentLoss: "present",
+      radiographicBoneLoss: "present",
+      ppd4OrGreaterWithBop: "no",
+      progressiveDestruction: "no",
+    };
+
+    expect(classifyGingivalHealthCandidate(classification)).toMatchObject({
+      context: "",
+      missingFields: [],
+    });
   });
 
   it("formats confirmed candidates like the ClearDent field", () => {
@@ -383,6 +620,24 @@ describe("Health/Gingivitis classification", () => {
 - BOP: 12%
 - NO RADIOGRAPHIC BONE LOSS
 - CLINICIAN OVERRIDE: Clinician-confirmed exception`);
+  });
+
+  it("does not chart a context override without a reason", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "intact",
+      bopPercent: { operator: "eq", value: 12, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+      attachmentLoss: "absent",
+      radiographicBoneLoss: "absent",
+      context: "health-intact",
+      confirmed: true,
+      overrideReason: "",
+    };
+
+    expect(formatHealthGingivitisBlock(classification)).toBe("");
   });
 
   it("requires treated contexts and current periodontal status to agree", () => {

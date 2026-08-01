@@ -2,7 +2,10 @@ export const periodontalDiagnosisChoices = [
   { value: "", label: "Not assessed" },
   { value: "health", label: "Periodontal health" },
   { value: "gingivitis", label: "Gingivitis" },
-  { value: "periodontitis", label: "Periodontitis" },
+  {
+    value: "periodontitis",
+    label: "Periodontitis / history of periodontitis",
+  },
   { value: "other", label: "Other periodontal condition" },
 ] as const;
 
@@ -50,7 +53,7 @@ export const periodontalPeriodontiumChoices = [
   },
   {
     value: "reduced-treated-periodontitis",
-    label: "Reduced support (after periodontitis treatment)",
+    label: "Reduced support (with a history of treated periodontitis)",
   },
 ] as const;
 
@@ -480,7 +483,22 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
 
 export interface GingivalHealthCandidate {
   context: HealthGingivitisContext;
+  missingFields: GingivalHealthCandidateMissingField[];
   warnings: string[];
+}
+
+export type GingivalHealthCandidateMissingFieldId =
+  | "periodontal-support"
+  | "bop-percentage"
+  | "maximum-ppd"
+  | "attachment-loss"
+  | "radiographic-bone-loss"
+  | "ppd-4-or-greater-with-bop"
+  | "progressive-destruction";
+
+export interface GingivalHealthCandidateMissingField {
+  id: GingivalHealthCandidateMissingFieldId;
+  label: string;
 }
 
 const stageRank: Record<Exclude<PeriodontitisStage, "">, number> = {
@@ -559,34 +577,52 @@ export function classifyGingivalHealthCandidate(
     classification.diagnosis !== "gingivitis" &&
     classification.diagnosis !== "periodontitis"
   ) {
-    return { context: "", warnings: [] };
+    return { context: "", missingFields: [], warnings: [] };
   }
 
   const bop = exactMeasurementValue(assessment.bopPercent, "percent");
   const maximumPpd = exactMeasurementValue(assessment.maximumPpd, "mm");
-  const missing = [
-    ...(!assessment.periodontium ? ["periodontium"] : []),
-    ...(bop === undefined ? ["BOP percentage"] : []),
-    ...(maximumPpd === undefined ? ["maximum PPD"] : []),
+  const missingFields: GingivalHealthCandidateMissingField[] = [
+    ...(!assessment.periodontium
+      ? [{ id: "periodontal-support", label: "Periodontal support" } as const]
+      : []),
+    ...(bop === undefined
+      ? [{ id: "bop-percentage", label: "BOP percentage" } as const]
+      : []),
+    ...(maximumPpd === undefined
+      ? [{ id: "maximum-ppd", label: "Maximum PPD" } as const]
+      : []),
     ...(assessment.attachmentLoss === "not-assessed"
-      ? ["attachment loss"]
+      ? [{ id: "attachment-loss", label: "Probing attachment loss" } as const]
       : []),
     ...(assessment.radiographicBoneLoss === "not-assessed"
-      ? ["radiographic bone loss"]
+      ? [
+          {
+            id: "radiographic-bone-loss",
+            label: "Radiographic bone loss (RBL)",
+          } as const,
+        ]
       : []),
   ];
   if (classification.diagnosis === "periodontitis") {
     if (assessment.ppd4OrGreaterWithBop === "not-assessed") {
-      missing.push("sites with PPD >=4 mm and BOP");
+      missingFields.push({
+        id: "ppd-4-or-greater-with-bop",
+        label: "Sites with PPD ≥4 mm and BOP",
+      });
     }
     if (assessment.progressiveDestruction === "not-assessed") {
-      missing.push("progressive destruction");
+      missingFields.push({
+        id: "progressive-destruction",
+        label: "Evidence of progressive periodontal destruction",
+      });
     }
   }
-  if (missing.length) {
+  if (missingFields.length) {
     return {
       context: "",
-      warnings: [`Complete ${missing.join(", ")} to calculate a candidate.`],
+      missingFields,
+      warnings: [],
     };
   }
   if (
@@ -594,10 +630,11 @@ export function classifyGingivalHealthCandidate(
     maximumPpd === undefined ||
     bop < 0 ||
     bop > 100 ||
-    maximumPpd <= 0
+    maximumPpd < 1
   ) {
     return {
       context: "",
+      missingFields: [],
       warnings: [
         "Entered periodontal measurements are outside supported ranges.",
       ],
@@ -608,6 +645,7 @@ export function classifyGingivalHealthCandidate(
     if (assessment.periodontium !== "reduced-treated-periodontitis") {
       return {
         context: "",
+        missingFields: [],
         warnings: [
           "A periodontitis diagnosis requires the treated-periodontitis context for this calculation.",
         ],
@@ -619,6 +657,7 @@ export function classifyGingivalHealthCandidate(
     ) {
       return {
         context: "",
+        missingFields: [],
         warnings: [
           "Treated periodontitis context requires confirmed reduced attachment and bone levels.",
         ],
@@ -630,6 +669,7 @@ export function classifyGingivalHealthCandidate(
     ) {
       return {
         context: "",
+        missingFields: [],
         warnings: [
           "Findings may indicate unstable or recurrent periodontitis; no treated-periodontitis context is suggested.",
         ],
@@ -638,17 +678,24 @@ export function classifyGingivalHealthCandidate(
     if (bop < 10 && maximumPpd <= 4) {
       return {
         context: "health-treated-stable-periodontitis",
+        missingFields: [],
         warnings: [],
       };
     }
-    if (bop >= 10 && assessment.ppd4OrGreaterWithBop === "no") {
+    if (
+      bop >= 10 &&
+      maximumPpd < 4 &&
+      assessment.ppd4OrGreaterWithBop === "no"
+    ) {
       return {
         context: "inflammation-periodontitis-history",
+        missingFields: [],
         warnings: [],
       };
     }
     return {
       context: "",
+      missingFields: [],
       warnings: [
         "Entered findings do not match a supported treated-periodontitis context.",
       ],
@@ -679,16 +726,18 @@ export function classifyGingivalHealthCandidate(
   ) {
     return {
       context: "",
+      missingFields: [],
       warnings: [
-        "Attachment and bone-loss findings do not match the selected periodontium.",
+        "Attachment and bone-loss findings do not match the selected periodontal support.",
       ],
     };
   }
   if (maximumPpd > 3) {
     return {
       context: "",
+      missingFields: [],
       warnings: [
-        "Maximum PPD exceeds the supported health/gingivitis threshold for this periodontium.",
+        "Maximum PPD exceeds the supported health/gingivitis threshold for the selected periodontal support.",
       ],
     };
   }
@@ -696,17 +745,20 @@ export function classifyGingivalHealthCandidate(
   if (classification.diagnosis === "health" && bop < 10) {
     return {
       context: expectedPeriodontium.health as HealthGingivitisContext,
+      missingFields: [],
       warnings: [],
     };
   }
   if (classification.diagnosis === "gingivitis" && bop >= 10) {
     return {
       context: expectedPeriodontium.gingivitis as HealthGingivitisContext,
+      missingFields: [],
       warnings: [],
     };
   }
   return {
     context: "",
+    missingFields: [],
     warnings: [
       `BOP ${bop}% does not support the selected ${classification.diagnosis} category.`,
     ],
@@ -720,14 +772,13 @@ function stageFromEvidence(
   if (id === "stage.interdental-cal") {
     const value = exactMeasurement(evidence, "mm");
     if (value === undefined || value <= 0) return undefined;
-    if (value <= 2) return "I";
-    if (value <= 4) return "II";
-    if (value >= 5) return "III";
-    return undefined;
+    if (value < 3) return "I";
+    if (value < 5) return "II";
+    return "III";
   }
   if (id === "stage.rbl-percent") {
     const value = exactMeasurement(evidence, "percent");
-    if (value === undefined || value <= 0) return undefined;
+    if (value === undefined || value <= 0 || value > 100) return undefined;
     if (value < 15) return "I";
     if (value <= 33) return "II";
     return "III";
@@ -741,11 +792,10 @@ function stageFromEvidence(
   }
   if (id === "stage.max-ppd") {
     const value = exactMeasurement(evidence, "mm");
-    if (value === undefined || value <= 0) return undefined;
-    if (value <= 4) return "I";
-    if (value <= 5) return "II";
-    if (value >= 6) return "III";
-    return undefined;
+    if (value === undefined || value < 1) return undefined;
+    if (value < 5) return "I";
+    if (value < 6) return "II";
+    return "III";
   }
   if (id === "stage.vertical-bone-loss") {
     const value = exactMeasurement(evidence, "mm");
@@ -753,13 +803,19 @@ function stageFromEvidence(
   }
   if (id === "stage.remaining-teeth") {
     const value = exactMeasurement(evidence, "teeth");
-    return value !== undefined && Number.isInteger(value) && value < 20
+    return value !== undefined &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value < 20
       ? "IV"
       : undefined;
   }
   if (id === "stage.opposing-pairs") {
     const value = exactMeasurement(evidence, "opposing-pairs");
-    return value !== undefined && Number.isInteger(value) && value < 10
+    return value !== undefined &&
+      Number.isInteger(value) &&
+      value >= 0 &&
+      value < 10
       ? "IV"
       : undefined;
   }
@@ -804,8 +860,9 @@ function smokingGrade(
     { criterionId: "modifier.smoking", measurement: modifier.measurement },
     "cigarettes-per-day",
   );
-  if (value === undefined || value < 0) return undefined;
-  if (value === 0) return "A";
+  if (value === undefined || value < 1 || !Number.isInteger(value)) {
+    return undefined;
+  }
   return value < 10 ? "B" : "C";
 }
 
@@ -818,7 +875,7 @@ function diabetesGrade(
     { criterionId: "modifier.diabetes", measurement: modifier.measurement },
     "percent",
   );
-  if (value === undefined || value < 0) return undefined;
+  if (value === undefined || value <= 0) return undefined;
   return value < 7 ? "B" : "C";
 }
 
@@ -944,9 +1001,25 @@ export function classifyPeriodontalCandidate(
       "Other tobacco/nicotine exposure is documented but is not converted to a cigarette-equivalent grade.",
     );
   }
+  if (
+    classification.smoking.status === "cigarettes" &&
+    smoking === undefined
+  ) {
+    warnings.push(
+      "Cigarette exposure is selected, but a positive whole-number cigarettes/day value is missing.",
+    );
+  }
   if (classification.diabetes.status === "diabetes-hba1c-unknown") {
     warnings.push(
       "Diabetes is present, but grade cannot be modified without a current HbA1c.",
+    );
+  }
+  if (
+    classification.diabetes.status === "diabetes" &&
+    diabetes === undefined
+  ) {
+    warnings.push(
+      "Diabetes with current HbA1c is selected, but a positive HbA1c value is missing.",
     );
   }
 
@@ -1033,6 +1106,13 @@ export function formatHealthGingivitisBlock(
 ): string {
   const assessment = classification.gingivalHealth;
   if (!assessment.confirmed || !assessment.context) return "";
+  const candidate = classifyGingivalHealthCandidate(classification);
+  if (
+    assessment.context !== candidate.context &&
+    !assessment.overrideReason.trim()
+  ) {
+    return "";
+  }
   const selectedContext = healthGingivitisContextChoices.find(
     (choice) => choice.value === assessment.context,
   );
