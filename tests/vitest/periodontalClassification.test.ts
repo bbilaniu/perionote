@@ -5,6 +5,7 @@ import {
   createEmptyPeriodontalClassification,
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
+  isPeriodontalStatusCompatibleWithContext,
   type GingivalHealthAssessment,
   type HealthGingivitisContext,
   type PeriodontalDiagnosis,
@@ -294,8 +295,8 @@ describe("Health/Gingivitis classification", () => {
     expect(formatHealthGingivitisBlock(classification))
       .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
 - NO PROBING ATTACHMENT LOSS
-- PPD <=3 MM
-- BOP <10%
+- MAXIMUM PPD: 3 MM
+- BOP: 6%
 - NO RADIOGRAPHIC BONE LOSS`);
   });
 
@@ -317,11 +318,34 @@ describe("Health/Gingivitis classification", () => {
 
     expect(formatHealthGingivitisBlock(classification))
       .toBe(`Health/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT
-- HISTORY OF PERIODONTITIS WITH REDUCED ATTACHMENT/BONE LEVELS
-- PPD <=4 MM
-- NO SITE WITH PPD >=4 MM AND BOP
-- BOP <10%
+- PROBING ATTACHMENT LOSS PRESENT
+- MAXIMUM PPD: 4 MM
+- BOP: 5%
+- RADIOGRAPHIC BONE LOSS PRESENT
+- SITES WITH PPD >=4 MM AND BOP: NONE
 - NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION`);
+  });
+
+  it("charts declared bone loss instead of a generic possibility", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "gingivitis";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "reduced-non-periodontitis",
+      bopPercent: { operator: "eq", value: 22, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+      attachmentLoss: "present",
+      radiographicBoneLoss: "absent",
+      context: "gingivitis-reduced-non-periodontitis",
+      confirmed: true,
+    };
+
+    expect(formatHealthGingivitisBlock(classification))
+      .toBe(`Health/Gingivitis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT
+- PROBING ATTACHMENT LOSS PRESENT
+- MAXIMUM PPD: 3 MM
+- BOP: 22%
+- NO RADIOGRAPHIC BONE LOSS`);
   });
 
   it("omits a confirmed treated context when periodontal support is incompatible", () => {
@@ -359,5 +383,36 @@ describe("Health/Gingivitis classification", () => {
 - BOP: 12%
 - NO RADIOGRAPHIC BONE LOSS
 - CLINICIAN OVERRIDE: Clinician-confirmed exception`);
+  });
+
+  it("requires treated contexts and current periodontal status to agree", () => {
+    expect(
+      isPeriodontalStatusCompatibleWithContext(
+        "stable",
+        "health-treated-stable-periodontitis",
+        true
+      )
+    ).toBe(true);
+    expect(
+      isPeriodontalStatusCompatibleWithContext(
+        "unstable-recurrent",
+        "health-treated-stable-periodontitis",
+        true
+      )
+    ).toBe(false);
+    expect(
+      isPeriodontalStatusCompatibleWithContext(
+        "remission-control",
+        "inflammation-periodontitis-history",
+        true
+      )
+    ).toBe(true);
+    expect(
+      isPeriodontalStatusCompatibleWithContext(
+        "stable",
+        "inflammation-periodontitis-history",
+        false
+      )
+    ).toBe(true);
   });
 });

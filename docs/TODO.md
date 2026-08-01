@@ -23,3 +23,12 @@ Source:
   precedence, direct versus indirect grading evidence, risk modifiers,
   conflicting criteria, confirmation, overrides, and the confirmed basis
   included in output.
+
+### Deferred decisions
+
+- Defer the proposed periodontal output-detail selector (concise diagnosis,
+  diagnosis plus confirmed basis, or expanded chart note). The current fixed
+  output intentionally follows the preferred diagnosis-plus-confirmed-basis
+  approach and is sufficiently close to the target ClearDent-compatible
+  workflow. Reconsider multiple output modes only through a separately scoped
+  request after clinical review identifies a concrete need.

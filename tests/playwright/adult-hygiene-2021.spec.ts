@@ -756,6 +756,12 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     .click();
   await page.locator("#adult-hygiene-bop-percent").fill("6");
   await page.locator("#adult-hygiene-maximum-ppd").fill("3");
+  await expect(page.locator("#adult-hygiene-stage-maximum-ppd")).toHaveValue(
+    "3"
+  );
+  await page.locator("#adult-hygiene-stage-maximum-ppd").fill("2");
+  await expect(page.locator("#adult-hygiene-maximum-ppd")).toHaveValue("2");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("3");
   await page.locator("#adult-hygiene-attachment-loss").click();
   await page.getByRole("option", { name: "Absent", exact: true }).click();
   await page.locator("#adult-hygiene-radiographic-bone-loss").click();
@@ -807,7 +813,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     .getByLabel("Confirm selected Health/Gingivitis classification")
     .check();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- PPD <=3 MM\n- BOP <10%\n- NO RADIOGRAPHIC BONE LOSS/
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- MAXIMUM PPD: 3 MM\n- BOP: 6%\n- NO RADIOGRAPHIC BONE LOSS/
   );
 
   await structuredPeriodontalObservations.click();
@@ -860,12 +866,19 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .click();
   await page.locator("#adult-hygiene-bop-percent").fill("5");
   await page.locator("#adult-hygiene-maximum-ppd").fill("4");
+  await expect(page.locator("#adult-hygiene-stage-maximum-ppd")).toHaveValue(
+    "4"
+  );
   await page.locator("#adult-hygiene-attachment-loss").click();
   await page.getByRole("option", { name: "Present", exact: true }).click();
   await page.locator("#adult-hygiene-radiographic-bone-loss").click();
   await page.getByRole("option", { name: "Present", exact: true }).click();
-  await page.locator("#adult-hygiene-ppd4-bop").click();
-  await page.getByRole("option", { name: "No", exact: true }).click();
+  await page.locator("#adult-hygiene-stage-ppd4-bop").click();
+  await page.getByRole("option", { name: "None", exact: true }).click();
+  await expect(page.locator("#adult-hygiene-ppd4-bop")).toHaveAttribute(
+    "data-value",
+    "no"
+  );
   await page.locator("#adult-hygiene-progressive-destruction").click();
   await page.getByRole("option", { name: "No", exact: true }).click();
 
@@ -884,14 +897,37 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await expect(
     page.getByLabel("Treated-periodontitis context", { exact: true })
   ).toBeVisible();
+  await page.locator("#adult-hygiene-periodontal-status").click();
+  await page
+    .getByRole("option", {
+      name: "Unstable/recurrent periodontitis",
+      exact: true,
+    })
+    .click();
   await page
     .getByRole("button", { name: "Use candidate", exact: true })
     .click();
   await page
     .getByLabel("Confirm selected treated-periodontitis context")
     .check();
+  await expect(
+    page.locator("#adult-hygiene-periodontal-status")
+  ).toHaveAttribute("data-value", "");
+  await page.locator("#adult-hygiene-periodontal-status").click();
+  await expect(
+    page.getByRole("option", {
+      name: "Unstable/recurrent periodontitis",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await page
+    .getByRole("option", {
+      name: "Periodontal disease stability",
+      exact: true,
+    })
+    .click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT/
+    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT\n- PROBING ATTACHMENT LOSS PRESENT\n- MAXIMUM PPD: 4 MM\n- BOP: 5%\n- RADIOGRAPHIC BONE LOSS PRESENT\n- SITES WITH PPD >=4 MM AND BOP: NONE\n- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION[\s\S]*Periodontal status: Periodontal disease stability\./
   );
 
   await page.locator("#adult-hygiene-periodontium").click();

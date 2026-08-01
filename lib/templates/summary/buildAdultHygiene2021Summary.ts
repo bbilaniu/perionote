@@ -8,6 +8,7 @@ import {
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
   formatSmokingModifier,
+  isPeriodontalStatusCompatibleWithContext,
   periodontalStageEvidence,
   periodontalStatusChoices,
   type PeriodontalClassification,
@@ -288,7 +289,12 @@ function formatPeriodontalClassification(
         )}`
       : "",
     modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
-    classification.status
+    classification.status &&
+    isPeriodontalStatusCompatibleWithContext(
+      classification.status,
+      classification.gingivalHealth.context,
+      classification.gingivalHealth.confirmed
+    )
       ? `Periodontal status: ${withTerminalPunctuation(
           choiceLabel(periodontalStatusChoices, classification.status)
         )}`

@@ -56,7 +56,7 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
     extent: "localized",
     stage: "II",
     grade: "B",
-    status: "stable",
+    status: "remission-control",
     stageConfirmed: true,
     gradeConfirmed: true,
     stageOverrideReason: "",

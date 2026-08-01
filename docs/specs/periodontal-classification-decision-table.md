@@ -30,12 +30,16 @@ catalogue in that module.
 | Missing grade data | For a periodontitis diagnosis, Grade B is shown as a working assumption with a warning. It is not confirmed or charted automatically. |
 | Unsupported exposure | Non-cigarette nicotine exposure is documented separately and never converted to cigarettes/day. |
 | Unknown HbA1c | Diabetes with unknown current HbA1c does not modify the candidate grade. |
-| Health/Gingivitis compatibility | Structured evidence is calculated and confirmed, while generated output retains the familiar ClearDent field heading and criterion-block style. |
+| Health/Gingivitis compatibility | Structured evidence is calculated and confirmed, while generated output retains the familiar ClearDent field heading and charts only entered measurements and declared findings. |
+| Treated context and status | A confirmed stable treated-periodontitis context permits periodontal disease stability; a confirmed inflammation context permits remission/control. Incompatible current-status choices are not charted. |
 
 ## Health/Gingivitis and Treated-Periodontitis Context Table
 
 Maximum PPD is a shared measurement used by both this table and periodontitis
-staging. Unassessed negative findings never count as confirmed absence.
+staging. It is synchronized between Periodontal assessment findings and Stage
+complexity evidence without creating duplicate data. The deeper-pocket BOP
+state is shared in the same way. Unassessed negative findings never count as
+confirmed absence.
 
 | Diagnosis and periodontium | Required evidence | Candidate |
 | --- | --- | --- |
@@ -50,6 +54,11 @@ A site with PPD >=4 mm and BOP or evidence of progressive destruction suppresses
 the treated-periodontitis context candidate and prompts assessment for unstable
 or recurrent periodontitis. A treated periodontitis patient is never relabelled
 as a simple gingivitis patient.
+
+Confirmed output uses the entered maximum PPD and BOP percentage plus declared
+attachment-loss, radiographic-bone-loss, deeper-pocket BOP, and progression
+states. Candidate thresholds remain reference logic and are not emitted as if
+they were patient findings.
 
 ## Stage Table
 

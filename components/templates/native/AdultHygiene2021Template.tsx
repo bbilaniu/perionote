@@ -59,6 +59,7 @@ import {
   choiceLabel,
   classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
+  deepPocketBopChoices,
   formatDiabetesModifier,
   formatPeriodontalEvidence,
   formatSmokingModifier,
@@ -72,6 +73,8 @@ import {
   periodontalStageChoices,
   periodontalStageCriterionCatalogue,
   periodontalStatusChoices,
+  requiredPeriodontalStatusForContext,
+  isPeriodontalStatusCompatibleWithContext,
   type ClinicalMeasurement,
   type DiabetesModifier,
   type GingivalHealthAssessment,
@@ -821,6 +824,21 @@ function PeriodontalClassificationControl({
   const gingivalContextOverrideLabel = isTreatedPeriodontitisContext
     ? "Treated-periodontitis context override reason"
     : "Health/Gingivitis classification override reason";
+  const requiredContextStatus = value.gingivalHealth.confirmed
+    ? requiredPeriodontalStatusForContext(value.gingivalHealth.context)
+    : "";
+  const compatiblePeriodontalStatusChoices = requiredContextStatus
+    ? periodontalStatusChoices.filter(
+        (choice) => !choice.value || choice.value === requiredContextStatus,
+      )
+    : periodontalStatusChoices;
+  const displayedPeriodontalStatus = isPeriodontalStatusCompatibleWithContext(
+    value.status,
+    value.gingivalHealth.context,
+    value.gingivalHealth.confirmed,
+  )
+    ? value.status
+    : "";
   const hasHorizontalBoneLoss = value.stageBasis.some(
     (evidence) => evidence.criterionId === "stage.horizontal-bone-loss",
   );
@@ -954,6 +972,41 @@ function PeriodontalClassificationControl({
       periodontium,
       ...(hidesTreatedPeriodontitisContext
         ? { context: "", overrideReason: "" }
+        : {}),
+    });
+  }
+
+  function updateMaximumPpd(rawValue: string) {
+    const nextValue = Number(rawValue);
+    if (rawValue && !Number.isFinite(nextValue)) return;
+    updateGingivalHealth(
+      {
+        ...(rawValue
+          ? {
+              maximumPpd: {
+                operator: "eq",
+                value: nextValue,
+                unit: "mm",
+              } as const,
+            }
+          : { maximumPpd: undefined }),
+      },
+      { invalidatesStage: true },
+    );
+  }
+
+  function updateGingivalContextConfirmation(confirmed: boolean) {
+    const nextConfirmed = Boolean(value.gingivalHealth.context) && confirmed;
+    const requiredStatus = nextConfirmed
+      ? requiredPeriodontalStatusForContext(value.gingivalHealth.context)
+      : "";
+    update({
+      gingivalHealth: {
+        ...value.gingivalHealth,
+        confirmed: nextConfirmed,
+      },
+      ...(requiredStatus && value.status && value.status !== requiredStatus
+        ? { status: "" }
         : {}),
     });
   }
@@ -1216,23 +1269,7 @@ function PeriodontalClassificationControl({
                     min={0}
                     step={1}
                     value={numericValue(value.gingivalHealth.maximumPpd)}
-                    onChange={(event) => {
-                      const raw = event.target.value;
-                      updateGingivalHealth(
-                        {
-                          ...(raw
-                            ? {
-                                maximumPpd: {
-                                  operator: "eq",
-                                  value: Number(raw),
-                                  unit: "mm",
-                                },
-                              }
-                            : { maximumPpd: undefined }),
-                        },
-                        { invalidatesStage: true },
-                      );
-                    }}
+                    onChange={(event) => updateMaximumPpd(event.target.value)}
                   />
                 </label>
                 <FixedChoiceListbox
@@ -1255,9 +1292,9 @@ function PeriodontalClassificationControl({
                 />
                 <FixedChoiceListbox
                   id="adult-hygiene-ppd4-bop"
-                  label="Any site with PPD ≥4 mm and BOP"
+                  label="Sites with PPD ≥4 mm and BOP"
                   value={value.gingivalHealth.ppd4OrGreaterWithBop}
-                  options={assessedBooleanChoices}
+                  options={deepPocketBopChoices}
                   onChange={(ppd4OrGreaterWithBop) =>
                     updateGingivalHealth({ ppd4OrGreaterWithBop })
                   }
@@ -1287,6 +1324,31 @@ function PeriodontalClassificationControl({
                   <div className="grid gap-3 md:grid-cols-2">
                     {group === "complexity" ? (
                       <>
+                        <label className="block text-sm font-medium">
+                          Maximum PPD (mm, shared)
+                          <input
+                            id="adult-hygiene-stage-maximum-ppd"
+                            className={inputClass}
+                            type="number"
+                            min={0}
+                            step={1}
+                            value={numericValue(
+                              value.gingivalHealth.maximumPpd,
+                            )}
+                            onChange={(event) =>
+                              updateMaximumPpd(event.target.value)
+                            }
+                          />
+                        </label>
+                        <FixedChoiceListbox
+                          id="adult-hygiene-stage-ppd4-bop"
+                          label="Sites with PPD ≥4 mm and BOP (shared)"
+                          value={value.gingivalHealth.ppd4OrGreaterWithBop}
+                          options={deepPocketBopChoices}
+                          onChange={(ppd4OrGreaterWithBop) =>
+                            updateGingivalHealth({ ppd4OrGreaterWithBop })
+                          }
+                        />
                         <FixedChoiceListbox
                           id="adult-hygiene-stage-bone-loss-pattern"
                           label="Bone-loss pattern"
@@ -1296,7 +1358,7 @@ function PeriodontalClassificationControl({
                         />
                         {hasVerticalBoneLoss ? (
                           <label className="block text-sm font-medium">
-                            Vertical bone loss (mm)
+                            Vertical (angular) bone loss (mm)
                             <input
                               id="adult-hygiene-stage-vertical-bone-loss"
                               className={inputClass}
@@ -1720,15 +1782,7 @@ function PeriodontalClassificationControl({
                     gingivalHealthCandidate.context &&
                     !value.gingivalHealth.overrideReason.trim())
                 }
-                onChange={(confirmed) =>
-                  update({
-                    gingivalHealth: {
-                      ...value.gingivalHealth,
-                      confirmed:
-                        Boolean(value.gingivalHealth.context) && confirmed,
-                    },
-                  })
-                }
+                onChange={updateGingivalContextConfirmation}
               />
             </div>
             {value.gingivalHealth.context &&
@@ -1878,8 +1932,8 @@ function PeriodontalClassificationControl({
             <FixedChoiceListbox
               id="adult-hygiene-periodontal-status"
               label="Current periodontal status"
-              value={value.status}
-              options={periodontalStatusChoices}
+              value={displayedPeriodontalStatus}
+              options={compatiblePeriodontalStatusChoices}
               onChange={(status) => update({ status })}
             />
           </fieldset>

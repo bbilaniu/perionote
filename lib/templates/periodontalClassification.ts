@@ -99,6 +99,12 @@ export const assessedBooleanChoices = [
   { value: "yes", label: "Yes" },
 ] as const;
 
+export const deepPocketBopChoices = [
+  { value: "not-assessed", label: "Not assessed" },
+  { value: "no", label: "None" },
+  { value: "yes", label: "One or more" },
+] as const;
+
 export type PeriodontalDiagnosis =
   (typeof periodontalDiagnosisChoices)[number]["value"];
 export type PeriodontalExtent =
@@ -117,6 +123,27 @@ export type HealthGingivitisContext =
 export type AssessedPresence =
   (typeof assessedPresenceChoices)[number]["value"];
 export type AssessedBoolean = (typeof assessedBooleanChoices)[number]["value"];
+
+export function requiredPeriodontalStatusForContext(
+  context: HealthGingivitisContext,
+): PeriodontalStatus {
+  if (context === "health-treated-stable-periodontitis") return "stable";
+  if (context === "inflammation-periodontitis-history") {
+    return "remission-control";
+  }
+  return "";
+}
+
+export function isPeriodontalStatusCompatibleWithContext(
+  status: PeriodontalStatus,
+  context: HealthGingivitisContext,
+  contextConfirmed: boolean,
+): boolean {
+  const requiredStatus = contextConfirmed
+    ? requiredPeriodontalStatusForContext(context)
+    : "";
+  return !status || !requiredStatus || status === requiredStatus;
+}
 
 export type ClinicalOperator = "eq" | "lt" | "lte" | "gt" | "gte";
 export type ClinicalUnit =
@@ -1001,49 +1028,6 @@ export function formatPeriodontalEvidence(
     : wording;
 }
 
-const healthGingivitisCanonicalLines: Record<
-  Exclude<HealthGingivitisContext, "">,
-  readonly string[]
-> = {
-  "health-intact": [
-    "NO PROBING ATTACHMENT LOSS",
-    "PPD <=3 MM",
-    "BOP <10%",
-    "NO RADIOGRAPHIC BONE LOSS",
-  ],
-  "gingivitis-intact": [
-    "NO PROBING ATTACHMENT LOSS",
-    "PPD <=3 MM",
-    "BOP >=10%",
-    "NO RADIOGRAPHIC BONE LOSS",
-  ],
-  "health-reduced-non-periodontitis": [
-    "PROBING ATTACHMENT LOSS PRESENT",
-    "PPD <=3 MM",
-    "BOP <10%",
-    "RADIOGRAPHIC BONE LOSS MAY BE PRESENT",
-  ],
-  "gingivitis-reduced-non-periodontitis": [
-    "PROBING ATTACHMENT LOSS PRESENT",
-    "PPD <=3 MM",
-    "BOP >=10%",
-    "RADIOGRAPHIC BONE LOSS MAY BE PRESENT",
-  ],
-  "health-treated-stable-periodontitis": [
-    "HISTORY OF PERIODONTITIS WITH REDUCED ATTACHMENT/BONE LEVELS",
-    "PPD <=4 MM",
-    "NO SITE WITH PPD >=4 MM AND BOP",
-    "BOP <10%",
-    "NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION",
-  ],
-  "inflammation-periodontitis-history": [
-    "PROBING ATTACHMENT LOSS AND RADIOGRAPHIC BONE LOSS PRESENT",
-    "BLEEDING SITES USED FOR THIS CATEGORY HAVE PPD <=3 MM",
-    "BOP >=10%",
-    "ASSESS SITES WITH PPD >=4 MM AND BOP FOR RECURRENT OR UNSTABLE PERIODONTITIS",
-  ],
-};
-
 export function formatHealthGingivitisBlock(
   classification: PeriodontalClassification,
 ): string {
@@ -1061,16 +1045,6 @@ export function formatHealthGingivitisBlock(
     healthGingivitisContextChoices,
     assessment.context,
   );
-  const candidate = classifyGingivalHealthCandidate(classification);
-  if (candidate.context === assessment.context) {
-    return [
-      `Health/Gingivitis: ${contextLabel}`,
-      ...healthGingivitisCanonicalLines[assessment.context].map(
-        (line) => `- ${line}`,
-      ),
-    ].join("\n");
-  }
-
   const evidenceLines = [
     assessment.attachmentLoss === "absent"
       ? "NO PROBING ATTACHMENT LOSS"
@@ -1095,9 +1069,9 @@ export function formatHealthGingivitisBlock(
       ? "RADIOGRAPHIC BONE LOSS PRESENT"
       : "",
     assessment.ppd4OrGreaterWithBop === "no"
-      ? "NO SITE WITH PPD >=4 MM AND BOP"
+      ? "SITES WITH PPD >=4 MM AND BOP: NONE"
       : assessment.ppd4OrGreaterWithBop === "yes"
-      ? "SITE WITH PPD >=4 MM AND BOP PRESENT"
+      ? "SITES WITH PPD >=4 MM AND BOP: PRESENT"
       : "",
     assessment.progressiveDestruction === "no"
       ? "NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION"

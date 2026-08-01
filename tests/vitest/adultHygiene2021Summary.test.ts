@@ -44,10 +44,12 @@ PSR/Pocketing: 1 2 2 / 2 1 2
 Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
 Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
-- PROBING ATTACHMENT LOSS AND RADIOGRAPHIC BONE LOSS PRESENT
-- BLEEDING SITES USED FOR THIS CATEGORY HAVE PPD <=3 MM
-- BOP >=10%
-- ASSESS SITES WITH PPD >=4 MM AND BOP FOR RECURRENT OR UNSTABLE PERIODONTITIS
+- PROBING ATTACHMENT LOSS PRESENT
+- MAXIMUM PPD: 5 MM
+- BOP: 18%
+- RADIOGRAPHIC BONE LOSS PRESENT
+- SITES WITH PPD >=4 MM AND BOP: NONE
+- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION
 Gingival Description:
   - Color: coral pink (extent: generalized).
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
@@ -55,7 +57,7 @@ Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
 Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 5 mm; mostly horizontal bone loss.
 Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
 Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
-Periodontal status: Periodontal disease stability.
+Periodontal status: Periodontal disease remission/control.
 
 Oral hygiene compliance: Good.
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -83,6 +85,20 @@ Next visit: Synthetic hygiene follow-up.
 Date Booked: 2026-11-15`);
     expect(summary).not.toContain("\n\n\n");
     expect(summary).not.toContain("Not documented");
+  });
+
+  it("omits a current status that contradicts a confirmed treated context", () => {
+    const form = {
+      ...adultHygiene2021Fixture,
+      periodontalClassification: {
+        ...adultHygiene2021Fixture.periodontalClassification,
+        status: "stable" as const,
+      },
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).not.toContain(
+      "Periodontal status:"
+    );
   });
 
   it("preserves output when the optional gingival description is absent", () => {
