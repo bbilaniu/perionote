@@ -263,6 +263,27 @@ describe("Health/Gingivitis classification", () => {
 
     expect(classifyGingivalHealthCandidate(classification)).toEqual({
       context: expected,
+      missingFields: [],
+      warnings: [],
+    });
+  });
+
+  it("returns human-readable missing fields for candidate navigation", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+
+    expect(classifyGingivalHealthCandidate(classification)).toEqual({
+      context: "",
+      missingFields: [
+        { id: "periodontal-support", label: "Periodontal support" },
+        { id: "bop-percentage", label: "BOP percentage" },
+        { id: "maximum-ppd", label: "Maximum PPD" },
+        { id: "attachment-loss", label: "Probing attachment loss" },
+        {
+          id: "radiographic-bone-loss",
+          label: "Radiographic bone loss (RBL)",
+        },
+      ],
       warnings: [],
     });
   });

@@ -915,7 +915,7 @@ It avoids turning a generic reference list into a false claim that every criteri
 - Unknown / not yet assessed
 - Intact periodontal support
 - Reduced support (not due to periodontitis)
-- Reduced support (after periodontitis treatment)
+- Reduced support (with a history of treated periodontitis)
   
 ## Section C - Extent/distribution  
   

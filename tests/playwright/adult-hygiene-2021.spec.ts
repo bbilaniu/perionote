@@ -722,6 +722,17 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     page.getByText("Periodontal assessment findings", { exact: true })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-periodontium")).toBeVisible();
+  const periodontalSupportBox = await page
+    .locator('[data-candidate-field="periodontal-support"]')
+    .boundingBox();
+  const progressiveDestructionBox = await page
+    .locator('[data-candidate-field="progressive-destruction"]')
+    .boundingBox();
+  expect(periodontalSupportBox).not.toBeNull();
+  expect(progressiveDestructionBox).not.toBeNull();
+  expect(periodontalSupportBox!.y).toBeGreaterThan(
+    progressiveDestructionBox!.y
+  );
   const stageEvidence = page.getByRole("button", {
     name: /Patient-specific stage evidence/,
   });
@@ -826,6 +837,41 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   );
 });
 
+test("Adult Hygiene missing candidate items navigate to and highlight findings", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+
+  await expect(
+    page.getByText("More information is needed to calculate a candidate:", {
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Periodontium", exact: true })
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Periodontal support", exact: true })
+    .click();
+
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  await expect(page.locator("#adult-hygiene-periodontium")).toBeFocused();
+  await expect(
+    page.locator('[data-candidate-field="periodontal-support"]')
+  ).toHaveAttribute("data-candidate-highlighted", "true");
+});
+
 test("Adult Hygiene shows treated-periodontitis context only with treated support", async ({
   page,
 }) => {
@@ -860,7 +906,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await page.locator("#adult-hygiene-periodontium").click();
   await page
     .getByRole("option", {
-      name: "Reduced support (after periodontitis treatment)",
+      name: "Reduced support (with a history of treated periodontitis)",
       exact: true,
     })
     .click();

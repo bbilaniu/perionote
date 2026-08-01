@@ -78,6 +78,7 @@ import {
   type ClinicalMeasurement,
   type DiabetesModifier,
   type GingivalHealthAssessment,
+  type GingivalHealthCandidateMissingFieldId,
   type HealthGingivitisContext,
   type PeriodontalClassification,
   type PeriodontalCriterionEvidence,
@@ -97,6 +98,44 @@ const treatmentRowRemoveButtonClass =
 const evidenceSectionClass =
   "space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700";
 const evidenceSectionHeadingClass = "mb-2 text-center text-sm font-semibold";
+const gingivalCandidateFieldTargetIds: Record<
+  GingivalHealthCandidateMissingFieldId,
+  string
+> = {
+  "periodontal-support": "adult-hygiene-periodontium",
+  "bop-percentage": "adult-hygiene-bop-percent",
+  "maximum-ppd": "adult-hygiene-maximum-ppd",
+  "attachment-loss": "adult-hygiene-attachment-loss",
+  "radiographic-bone-loss": "adult-hygiene-radiographic-bone-loss",
+  "ppd-4-or-greater-with-bop": "adult-hygiene-ppd4-bop",
+  "progressive-destruction": "adult-hygiene-progressive-destruction",
+};
+
+function GingivalCandidateFieldTarget({
+  id,
+  activeId,
+  children,
+}: {
+  id: GingivalHealthCandidateMissingFieldId;
+  activeId?: GingivalHealthCandidateMissingFieldId;
+  children: ReactNode;
+}) {
+  const highlighted = id === activeId;
+  return (
+    <div
+      className={`scroll-mt-24 rounded-xl transition-shadow duration-300 ${
+        highlighted
+          ? "ring-2 ring-amber-400 ring-offset-4 ring-offset-white dark:ring-amber-300 dark:ring-offset-slate-950"
+          : ""
+      }`}
+      data-candidate-field={id}
+      data-candidate-highlighted={highlighted ? "true" : undefined}
+    >
+      {children}
+    </div>
+  );
+}
+
 const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
@@ -925,6 +964,10 @@ function PeriodontalClassificationControl({
   const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
     gradeObservationCount > 0,
   );
+  const [pendingMissingField, setPendingMissingField] =
+    useState<GingivalHealthCandidateMissingFieldId>();
+  const [highlightedMissingField, setHighlightedMissingField] =
+    useState<GingivalHealthCandidateMissingFieldId>();
 
   useEffect(() => {
     if (hasStructuredObservations) setStructuredObservationsOpen(true);
@@ -943,6 +986,46 @@ function PeriodontalClassificationControl({
     setStructuredObservationsOpen(true);
     setStageEvidenceOpen(true);
   }, [value.diagnosis]);
+
+  useEffect(() => {
+    if (!pendingMissingField || !structuredObservationsOpen) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(
+        gingivalCandidateFieldTargetIds[pendingMissingField],
+      );
+      if (!(target instanceof HTMLElement)) {
+        setPendingMissingField(undefined);
+        return;
+      }
+
+      setHighlightedMissingField(pendingMissingField);
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      target.scrollIntoView({
+        behavior: reduceMotion ? "auto" : "smooth",
+        block: "center",
+      });
+      target.focus({ preventScroll: true });
+    });
+    const timeout = window.setTimeout(() => {
+      setHighlightedMissingField(undefined);
+      setPendingMissingField(undefined);
+    }, 2000);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timeout);
+    };
+  }, [pendingMissingField, structuredObservationsOpen]);
+
+  function navigateToMissingField(
+    fieldId: GingivalHealthCandidateMissingFieldId,
+  ) {
+    setStructuredObservationsOpen(true);
+    setPendingMissingField(fieldId);
+  }
 
   function update(patch: Partial<PeriodontalClassification>) {
     onChange({ ...value, ...patch });
@@ -1227,87 +1310,122 @@ function PeriodontalClassificationControl({
                 Periodontal assessment findings
               </legend>
               <div className="grid gap-3 md:grid-cols-2">
-                <FixedChoiceListbox
-                  id="adult-hygiene-periodontium"
-                  label="Periodontal support (if known)"
-                  value={value.gingivalHealth.periodontium}
-                  options={periodontalPeriodontiumChoices}
-                  onChange={updatePeriodontalSupport}
-                />
-                <label className="block text-sm font-medium">
-                  Bleeding on probing (%)
-                  <input
-                    id="adult-hygiene-bop-percent"
-                    className={inputClass}
-                    type="number"
-                    min={0}
-                    max={100}
-                    step={1}
-                    value={numericValue(value.gingivalHealth.bopPercent)}
-                    onChange={(event) => {
-                      const raw = event.target.value;
-                      updateGingivalHealth({
-                        ...(raw
-                          ? {
-                              bopPercent: {
-                                operator: "eq",
-                                value: Number(raw),
-                                unit: "percent",
-                              },
-                            }
-                          : { bopPercent: undefined }),
-                      });
-                    }}
+                <GingivalCandidateFieldTarget
+                  id="bop-percentage"
+                  activeId={highlightedMissingField}
+                >
+                  <label className="block text-sm font-medium">
+                    Bleeding on probing (%)
+                    <input
+                      id="adult-hygiene-bop-percent"
+                      className={inputClass}
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={numericValue(value.gingivalHealth.bopPercent)}
+                      onChange={(event) => {
+                        const raw = event.target.value;
+                        updateGingivalHealth({
+                          ...(raw
+                            ? {
+                                bopPercent: {
+                                  operator: "eq",
+                                  value: Number(raw),
+                                  unit: "percent",
+                                },
+                              }
+                            : { bopPercent: undefined }),
+                        });
+                      }}
+                    />
+                  </label>
+                </GingivalCandidateFieldTarget>
+                <GingivalCandidateFieldTarget
+                  id="maximum-ppd"
+                  activeId={highlightedMissingField}
+                >
+                  <label className="block text-sm font-medium">
+                    Maximum PPD (mm)
+                    <input
+                      id="adult-hygiene-maximum-ppd"
+                      className={inputClass}
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={numericValue(value.gingivalHealth.maximumPpd)}
+                      onChange={(event) => updateMaximumPpd(event.target.value)}
+                    />
+                  </label>
+                </GingivalCandidateFieldTarget>
+                <GingivalCandidateFieldTarget
+                  id="attachment-loss"
+                  activeId={highlightedMissingField}
+                >
+                  <FixedChoiceListbox
+                    id="adult-hygiene-attachment-loss"
+                    label="Probing attachment loss"
+                    value={value.gingivalHealth.attachmentLoss}
+                    options={assessedPresenceChoices}
+                    onChange={(attachmentLoss) =>
+                      updateGingivalHealth({ attachmentLoss })
+                    }
                   />
-                </label>
-                <label className="block text-sm font-medium">
-                  Maximum PPD (mm)
-                  <input
-                    id="adult-hygiene-maximum-ppd"
-                    className={inputClass}
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={numericValue(value.gingivalHealth.maximumPpd)}
-                    onChange={(event) => updateMaximumPpd(event.target.value)}
+                </GingivalCandidateFieldTarget>
+                <GingivalCandidateFieldTarget
+                  id="radiographic-bone-loss"
+                  activeId={highlightedMissingField}
+                >
+                  <FixedChoiceListbox
+                    id="adult-hygiene-radiographic-bone-loss"
+                    label="Radiographic bone loss (RBL)"
+                    value={value.gingivalHealth.radiographicBoneLoss}
+                    options={assessedPresenceChoices}
+                    onChange={(radiographicBoneLoss) =>
+                      updateGingivalHealth({ radiographicBoneLoss })
+                    }
                   />
-                </label>
-                <FixedChoiceListbox
-                  id="adult-hygiene-attachment-loss"
-                  label="Probing attachment loss"
-                  value={value.gingivalHealth.attachmentLoss}
-                  options={assessedPresenceChoices}
-                  onChange={(attachmentLoss) =>
-                    updateGingivalHealth({ attachmentLoss })
-                  }
-                />
-                <FixedChoiceListbox
-                  id="adult-hygiene-radiographic-bone-loss"
-                  label="Radiographic bone loss (RBL)"
-                  value={value.gingivalHealth.radiographicBoneLoss}
-                  options={assessedPresenceChoices}
-                  onChange={(radiographicBoneLoss) =>
-                    updateGingivalHealth({ radiographicBoneLoss })
-                  }
-                />
-                <FixedChoiceListbox
-                  id="adult-hygiene-ppd4-bop"
-                  label="Sites with PPD ≥4 mm and BOP"
-                  value={value.gingivalHealth.ppd4OrGreaterWithBop}
-                  options={deepPocketBopChoices}
-                  onChange={(ppd4OrGreaterWithBop) =>
-                    updateGingivalHealth({ ppd4OrGreaterWithBop })
-                  }
-                />
-                <FixedChoiceListbox
-                  id="adult-hygiene-progressive-destruction"
-                  label="Evidence of progressive periodontal destruction"
-                  value={value.gingivalHealth.progressiveDestruction}
-                  options={assessedBooleanChoices}
-                  onChange={(progressiveDestruction) =>
-                    updateGingivalHealth({ progressiveDestruction })
-                  }
-                />
+                </GingivalCandidateFieldTarget>
+                <GingivalCandidateFieldTarget
+                  id="ppd-4-or-greater-with-bop"
+                  activeId={highlightedMissingField}
+                >
+                  <FixedChoiceListbox
+                    id="adult-hygiene-ppd4-bop"
+                    label="Sites with PPD ≥4 mm and BOP"
+                    value={value.gingivalHealth.ppd4OrGreaterWithBop}
+                    options={deepPocketBopChoices}
+                    onChange={(ppd4OrGreaterWithBop) =>
+                      updateGingivalHealth({ ppd4OrGreaterWithBop })
+                    }
+                  />
+                </GingivalCandidateFieldTarget>
+                <GingivalCandidateFieldTarget
+                  id="progressive-destruction"
+                  activeId={highlightedMissingField}
+                >
+                  <FixedChoiceListbox
+                    id="adult-hygiene-progressive-destruction"
+                    label="Evidence of progressive periodontal destruction"
+                    value={value.gingivalHealth.progressiveDestruction}
+                    options={assessedBooleanChoices}
+                    onChange={(progressiveDestruction) =>
+                      updateGingivalHealth({ progressiveDestruction })
+                    }
+                  />
+                </GingivalCandidateFieldTarget>
+                <GingivalCandidateFieldTarget
+                  id="periodontal-support"
+                  activeId={highlightedMissingField}
+                >
+                  <FixedChoiceListbox
+                    id="adult-hygiene-periodontium"
+                    label="Periodontal support (if known)"
+                    value={value.gingivalHealth.periodontium}
+                    options={periodontalPeriodontiumChoices}
+                    onChange={updatePeriodontalSupport}
+                  />
+                </GingivalCandidateFieldTarget>
               </div>
             </fieldset>
 
@@ -1738,6 +1856,24 @@ function PeriodontalClassificationControl({
                   )
                 : "Not available"}
             </p>
+            {gingivalHealthCandidate.missingFields.length ? (
+              <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                <p>More information is needed to calculate a candidate:</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {gingivalHealthCandidate.missingFields.map((field) => (
+                    <li key={field.id}>
+                      <button
+                        type="button"
+                        className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                        onClick={() => navigateToMissingField(field.id)}
+                      >
+                        {field.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {gingivalHealthCandidate.warnings.length ? (
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
                 {gingivalHealthCandidate.warnings.map((warning) => (

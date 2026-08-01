@@ -50,7 +50,7 @@ export const periodontalPeriodontiumChoices = [
   },
   {
     value: "reduced-treated-periodontitis",
-    label: "Reduced support (after periodontitis treatment)",
+    label: "Reduced support (with a history of treated periodontitis)",
   },
 ] as const;
 
@@ -480,7 +480,22 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
 
 export interface GingivalHealthCandidate {
   context: HealthGingivitisContext;
+  missingFields: GingivalHealthCandidateMissingField[];
   warnings: string[];
+}
+
+export type GingivalHealthCandidateMissingFieldId =
+  | "periodontal-support"
+  | "bop-percentage"
+  | "maximum-ppd"
+  | "attachment-loss"
+  | "radiographic-bone-loss"
+  | "ppd-4-or-greater-with-bop"
+  | "progressive-destruction";
+
+export interface GingivalHealthCandidateMissingField {
+  id: GingivalHealthCandidateMissingFieldId;
+  label: string;
 }
 
 const stageRank: Record<Exclude<PeriodontitisStage, "">, number> = {
@@ -559,34 +574,52 @@ export function classifyGingivalHealthCandidate(
     classification.diagnosis !== "gingivitis" &&
     classification.diagnosis !== "periodontitis"
   ) {
-    return { context: "", warnings: [] };
+    return { context: "", missingFields: [], warnings: [] };
   }
 
   const bop = exactMeasurementValue(assessment.bopPercent, "percent");
   const maximumPpd = exactMeasurementValue(assessment.maximumPpd, "mm");
-  const missing = [
-    ...(!assessment.periodontium ? ["periodontium"] : []),
-    ...(bop === undefined ? ["BOP percentage"] : []),
-    ...(maximumPpd === undefined ? ["maximum PPD"] : []),
+  const missingFields: GingivalHealthCandidateMissingField[] = [
+    ...(!assessment.periodontium
+      ? [{ id: "periodontal-support", label: "Periodontal support" } as const]
+      : []),
+    ...(bop === undefined
+      ? [{ id: "bop-percentage", label: "BOP percentage" } as const]
+      : []),
+    ...(maximumPpd === undefined
+      ? [{ id: "maximum-ppd", label: "Maximum PPD" } as const]
+      : []),
     ...(assessment.attachmentLoss === "not-assessed"
-      ? ["attachment loss"]
+      ? [{ id: "attachment-loss", label: "Probing attachment loss" } as const]
       : []),
     ...(assessment.radiographicBoneLoss === "not-assessed"
-      ? ["radiographic bone loss"]
+      ? [
+          {
+            id: "radiographic-bone-loss",
+            label: "Radiographic bone loss (RBL)",
+          } as const,
+        ]
       : []),
   ];
   if (classification.diagnosis === "periodontitis") {
     if (assessment.ppd4OrGreaterWithBop === "not-assessed") {
-      missing.push("sites with PPD >=4 mm and BOP");
+      missingFields.push({
+        id: "ppd-4-or-greater-with-bop",
+        label: "Sites with PPD ≥4 mm and BOP",
+      });
     }
     if (assessment.progressiveDestruction === "not-assessed") {
-      missing.push("progressive destruction");
+      missingFields.push({
+        id: "progressive-destruction",
+        label: "Evidence of progressive periodontal destruction",
+      });
     }
   }
-  if (missing.length) {
+  if (missingFields.length) {
     return {
       context: "",
-      warnings: [`Complete ${missing.join(", ")} to calculate a candidate.`],
+      missingFields,
+      warnings: [],
     };
   }
   if (
@@ -598,6 +631,7 @@ export function classifyGingivalHealthCandidate(
   ) {
     return {
       context: "",
+      missingFields: [],
       warnings: [
         "Entered periodontal measurements are outside supported ranges.",
       ],
@@ -608,6 +642,7 @@ export function classifyGingivalHealthCandidate(
     if (assessment.periodontium !== "reduced-treated-periodontitis") {
       return {
         context: "",
+        missingFields: [],
         warnings: [
           "A periodontitis diagnosis requires the treated-periodontitis context for this calculation.",
         ],
@@ -619,6 +654,7 @@ export function classifyGingivalHealthCandidate(
     ) {
       return {
         context: "",
+        missingFields: [],
         warnings: [
           "Treated periodontitis context requires confirmed reduced attachment and bone levels.",
         ],
@@ -630,6 +666,7 @@ export function classifyGingivalHealthCandidate(
     ) {
       return {
         context: "",
+        missingFields: [],
         warnings: [
           "Findings may indicate unstable or recurrent periodontitis; no treated-periodontitis context is suggested.",
         ],
@@ -638,17 +675,20 @@ export function classifyGingivalHealthCandidate(
     if (bop < 10 && maximumPpd <= 4) {
       return {
         context: "health-treated-stable-periodontitis",
+        missingFields: [],
         warnings: [],
       };
     }
     if (bop >= 10 && assessment.ppd4OrGreaterWithBop === "no") {
       return {
         context: "inflammation-periodontitis-history",
+        missingFields: [],
         warnings: [],
       };
     }
     return {
       context: "",
+      missingFields: [],
       warnings: [
         "Entered findings do not match a supported treated-periodontitis context.",
       ],
@@ -679,16 +719,18 @@ export function classifyGingivalHealthCandidate(
   ) {
     return {
       context: "",
+      missingFields: [],
       warnings: [
-        "Attachment and bone-loss findings do not match the selected periodontium.",
+        "Attachment and bone-loss findings do not match the selected periodontal support.",
       ],
     };
   }
   if (maximumPpd > 3) {
     return {
       context: "",
+      missingFields: [],
       warnings: [
-        "Maximum PPD exceeds the supported health/gingivitis threshold for this periodontium.",
+        "Maximum PPD exceeds the supported health/gingivitis threshold for the selected periodontal support.",
       ],
     };
   }
@@ -696,17 +738,20 @@ export function classifyGingivalHealthCandidate(
   if (classification.diagnosis === "health" && bop < 10) {
     return {
       context: expectedPeriodontium.health as HealthGingivitisContext,
+      missingFields: [],
       warnings: [],
     };
   }
   if (classification.diagnosis === "gingivitis" && bop >= 10) {
     return {
       context: expectedPeriodontium.gingivitis as HealthGingivitisContext,
+      missingFields: [],
       warnings: [],
     };
   }
   return {
     context: "",
+    missingFields: [],
     warnings: [
       `BOP ${bop}% does not support the selected ${classification.diagnosis} category.`,
     ],
