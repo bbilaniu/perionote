@@ -781,6 +781,12 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Health/Gingivitis classification",
+      exact: true,
+    })
+  ).toBeVisible();
   await structuredPeriodontalObservations.click();
   await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
@@ -809,6 +815,98 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(
     page.getByLabel("Confirm selected Health/Gingivitis classification")
   ).not.toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
+  );
+});
+
+test("Adult Hygiene shows treated-periodontitis context only with treated support", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontitis", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Periodontitis classification",
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate treated-periodontitis context",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Health/Gingivitis classification",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Treated-periodontitis context", { exact: true })
+  ).toHaveCount(0);
+
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", {
+      name: "Reduced support (after periodontitis treatment)",
+      exact: true,
+    })
+    .click();
+  await page.locator("#adult-hygiene-bop-percent").fill("5");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("4");
+  await page.locator("#adult-hygiene-attachment-loss").click();
+  await page.getByRole("option", { name: "Present", exact: true }).click();
+  await page.locator("#adult-hygiene-radiographic-bone-loss").click();
+  await page.getByRole("option", { name: "Present", exact: true }).click();
+  await page.locator("#adult-hygiene-ppd4-bop").click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+  await page.locator("#adult-hygiene-progressive-destruction").click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate treated-periodontitis context",
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Health/Gingivitis classification",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Treated-periodontitis context", { exact: true })
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Use candidate", exact: true })
+    .click();
+  await page
+    .getByLabel("Confirm selected treated-periodontitis context")
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT/
+  );
+
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", { name: "Intact periodontal support", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate treated-periodontitis context",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Treated-periodontitis context", { exact: true })
+  ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Health\/Gingivitis:/
   );
@@ -1221,7 +1319,10 @@ test("Adult Hygiene requires confirmation for structured periodontal candidates"
     name: /Structured periodontal observations/,
   });
   await expect(
-    page.getByRole("heading", { name: "Candidate classification", exact: true })
+    page.getByRole("heading", {
+      name: "Candidate Periodontitis classification",
+      exact: true,
+    })
   ).toHaveCount(0);
   await page.locator("#adult-hygiene-periodontal-extent").click();
   await page.getByRole("option", { name: "Generalized", exact: true }).click();

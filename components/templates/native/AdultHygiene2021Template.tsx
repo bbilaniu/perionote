@@ -802,6 +802,25 @@ function PeriodontalClassificationControl({
         label,
       })),
   ];
+  const isHealthGingivitisDiagnosis =
+    value.diagnosis === "health" || value.diagnosis === "gingivitis";
+  const isTreatedPeriodontitisContext =
+    value.diagnosis === "periodontitis" &&
+    value.gingivalHealth.periodontium === "reduced-treated-periodontitis";
+  const showGingivalContextWorkflow =
+    isHealthGingivitisDiagnosis || isTreatedPeriodontitisContext;
+  const gingivalCandidateHeading = isTreatedPeriodontitisContext
+    ? "Candidate treated-periodontitis context"
+    : "Candidate Health/Gingivitis classification";
+  const gingivalContextLabel = isTreatedPeriodontitisContext
+    ? "Treated-periodontitis context"
+    : "Health/Gingivitis classification";
+  const gingivalContextConfirmationLabel = isTreatedPeriodontitisContext
+    ? "Confirm selected treated-periodontitis context"
+    : "Confirm selected Health/Gingivitis classification";
+  const gingivalContextOverrideLabel = isTreatedPeriodontitisContext
+    ? "Treated-periodontitis context override reason"
+    : "Health/Gingivitis classification override reason";
   const hasHorizontalBoneLoss = value.stageBasis.some(
     (evidence) => evidence.criterionId === "stage.horizontal-bone-loss",
   );
@@ -922,6 +941,20 @@ function PeriodontalClassificationControl({
         confirmed: false,
       },
       ...(invalidatesStage ? { stageConfirmed: false } : {}),
+    });
+  }
+
+  function updatePeriodontalSupport(
+    periodontium: GingivalHealthAssessment["periodontium"],
+  ) {
+    const hidesTreatedPeriodontitisContext =
+      value.diagnosis === "periodontitis" &&
+      periodontium !== "reduced-treated-periodontitis";
+    updateGingivalHealth({
+      periodontium,
+      ...(hidesTreatedPeriodontitisContext
+        ? { context: "", overrideReason: "" }
+        : {}),
     });
   }
 
@@ -1146,9 +1179,7 @@ function PeriodontalClassificationControl({
                   label="Periodontal support (if known)"
                   value={value.gingivalHealth.periodontium}
                   options={periodontalPeriodontiumChoices}
-                  onChange={(periodontium) =>
-                    updateGingivalHealth({ periodontium })
-                  }
+                  onChange={updatePeriodontalSupport}
                 />
                 <label className="block text-sm font-medium">
                   Bleeding on probing (%)
@@ -1633,12 +1664,10 @@ function PeriodontalClassificationControl({
         />
       </div>
 
-      {value.diagnosis === "health" ||
-      value.diagnosis === "gingivitis" ||
-      value.diagnosis === "periodontitis" ? (
+      {showGingivalContextWorkflow ? (
         <>
           <div className="border-l-4 border-sky-600 pl-4">
-            <h3 className="font-semibold">Candidate Health/Gingivitis</h3>
+            <h3 className="font-semibold">{gingivalCandidateHeading}</h3>
             <p className="mt-1 text-sm">
               {gingivalHealthCandidate.context
                 ? choiceLabel(
@@ -1674,7 +1703,7 @@ function PeriodontalClassificationControl({
             <div className="space-y-3">
               <FixedChoiceListbox
                 id="adult-hygiene-health-gingivitis-context"
-                label="Health/Gingivitis"
+                label={gingivalContextLabel}
                 value={value.gingivalHealth.context}
                 options={healthGingivitisOptions}
                 onChange={(context) =>
@@ -1683,7 +1712,7 @@ function PeriodontalClassificationControl({
               />
               <CheckboxField
                 id="adult-hygiene-health-gingivitis-confirmed"
-                label="Confirm selected Health/Gingivitis classification"
+                label={gingivalContextConfirmationLabel}
                 checked={value.gingivalHealth.confirmed}
                 disabled={
                   !value.gingivalHealth.context ||
@@ -1706,7 +1735,7 @@ function PeriodontalClassificationControl({
             value.gingivalHealth.context !== gingivalHealthCandidate.context ? (
               <TextField
                 id="adult-hygiene-health-gingivitis-override"
-                label="Health/Gingivitis override reason"
+                label={gingivalContextOverrideLabel}
                 value={value.gingivalHealth.overrideReason}
                 onChange={(overrideReason) =>
                   updateGingivalHealth({ overrideReason })
@@ -1720,7 +1749,9 @@ function PeriodontalClassificationControl({
       {value.diagnosis === "periodontitis" ? (
         <>
           <div className="border-l-4 border-sky-600 pl-4">
-            <h3 className="font-semibold">Candidate classification</h3>
+            <h3 className="font-semibold">
+              Candidate Periodontitis classification
+            </h3>
             <p className="mt-1 text-sm">
               Stage {candidate.stage || "not available"}; Grade{" "}
               {candidate.grade || "not available"}

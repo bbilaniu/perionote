@@ -572,7 +572,7 @@ export function classifyGingivalHealthCandidate(
     return {
       context: "",
       warnings: [
-        "Entered Health/Gingivitis measurements are outside supported ranges.",
+        "Entered periodontal measurements are outside supported ranges.",
       ],
     };
   }
@@ -604,7 +604,7 @@ export function classifyGingivalHealthCandidate(
       return {
         context: "",
         warnings: [
-          "Findings may indicate unstable or recurrent periodontitis; no Health/Gingivitis candidate is suggested.",
+          "Findings may indicate unstable or recurrent periodontitis; no treated-periodontitis context is suggested.",
         ],
       };
     }
@@ -623,7 +623,7 @@ export function classifyGingivalHealthCandidate(
     return {
       context: "",
       warnings: [
-        "Entered findings do not match a supported treated-periodontitis Health/Gingivitis context.",
+        "Entered findings do not match a supported treated-periodontitis context.",
       ],
     };
   }
@@ -1049,6 +1049,14 @@ export function formatHealthGingivitisBlock(
 ): string {
   const assessment = classification.gingivalHealth;
   if (!assessment.confirmed || !assessment.context) return "";
+  const selectedContext = healthGingivitisContextChoices.find(
+    (choice) => choice.value === assessment.context,
+  );
+  const contextIsAvailable =
+    selectedContext?.diagnosis === classification.diagnosis &&
+    (classification.diagnosis !== "periodontitis" ||
+      assessment.periodontium === "reduced-treated-periodontitis");
+  if (!contextIsAvailable) return "";
   const contextLabel = choiceLabel(
     healthGingivitisContextChoices,
     assessment.context,

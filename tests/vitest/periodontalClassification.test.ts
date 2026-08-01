@@ -299,6 +299,44 @@ describe("Health/Gingivitis classification", () => {
 - NO RADIOGRAPHIC BONE LOSS`);
   });
 
+  it("keeps ClearDent wording for a confirmed treated-periodontitis context", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "periodontitis";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "reduced-treated-periodontitis",
+      bopPercent: { operator: "eq", value: 5, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 4, unit: "mm" },
+      attachmentLoss: "present",
+      radiographicBoneLoss: "present",
+      ppd4OrGreaterWithBop: "no",
+      progressiveDestruction: "no",
+      context: "health-treated-stable-periodontitis",
+      confirmed: true,
+    };
+
+    expect(formatHealthGingivitisBlock(classification))
+      .toBe(`Health/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT
+- HISTORY OF PERIODONTITIS WITH REDUCED ATTACHMENT/BONE LEVELS
+- PPD <=4 MM
+- NO SITE WITH PPD >=4 MM AND BOP
+- BOP <10%
+- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION`);
+  });
+
+  it("omits a confirmed treated context when periodontal support is incompatible", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "periodontitis";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "intact",
+      context: "health-treated-stable-periodontitis",
+      confirmed: true,
+    };
+
+    expect(formatHealthGingivitisBlock(classification)).toBe("");
+  });
+
   it("formats overrides from actual evidence instead of claiming reference criteria", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "health";

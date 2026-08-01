@@ -32,7 +32,7 @@ catalogue in that module.
 | Unknown HbA1c | Diabetes with unknown current HbA1c does not modify the candidate grade. |
 | Health/Gingivitis compatibility | Structured evidence is calculated and confirmed, while generated output retains the familiar ClearDent field heading and criterion-block style. |
 
-## Health/Gingivitis Table
+## Health/Gingivitis and Treated-Periodontitis Context Table
 
 Maximum PPD is a shared measurement used by both this table and periodontitis
 staging. Unassessed negative findings never count as confirmed absence.
@@ -47,9 +47,9 @@ staging. Unassessed negative findings never count as confirmed absence.
 | Periodontitis; reduced treated | BOP >=10%; attachment and RBL present; no site with PPD >=4 mm and BOP; no progressive destruction | Gingival inflammation - patient with history of periodontitis |
 
 A site with PPD >=4 mm and BOP or evidence of progressive destruction suppresses
-the Health/Gingivitis candidate and prompts assessment for unstable or recurrent
-periodontitis. A treated periodontitis patient is never relabelled as a simple
-gingivitis patient.
+the treated-periodontitis context candidate and prompts assessment for unstable
+or recurrent periodontitis. A treated periodontitis patient is never relabelled
+as a simple gingivitis patient.
 
 ## Stage Table
 
@@ -138,5 +138,5 @@ Modifiers can raise the evidence-based or assumed grade. They never lower it.
 - [ ] Confirm Grade B working-assumption behavior when progression data are absent.
 - [ ] Confirm smoking and HbA1c modifier behavior.
 - [ ] Confirm generated wording and override documentation.
-- [ ] Confirm all six Health/Gingivitis candidate rows and ClearDent-compatible output blocks.
+- [ ] Confirm all six Health/Gingivitis or treated-periodontitis context rows and ClearDent-compatible output blocks.
 - [ ] Record reviewer, review date, and approved implementation revision.
