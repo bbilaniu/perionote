@@ -910,12 +910,12 @@ It avoids turning a generic reference list into a false claim that every criteri
 - Other periodontal condition  
 - Not assessed  
   
-## Section B - Health or gingivitis context  
-  
-- Intact periodontium  
-- Reduced periodontium, non-periodontitis patient  
-- Successfully treated periodontitis patient  
-- Patient with history of periodontitis and current inflammation  
+## Section B - Periodontal support (if known)
+
+- Unknown / not yet assessed
+- Intact periodontal support
+- Reduced support (not due to periodontitis)
+- Reduced support (after periodontitis treatment)
   
 ## Section C - Extent/distribution  
   

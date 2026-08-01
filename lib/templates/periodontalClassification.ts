@@ -42,15 +42,15 @@ export const periodontalStatusChoices = [
 ] as const;
 
 export const periodontalPeriodontiumChoices = [
-  { value: "", label: "Not assessed" },
-  { value: "intact", label: "Intact periodontium" },
+  { value: "", label: "Unknown / not yet assessed" },
+  { value: "intact", label: "Intact periodontal support" },
   {
     value: "reduced-non-periodontitis",
-    label: "Reduced periodontium, non-periodontitis patient",
+    label: "Reduced support (not due to periodontitis)",
   },
   {
     value: "reduced-treated-periodontitis",
-    label: "Reduced periodontium, treated periodontitis patient",
+    label: "Reduced support (after periodontitis treatment)",
   },
 ] as const;
 

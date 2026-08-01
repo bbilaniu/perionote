@@ -744,9 +744,15 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(
     page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Severity evidence", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Complexity evidence", exact: true })
+  ).toBeVisible();
   await page.locator("#adult-hygiene-periodontium").click();
   await page
-    .getByRole("option", { name: "Intact periodontium", exact: true })
+    .getByRole("option", { name: "Intact periodontal support", exact: true })
     .click();
   await page.locator("#adult-hygiene-bop-percent").fill("6");
   await page.locator("#adult-hygiene-maximum-ppd").fill("3");
