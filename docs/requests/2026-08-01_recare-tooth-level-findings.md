@@ -50,6 +50,7 @@ The extension must:
 | 8   | Repeated instances                   | Proposed first-slice assumption: do not repeat the same fixed finding. One selected finding owns all of its current Tooth/area and other annotations. See the review limitation below. |
 | 9   | Generated wording                    | Use the proposed contract and examples in this document for clinical review.                                                                                                           |
 | 10  | Odontogram placement                 | Move the existing **Odontogram up to date** checkbox to the bottom of the new structured Teeth input area. Its state and output remain unchanged.                                      |
+| 11  | Initial caries lesions               | Add **Initial/noncavitated caries lesion** as a finding distinct from unspecified Caries. Support optional Active / Inactive activity without inferring management or treatment.       |
 
 ## Compatibility Boundary
 
@@ -111,7 +112,8 @@ Add an optional, backward-compatible Teeth assessment containing:
 - status: `not_assessed`, `wnl`, or `findings`;
 - selected stable normalized Teeth option IDs;
 - per-finding zero or more Tooth/area text values where supported;
-- per-Caries optional free-text Surface(s);
+- per-Caries and per-initial-lesion optional free-text Surface(s);
+- per-initial-lesion optional activity: `active` or `inactive`;
 - per-Mobility optional Miller Index value: `M0`, `M1`, `M2`, or `M3`;
 - an optional encounter-only comment per finding; and
 - optional encounter-only Additional tooth findings text.
@@ -129,17 +131,18 @@ form JSON.
 
 Render the fixed observations in the reviewed catalogue order:
 
-| Observation       | Classification   | Proposed annotations                                   |
-| ----------------- | ---------------- | ------------------------------------------------------ |
-| Intact            | Normal           | Optional comment                                       |
-| No caries         | Normal           | Optional comment                                       |
-| No mobility       | Normal           | Optional comment                                       |
-| Caries            | Abnormal         | Tooth/area, free-text Surface(s), optional comment     |
-| Fracture          | Abnormal         | Tooth/area, optional comment                           |
-| Discoloration     | Abnormal         | Tooth/area, optional comment                           |
-| Mobility          | Abnormal         | Tooth/area, Miller Index M0/M1/M2/M3, optional comment |
-| Enamel hypoplasia | Normal variation | Tooth/area, optional comment                           |
-| Fluorosis         | Normal variation | Tooth/area, optional comment                           |
+| Observation                        | Classification   | Proposed annotations                                                         |
+| ---------------------------------- | ---------------- | ---------------------------------------------------------------------------- |
+| Intact                             | Normal           | Optional comment                                                             |
+| No caries                          | Normal           | Optional comment                                                             |
+| No mobility                        | Normal           | Optional comment                                                             |
+| Caries                             | Abnormal         | Tooth/area, free-text Surface(s), optional comment                           |
+| Initial/noncavitated caries lesion | Abnormal         | Tooth/area, free-text Surface(s), Active/Inactive activity, optional comment |
+| Fracture                           | Abnormal         | Tooth/area, optional comment                                                 |
+| Discoloration                      | Abnormal         | Tooth/area, optional comment                                                 |
+| Mobility                           | Abnormal         | Tooth/area, Miller Index M0/M1/M2/M3, optional comment                       |
+| Enamel hypoplasia                  | Normal variation | Tooth/area, optional comment                                                 |
+| Fluorosis                          | Normal variation | Tooth/area, optional comment                                                 |
 
 Normal and normal-variation classifications are vocabulary metadata only.
 They must not preselect observations, change status, affect visual urgency, or
@@ -162,12 +165,31 @@ preserved as entered. The application must not correct, translate, or infer a
 numbering system. Normalized duplicate text may be rejected, but no clinical
 normalization is permitted.
 
-### Caries surfaces
+### Caries surfaces and initial-lesion activity
 
-Label the encounter-only field **Surface(s)** and accept unrestricted text.
-Do not present a fixed surface vocabulary, reject unfamiliar notation, or
-derive Caries from the field. Empty Surface(s) remains a valid undocumented
-annotation and does not remove the explicitly selected Caries observation.
+For Caries and Initial/noncavitated caries lesion, label the encounter-only
+field **Surface(s)** and accept unrestricted text. Do not present a fixed
+surface vocabulary, reject unfamiliar notation, or derive either finding from
+the field. Empty Surface(s) remains a valid undocumented annotation and does
+not remove the explicitly selected observation.
+
+For Initial/noncavitated caries lesion only, offer an optional **Activity**
+fixed selector with Active and Inactive choices and no default. Activity is
+independent from lesion presence, Caries Risk, and treatment planning. Do not
+infer it from tooth, surface, appearance, radiographs, risk factors, notes, or
+another field.
+
+Selecting Initial/noncavitated caries lesion records a present tooth-level
+finding. It must set Teeth to Findings and be mutually exclusive with WNL and
+No caries. It must not automatically create a Treatment Option, Treatment Plan,
+recommendation, monitoring instruction, nonrestorative intervention, or
+restorative intervention.
+
+This slice intentionally has no structured management field. If management is
+clinically documented, it remains an independent explicit entry in the
+existing Treatment Options, Treatment Plan, or another accepted free-text
+field. The application must not derive management from lesion stage or
+activity.
 
 ### Mobility grade
 
@@ -223,7 +245,8 @@ Formatting rules:
 - emit one bullet per selected fixed observation in catalogue order;
 - use the reviewed observation label as the bullet wording;
 - place supported annotations in one parenthetical, separated by semicolons;
-- use annotation labels `tooth/area`, `surface`, `Miller Index`, and `notes`;
+- use annotation labels `tooth/area`, `surface`, `activity`, `Miller Index`,
+  and `notes`;
 - join multiple Tooth/area values with `, ` in their displayed order;
 - omit unsupported and empty clauses;
 - omit Additional observations when its field is empty;
@@ -241,6 +264,21 @@ Teeth:
   - Caries (tooth/area: 14; surface: DO).
 ```
 
+Initial lesion with explicitly documented activity:
+
+```text
+Teeth:
+  - Initial/noncavitated caries lesion (tooth/area: 15; surface: O; activity: inactive).
+```
+
+The same finding without an activity selection remains valid and does not
+invent one:
+
+```text
+Teeth:
+  - Initial/noncavitated caries lesion (tooth/area: 15; surface: O).
+```
+
 Several teeth sharing one mobility grade:
 
 ```text
@@ -253,6 +291,7 @@ Mixed findings:
 ```text
 Teeth:
   - Caries (tooth/area: 14, 15; surface: occlusal; notes: monitored areas).
+  - Initial/noncavitated caries lesion (tooth/area: 25; surface: D; activity: active).
   - Fracture (tooth/area: 26).
   - Discoloration (tooth/area: maxillary anterior).
   - Enamel hypoplasia (tooth/area: 12).
@@ -291,12 +330,15 @@ that finding apply to the entire selection.
 This safely represents:
 
 - Caries on several teeth when one Surface(s) entry applies to all of them;
-  and
+- Initial/noncavitated caries lesions on several teeth when one Surface(s)
+  entry and one documented activity apply to all of them; and
 - Mobility on several teeth when all share one Miller Index grade.
 
 It cannot unambiguously represent, in the structured fields:
 
 - Caries on different teeth with different surfaces; or
+- initial/noncavitated caries lesions on different teeth with different
+  surfaces or activity; or
 - Mobility on different teeth with different Miller grades.
 
 Until repeated instances are approved, the UI must explain that shared
@@ -311,19 +353,22 @@ implementation:
 
 1. **Generated wording:** approve the WNL line, Findings grammar, annotation
    labels, examples, and placement proposed above.
-2. **Repeated findings:** confirm that the first slice may omit repeated Caries
-   and Mobility instances despite the documented limitation, or approve
-   repeatable rows for those observations.
+2. **Repeated findings:** confirm that the first slice may omit repeated Caries,
+   Initial/noncavitated caries lesion, and Mobility instances despite the
+   documented limitation, or approve repeatable rows for those observations.
 3. **M0 and No mobility:** decide whether M0 is selected only within Mobility,
    whether it maps to the fixed No mobility observation, or whether both may be
    documented. They must not produce contradictory duplicate statements.
 4. **Mutual exclusivity:** decide which normal observations are incompatible
-   with which findings. At minimum, resolve No caries versus Caries and No
-   mobility versus Mobility. Also decide whether Intact can coexist with
-   Fracture, Caries, discoloration, enamel hypoplasia, or fluorosis.
+   with which findings. Initial/noncavitated caries lesion is already defined
+   as incompatible with WNL and No caries. Also resolve No caries versus Caries
+   and No mobility versus Mobility, and decide whether Intact can coexist with
+   Fracture, Caries, Initial/noncavitated caries lesion, discoloration, enamel
+   hypoplasia, or fluorosis.
 5. **Required annotations:** decide whether Tooth/area is optional or required
-   for Caries, Fracture, Mobility, enamel hypoplasia, and other localized
-   findings, and whether Mobility requires a Miller grade.
+   for Caries, Initial/noncavitated caries lesion, Fracture, Mobility, enamel
+   hypoplasia, and other localized findings; whether Mobility requires a
+   Miller grade; and whether an initial lesion requires an activity selection.
 6. **Additional tooth findings:** approve or remove the proposed encounter-only
    free-text field modeled on Gingival Description findings.
 
@@ -343,13 +388,16 @@ Record:
 - all approved mutual-exclusion rules;
 - exact output placement and formatting;
 - compatibility with odontogram and Caries Risk; and
-- synthetic WNL, mixed-finding, multi-tooth, and mobility examples.
+- synthetic WNL, mixed-finding, multi-tooth, mobility, and initial-lesion
+  examples.
 
 After clinical approval, update the normalized catalogue and schema as needed
 to represent:
 
 - Tooth/area support for fluorosis;
 - free-text caries Surface(s);
+- the Initial/noncavitated caries lesion option and its optional Active /
+  Inactive activity;
 - the fixed M0–M3 Miller Index choices;
 - any approved exclusivity rules; and
 - any approved repeated-instance model.
@@ -366,6 +414,11 @@ Focused unit and browser tests must prove that:
 - Findings never emits WNL wording;
 - only supported annotations are collected and emitted;
 - Tooth/area and Surface(s) preserve clinician-entered text;
+- Initial/noncavitated caries lesion conflicts with WNL and No caries;
+- initial-lesion activity remains optional, stores only Active or Inactive, and
+  is never inferred;
+- initial-lesion stage or activity never creates or changes management,
+  treatment, monitoring, recommendation, or Caries Risk;
 - multiple Tooth/area values remain ordered and encounter-only;
 - only M0, M1, M2, or M3 can be stored as a structured Miller Index value;
 - the approved exclusivity behavior prevents contradictory output;

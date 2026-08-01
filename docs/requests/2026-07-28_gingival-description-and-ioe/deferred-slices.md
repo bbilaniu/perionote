@@ -28,6 +28,7 @@ and generated-output contract are approved.
 - No caries
 - No mobility
 - Caries
+- Initial/noncavitated caries lesion
 - Fracture
 - Discoloration
 - Mobility
@@ -56,6 +57,8 @@ The deferred design must resolve:
 - tooth-numbering interaction without hard-coding a numbering system;
 - one or more teeth per observation;
 - surface selection for caries;
+- activity representation for initial/noncavitated caries lesions without
+  inferring management;
 - mobility grade representation;
 - location for discoloration and fluorosis;
 - repeated instances of the same finding on different teeth;
