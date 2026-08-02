@@ -38,6 +38,10 @@ import {
   formControlClass,
 } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import {
+  FixedChoiceMultiCombobox,
+  type FixedChoiceMultiComboboxGroup,
+} from "@/components/forms/FixedChoiceMultiCombobox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
@@ -45,6 +49,7 @@ import {
   recareIntraoralLocationChoices,
   recareIntraoralOptionConflicts,
   recareIntraoralStructures,
+  type RecareIntraoralStructure,
 } from "@/lib/templates/recareIntraoralCatalog";
 
 const inputClass = `mt-1 ${formControlClass()}`;
@@ -407,7 +412,7 @@ function TeethAssessment({
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+                    className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
                     onClick={applyNormalStructuredObservations}
                   >
                     Apply normal structured observations
@@ -765,6 +770,23 @@ function ExamFinding({
   );
 }
 
+function recareIntraoralChoiceGroups(
+  structure: RecareIntraoralStructure,
+): FixedChoiceMultiComboboxGroup[] {
+  const groups = [
+    { classification: "normal", label: "Normal" },
+    { classification: "abnormal", label: "Abnormal" },
+    { classification: "normal_variation", label: "Common variations" },
+  ] as const;
+
+  return groups.flatMap((group) => {
+    const choices = structure.options
+      .filter((option) => option.classification === group.classification)
+      .map((option) => option.label);
+    return choices.length ? [{ label: group.label, choices }] : [];
+  });
+}
+
 function StructuredIntraoralFindings({
   status,
   values,
@@ -805,6 +827,41 @@ function StructuredIntraoralFindings({
       )
     );
   }
+
+  function updateStructureFindings(
+    structure: RecareIntraoralStructure,
+    selectedLabels: string[],
+  ) {
+    const structureOptionIds = new Set(
+      structure.options.map((option) => option.id),
+    );
+    const currentOptionIds = values
+      .filter((value) => structureOptionIds.has(value.optionId))
+      .map((value) => value.optionId);
+    let nextOptionIds = structure.options
+      .filter((option) => selectedLabels.includes(option.label))
+      .map((option) => option.id);
+    const addedOptionId = nextOptionIds.find(
+      (optionId) => !currentOptionIds.includes(optionId),
+    );
+    if (addedOptionId) {
+      const conflicts = recareIntraoralOptionConflicts.get(addedOptionId);
+      nextOptionIds = nextOptionIds.filter(
+        (optionId) => !conflicts?.has(optionId),
+      );
+    }
+
+    onChange([
+      ...values.filter((value) => !structureOptionIds.has(value.optionId)),
+      ...nextOptionIds.map(
+        (optionId) =>
+          values.find((value) => value.optionId === optionId) ?? {
+            optionId,
+            structureId: structure.id,
+          },
+      ),
+    ]);
+  }
   return (
     <fieldset
       className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
@@ -832,140 +889,146 @@ function StructuredIntraoralFindings({
       {structuredObservationsOpen ? (
         <div
           id="recare-structured-intraoral-observations-content"
-          className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700"
+          className="space-y-4 pt-2"
         >
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Apply the reviewed normal observations or select individual
-            observations. Both document Findings.
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Apply the reviewed normal observations or document individual
+            findings. Both document Findings.
           </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+              className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
               onClick={onApplyNormal}
             >
               Apply normal structured observations
             </button>
             <button
               type="button"
-              className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+              className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
               onClick={onClear}
               disabled={clearDisabled}
             >
               Clear intraoral observations
             </button>
           </div>
-          {recareIntraoralStructures.map((structure) => (
-            <div key={structure.id} className="space-y-2">
-              <h3 className="text-sm font-semibold">{structure.label}</h3>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {structure.options.map((option) => {
-                  const selected = values.find(
-                    (value) => value.optionId === option.id
-                  );
-                  return (
-                    <div
-                      key={option.id}
-                      className="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
-                    >
-                      <label className="flex gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="mt-1 h-4 w-4 accent-sky-700"
-                          checked={Boolean(selected)}
-                          onChange={(event) =>
-                            onChange(
-                              event.target.checked
-                                ? [
-                                    ...values.filter(
-                                      (value) =>
-                                        !recareIntraoralOptionConflicts
-                                          .get(option.id)
-                                          ?.has(value.optionId),
-                                    ),
-                                    {
-                                      optionId: option.id,
-                                      structureId: structure.id,
-                                    },
-                                  ]
-                                : values.filter(
-                                    (value) => value.optionId !== option.id
-                                  )
-                            )
-                          }
-                        />
-                        <span>{option.label}</span>
-                      </label>
-                      {selected ? (
-                        <div className="mt-2 space-y-2">
-                          {option.supportsLocation ? (
-                            <TextField
-                              id={`recare-${option.id}-location`}
-                              label="Location"
-                              value={(selected.locations ?? []).join(", ")}
-                              onChange={(value) =>
-                                patch(option.id, {
-                                  locations: value
-                                    .split(",")
-                                    .map((item) => item.trim())
-                                    .filter(Boolean),
-                                })
-                              }
-                              placeholder="Tooth/area or region"
-                            />
-                          ) : null}
-                          {option.supportsLaterality ? (
-                            <FixedChoiceListbox
-                              id={`recare-${option.id}-laterality`}
-                              label="Laterality"
-                              value={selected.laterality ?? ""}
-                              options={[
-                                { value: "", label: "None" },
-                                { value: "Right", label: "Right" },
-                                { value: "Left", label: "Left" },
-                                { value: "Bilateral", label: "Bilateral" },
-                              ]}
-                              onChange={(value) =>
-                                patch(option.id, { laterality: value })
-                              }
-                            />
-                          ) : null}
-                          {option.supportsMeasurement ? (
-                            <TextField
-                              id={`recare-${option.id}-measurement`}
-                              label={`Measurement${
-                                option.measurementUnits.length === 1
-                                  ? ` (${option.measurementUnits[0]})`
-                                  : ""
-                              }`}
-                              value={selected.measurement ?? ""}
-                              onChange={(value) =>
-                                patch(option.id, {
-                                  measurement: value,
-                                  measurementUnit: option.measurementUnits[0],
-                                })
-                              }
-                              inputMode="decimal"
-                            />
-                          ) : null}
-                          {structure.supportsComment ? (
-                            <TextField
-                              id={`recare-${option.id}-comment`}
-                              label="Comment"
-                              value={selected.comment ?? ""}
-                              onChange={(value) =>
-                                patch(option.id, { comment: value })
-                              }
-                            />
-                          ) : null}
+          {recareIntraoralStructures.map((structure) => {
+            const selectedOptions = structure.options.filter((option) =>
+              values.some((value) => value.optionId === option.id),
+            );
+            return (
+              <fieldset
+                key={structure.id}
+                className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+              >
+                <legend className="font-medium">{structure.label}</legend>
+                <FixedChoiceMultiCombobox
+                  id={`recare-${structure.id.replaceAll(".", "-")}-observations`}
+                  label={`${structure.label} observations`}
+                  choices={structure.options.map((option) => option.label)}
+                  choiceGroups={recareIntraoralChoiceGroups(structure)}
+                  values={selectedOptions.map((option) => option.label)}
+                  onChange={(selectedLabels) =>
+                    updateStructureFindings(structure, selectedLabels)
+                  }
+                  customPlaceholder={`Search ${structure.label.toLocaleLowerCase(
+                    "en-CA",
+                  )} observations`}
+                  customHelpText=""
+                  showSelectedChips={false}
+                  allowCustomValues={false}
+                />
+                {selectedOptions.length ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {selectedOptions.map((option) => {
+                      const selected = values.find(
+                        (value) => value.optionId === option.id,
+                      )!;
+                      return (
+                        <div
+                          key={option.id}
+                          role="group"
+                          aria-label={`${structure.label}: ${option.label}`}
+                          className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                        >
+                          <h4 className="text-sm font-semibold">
+                            {option.label}
+                          </h4>
+                          <div className="mt-3 grid gap-3">
+                            {option.supportsLocation ? (
+                              <TextField
+                                id={`recare-${option.id}-location`}
+                                label={`${option.label} location`}
+                                value={(selected.locations ?? []).join(", ")}
+                                onChange={(value) =>
+                                  patch(option.id, {
+                                    locations: value
+                                      .split(",")
+                                      .map((item) => item.trim())
+                                      .filter(Boolean),
+                                  })
+                                }
+                                placeholder="Tooth/area or region"
+                              />
+                            ) : null}
+                            {option.supportsLaterality ? (
+                              <FixedChoiceListbox
+                                id={`recare-${option.id}-laterality`}
+                                label={`${option.label} laterality`}
+                                value={selected.laterality ?? ""}
+                                options={[
+                                  { value: "", label: "None" },
+                                  { value: "Right", label: "Right" },
+                                  { value: "Left", label: "Left" },
+                                  {
+                                    value: "Bilateral",
+                                    label: "Bilateral",
+                                  },
+                                ]}
+                                onChange={(value) =>
+                                  patch(option.id, { laterality: value })
+                                }
+                              />
+                            ) : null}
+                            {option.supportsMeasurement ? (
+                              <TextField
+                                id={`recare-${option.id}-measurement`}
+                                label={`${option.label} measurement${
+                                  option.measurementUnits.length === 1
+                                    ? ` (${option.measurementUnits[0]})`
+                                    : ""
+                                }`}
+                                value={selected.measurement ?? ""}
+                                onChange={(value) =>
+                                  patch(option.id, {
+                                    measurement: value,
+                                    measurementUnit:
+                                      option.measurementUnits[0],
+                                  })
+                                }
+                                inputMode="decimal"
+                              />
+                            ) : null}
+                            {structure.supportsComment ? (
+                              <TextField
+                                id={`recare-${option.id}-comment`}
+                                label={`${option.label} notes`}
+                                value={selected.comment ?? ""}
+                                onChange={(value) =>
+                                  patch(option.id, { comment: value })
+                                }
+                                placeholder="Optional encounter-specific note"
+                              />
+                            ) : null}
+                          </div>
                         </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </fieldset>
+            );
+          })}
         </div>
       ) : null}
     </fieldset>
