@@ -305,6 +305,10 @@ test("paired recare controls stay aligned when a catalogue opens at tablet width
   expect(rightBox).not.toBeNull();
   expect(leftBox).not.toBeNull();
   expect(rightNotApplicableBox).not.toBeNull();
+  expect(rightBox?.width ?? 0).toBeGreaterThan(200);
+  expect(Math.abs((rightBox?.width ?? 0) - (leftBox?.width ?? 0))).toBeLessThan(
+    2,
+  );
   expect(Math.abs((rightBox?.y ?? 0) - (leftBox?.y ?? 0))).toBeLessThan(2);
   expect(
     Math.abs((rightBox?.y ?? 0) - (rightNotApplicableBox?.y ?? 0)),

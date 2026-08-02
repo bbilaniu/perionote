@@ -1670,7 +1670,7 @@ export function RecareExamTemplate({
               onChange={(value) => updateField("oralHabits", value)}
             />
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
                 <CatalogueCombobox
                   id="recare-right-molar-occlusion"
