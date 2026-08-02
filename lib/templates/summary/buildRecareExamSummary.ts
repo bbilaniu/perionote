@@ -5,6 +5,10 @@ import type {
   RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import {
+  recareToothOptionById,
+  recareToothOptions,
+} from "@/lib/templates/recareTeethCatalog";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import {
   recareIntraoralOptionById,
@@ -23,6 +27,55 @@ function withTerminalPunctuation(value: string): string {
   const cleanValue = trimmed(value);
   if (!cleanValue) return "";
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
+}
+
+function teethSummary(form: RecareExamForm): string {
+  if (form.teethStatus === "wnl")
+    return "Teeth intact, with no caries or mobility noted.";
+  if (form.teethStatus !== "findings") return "";
+
+  const findings = form.toothFindings ?? [];
+  const lines = recareToothOptions.flatMap((catalogueOption) =>
+    findings
+      .filter((finding) => finding.optionId === catalogueOption.id)
+      .flatMap((finding) => {
+        const option = recareToothOptionById.get(finding.optionId);
+        if (!option) return [];
+        const clauses = [
+          finding.toothAreas?.map(trimmed).filter(Boolean).length
+            ? `tooth/area: ${finding.toothAreas
+                .map(trimmed)
+                .filter(Boolean)
+                .join(", ")}`
+            : "",
+          option.supportsSurface && trimmed(finding.surface ?? "")
+            ? `surface: ${trimmed(finding.surface ?? "")}`
+            : "",
+          option.supportsActivity && finding.activity
+            ? `activity: ${finding.activity}`
+            : "",
+          option.fixedGrade
+            ? `Miller Index: ${option.fixedGrade}`
+            : option.supportsGrade && finding.millerGrade
+            ? `Miller Index: ${finding.millerGrade}`
+            : "",
+          trimmed(finding.comment ?? "")
+            ? `notes: ${trimmed(finding.comment ?? "")}`
+            : "",
+        ].filter(Boolean);
+        return [
+          `  - ${option.label}${
+            clauses.length ? ` (${clauses.join("; ")})` : ""
+          }.`,
+        ];
+      })
+  );
+  const additional = trimmed(form.additionalToothFindings ?? "");
+  if (additional)
+    lines.push(
+      `  Additional observations: ${withTerminalPunctuation(additional)}`
+    );
+  return lines.length ? `Teeth:\n${lines.join("\n")}` : "";
 }
 
 function appendDetails(base: string, details: string): string {
@@ -120,18 +173,12 @@ function intraoralLines(form: RecareExamForm): string[] {
         ? (finding.locations ?? []).map(trimmed).filter(Boolean)
         : [];
       const locationParts = [...locations];
-      if (
-        option.supportsLaterality &&
-        trimmed(finding.laterality ?? "")
-      ) {
+      if (option.supportsLaterality && trimmed(finding.laterality ?? "")) {
         locationParts.push(trimmed(finding.laterality ?? ""));
       }
       if (locationParts.length)
         annotations.push(`location: ${locationParts.join(", ")}`);
-      if (
-        option.supportsMeasurement &&
-        trimmed(finding.measurement ?? "")
-      ) {
+      if (option.supportsMeasurement && trimmed(finding.measurement ?? "")) {
         const allowedUnit = option.measurementUnits.includes(
           finding.measurementUnit ?? ""
         )
@@ -143,10 +190,7 @@ function intraoralLines(form: RecareExamForm): string[] {
           }`
         );
       }
-      if (
-        structure.supportsComment &&
-        trimmed(finding.comment ?? "")
-      ) {
+      if (structure.supportsComment && trimmed(finding.comment ?? "")) {
         annotations.push(`notes: ${trimmed(finding.comment ?? "")}`);
       }
       return [
@@ -438,6 +482,7 @@ export function buildRecareExamSummary(
   ];
 
   const odontogramAndCariesRisk = [
+    teethSummary(form),
     form.odontogramUpToDate ? "ODONTOGRAM UP TO DATE" : "",
     cariesRiskLine(
       form.cariesRiskLevel,

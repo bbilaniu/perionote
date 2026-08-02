@@ -239,6 +239,49 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
     ).toBe("Caries risk: Synthetic rationale only.");
   });
 
+  it("formats approved repeatable tooth findings without inferring management", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      teethStatus: "findings" as const,
+      toothFindings: [
+        {
+          id: "c1",
+          optionId: "ioe.teeth.caries",
+          toothAreas: ["14"],
+          surface: "DO",
+        },
+        {
+          id: "i1",
+          optionId: "ioe.teeth.initial_noncavitated_caries",
+          toothAreas: ["15"],
+          surface: "O",
+          activity: "inactive" as const,
+        },
+        {
+          id: "m1",
+          optionId: "ioe.teeth.mobility",
+          toothAreas: ["31", "41"],
+          millerGrade: "M2" as const,
+        },
+        { id: "retired", optionId: "ioe.teeth.retired", toothAreas: ["99"] },
+      ],
+      additionalToothFindings: "Synthetic observation",
+      odontogramUpToDate: true,
+    };
+    expect(buildRecareExamSummary(form)).toBe(`Teeth:
+  - Caries (tooth/area: 14; surface: DO).
+  - Initial/noncavitated caries lesion (tooth/area: 15; surface: O; activity: inactive).
+  - Mobility (tooth/area: 31, 41; Miller Index: M2).
+  Additional observations: Synthetic observation.
+ODONTOGRAM UP TO DATE`);
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        teethStatus: "wnl",
+      })
+    ).toBe("Teeth intact, with no caries or mobility noted.");
+  });
+
   it("uses browser-local timestamp components", () => {
     expect(formatRecareExamLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
       "2026-01-02 03:04"

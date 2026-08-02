@@ -15,8 +15,13 @@ import type {
   RecareExamForm,
   RecareIntraoralFinding,
   RecareOcclusalFinding,
+  RecareToothFinding,
   RecareTreatmentEntry,
 } from "@/lib/templates/recareExam";
+import {
+  recareToothOptions,
+  recareToothWnlOptionIds,
+} from "@/lib/templates/recareTeethCatalog";
 import {
   createEmptyRecareExamForm,
   hasRequiredRecareExamFields,
@@ -236,6 +241,230 @@ function CheckboxField({
       />
       <span>{label}</span>
     </label>
+  );
+}
+
+function TeethAssessment({
+  form,
+  onChange,
+}: {
+  form: RecareExamForm;
+  onChange: (patch: Partial<RecareExamForm>) => void;
+}) {
+  const findings = form.toothFindings ?? [];
+  const status = form.teethStatus ?? "not-assessed";
+  const hasDocumented =
+    findings.length > 0 || Boolean(form.additionalToothFindings?.trim());
+  const createFinding = (optionId: string): RecareToothFinding => ({
+    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    optionId,
+    toothAreas: [],
+  });
+  function setStatus(next: ExamStatus) {
+    if (next === "wnl") {
+      if (
+        hasDocumented &&
+        !window.confirm(
+          "Clear the documented Teeth findings and set this assessment to WNL?"
+        )
+      )
+        return;
+      onChange({
+        teethStatus: "wnl",
+        toothFindings: recareToothWnlOptionIds.map(createFinding),
+        additionalToothFindings: "",
+      });
+    } else if (next === "not-assessed") {
+      if (
+        hasDocumented &&
+        !window.confirm(
+          "Clear all documented Teeth observations and return this assessment to Not assessed?"
+        )
+      )
+        return;
+      onChange({
+        teethStatus: next,
+        toothFindings: [],
+        additionalToothFindings: "",
+      });
+    } else onChange({ teethStatus: next });
+  }
+  function add(optionId: string) {
+    const option = recareToothOptions.find((item) => item.id === optionId);
+    if (!option) return;
+    const conflicts = new Set(option.conflictsWithOptionIds);
+    const removed = findings.filter((item) => conflicts.has(item.optionId));
+    if (
+      removed.some(
+        (item) =>
+          item.toothAreas.length ||
+          item.surface ||
+          item.activity ||
+          item.millerGrade ||
+          item.comment
+      ) &&
+      !window.confirm(
+        "Replace the conflicting documented tooth observation and discard its annotations?"
+      )
+    )
+      return;
+    onChange({
+      teethStatus: "findings",
+      toothFindings: [
+        ...findings.filter((item) => !conflicts.has(item.optionId)),
+        createFinding(optionId),
+      ],
+    });
+  }
+  function patch(id: string, changes: Partial<RecareToothFinding>) {
+    onChange({
+      teethStatus: "findings",
+      toothFindings: findings.map((item) =>
+        item.id === id ? { ...item, ...changes } : item
+      ),
+    });
+  }
+  return (
+    <div className="space-y-4">
+      <FixedChoiceListbox
+        id="recare-teeth-status"
+        label="Teeth"
+        value={status}
+        options={examStatusOptions}
+        onChange={setStatus}
+      />
+      {status === "findings" ? (
+        <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+          <legend className="px-1 text-sm font-semibold">
+            Structured tooth-level observations
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {recareToothOptions.map((option) => {
+              const selected = findings.filter(
+                (item) => item.optionId === option.id
+              );
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900`}
+                  onClick={() => add(option.id)}
+                  disabled={
+                    !option.allowMultipleInstances && selected.length > 0
+                  }
+                >
+                  {selected.length
+                    ? `${option.label} (${selected.length})`
+                    : option.label}
+                  {option.allowMultipleInstances ? " +" : ""}
+                </button>
+              );
+            })}
+          </div>
+          {findings.map((finding) => {
+            const option = recareToothOptions.find(
+              (item) => item.id === finding.optionId
+            );
+            if (!option) return null;
+            return (
+              <div
+                key={finding.id}
+                className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <strong className="text-sm">{option.label}</strong>
+                  <button
+                    type="button"
+                    className={treatmentRowRemoveButtonClass}
+                    onClick={() =>
+                      onChange({
+                        toothFindings: findings.filter(
+                          (item) => item.id !== finding.id
+                        ),
+                      })
+                    }
+                  >
+                    Remove
+                  </button>
+                </div>
+                {option.supportsTooth ? (
+                  <TextField
+                    id={`tooth-area-${finding.id}`}
+                    label={`Tooth/area${
+                      option.requiresToothOrArea ? " (required)" : ""
+                    }`}
+                    value={finding.toothAreas.join(", ")}
+                    onChange={(value) =>
+                      patch(finding.id, {
+                        toothAreas: value
+                          .split(",")
+                          .map((item) => item.trim())
+                          .filter(Boolean),
+                      })
+                    }
+                  />
+                ) : null}
+                {option.supportsSurface ? (
+                  <TextField
+                    id={`tooth-surface-${finding.id}`}
+                    label="Surface(s)"
+                    value={finding.surface ?? ""}
+                    onChange={(surface) => patch(finding.id, { surface })}
+                  />
+                ) : null}
+                {option.supportsActivity ? (
+                  <FixedChoiceListbox
+                    id={`tooth-activity-${finding.id}`}
+                    label="Activity"
+                    value={finding.activity ?? ""}
+                    options={[
+                      { value: "", label: "Not assessed" },
+                      { value: "active", label: "Active" },
+                      { value: "inactive", label: "Inactive" },
+                    ]}
+                    onChange={(activity) =>
+                      patch(finding.id, { activity: activity || undefined })
+                    }
+                  />
+                ) : null}
+                {option.supportsGrade && !option.fixedGrade ? (
+                  <FixedChoiceListbox
+                    id={`tooth-grade-${finding.id}`}
+                    label="Mobility — Miller Index"
+                    value={finding.millerGrade ?? ""}
+                    options={[
+                      { value: "", label: "Select grade" },
+                      { value: "M1", label: "M1" },
+                      { value: "M2", label: "M2" },
+                      { value: "M3", label: "M3" },
+                    ]}
+                    onChange={(millerGrade) =>
+                      patch(finding.id, {
+                        millerGrade: millerGrade || undefined,
+                      })
+                    }
+                  />
+                ) : null}
+                <TextField
+                  id={`tooth-notes-${finding.id}`}
+                  label="Notes"
+                  value={finding.comment ?? ""}
+                  onChange={(comment) => patch(finding.id, { comment })}
+                />
+              </div>
+            );
+          })}
+          <TextareaField
+            id="recare-additional-tooth-findings"
+            label="Additional tooth findings"
+            value={form.additionalToothFindings ?? ""}
+            onChange={(additionalToothFindings) =>
+              onChange({ teethStatus: "findings", additionalToothFindings })
+            }
+          />
+        </fieldset>
+      ) : null}
+    </div>
   );
 }
 
@@ -1440,6 +1669,13 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Odontogram and Caries Risk">
+            <TeethAssessment
+              form={form}
+              onChange={(patch) => {
+                setForm((current) => ({ ...current, ...patch }));
+                setCopyMessage("");
+              }}
+            />
             <CheckboxField
               id="recare-odontogram-up-to-date"
               label="Odontogram up to date"

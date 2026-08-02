@@ -28,6 +28,16 @@ export type RecareOcclusalFinding = {
   locations: string[];
 };
 
+export type RecareToothFinding = {
+  id: string;
+  optionId: string;
+  toothAreas: string[];
+  surface?: string;
+  activity?: "active" | "inactive";
+  millerGrade?: "M1" | "M2" | "M3";
+  comment?: string;
+};
+
 export type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCatalog";
 import type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCatalog";
 
@@ -81,6 +91,9 @@ export interface RecareExamForm {
   removableDenturesStatus: DocumentationStatus;
   improvementRequest: string;
   additionalComments: string;
+  teethStatus?: ExamStatus;
+  toothFindings?: RecareToothFinding[];
+  additionalToothFindings?: string;
   odontogramUpToDate: boolean;
   cariesRiskLevel: CariesRiskLevel;
   cariesRiskFactors: string[];
@@ -144,6 +157,9 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     removableDenturesStatus: "not-documented",
     improvementRequest: "",
     additionalComments: "",
+    teethStatus: "not-assessed",
+    toothFindings: [],
+    additionalToothFindings: "",
     odontogramUpToDate: false,
     cariesRiskLevel: "",
     cariesRiskFactors: [],
