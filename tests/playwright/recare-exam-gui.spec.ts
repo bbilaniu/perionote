@@ -254,6 +254,28 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
     /Intraoral:\n  - Buccal mucosa: pink; moist; no lesions; no swelling\.\n  - Tongue: pink; moist; symmetrical; no lesions\.\n  - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n  - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n  - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n  - Saliva: clear; normal flow\./
   );
 
+  const reducedFlow = structuredIntraoral.getByRole("checkbox", {
+    name: "Reduced flow",
+    exact: true,
+  });
+  await reducedFlow.check();
+  await expect(reducedFlow).toBeChecked();
+  await expect(normalFlow).not.toBeChecked();
+  await expect(page.locator("#recare-summary")).toContainText("reduced flow");
+  await expect(page.locator("#recare-summary")).not.toContainText("normal flow");
+
+  const noSwelling = structuredIntraoral.getByRole("checkbox", {
+    name: "No swelling",
+    exact: true,
+  }).first();
+  const swelling = structuredIntraoral.getByRole("checkbox", {
+    name: "Swelling",
+    exact: true,
+  }).first();
+  await swelling.check();
+  await expect(swelling).toBeChecked();
+  await expect(noSwelling).not.toBeChecked();
+
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
       "Clear all entered intraoral observations and return Intraoral to Not assessed?"

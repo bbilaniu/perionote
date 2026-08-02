@@ -35,6 +35,7 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   createRecareNormalStructuredIntraoralFindings,
   recareIntraoralLocationChoices,
+  recareIntraoralOptionConflicts,
   recareIntraoralStructures,
 } from "@/lib/templates/recareIntraoralCatalog";
 
@@ -504,7 +505,12 @@ function StructuredIntraoralFindings({
                             onChange(
                               event.target.checked
                                 ? [
-                                    ...values,
+                                    ...values.filter(
+                                      (value) =>
+                                        !recareIntraoralOptionConflicts
+                                          .get(option.id)
+                                          ?.has(value.optionId),
+                                    ),
                                     {
                                       optionId: option.id,
                                       structureId: structure.id,

@@ -7,6 +7,7 @@ import {
 } from "@/lib/templates/recareExam";
 import {
   createRecareNormalStructuredIntraoralFindings,
+  recareIntraoralOptionConflicts,
   recareNormalStructuredObservationIds,
 } from "@/lib/templates/recareIntraoralCatalog";
 import {
@@ -16,6 +17,24 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 
 describe("buildRecareExamSummary", () => {
+  it("defines bidirectional conflicts for normal and abnormal observations", () => {
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.buccal_mucosa.ulcer")
+        ?.has("ioe.buccal_mucosa.no_lesions")
+    ).toBe(true);
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.buccal_mucosa.no_lesions")
+        ?.has("ioe.buccal_mucosa.ulcer")
+    ).toBe(true);
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.saliva.reduced_flow")
+        ?.has("ioe.saliva.normal_flow")
+    ).toBe(true);
+  });
+
   it("starts empty without inferring findings or treatment", () => {
     const emptyForm = createEmptyRecareExamForm();
 

@@ -75,6 +75,33 @@ export const recareIntraoralOptionById = new Map(
   )
 );
 
+const recareIntraoralConflictPairs = [
+  ["ioe.buccal_mucosa.no_lesions", "ioe.buccal_mucosa.ulcer"],
+  ["ioe.buccal_mucosa.no_lesions", "ioe.buccal_mucosa.white_patch"],
+  ["ioe.buccal_mucosa.no_lesions", "ioe.buccal_mucosa.red_patch"],
+  ["ioe.buccal_mucosa.no_swelling", "ioe.buccal_mucosa.swelling"],
+  ["ioe.tongue.no_lesions", "ioe.tongue.lesion"],
+  ["ioe.floor_of_mouth.no_swelling", "ioe.floor_of_mouth.swelling"],
+  ["ioe.floor_of_mouth.no_discoloration", "ioe.floor_of_mouth.blue_discoloration"],
+  ["ioe.floor_of_mouth.no_discoloration", "ioe.floor_of_mouth.black_discoloration"],
+  ["ioe.palate.no_lesions", "ioe.palate.ulcer"],
+  ["ioe.palate.no_lesions", "ioe.palate.red_patch"],
+  ["ioe.palate.no_lesions", "ioe.palate.white_patch"],
+  ["ioe.oropharynx.uvula_midline", "ioe.oropharynx.asymmetry"],
+  ["ioe.oropharynx.no_redness", "ioe.oropharynx.redness"],
+  ["ioe.oropharynx.no_swelling", "ioe.oropharynx.swelling"],
+  ["ioe.oropharynx.no_exudate", "ioe.oropharynx.exudate"],
+  ["ioe.saliva.normal_flow", "ioe.saliva.reduced_flow"],
+] as const;
+
+/** Options that cannot appear together in a clinically coherent observation. */
+export const recareIntraoralOptionConflicts: ReadonlyMap<string, ReadonlySet<string>> =
+  recareIntraoralConflictPairs.reduce((conflicts, [first, second]) => {
+    conflicts.set(first, new Set([...(conflicts.get(first) ?? []), second]));
+    conflicts.set(second, new Set([...(conflicts.get(second) ?? []), first]));
+    return conflicts;
+  }, new Map<string, Set<string>>());
+
 export const recareNormalStructuredObservationIds = [
   "ioe.buccal_mucosa.pink",
   "ioe.buccal_mucosa.moist",
