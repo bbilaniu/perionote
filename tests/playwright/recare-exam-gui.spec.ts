@@ -479,6 +479,29 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
     }),
   ).toHaveCount(3);
 
+  for (const observation of [
+    "Discoloration",
+    "Enamel hypoplasia",
+    "Fluorosis",
+  ]) {
+    await structuredDental
+      .getByRole("button", { name: observation, exact: true })
+      .click();
+    const observationGroup = structuredDental.getByRole("group", {
+      name: `${observation} dental observations`,
+      exact: true,
+    });
+    const addAnother = observationGroup.getByRole("button", {
+      name: `Add another ${observation}`,
+      exact: true,
+    });
+    await expect(addAnother).toBeVisible();
+    await addAnother.click();
+    await expect(observationGroup.locator("legend")).toHaveText(
+      `${observation} (2 entries)`,
+    );
+  }
+
   await disclosure.click();
   await expect(disclosure).toHaveAttribute("aria-expanded", "false");
   await expect(surface).toHaveCount(0);

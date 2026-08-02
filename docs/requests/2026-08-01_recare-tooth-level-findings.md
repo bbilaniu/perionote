@@ -43,7 +43,7 @@ The extension must:
 | 5   | Caries surface                       | Use encounter-only free text for now. Do not normalize or infer surfaces.                                                                                                        |
 | 6   | Mobility                             | Offer M0, M1, M2, and M3 using the Miller Index. Do not derive a grade from entered prose or other clinical state.                                                               |
 | 7   | Discoloration and fluorosis location | Use a multi-value Tooth/area interaction like the Adult Hygiene location and Tooth/area fields, including encounter-only custom text.                                            |
-| 8   | Repeated instances                   | Allow repeatable Caries, Initial/noncavitated caries lesion, and Mobility rows so different surfaces, activities, and Miller grades remain unambiguous.                          |
+| 8   | Repeated instances                   | Allow repeatable Caries, Initial/noncavitated caries lesion, Discoloration, Mobility, Enamel hypoplasia, and Fluorosis rows with independent annotations.                       |
 | 9   | Generated wording                    | Approve the generated-note contract and examples in this document.                                                                                                               |
 | 10  | Odontogram placement                 | Move the existing **Odontogram up to date** checkbox to the bottom of the new structured Teeth input area. Its state and output remain unchanged.                                |
 | 11  | Initial caries lesions               | Add **Initial/noncavitated caries lesion** as a finding distinct from unspecified Caries. Support optional Active / Inactive activity without inferring management or treatment. |
@@ -108,8 +108,8 @@ Add an optional, backward-compatible Teeth assessment containing:
 - status: `not_assessed`, `wnl`, or `findings`;
 - finding entries containing a stable instance ID and normalized Teeth option
   ID;
-- repeatable entries for Caries, Initial/noncavitated caries lesion, and
-  Mobility;
+- repeatable entries for Caries, Initial/noncavitated caries lesion,
+  Discoloration, Mobility, Enamel hypoplasia, and Fluorosis;
 - per-finding one or more Tooth/area text values where required, and zero or
   more where optional;
 - per-Caries and per-initial-lesion optional free-text Surface(s);
@@ -328,10 +328,10 @@ be interpreted as synchronization between them.
 
 ## Approved Repeatability and Exclusivity
 
-Caries, Initial/noncavitated caries lesion, and Mobility use repeatable rows.
-Every row owns its own Tooth/area values, Surface(s), activity, Miller grade,
-and comment as supported. Other fixed findings remain single selections with
-their own annotations.
+Caries, Initial/noncavitated caries lesion, Discoloration, Mobility, Enamel
+hypoplasia, and Fluorosis use repeatable rows. Every row owns its own
+Tooth/area values, Surface(s), activity, Miller grade, and comment as supported.
+Other fixed findings remain single selections with their own annotations.
 
 Apply these reviewed conflicts bidirectionally:
 

@@ -1467,7 +1467,8 @@
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "discoloration",
               "supportsLocation": true,
-              "supportsTooth": true
+              "supportsTooth": true,
+              "allowMultipleInstances": true
             },
             {
               "id": "ioe.teeth.mobility",
@@ -1492,7 +1493,8 @@
               "noteFragment": "enamel hypoplasia",
               "sourceCategory": "common_variations",
               "sourceTerm": "Enamel hypoplasia",
-              "supportsTooth": true
+              "supportsTooth": true,
+              "allowMultipleInstances": true
             },
             {
               "id": "ioe.teeth.fluorosis",
@@ -1502,7 +1504,8 @@
               "sourceCategory": "common_variations",
               "sourceTerm": "fluorosis",
               "supportsLocation": true,
-              "supportsTooth": true
+              "supportsTooth": true,
+              "allowMultipleInstances": true
             }
           ],
           "supportsComment": true,

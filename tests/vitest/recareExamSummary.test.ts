@@ -18,12 +18,22 @@ import {
 import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 
 describe("buildRecareExamSummary", () => {
-  it("allows separate fracture observations", () => {
+  it("allows separate entries for every repeatable tooth observation", () => {
+    const repeatableOptionIds = [
+      "ioe.teeth.caries",
+      "ioe.teeth.initial_noncavitated_caries",
+      "ioe.teeth.fracture",
+      "ioe.teeth.discoloration",
+      "ioe.teeth.mobility",
+      "ioe.teeth.enamel_hypoplasia",
+      "ioe.teeth.fluorosis",
+    ];
+
     expect(
-      recareToothOptions.find(
-        (option) => option.id === "ioe.teeth.fracture",
-      )?.allowMultipleInstances,
-    ).toBe(true);
+      recareToothOptions
+        .filter((option) => option.allowMultipleInstances)
+        .map((option) => option.id),
+    ).toEqual(repeatableOptionIds);
   });
 
   it("defines bidirectional conflicts for normal and abnormal observations", () => {

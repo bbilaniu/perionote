@@ -339,9 +339,10 @@ Teeth intact, with no caries or mobility noted.
 ```
 
 Findings use stable option IDs from the normalized catalogue. Caries,
-Initial/noncavitated caries lesion, and Mobility are repeatable rows. Each row
-owns its supported Tooth/area values, free-text Surface(s), optional activity,
-required Miller grade, and comment. Tooth/area is required for Caries,
+Initial/noncavitated caries lesion, Discoloration, Mobility, Enamel hypoplasia,
+and Fluorosis are repeatable rows. Each row owns its supported Tooth/area
+values, free-text Surface(s), optional activity, required Miller grade, and
+comment. Tooth/area is required for Caries,
 Initial/noncavitated caries lesion, Fracture, and Mobility. It is optional for
 Discoloration, Enamel hypoplasia, and Fluorosis. Tooth/area accepts multiple
 values and encounter-only custom text without validating, translating, or
@@ -643,8 +644,9 @@ contract are genuinely the same, not only because two fields look similar.
   unused Teeth assessment emits nothing.
 - Teeth WNL emits exactly
   `Teeth intact, with no caries or mobility noted.`
-- Caries, Initial/noncavitated caries lesion, and Mobility support repeatable
-  rows with independent annotations.
+- Caries, Initial/noncavitated caries lesion, Discoloration, Mobility, Enamel
+  hypoplasia, and Fluorosis support repeatable rows with independent
+  annotations.
 - Required Tooth/area, Miller Index, activity, repeatability, and conflict
   behavior matches the approved Slice 3 contract.
 - Initial-lesion stage or activity never infers management, treatment,
