@@ -1618,7 +1618,7 @@ export function RecareExamTemplate({
             />
             <ExamFinding
               id="recare-masseter"
-              label="Palpation of the masseter test"
+              label="Masseter palpation"
               status={form.masseterStatus}
               findings={form.masseterFindings}
               onStatusChange={(value) => updateField("masseterStatus", value)}
@@ -1628,7 +1628,7 @@ export function RecareExamTemplate({
             />
             <ExamFinding
               id="recare-tmj-load"
-              label="Load TMJ joint test"
+              label="TMJ loading test"
               status={form.tmjLoadStatus}
               findings={form.tmjLoadFindings}
               onStatusChange={(value) => updateField("tmjLoadStatus", value)}

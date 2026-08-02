@@ -2,9 +2,11 @@ import type {
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
+  RecareToothFinding,
   RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import type { RecareToothOption } from "@/lib/templates/recareTeethCatalog";
 import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import {
@@ -26,6 +28,57 @@ function withTerminalPunctuation(value: string): string {
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
 }
 
+function hasMeaningfulToothFinding(
+  finding: RecareToothFinding,
+  option: RecareToothOption,
+): boolean {
+  const optionIsCompleteWithoutAnnotations =
+    !option.supportsTooth &&
+    !option.supportsSurface &&
+    !option.supportsActivity &&
+    (!option.supportsGrade || Boolean(option.fixedGrade));
+
+  return (
+    optionIsCompleteWithoutAnnotations ||
+    Boolean(finding.toothAreas?.map(trimmed).filter(Boolean).length) ||
+    Boolean(trimmed(finding.surface ?? "")) ||
+    Boolean(finding.activity) ||
+    Boolean(finding.millerGrade) ||
+    Boolean(trimmed(finding.comment ?? ""))
+  );
+}
+
+function toothFindingEntry(
+  finding: RecareToothFinding,
+  option: RecareToothOption,
+): string {
+  const toothAreas = finding.toothAreas?.map(trimmed).filter(Boolean) ?? [];
+  const surface = option.supportsSurface
+    ? trimmed(finding.surface ?? "")
+    : "";
+  const primary = [toothAreas.join(", "), surface].filter(Boolean).join(" ");
+  const descriptors = [
+    option.supportsActivity ? finding.activity : "",
+    option.fixedGrade ??
+      (option.supportsGrade ? finding.millerGrade : undefined),
+  ].filter(Boolean);
+  const summary = primary
+    ? `${primary}${descriptors.length ? ` (${descriptors.join("; ")})` : ""}`
+    : descriptors.join("; ");
+  const comment = trimmed(finding.comment ?? "").replace(/\.$/, "");
+
+  return [summary, comment].filter(Boolean).join(" — ");
+}
+
+function toothFindingHeading(option: RecareToothOption, count: number): string {
+  if (count === 1) return option.label;
+  if (option.id === "ioe.teeth.initial_noncavitated_caries") {
+    return "Initial/noncavitated caries lesions";
+  }
+  if (option.id === "ioe.teeth.fracture") return "Fractures";
+  return option.label;
+}
+
 function teethSummary(form: RecareExamForm): string {
   if (form.teethStatus === "wnl")
     return "Teeth intact, with no caries or mobility noted.";
@@ -34,38 +87,19 @@ function teethSummary(form: RecareExamForm): string {
   const findings = form.toothFindings ?? [];
   const lines = recareToothOptions.flatMap((option) => {
     const optionFindings = findings.filter(
-      (finding) => finding.optionId === option.id,
+      (finding) =>
+        finding.optionId === option.id &&
+        hasMeaningfulToothFinding(finding, option),
     );
     if (!optionFindings.length) return [];
 
-    const entries = optionFindings.flatMap((finding) => {
-      const clauses = [
-        finding.toothAreas?.map(trimmed).filter(Boolean).length
-          ? `tooth/area: ${finding.toothAreas
-              .map(trimmed)
-              .filter(Boolean)
-              .join(", ")}`
-          : "",
-        option.supportsSurface && trimmed(finding.surface ?? "")
-          ? `surface: ${trimmed(finding.surface ?? "")}`
-          : "",
-        option.supportsActivity && finding.activity
-          ? `activity: ${finding.activity}`
-          : "",
-        option.fixedGrade
-          ? `Miller Index: ${option.fixedGrade}`
-          : option.supportsGrade && finding.millerGrade
-            ? `Miller Index: ${finding.millerGrade}`
-            : "",
-        trimmed(finding.comment ?? "")
-          ? `notes: ${trimmed(finding.comment ?? "")}`
-          : "",
-      ].filter(Boolean);
-      return clauses.length ? [`(${clauses.join("; ")})`] : [];
-    });
+    const entries = optionFindings
+      .map((finding) => toothFindingEntry(finding, option))
+      .filter(Boolean);
+    const heading = toothFindingHeading(option, optionFindings.length);
 
     return [
-      `  - ${option.label}${entries.length ? ` ${entries.join(", ")}` : ""}.`,
+      `  - ${heading}${entries.length ? `: ${entries.join("; ")}` : ""}.`,
     ];
   });
   const additional = trimmed(form.additionalToothFindings ?? "");
@@ -135,6 +169,19 @@ function yesNoLine(
 ): string {
   if (status === "not-documented") return "";
   return appendDetails(`${label}: ${status === "yes" ? "Yes" : "No"}`, details);
+}
+
+function intraoralPhotosLine(
+  status: DocumentationStatus,
+  details: string,
+): string {
+  if (status === "not-documented") return "";
+  if (status === "no") return "Intraoral photos: No.";
+
+  const cleanDetails = trimmed(details);
+  return cleanDetails
+    ? `Intraoral photos: ${withTerminalPunctuation(cleanDetails)}`
+    : "Intraoral photos: Yes.";
 }
 
 function examLine(label: string, status: ExamStatus, findings: string): string {
@@ -389,33 +436,54 @@ export function buildRecareExamSummary(
   ];
 
   const radiographs = form.radiographs.map(trimmed).filter(Boolean);
-  const recordsAndConcern = [
+  const records = [
     radiographs.length ? `Radiographs: ${radiographs.join("; ")}` : "",
-    yesNoLine(
-      "Intraoral photos",
+    intraoralPhotosLine(
       form.intraoralPhotosStatus,
-      form.intraoralPhotosDetails
-    ),
-    formatPatientChiefConcerns(
-      "Patient's chief concern",
-      form.chiefConcern,
-      form.listChiefConcerns
+      form.intraoralPhotosDetails,
     ),
   ];
 
-  const extraoralAndTmj = [
-    examLine("Extraoral", form.extraoralStatus, form.extraoralFindings),
+  const chiefConcern = formatPatientChiefConcerns(
+    "Patient's chief concern",
+    form.chiefConcern,
+    form.listChiefConcerns,
+  );
+  const chiefConcernSection = chiefConcern ? [`a) ${chiefConcern}`] : [];
+
+  const extraoral = examLine(
+    "Extraoral",
+    form.extraoralStatus,
+    form.extraoralFindings,
+  );
+  const extraoralSection = extraoral ? [`b) ${extraoral}`] : [];
+
+  const tmjLines = [
     examLine("TMJ", form.tmjStatus, form.tmjFindings),
     examLine(
-      "Palpation of the masseter test",
+      "Masseter palpation",
       form.masseterStatus,
-      form.masseterFindings
+      form.masseterFindings,
     ),
-    examLine("Load TMJ joint test", form.tmjLoadStatus, form.tmjLoadFindings),
-  ];
+    examLine(
+      "TMJ loading test",
+      form.tmjLoadStatus,
+      form.tmjLoadFindings,
+    ),
+  ].filter(Boolean);
+  const tmjSection = tmjLines.length
+    ? tmjLines[0].startsWith("TMJ:")
+      ? [`c) ${tmjLines[0]}`, ...tmjLines.slice(1)]
+      : ["c) TMJ examination:", ...tmjLines]
+    : [];
+
+  const intraoral = intraoralLines(form);
+  const letteredIntraoral = intraoral.length
+    ? [`d) ${intraoral[0]}`, ...intraoral.slice(1)]
+    : [];
 
   const intraoralAndOcclusion = [
-    ...intraoralLines(form),
+    ...letteredIntraoral,
     trimmed(form.oralHabits)
       ? `Oral habits: ${withTerminalPunctuation(form.oralHabits)}`
       : "",
@@ -468,7 +536,7 @@ export function buildRecareExamSummary(
 
   const patientRequests = [
     trimmed(form.improvementRequest)
-      ? `Patient would like to improve: ${withTerminalPunctuation(
+      ? `Patient-requested smile or dental improvements: ${withTerminalPunctuation(
           form.improvementRequest
         )}`
       : "",
@@ -497,8 +565,10 @@ export function buildRecareExamSummary(
   const groups = [
     patientAndTeam,
     consentHistoryAndSterilization,
-    recordsAndConcern,
-    extraoralAndTmj,
+    records,
+    chiefConcernSection,
+    extraoralSection,
+    tmjSection,
     intraoralAndOcclusion,
     appliancesAndHistory,
     patientRequests,

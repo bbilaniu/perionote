@@ -197,6 +197,8 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   await expect(
     page.getByLabel("Partial/complete removable dentures"),
   ).toHaveAttribute("data-value", "no");
+  await expect(page.getByLabel("Masseter palpation")).toBeVisible();
+  await expect(page.getByLabel("TMJ loading test")).toBeVisible();
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Occlusal splint: Yes; uses\./,
   );
@@ -209,7 +211,7 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
   expect(copiedNote).toBe(demoPreview);
   expect(copiedNote).toContain(
-    "Intraoral photos: No.\nPatient's chief concern:",
+    "Intraoral photos: No.\n\na) Patient's chief concern:",
   );
   expect(copiedNote).toContain(
     "Treatment Options:\n  1. Hygiene maintenance\n  2. Synthetic restorative consultation",

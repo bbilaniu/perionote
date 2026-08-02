@@ -153,15 +153,18 @@ state.
 | ID  | Source                                         | Control                                                                                                                                            | Classification                                                                                                           | Generated output                                                                                         |
 | --- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |
 | R10 | `Radiographs: [SELECT/INSERT: Radiographs]`    | Ordered catalogue-backed multi-value control: **Radiographs**; the same value may be added more than once                                          | Current selections: `patient-specific`; reusable values: `catalogue`                                                     | `Radiographs: {selected and entered values, including repeats}`                                          |
-| R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details**                                                                               | Status: `appCore`; details: `patient-specific`                                                                           | `Intraoral photos: {Yes/No}.` or `Intraoral photos: {Yes/No}—{details}.`                                 |
-| R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue; format: `administrative` | Inline `Patient's chief concern: {values joined with "; "}` by default, or heading plus indented bullets |
+| R11 | `Intraoral photos: [SELECT/INSERT: Intraoral]` | Status: **Not documented / No / Yes**; optional editable **Details**                                                                               | Status: `appCore`; details: `patient-specific`                                                                           | Omit Not documented; `Intraoral photos: No.`; `Intraoral photos: Yes.`; or `Intraoral photos: {details}.` |
+| R12 | `a) Patients chief concern:`                   | Ordered catalogue-backed multi-value control: **Patient's chief concern**; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: shared `patient.chief-concerns` catalogue; format: `administrative` | Inline `a) Patient's chief concern: {values joined with "; "}` by default, or heading plus indented bullets |
 
 Radiographs uses the complete visible options from the reviewed local JSON
 extraction as public starters: `PAN`, `1 BW`, `2 BW`, `3 BW`, `4 BW`, `5 BW`,
 `6 BW`, `1 PA`, and `2 PA`. The source list has a scrollbar, so free entry and
 explicit browser-local additions remain available. Selected entries can be
 removed and reordered without modifying the catalogue. Intraoral photos
-continues to use an explicit Yes/No status plus editable details.
+continues to use an explicit Yes/No status plus editable details. Not
+documented emits nothing. No emits `Intraoral photos: No.` Yes with empty
+details emits `Intraoral photos: Yes.`; otherwise, the entered details follow
+the label directly.
 
 Patient chief concerns share the same starter and browser-local catalogue as
 Adult Hygiene. Custom values apply only to the current note unless deliberately
@@ -175,11 +178,11 @@ bullet style.
 
 | ID  | Source                                | Control                                                                                                                | Classification                                   | Generated output                                                                 |
 | --- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
-| R13 | `b) Extraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `Extraoral: WNL.` or `Extraoral: {findings}`                                     |
-| R14 | `c) TMJ- WNL`                         | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `TMJ: WNL.` or `TMJ: {findings}`                                                 |
-| R15 | `Palpation of the Masseter Test: WNL` | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `Palpation of the masseter test: WNL.` or the entered findings                   |
-| R16 | `Load TMJ joint Test: WNL`            | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `Load TMJ joint test: WNL.` or the entered findings                              |
-| R17 | `d) Intraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `Intraoral: WNL.` or `Intraoral: {findings}`                                     |
+| R13 | `b) Extraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `b) Extraoral: WNL.` or `b) Extraoral: {findings}`                               |
+| R14 | `c) TMJ- WNL`                         | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `c) TMJ: WNL.` or `c) TMJ: {findings}`                                           |
+| R15 | `Palpation of the Masseter Test: WNL` | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `Masseter palpation: WNL.` or the entered findings                               |
+| R16 | `Load TMJ joint Test: WNL`            | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `TMJ loading test: WNL.` or the entered findings                                 |
+| R17 | `d) Intraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `d) Intraoral: WNL.` or `d) Intraoral: {findings}`                               |
 | R18 | `Oral Habits-`                        | Editable text: **Oral habits**                                                                                         | `patient-specific`                               | `Oral habits: {text}`                                                            |
 | R19 | `Molar Occlusion-`                    | Separate catalogue-backed editable **Right** and **Left molar occlusion** fields, each with an explicit **N/A** action | Text: `catalogue`; N/A: `appCore`                | `Molar occlusion—right: {text or N/A}` and `Molar occlusion—left: {text or N/A}` |
 | R20 | `Skeletal Occlusion- N/A`             | Catalogue-backed editable text: **Skeletal occlusion** with an explicit **N/A** action                                 | Text: `catalogue`; N/A: `appCore`                | `Skeletal occlusion: N/A.` or `Skeletal occlusion: {text}`                       |
@@ -209,9 +212,9 @@ Selecting or editing any finding changes the shared R17 status to Findings,
 including normal and normal-variation observations. WNL is never inferred.
 Choosing WNL while free text or structured observations exist asks for
 confirmation: confirmation clears only both kinds of Intraoral findings and
-sets WNL; cancellation changes nothing. Existing WNL output remains exactly
-`Intraoral: WNL.`, and free-text-only Findings retain the legacy one-line
-output.
+sets WNL; cancellation changes nothing. WNL output is
+`d) Intraoral: WNL.`, and free-text-only Findings retain the one-line output
+under the conditional `d)` marker.
 
 **Apply normal structured observations** is an explicit shortcut within the
 same fieldset. It sets the shared R17 status to Findings and selects these
@@ -298,7 +301,7 @@ neither is preselected.
 | R26 | `Have they had orthodontics?`                               | Status: **Not documented / No / Yes**                                                                                    | `appCore`          | `Orthodontic history: No.` or `Orthodontic history: Yes.`                                 |
 | R27 | `Do they wear Retainers? Fixed or removable?`               | Status: **Not documented / None / Fixed / Removable / Fixed and removable**                                              | `appCore`          | `Retainers: {selected status}.`                                                           |
 | R28 | `Do they have Partial Dentures`                             | Status: **Not documented / No / Yes** labelled **Partial/complete removable dentures**                                   | `appCore`          | `Partial/complete removable dentures: No.` or `Partial/complete removable dentures: Yes.` |
-| R29 | Smile or teeth improvement question                         | Textarea: **What would the patient like to improve about their smile or teeth?**                                         | `patient-specific` | `Patient would like to improve: {text}`                                                   |
+| R29 | Smile or teeth improvement question                         | Textarea: **What would the patient like to improve about their smile or teeth?**                                         | `patient-specific` | `Patient-requested smile or dental improvements: {text}`                                  |
 | R30 | `Additional Comments-`                                      | Textarea: **Additional comments**                                                                                        | `patient-specific` | `Additional comments: {text}`                                                             |
 
 The CPAP ownership and use controls behave like the occlusal-splint pair.
@@ -369,11 +372,13 @@ before clearing it. Cancellation leaves state unchanged. Unknown or retired
 fixed IDs are ignored safely and never generate invented prose.
 
 Findings output is one block in catalogue order before odontogram and Caries
-Risk output. Repeatable rows retain encounter order within their fixed option:
+Risk output. Empty abnormal rows are omitted, while selected standalone normal
+observations remain meaningful. Repeatable rows retain encounter order within
+their fixed option:
 
 ```text
 Teeth:
-  - {Observation} (tooth/area: {values}; surface: {text}; activity: {active/inactive}; Miller Index: {M1/M2/M3}; notes: {comment}).
+  - {Observation}: {tooth/area} {surface} ({activity or Miller grade}) — {comment}.
   Additional observations: {entered Additional tooth findings text}.
 ```
 
@@ -381,9 +386,9 @@ Unsupported and empty clauses are omitted. Examples of the approved contract:
 
 ```text
 Teeth:
-  - Caries (tooth/area: 14; surface: DO).
-  - Initial/noncavitated caries lesion (tooth/area: 15; surface: O; activity: inactive).
-  - Mobility (tooth/area: 31, 41; Miller Index: M2).
+  - Caries: 14 DO.
+  - Initial/noncavitated caries lesion: 15 O (inactive).
+  - Mobility: 31, 41 (M2).
 ```
 
 The Teeth assessment, odontogram checkbox, and Caries Risk controls remain
@@ -463,6 +468,11 @@ no output are also omitted. The generated note must not contain placeholder
 labels such as `undefined`, `Not assessed`, or
 `[UNRESOLVED PLACEHOLDER: ...]`.
 
+The `a)` through `d)` examination markers render only when their corresponding
+subsection has meaningful output. They may therefore be skipped when a
+subsection is not assessed. Later sections such as Treatment Options,
+Treatment Plan, Next Visit, and Date Booked do not receive letter markers.
+
 The visible preview contains the complete generated note. A successful
 **Copy note** action writes that preview to the clipboard unchanged and does
 not add a separate copy-time timestamp.
@@ -483,15 +493,17 @@ Medical history reviewed: {selected or entered text}
 Premedication required: {documented answer}
 
 Radiographs: {ordered selected and entered values}
-Intraoral photos: {Yes/No and optional details}
-Patient's chief concern: {ordered selected and entered values inline by default, or as indented bullets when list formatting is checked}
+Intraoral photos: {No, Yes, or entered details}
 
-Extraoral: {WNL or findings}
-TMJ: {WNL or findings}
-Palpation of the masseter test: {WNL or findings}
-Load TMJ joint test: {WNL or findings}
+a) Patient's chief concern: {ordered selected and entered values inline by default, or as indented bullets when list formatting is checked}
 
-Intraoral: {WNL or findings}
+b) Extraoral: {WNL or findings}
+
+c) TMJ: {WNL or findings}
+Masseter palpation: {WNL or findings}
+TMJ loading test: {WNL or findings}
+
+d) Intraoral: {WNL or findings}
 Oral habits: {entered text}
 Molar occlusion—right: {entered text or N/A}
 Molar occlusion—left: {entered text or N/A}
@@ -505,7 +517,7 @@ Orthodontic history: {documented answer}
 Retainers: {documented answer}
 Partial/complete removable dentures: {documented answer}
 
-Patient would like to improve: {entered text}
+Patient-requested smile or dental improvements: {entered text}
 Additional comments: {entered text}
 
 Teeth:
