@@ -340,11 +340,17 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
     name: "Surface(s)",
     exact: true,
   });
+  const notes = structuredDental.getByRole("textbox", {
+    name: "Notes",
+    exact: true,
+  });
   const fieldTops = await Promise.all([
     toothArea.evaluate((element) => element.getBoundingClientRect().top),
     surface.evaluate((element) => element.getBoundingClientRect().top),
+    notes.evaluate((element) => element.getBoundingClientRect().top),
   ]);
   expect(Math.abs(fieldTops[0] - fieldTops[1])).toBeLessThan(2);
+  expect(Math.abs(fieldTops[0] - fieldTops[2])).toBeLessThan(2);
 
   const fracture = structuredDental.getByRole("button", {
     name: "Fracture +",

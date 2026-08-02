@@ -454,6 +454,20 @@ function TeethAssessment({
                     (item) => item.id === finding.optionId,
                   );
                   if (!option) return null;
+                  const detailFieldCount =
+                    Number(option.supportsTooth) +
+                    Number(option.supportsSurface) +
+                    Number(option.supportsActivity) +
+                    Number(option.supportsGrade && !option.fixedGrade) +
+                    1;
+                  const detailGridClass =
+                    detailFieldCount >= 4
+                      ? "grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4"
+                      : detailFieldCount === 3
+                        ? "grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                        : detailFieldCount === 2
+                          ? "grid items-start gap-3 sm:grid-cols-2"
+                          : "grid items-start gap-3";
                   return (
                     <div
                       key={finding.id}
@@ -475,13 +489,7 @@ function TeethAssessment({
                           Remove
                         </button>
                       </div>
-                      <div
-                        className={
-                          option.supportsTooth && option.supportsSurface
-                            ? "grid gap-3 sm:grid-cols-2"
-                            : undefined
-                        }
-                      >
+                      <div className={detailGridClass}>
                         {option.supportsTooth ? (
                           <TextField
                             id={`tooth-area-${finding.id}`}
@@ -509,7 +517,6 @@ function TeethAssessment({
                             }
                           />
                         ) : null}
-                      </div>
                       {option.supportsActivity ? (
                         <FixedChoiceListbox
                           id={`tooth-activity-${finding.id}`}
@@ -553,6 +560,7 @@ function TeethAssessment({
                           patch(finding.id, { comment })
                         }
                       />
+                      </div>
                     </div>
                   );
                 })}

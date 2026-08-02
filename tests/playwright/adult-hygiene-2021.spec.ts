@@ -577,12 +577,33 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await expect(structuredGingivalDisclosure).toContainText(
     "1 observation documented"
   );
-  await page.getByRole("button", { name: "Gingival recession extent" }).click();
+  const recessionExtent = page.getByRole("button", {
+    name: "Gingival recession extent",
+    exact: true,
+  });
+  await recessionExtent.click();
   await page.getByRole("option", { name: "Localized", exact: true }).click();
   const recessionLocation = page.getByRole("button", {
     name: "Gingival recession location",
     exact: true,
   });
+  const recessionMeasurement = page.getByLabel(
+    "Gingival recession measurement (mm)",
+    { exact: true },
+  );
+  const gingivalFieldTops = await Promise.all([
+    recessionLocation.evaluate((element) =>
+      element
+        .closest("[data-fixed-multi-combobox]")!
+        .getBoundingClientRect().top,
+    ),
+    recessionMeasurement.evaluate(
+      (element) => element.parentElement!.getBoundingClientRect().top,
+    ),
+  ]);
+  expect(Math.abs(gingivalFieldTops[0] - gingivalFieldTops[1])).toBeLessThan(
+    2,
+  );
   await recessionLocation.click();
   const recessionLocationOptions = page.getByRole("dialog", {
     name: "Gingival recession location options",
@@ -613,7 +634,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await recessionLocationOptions
     .getByRole("button", { name: "Done", exact: true })
     .click();
-  await page.getByLabel("Gingival recession measurement (mm)").fill("2");
+  await recessionMeasurement.fill("2");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: Q1, facial\/buccal, tooth 13; measurement: 2 mm\)\./
