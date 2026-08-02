@@ -280,6 +280,7 @@ test("Recare Exam aligns Intraoral with the primary exam and conditionally shows
 test("Recare Exam compacts repeatable dental observations in a disclosure", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 2048, height: 1300 });
   await page.goto(recareExamUrl);
 
   const structuredDental = page.getByRole("group", {
@@ -297,7 +298,7 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
   await expect(disclosure).toHaveAttribute("aria-expanded", "false");
   await disclosure.click();
   await expect(
-    structuredDental.getByRole("button", { name: "Caries +", exact: true }),
+    structuredDental.getByRole("button", { name: "Caries", exact: true }),
   ).toBeVisible();
   const applyNormal = structuredDental.getByRole("button", {
     name: "Apply normal structured observations",
@@ -314,8 +315,14 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
   await applyNormal.click();
   await expect(teethStatus).toContainText("Findings");
   await expect(
-    structuredDental.getByRole("button", { name: "Intact (1)", exact: true }),
-  ).toBeDisabled();
+    structuredDental.getByRole("button", { name: "Intact", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    structuredDental.getByRole("group", {
+      name: "Intact dental observations",
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(clearDental).toBeEnabled();
 
   page.once("dialog", async (dialog) => {
@@ -326,24 +333,52 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
   });
   await clearDental.click();
   await expect(teethStatus).toContainText("Not assessed");
+  await expect(
+    structuredDental.getByRole("button", { name: "Intact", exact: true }),
+  ).toBeVisible();
 
-  await structuredDental
-    .getByRole("button", { name: "Caries +", exact: true })
-    .click();
-  await expect(disclosure).toHaveAttribute("aria-expanded", "true");
-  await expect(teethStatus).toContainText("Findings");
-  const toothArea = structuredDental.getByRole("textbox", {
-    name: "Tooth/area (required)",
+  const cariesChoice = structuredDental.getByRole("button", {
+    name: "Caries",
     exact: true,
   });
-  const surface = structuredDental.getByRole("textbox", {
+  await cariesChoice.click();
+  await expect(cariesChoice).toHaveCount(0);
+  await expect(disclosure).toHaveAttribute("aria-expanded", "true");
+  await expect(teethStatus).toContainText("Findings");
+  const cariesGroup = structuredDental.getByRole("group", {
+    name: "Caries dental observations",
+    exact: true,
+  });
+  await expect(cariesGroup.getByText("Caries", { exact: true })).toHaveCount(1);
+  const toothArea = cariesGroup.getByRole("textbox", {
+    name: "Tooth/area",
+    exact: true,
+  });
+  const surface = cariesGroup.getByRole("textbox", {
     name: "Surface(s)",
     exact: true,
   });
-  const notes = structuredDental.getByRole("textbox", {
+  const notes = cariesGroup.getByRole("textbox", {
     name: "Notes",
     exact: true,
   });
+  const cariesEntry = cariesGroup.getByRole("group", {
+    name: "Caries entry 1",
+    exact: true,
+  });
+  const removeCaries = cariesEntry.getByRole("button", {
+    name: "Remove",
+    exact: true,
+  });
+  const [entryBounds, dentalBounds] = await Promise.all([
+    cariesEntry.boundingBox(),
+    structuredDental.boundingBox(),
+  ]);
+  expect(entryBounds).not.toBeNull();
+  expect(dentalBounds).not.toBeNull();
+  expect(entryBounds!.x + entryBounds!.width).toBeLessThanOrEqual(
+    dentalBounds!.x + dentalBounds!.width + 1,
+  );
   const fieldTops = await Promise.all([
     toothArea.evaluate((element) => element.getBoundingClientRect().top),
     surface.evaluate((element) => element.getBoundingClientRect().top),
@@ -351,24 +386,95 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
   ]);
   expect(Math.abs(fieldTops[0] - fieldTops[1])).toBeLessThan(2);
   expect(Math.abs(fieldTops[0] - fieldTops[2])).toBeLessThan(2);
+  const [toothWidth, surfaceWidth, notesWidth] = await Promise.all([
+    toothArea.evaluate((element) => element.getBoundingClientRect().width),
+    surface.evaluate((element) => element.getBoundingClientRect().width),
+    notes.evaluate((element) => element.getBoundingClientRect().width),
+  ]);
+  expect(toothWidth).toBeLessThan(notesWidth * 0.8);
+  expect(surfaceWidth).toBeLessThan(notesWidth * 0.8);
+  const [fieldBottom, removeBottom] = await Promise.all([
+    toothArea.evaluate((element) => element.getBoundingClientRect().bottom),
+    removeCaries.evaluate((element) => element.getBoundingClientRect().bottom),
+  ]);
+  expect(Math.abs(fieldBottom - removeBottom)).toBeLessThan(2);
+
+  await page.setViewportSize({ width: 560, height: 1300 });
+  const [narrowToothWidth, narrowSurfaceWidth, narrowNotesWidth] =
+    await Promise.all([
+      toothArea.evaluate((element) => element.getBoundingClientRect().width),
+      surface.evaluate((element) => element.getBoundingClientRect().width),
+      notes.evaluate((element) => element.getBoundingClientRect().width),
+    ]);
+  expect(narrowToothWidth).toBeLessThan(narrowNotesWidth * 0.8);
+  expect(narrowSurfaceWidth).toBeLessThan(narrowNotesWidth * 0.8);
+  const [locationGroupWidth, notesGroupWidth] = await Promise.all([
+    toothArea.evaluate(
+      (element) =>
+        element.parentElement?.parentElement?.getBoundingClientRect().width ?? 0,
+    ),
+    notes.evaluate(
+      (element) =>
+        element.parentElement?.parentElement?.getBoundingClientRect().width ?? 0,
+    ),
+  ]);
+  expect(Math.abs(locationGroupWidth - notesGroupWidth)).toBeLessThan(2);
+  const [narrowNotesBottom, narrowRemoveBottom] = await Promise.all([
+    notes.evaluate((element) => element.getBoundingClientRect().bottom),
+    removeCaries.evaluate((element) => element.getBoundingClientRect().bottom),
+  ]);
+  expect(Math.abs(narrowNotesBottom - narrowRemoveBottom)).toBeLessThan(2);
+  const [narrowEntryBounds, narrowDentalBounds] = await Promise.all([
+    cariesEntry.boundingBox(),
+    structuredDental.boundingBox(),
+  ]);
+  expect(narrowEntryBounds).not.toBeNull();
+  expect(narrowDentalBounds).not.toBeNull();
+  expect(
+    narrowEntryBounds!.x + narrowEntryBounds!.width,
+  ).toBeLessThanOrEqual(narrowDentalBounds!.x + narrowDentalBounds!.width + 1);
 
   const fracture = structuredDental.getByRole("button", {
-    name: "Fracture +",
+    name: "Fracture",
     exact: true,
   });
   await fracture.click();
-  await structuredDental
-    .getByRole("button", { name: "Fracture (1) +", exact: true })
-    .click();
+  await expect(fracture).toHaveCount(0);
+  const fractureGroup = structuredDental.getByRole("group", {
+    name: "Fracture dental observations",
+    exact: true,
+  });
+  const addAnotherFracture = fractureGroup.getByRole("button", {
+    name: "Add another Fracture",
+    exact: true,
+  });
+  await addAnotherFracture.click();
+  const fractureHeading = fractureGroup.locator("legend");
+  await expect(fractureHeading).toHaveCount(1);
+  await expect(fractureHeading).toHaveText("Fracture (2 entries)");
+  const secondFracture = fractureGroup.getByRole("group", {
+    name: "Fracture entry 2",
+    exact: true,
+  });
+  await expect(secondFracture).toBeVisible();
+  const [lastEntryBottom, addAnotherTop] = await Promise.all([
+    secondFracture.evaluate(
+      (element) => element.getBoundingClientRect().bottom,
+    ),
+    addAnotherFracture.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    ),
+  ]);
+  expect(addAnotherTop).toBeGreaterThanOrEqual(lastEntryBottom);
   await expect(
-    structuredDental.getByRole("button", {
-      name: "Fracture (2) +",
+    fractureGroup.getByRole("group", {
+      name: "Fracture entry 1",
       exact: true,
     }),
   ).toBeVisible();
   await expect(
     structuredDental.getByRole("textbox", {
-      name: "Tooth/area (required)",
+      name: "Tooth/area",
       exact: true,
     }),
   ).toHaveCount(3);

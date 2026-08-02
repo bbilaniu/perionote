@@ -427,142 +427,165 @@ function TeethAssessment({
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {recareToothOptions.map((option) => {
-                    const selected = findings.filter(
-                      (item) => item.optionId === option.id,
-                    );
-                    return (
+                  {recareToothOptions
+                    .filter(
+                      (option) =>
+                        !findings.some(
+                          (finding) => finding.optionId === option.id,
+                        ),
+                    )
+                    .map((option) => (
                       <button
                         key={option.id}
                         type="button"
                         className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900`}
                         onClick={() => add(option.id)}
-                        disabled={
-                          !option.allowMultipleInstances && selected.length > 0
-                        }
                       >
-                        {selected.length
-                          ? `${option.label} (${selected.length})`
-                          : option.label}
-                        {option.allowMultipleInstances ? " +" : ""}
+                        {option.label}
                       </button>
-                    );
-                  })}
+                    ))}
                 </div>
-                {findings.map((finding) => {
-                  const option = recareToothOptions.find(
-                    (item) => item.id === finding.optionId,
+                {recareToothOptions.flatMap((option) => {
+                  const optionFindings = findings.filter(
+                    (finding) => finding.optionId === option.id,
                   );
-                  if (!option) return null;
-                  const detailFieldCount =
+                  if (!optionFindings.length) return [];
+                  const clinicalFieldCount =
                     Number(option.supportsTooth) +
                     Number(option.supportsSurface) +
                     Number(option.supportsActivity) +
-                    Number(option.supportsGrade && !option.fixedGrade) +
-                    1;
+                    Number(option.supportsGrade && !option.fixedGrade);
                   const detailGridClass =
-                    detailFieldCount >= 4
-                      ? "grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4"
-                      : detailFieldCount === 3
-                        ? "grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3"
-                        : detailFieldCount === 2
-                          ? "grid items-start gap-3 sm:grid-cols-2"
-                          : "grid items-start gap-3";
-                  return (
-                    <div
-                      key={finding.id}
-                      className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                    clinicalFieldCount > 0
+                      ? "grid min-w-0 items-end gap-3 sm:grid-cols-2 [&>*]:min-w-0"
+                      : "grid min-w-0 items-end gap-3 [&>*]:min-w-0";
+                  const clinicalGridClass =
+                    clinicalFieldCount >= 3
+                      ? "grid min-w-0 grid-cols-3 items-end gap-3 [&>*]:min-w-0"
+                      : clinicalFieldCount === 2
+                        ? "grid min-w-0 grid-cols-2 items-end gap-3 [&>*]:min-w-0"
+                        : "grid min-w-0 grid-cols-1 items-end gap-3 [&>*]:min-w-0";
+                  return [
+                    <fieldset
+                      key={option.id}
+                      className="min-w-0 space-y-3"
+                      aria-label={`${option.label} dental observations`}
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <strong className="text-sm">{option.label}</strong>
+                      <legend className="px-1 text-sm font-semibold">
+                        {option.label}
+                        {optionFindings.length > 1
+                          ? ` (${optionFindings.length} entries)`
+                          : ""}
+                      </legend>
+                      {optionFindings.map((finding, index) => (
+                        <div
+                          key={finding.id}
+                          role="group"
+                          aria-label={`${option.label} entry ${index + 1}`}
+                          className="min-w-0 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                        >
+                          <div className={detailGridClass}>
+                            {clinicalFieldCount > 0 ? (
+                              <div className={clinicalGridClass}>
+                                {option.supportsTooth ? (
+                                  <TextField
+                                    id={`tooth-area-${finding.id}`}
+                                    label="Tooth/area"
+                                    value={finding.toothAreas.join(", ")}
+                                    onChange={(value) =>
+                                      patch(finding.id, {
+                                        toothAreas: value
+                                          .split(",")
+                                          .map((item) => item.trim())
+                                          .filter(Boolean),
+                                      })
+                                    }
+                                  />
+                                ) : null}
+                                {option.supportsSurface ? (
+                                  <TextField
+                                    id={`tooth-surface-${finding.id}`}
+                                    label="Surface(s)"
+                                    value={finding.surface ?? ""}
+                                    onChange={(surface) =>
+                                      patch(finding.id, { surface })
+                                    }
+                                  />
+                                ) : null}
+                                {option.supportsActivity ? (
+                                  <FixedChoiceListbox
+                                    id={`tooth-activity-${finding.id}`}
+                                    label="Activity"
+                                    value={finding.activity ?? ""}
+                                    options={[
+                                      { value: "", label: "Not assessed" },
+                                      { value: "active", label: "Active" },
+                                      { value: "inactive", label: "Inactive" },
+                                    ]}
+                                    onChange={(activity) =>
+                                      patch(finding.id, {
+                                        activity: activity || undefined,
+                                      })
+                                    }
+                                  />
+                                ) : null}
+                                {option.supportsGrade && !option.fixedGrade ? (
+                                  <FixedChoiceListbox
+                                    id={`tooth-grade-${finding.id}`}
+                                    label="Mobility — Miller Index"
+                                    value={finding.millerGrade ?? ""}
+                                    options={[
+                                      { value: "", label: "Select grade" },
+                                      { value: "M1", label: "M1" },
+                                      { value: "M2", label: "M2" },
+                                      { value: "M3", label: "M3" },
+                                    ]}
+                                    onChange={(millerGrade) =>
+                                      patch(finding.id, {
+                                        millerGrade: millerGrade || undefined,
+                                      })
+                                    }
+                                  />
+                                ) : null}
+                              </div>
+                            ) : null}
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-3 [&>*]:min-w-0">
+                              <TextField
+                                id={`tooth-notes-${finding.id}`}
+                                label="Notes"
+                                value={finding.comment ?? ""}
+                                onChange={(comment) =>
+                                  patch(finding.id, { comment })
+                                }
+                              />
+                              <button
+                                type="button"
+                                className={treatmentRowRemoveButtonClass}
+                                onClick={() =>
+                                  onChange({
+                                    toothFindings: findings.filter(
+                                      (item) => item.id !== finding.id,
+                                    ),
+                                  })
+                                }
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {option.allowMultipleInstances ? (
                         <button
                           type="button"
-                          className={treatmentRowRemoveButtonClass}
-                          onClick={() =>
-                            onChange({
-                              toothFindings: findings.filter(
-                                (item) => item.id !== finding.id,
-                              ),
-                            })
-                          }
+                          className={treatmentRowButtonClass}
+                          onClick={() => add(option.id)}
                         >
-                          Remove
+                          Add another {option.label}
                         </button>
-                      </div>
-                      <div className={detailGridClass}>
-                        {option.supportsTooth ? (
-                          <TextField
-                            id={`tooth-area-${finding.id}`}
-                            label={`Tooth/area${
-                              option.requiresToothOrArea ? " (required)" : ""
-                            }`}
-                            value={finding.toothAreas.join(", ")}
-                            onChange={(value) =>
-                              patch(finding.id, {
-                                toothAreas: value
-                                  .split(",")
-                                  .map((item) => item.trim())
-                                  .filter(Boolean),
-                              })
-                            }
-                          />
-                        ) : null}
-                        {option.supportsSurface ? (
-                          <TextField
-                            id={`tooth-surface-${finding.id}`}
-                            label="Surface(s)"
-                            value={finding.surface ?? ""}
-                            onChange={(surface) =>
-                              patch(finding.id, { surface })
-                            }
-                          />
-                        ) : null}
-                      {option.supportsActivity ? (
-                        <FixedChoiceListbox
-                          id={`tooth-activity-${finding.id}`}
-                          label="Activity"
-                          value={finding.activity ?? ""}
-                          options={[
-                            { value: "", label: "Not assessed" },
-                            { value: "active", label: "Active" },
-                            { value: "inactive", label: "Inactive" },
-                          ]}
-                          onChange={(activity) =>
-                            patch(finding.id, {
-                              activity: activity || undefined,
-                            })
-                          }
-                        />
                       ) : null}
-                      {option.supportsGrade && !option.fixedGrade ? (
-                        <FixedChoiceListbox
-                          id={`tooth-grade-${finding.id}`}
-                          label="Mobility — Miller Index"
-                          value={finding.millerGrade ?? ""}
-                          options={[
-                            { value: "", label: "Select grade" },
-                            { value: "M1", label: "M1" },
-                            { value: "M2", label: "M2" },
-                            { value: "M3", label: "M3" },
-                          ]}
-                          onChange={(millerGrade) =>
-                            patch(finding.id, {
-                              millerGrade: millerGrade || undefined,
-                            })
-                          }
-                        />
-                      ) : null}
-                      <TextField
-                        id={`tooth-notes-${finding.id}`}
-                        label="Notes"
-                        value={finding.comment ?? ""}
-                        onChange={(comment) =>
-                          patch(finding.id, { comment })
-                        }
-                      />
-                      </div>
-                    </div>
-                  );
+                    </fieldset>,
+                  ];
                 })}
                 <TextareaField
                   id="recare-additional-tooth-findings"
