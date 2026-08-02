@@ -15,8 +15,17 @@ import {
   formatNoteHeaderLocalTimestamp,
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
+import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 
 describe("buildRecareExamSummary", () => {
+  it("allows separate fracture observations", () => {
+    expect(
+      recareToothOptions.find(
+        (option) => option.id === "ioe.teeth.fracture",
+      )?.allowMultipleInstances,
+    ).toBe(true);
+  });
+
   it("defines bidirectional conflicts for normal and abnormal observations", () => {
     expect(
       recareIntraoralOptionConflicts
@@ -251,11 +260,27 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
           surface: "DO",
         },
         {
+          id: "c2",
+          optionId: "ioe.teeth.caries",
+          toothAreas: ["30"],
+          surface: "O",
+        },
+        {
           id: "i1",
           optionId: "ioe.teeth.initial_noncavitated_caries",
           toothAreas: ["15"],
           surface: "O",
           activity: "inactive" as const,
+        },
+        {
+          id: "f1",
+          optionId: "ioe.teeth.fracture",
+          toothAreas: ["11"],
+        },
+        {
+          id: "f2",
+          optionId: "ioe.teeth.fracture",
+          toothAreas: ["21"],
         },
         {
           id: "m1",
@@ -269,8 +294,9 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
       odontogramUpToDate: true,
     };
     expect(buildRecareExamSummary(form)).toBe(`Teeth:
-  - Caries (tooth/area: 14; surface: DO).
+  - Caries (tooth/area: 14; surface: DO), (tooth/area: 30; surface: O).
   - Initial/noncavitated caries lesion (tooth/area: 15; surface: O; activity: inactive).
+  - Fracture (tooth/area: 11), (tooth/area: 21).
   - Mobility (tooth/area: 31, 41; Miller Index: M2).
   Additional observations: Synthetic observation.
 ODONTOGRAM UP TO DATE`);

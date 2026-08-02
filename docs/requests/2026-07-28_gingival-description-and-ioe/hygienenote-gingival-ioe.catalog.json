@@ -1456,6 +1456,7 @@
               "sourceTerm": "fractures",
               "supportsTooth": true,
               "requiresToothOrArea": true,
+              "allowMultipleInstances": true,
               "conflictsWithOptionIds": ["ioe.teeth.intact"]
             },
             {

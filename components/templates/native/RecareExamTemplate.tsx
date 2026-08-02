@@ -33,7 +33,10 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
-import { formControlClass } from "@/components/forms/controlStyles";
+import {
+  DropdownChevron,
+  formControlClass,
+} from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
@@ -255,6 +258,27 @@ function TeethAssessment({
   const status = form.teethStatus ?? "not-assessed";
   const hasDocumented =
     findings.length > 0 || Boolean(form.additionalToothFindings?.trim());
+  const structuredObservationCount =
+    findings.length + Number(Boolean(form.additionalToothFindings?.trim()));
+  const structuredObservationSummary =
+    status === "wnl"
+      ? "WNL"
+      : structuredObservationCount
+        ? `${structuredObservationCount} ${
+            structuredObservationCount === 1 ? "observation" : "observations"
+          } documented`
+        : "Not assessed";
+  const shouldAutoExpandStructuredObservations = status === "findings";
+  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
+    shouldAutoExpandStructuredObservations,
+  );
+
+  useEffect(() => {
+    if (shouldAutoExpandStructuredObservations) {
+      setStructuredObservationsOpen(true);
+    }
+  }, [shouldAutoExpandStructuredObservations]);
+
   const createFinding = (optionId: string): RecareToothFinding => ({
     id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     optionId,
@@ -288,6 +312,20 @@ function TeethAssessment({
         additionalToothFindings: "",
       });
     } else onChange({ teethStatus: next });
+  }
+  function applyNormalStructuredObservations() {
+    if (
+      hasDocumented &&
+      !window.confirm(
+        "Replace all entered dental findings with the reviewed normal structured observations?"
+      )
+    )
+      return;
+    onChange({
+      teethStatus: "findings",
+      toothFindings: recareToothWnlOptionIds.map(createFinding),
+      additionalToothFindings: "",
+    });
   }
   function add(optionId: string) {
     const option = recareToothOptions.find((item) => item.id === optionId);
@@ -333,137 +371,201 @@ function TeethAssessment({
         options={examStatusOptions}
         onChange={setStatus}
       />
-      {status === "findings" ? (
-        <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-          <legend className="px-1 text-sm font-semibold">
-            Structured tooth-level observations
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {recareToothOptions.map((option) => {
-              const selected = findings.filter(
-                (item) => item.optionId === option.id
-              );
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900`}
-                  onClick={() => add(option.id)}
-                  disabled={
-                    !option.allowMultipleInstances && selected.length > 0
-                  }
-                >
-                  {selected.length
-                    ? `${option.label} (${selected.length})`
-                    : option.label}
-                  {option.allowMultipleInstances ? " +" : ""}
-                </button>
-              );
-            })}
-          </div>
-          {findings.map((finding) => {
-            const option = recareToothOptions.find(
-              (item) => item.id === finding.optionId
-            );
-            if (!option) return null;
-            return (
-              <div
-                key={finding.id}
-                className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <strong className="text-sm">{option.label}</strong>
+      <fieldset
+        className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+        aria-label="Structured dental observations"
+      >
+        <button
+          id="recare-structured-dental-observations"
+          type="button"
+          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+          aria-expanded={structuredObservationsOpen}
+          aria-controls="recare-structured-dental-observations-content"
+          onClick={() => setStructuredObservationsOpen((open) => !open)}
+        >
+          <span className="min-w-0">Structured dental observations</span>
+          <span className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
+              {structuredObservationSummary}
+            </span>
+            <DropdownChevron open={structuredObservationsOpen} />
+          </span>
+          <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
+            {structuredObservationSummary}
+          </span>
+        </button>
+        {structuredObservationsOpen ? (
+          <div
+            id="recare-structured-dental-observations-content"
+            className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700"
+          >
+            <>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Apply the reviewed normal observations or select individual
+                  observations. Both document Findings.
+                </p>
+                <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className={treatmentRowRemoveButtonClass}
-                    onClick={() =>
-                      onChange({
-                        toothFindings: findings.filter(
-                          (item) => item.id !== finding.id
-                        ),
-                      })
-                    }
+                    className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+                    onClick={applyNormalStructuredObservations}
                   >
-                    Remove
+                    Apply normal structured observations
+                  </button>
+                  <button
+                    type="button"
+                    className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+                    onClick={() => setStatus("not-assessed")}
+                    disabled={status === "not-assessed" && !hasDocumented}
+                  >
+                    Clear dental observations
                   </button>
                 </div>
-                {option.supportsTooth ? (
-                  <TextField
-                    id={`tooth-area-${finding.id}`}
-                    label={`Tooth/area${
-                      option.requiresToothOrArea ? " (required)" : ""
-                    }`}
-                    value={finding.toothAreas.join(", ")}
-                    onChange={(value) =>
-                      patch(finding.id, {
-                        toothAreas: value
-                          .split(",")
-                          .map((item) => item.trim())
-                          .filter(Boolean),
-                      })
-                    }
-                  />
-                ) : null}
-                {option.supportsSurface ? (
-                  <TextField
-                    id={`tooth-surface-${finding.id}`}
-                    label="Surface(s)"
-                    value={finding.surface ?? ""}
-                    onChange={(surface) => patch(finding.id, { surface })}
-                  />
-                ) : null}
-                {option.supportsActivity ? (
-                  <FixedChoiceListbox
-                    id={`tooth-activity-${finding.id}`}
-                    label="Activity"
-                    value={finding.activity ?? ""}
-                    options={[
-                      { value: "", label: "Not assessed" },
-                      { value: "active", label: "Active" },
-                      { value: "inactive", label: "Inactive" },
-                    ]}
-                    onChange={(activity) =>
-                      patch(finding.id, { activity: activity || undefined })
-                    }
-                  />
-                ) : null}
-                {option.supportsGrade && !option.fixedGrade ? (
-                  <FixedChoiceListbox
-                    id={`tooth-grade-${finding.id}`}
-                    label="Mobility — Miller Index"
-                    value={finding.millerGrade ?? ""}
-                    options={[
-                      { value: "", label: "Select grade" },
-                      { value: "M1", label: "M1" },
-                      { value: "M2", label: "M2" },
-                      { value: "M3", label: "M3" },
-                    ]}
-                    onChange={(millerGrade) =>
-                      patch(finding.id, {
-                        millerGrade: millerGrade || undefined,
-                      })
-                    }
-                  />
-                ) : null}
-                <TextField
-                  id={`tooth-notes-${finding.id}`}
-                  label="Notes"
-                  value={finding.comment ?? ""}
-                  onChange={(comment) => patch(finding.id, { comment })}
+                <div className="flex flex-wrap gap-2">
+                  {recareToothOptions.map((option) => {
+                    const selected = findings.filter(
+                      (item) => item.optionId === option.id,
+                    );
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900`}
+                        onClick={() => add(option.id)}
+                        disabled={
+                          !option.allowMultipleInstances && selected.length > 0
+                        }
+                      >
+                        {selected.length
+                          ? `${option.label} (${selected.length})`
+                          : option.label}
+                        {option.allowMultipleInstances ? " +" : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+                {findings.map((finding) => {
+                  const option = recareToothOptions.find(
+                    (item) => item.id === finding.optionId,
+                  );
+                  if (!option) return null;
+                  return (
+                    <div
+                      key={finding.id}
+                      className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <strong className="text-sm">{option.label}</strong>
+                        <button
+                          type="button"
+                          className={treatmentRowRemoveButtonClass}
+                          onClick={() =>
+                            onChange({
+                              toothFindings: findings.filter(
+                                (item) => item.id !== finding.id,
+                              ),
+                            })
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div
+                        className={
+                          option.supportsTooth && option.supportsSurface
+                            ? "grid gap-3 sm:grid-cols-2"
+                            : undefined
+                        }
+                      >
+                        {option.supportsTooth ? (
+                          <TextField
+                            id={`tooth-area-${finding.id}`}
+                            label={`Tooth/area${
+                              option.requiresToothOrArea ? " (required)" : ""
+                            }`}
+                            value={finding.toothAreas.join(", ")}
+                            onChange={(value) =>
+                              patch(finding.id, {
+                                toothAreas: value
+                                  .split(",")
+                                  .map((item) => item.trim())
+                                  .filter(Boolean),
+                              })
+                            }
+                          />
+                        ) : null}
+                        {option.supportsSurface ? (
+                          <TextField
+                            id={`tooth-surface-${finding.id}`}
+                            label="Surface(s)"
+                            value={finding.surface ?? ""}
+                            onChange={(surface) =>
+                              patch(finding.id, { surface })
+                            }
+                          />
+                        ) : null}
+                      </div>
+                      {option.supportsActivity ? (
+                        <FixedChoiceListbox
+                          id={`tooth-activity-${finding.id}`}
+                          label="Activity"
+                          value={finding.activity ?? ""}
+                          options={[
+                            { value: "", label: "Not assessed" },
+                            { value: "active", label: "Active" },
+                            { value: "inactive", label: "Inactive" },
+                          ]}
+                          onChange={(activity) =>
+                            patch(finding.id, {
+                              activity: activity || undefined,
+                            })
+                          }
+                        />
+                      ) : null}
+                      {option.supportsGrade && !option.fixedGrade ? (
+                        <FixedChoiceListbox
+                          id={`tooth-grade-${finding.id}`}
+                          label="Mobility — Miller Index"
+                          value={finding.millerGrade ?? ""}
+                          options={[
+                            { value: "", label: "Select grade" },
+                            { value: "M1", label: "M1" },
+                            { value: "M2", label: "M2" },
+                            { value: "M3", label: "M3" },
+                          ]}
+                          onChange={(millerGrade) =>
+                            patch(finding.id, {
+                              millerGrade: millerGrade || undefined,
+                            })
+                          }
+                        />
+                      ) : null}
+                      <TextField
+                        id={`tooth-notes-${finding.id}`}
+                        label="Notes"
+                        value={finding.comment ?? ""}
+                        onChange={(comment) =>
+                          patch(finding.id, { comment })
+                        }
+                      />
+                    </div>
+                  );
+                })}
+                <TextareaField
+                  id="recare-additional-tooth-findings"
+                  label="Additional tooth findings"
+                  value={form.additionalToothFindings ?? ""}
+                  onChange={(additionalToothFindings) =>
+                    onChange({
+                      teethStatus: "findings",
+                      additionalToothFindings,
+                    })
+                  }
                 />
-              </div>
-            );
-          })}
-          <TextareaField
-            id="recare-additional-tooth-findings"
-            label="Additional tooth findings"
-            value={form.additionalToothFindings ?? ""}
-            onChange={(additionalToothFindings) =>
-              onChange({ teethStatus: "findings", additionalToothFindings })
-            }
-          />
-        </fieldset>
-      ) : null}
+            </>
+          </div>
+        ) : null}
+      </fieldset>
     </div>
   );
 }
@@ -678,6 +780,24 @@ function StructuredIntraoralFindings({
   clearDisabled: boolean;
   onChange: (values: RecareIntraoralFinding[]) => void;
 }) {
+  const structuredObservationSummary = values.length
+    ? `${values.length} ${
+        values.length === 1 ? "observation" : "observations"
+      } documented`
+    : status === "wnl"
+      ? "WNL"
+      : "Not assessed";
+  const shouldAutoExpandStructuredObservations = status === "findings";
+  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
+    shouldAutoExpandStructuredObservations,
+  );
+
+  useEffect(() => {
+    if (shouldAutoExpandStructuredObservations) {
+      setStructuredObservationsOpen(true);
+    }
+  }, [shouldAutoExpandStructuredObservations]);
+
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
     onChange(
       values.map((value) =>
@@ -686,33 +806,56 @@ function StructuredIntraoralFindings({
     );
   }
   return (
-    <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-      <legend className="px-1 text-sm font-semibold">
-        Structured intraoral observations
-      </legend>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Apply the reviewed normal observations or select individual
-        observations. Both document Findings.
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-          onClick={onApplyNormal}
+    <fieldset
+      className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+      aria-label="Structured intraoral observations"
+    >
+      <button
+        id="recare-structured-intraoral-observations"
+        type="button"
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+        aria-expanded={structuredObservationsOpen}
+        aria-controls="recare-structured-intraoral-observations-content"
+        onClick={() => setStructuredObservationsOpen((open) => !open)}
+      >
+        <span className="min-w-0">Structured intraoral observations</span>
+        <span className="flex shrink-0 items-center gap-3">
+          <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
+            {structuredObservationSummary}
+          </span>
+          <DropdownChevron open={structuredObservationsOpen} />
+        </span>
+        <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
+          {structuredObservationSummary}
+        </span>
+      </button>
+      {structuredObservationsOpen ? (
+        <div
+          id="recare-structured-intraoral-observations-content"
+          className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700"
         >
-          Apply normal structured observations
-        </button>
-        <button
-          type="button"
-          className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-          onClick={onClear}
-          disabled={clearDisabled}
-        >
-          Clear intraoral observations
-        </button>
-      </div>
-      {status === "findings"
-        ? recareIntraoralStructures.map((structure) => (
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Apply the reviewed normal observations or select individual
+            observations. Both document Findings.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+              onClick={onApplyNormal}
+            >
+              Apply normal structured observations
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+              onClick={onClear}
+              disabled={clearDisabled}
+            >
+              Clear intraoral observations
+            </button>
+          </div>
+          {recareIntraoralStructures.map((structure) => (
             <div key={structure.id} className="space-y-2">
               <h3 className="text-sm font-semibold">{structure.label}</h3>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -822,8 +965,9 @@ function StructuredIntraoralFindings({
                 })}
               </div>
             </div>
-          ))
-        : null}
+          ))}
+        </div>
+      ) : null}
     </fieldset>
   );
 }

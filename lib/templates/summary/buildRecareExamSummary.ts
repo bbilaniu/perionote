@@ -5,10 +5,7 @@ import type {
   RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
-import {
-  recareToothOptionById,
-  recareToothOptions,
-} from "@/lib/templates/recareTeethCatalog";
+import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
 import {
   recareIntraoralOptionById,
@@ -35,41 +32,42 @@ function teethSummary(form: RecareExamForm): string {
   if (form.teethStatus !== "findings") return "";
 
   const findings = form.toothFindings ?? [];
-  const lines = recareToothOptions.flatMap((catalogueOption) =>
-    findings
-      .filter((finding) => finding.optionId === catalogueOption.id)
-      .flatMap((finding) => {
-        const option = recareToothOptionById.get(finding.optionId);
-        if (!option) return [];
-        const clauses = [
-          finding.toothAreas?.map(trimmed).filter(Boolean).length
-            ? `tooth/area: ${finding.toothAreas
-                .map(trimmed)
-                .filter(Boolean)
-                .join(", ")}`
-            : "",
-          option.supportsSurface && trimmed(finding.surface ?? "")
-            ? `surface: ${trimmed(finding.surface ?? "")}`
-            : "",
-          option.supportsActivity && finding.activity
-            ? `activity: ${finding.activity}`
-            : "",
-          option.fixedGrade
-            ? `Miller Index: ${option.fixedGrade}`
-            : option.supportsGrade && finding.millerGrade
+  const lines = recareToothOptions.flatMap((option) => {
+    const optionFindings = findings.filter(
+      (finding) => finding.optionId === option.id,
+    );
+    if (!optionFindings.length) return [];
+
+    const entries = optionFindings.flatMap((finding) => {
+      const clauses = [
+        finding.toothAreas?.map(trimmed).filter(Boolean).length
+          ? `tooth/area: ${finding.toothAreas
+              .map(trimmed)
+              .filter(Boolean)
+              .join(", ")}`
+          : "",
+        option.supportsSurface && trimmed(finding.surface ?? "")
+          ? `surface: ${trimmed(finding.surface ?? "")}`
+          : "",
+        option.supportsActivity && finding.activity
+          ? `activity: ${finding.activity}`
+          : "",
+        option.fixedGrade
+          ? `Miller Index: ${option.fixedGrade}`
+          : option.supportsGrade && finding.millerGrade
             ? `Miller Index: ${finding.millerGrade}`
             : "",
-          trimmed(finding.comment ?? "")
-            ? `notes: ${trimmed(finding.comment ?? "")}`
-            : "",
-        ].filter(Boolean);
-        return [
-          `  - ${option.label}${
-            clauses.length ? ` (${clauses.join("; ")})` : ""
-          }.`,
-        ];
-      })
-  );
+        trimmed(finding.comment ?? "")
+          ? `notes: ${trimmed(finding.comment ?? "")}`
+          : "",
+      ].filter(Boolean);
+      return clauses.length ? [`(${clauses.join("; ")})`] : [];
+    });
+
+    return [
+      `  - ${option.label}${entries.length ? ` ${entries.join(", ")}` : ""}.`,
+    ];
+  });
   const additional = trimmed(form.additionalToothFindings ?? "");
   if (additional)
     lines.push(
