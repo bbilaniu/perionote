@@ -8,6 +8,34 @@ function multiControl(page: Page, label: string): Locator {
     .locator("xpath=ancestor::*[@data-editable-combobox][1]");
 }
 
+function intraoralObservationCard(
+  structuredIntraoral: Locator,
+  structure: string,
+  observation: string,
+): Locator {
+  return structuredIntraoral.getByRole("group", {
+    name: `${structure}: ${observation}`,
+    exact: true,
+  });
+}
+
+async function toggleIntraoralObservation(
+  structuredIntraoral: Locator,
+  structure: string,
+  observation: string,
+) {
+  const control = structuredIntraoral.getByRole("button", {
+    name: `${structure} observations`,
+    exact: true,
+  });
+  await control.click();
+  await structuredIntraoral
+    .getByRole("dialog", { name: `${structure} observations options` })
+    .getByText(observation, { exact: true })
+    .click();
+  await control.click();
+}
+
 test("Recare Exam radiographs use the reviewed catalogue and ordered note values", async ({
   page,
 }) => {
@@ -145,6 +173,10 @@ test("Recare Exam aligns Intraoral with the primary exam and conditionally shows
     name: "Structured intraoral observations",
     exact: true,
   });
+  const structuredIntraoralDisclosure = structuredIntraoral.getByRole(
+    "button",
+    { name: /Structured intraoral observations/ },
+  );
   const intraoralStatus = page.getByRole("button", {
     name: "Intraoral",
     exact: true,
@@ -153,12 +185,21 @@ test("Recare Exam aligns Intraoral with the primary exam and conditionally shows
     name: "Intraoral findings",
     exact: true,
   });
-  const normalFlow = structuredIntraoral.getByRole("checkbox", {
-    name: "Normal flow",
+  const normalFlow = intraoralObservationCard(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
+  const salivaObservations = structuredIntraoral.getByRole("button", {
+    name: "Saliva observations",
     exact: true,
   });
 
   await expect(intraoralStatus).toBeVisible();
+  await expect(structuredIntraoralDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
   await expect(
     structuredIntraoral.getByRole("button", {
       name: "Intraoral",
@@ -168,22 +209,58 @@ test("Recare Exam aligns Intraoral with the primary exam and conditionally shows
   await expect(normalFlow).toHaveCount(0);
   await expect(freeText).toHaveCount(0);
 
+  await structuredIntraoralDisclosure.click();
+  await expect(salivaObservations).toBeVisible();
+  await salivaObservations.click();
+  const salivaOptions = structuredIntraoral.getByRole("dialog", {
+    name: "Saliva observations options",
+  });
+  await expect(
+    salivaOptions.getByRole("group", {
+      name: "Normal Saliva observations choices",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    salivaOptions.getByRole("group", {
+      name: "Abnormal Saliva observations choices",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await salivaObservations.click();
+  await structuredIntraoralDisclosure.click();
+
   await intraoralStatus.click();
   await page.getByRole("option", { name: "Findings", exact: true }).click();
   await expect(freeText).toBeVisible();
+  await expect(structuredIntraoralDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
   await expect(normalFlow).toBeVisible();
-  await normalFlow.check();
+
+  await structuredIntraoralDisclosure.click();
+  await expect(structuredIntraoralDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  await expect(normalFlow).toHaveCount(0);
 
   await intraoralStatus.click();
   await page
     .getByRole("option", { name: "Not assessed", exact: true })
     .click();
   await expect(normalFlow).toHaveCount(0);
-  await expect(page.locator("#recare-summary")).toHaveValue("");
+  await expect(page.locator("#recare-summary")).not.toHaveValue(/Intraoral:/);
 
   await intraoralStatus.click();
   await page.getByRole("option", { name: "Findings", exact: true }).click();
-  await expect(normalFlow).toBeChecked();
+  await expect(normalFlow).toBeVisible();
 
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
@@ -194,7 +271,240 @@ test("Recare Exam aligns Intraoral with the primary exam and conditionally shows
   await intraoralStatus.click();
   await page.getByRole("option", { name: "WNL", exact: true }).click();
   await expect(normalFlow).toHaveCount(0);
-  await expect(page.locator("#recare-summary")).toHaveValue("Intraoral: WNL.");
+  await expect(salivaObservations).toBeVisible();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Intraoral: WNL\.$/,
+  );
+});
+
+test("Recare Exam compacts repeatable dental observations in a disclosure", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 2048, height: 1300 });
+  await page.goto(recareExamUrl);
+
+  const structuredDental = page.getByRole("group", {
+    name: "Structured dental observations",
+    exact: true,
+  });
+  const disclosure = structuredDental.getByRole("button", {
+    name: /Structured dental observations/,
+  });
+  const teethStatus = page.getByRole("button", {
+    name: "Teeth",
+    exact: true,
+  });
+
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await disclosure.click();
+  await expect(
+    structuredDental.getByRole("button", { name: "Caries", exact: true }),
+  ).toBeVisible();
+  const applyNormal = structuredDental.getByRole("button", {
+    name: "Apply normal structured observations",
+    exact: true,
+  });
+  const clearDental = structuredDental.getByRole("button", {
+    name: "Clear dental observations",
+    exact: true,
+  });
+  await expect(applyNormal).toBeVisible();
+  await expect(applyNormal).toHaveClass(/bg-sky-700/);
+  await expect(clearDental).toBeDisabled();
+
+  await applyNormal.click();
+  await expect(teethStatus).toContainText("Findings");
+  await expect(
+    structuredDental.getByRole("button", { name: "Intact", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    structuredDental.getByRole("group", {
+      name: "Intact dental observations",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(clearDental).toBeEnabled();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all documented Teeth observations",
+    );
+    await dialog.accept();
+  });
+  await clearDental.click();
+  await expect(teethStatus).toContainText("Not assessed");
+  await expect(
+    structuredDental.getByRole("button", { name: "Intact", exact: true }),
+  ).toBeVisible();
+
+  const cariesChoice = structuredDental.getByRole("button", {
+    name: "Caries",
+    exact: true,
+  });
+  await cariesChoice.click();
+  await expect(cariesChoice).toHaveCount(0);
+  await expect(disclosure).toHaveAttribute("aria-expanded", "true");
+  await expect(teethStatus).toContainText("Findings");
+  const cariesGroup = structuredDental.getByRole("group", {
+    name: "Caries dental observations",
+    exact: true,
+  });
+  await expect(cariesGroup.getByText("Caries", { exact: true })).toHaveCount(1);
+  const toothArea = cariesGroup.getByRole("textbox", {
+    name: "Tooth/area",
+    exact: true,
+  });
+  const surface = cariesGroup.getByRole("textbox", {
+    name: "Surface(s)",
+    exact: true,
+  });
+  const notes = cariesGroup.getByRole("textbox", {
+    name: "Notes",
+    exact: true,
+  });
+  const cariesEntry = cariesGroup.getByRole("group", {
+    name: "Caries entry 1",
+    exact: true,
+  });
+  const removeCaries = cariesEntry.getByRole("button", {
+    name: "Remove",
+    exact: true,
+  });
+  const [entryBounds, dentalBounds] = await Promise.all([
+    cariesEntry.boundingBox(),
+    structuredDental.boundingBox(),
+  ]);
+  expect(entryBounds).not.toBeNull();
+  expect(dentalBounds).not.toBeNull();
+  expect(entryBounds!.x + entryBounds!.width).toBeLessThanOrEqual(
+    dentalBounds!.x + dentalBounds!.width + 1,
+  );
+  const fieldTops = await Promise.all([
+    toothArea.evaluate((element) => element.getBoundingClientRect().top),
+    surface.evaluate((element) => element.getBoundingClientRect().top),
+    notes.evaluate((element) => element.getBoundingClientRect().top),
+  ]);
+  expect(Math.abs(fieldTops[0] - fieldTops[1])).toBeLessThan(2);
+  expect(Math.abs(fieldTops[0] - fieldTops[2])).toBeLessThan(2);
+  const [toothWidth, surfaceWidth, notesWidth] = await Promise.all([
+    toothArea.evaluate((element) => element.getBoundingClientRect().width),
+    surface.evaluate((element) => element.getBoundingClientRect().width),
+    notes.evaluate((element) => element.getBoundingClientRect().width),
+  ]);
+  expect(toothWidth).toBeLessThan(notesWidth * 0.8);
+  expect(surfaceWidth).toBeLessThan(notesWidth * 0.8);
+  const [fieldBottom, removeBottom] = await Promise.all([
+    toothArea.evaluate((element) => element.getBoundingClientRect().bottom),
+    removeCaries.evaluate((element) => element.getBoundingClientRect().bottom),
+  ]);
+  expect(Math.abs(fieldBottom - removeBottom)).toBeLessThan(2);
+
+  await page.setViewportSize({ width: 560, height: 1300 });
+  const [narrowToothWidth, narrowSurfaceWidth, narrowNotesWidth] =
+    await Promise.all([
+      toothArea.evaluate((element) => element.getBoundingClientRect().width),
+      surface.evaluate((element) => element.getBoundingClientRect().width),
+      notes.evaluate((element) => element.getBoundingClientRect().width),
+    ]);
+  expect(narrowToothWidth).toBeLessThan(narrowNotesWidth * 0.8);
+  expect(narrowSurfaceWidth).toBeLessThan(narrowNotesWidth * 0.8);
+  const [locationGroupWidth, notesGroupWidth] = await Promise.all([
+    toothArea.evaluate(
+      (element) =>
+        element.parentElement?.parentElement?.getBoundingClientRect().width ?? 0,
+    ),
+    notes.evaluate(
+      (element) =>
+        element.parentElement?.parentElement?.getBoundingClientRect().width ?? 0,
+    ),
+  ]);
+  expect(Math.abs(locationGroupWidth - notesGroupWidth)).toBeLessThan(2);
+  const [narrowNotesBottom, narrowRemoveBottom] = await Promise.all([
+    notes.evaluate((element) => element.getBoundingClientRect().bottom),
+    removeCaries.evaluate((element) => element.getBoundingClientRect().bottom),
+  ]);
+  expect(Math.abs(narrowNotesBottom - narrowRemoveBottom)).toBeLessThan(2);
+  const [narrowEntryBounds, narrowDentalBounds] = await Promise.all([
+    cariesEntry.boundingBox(),
+    structuredDental.boundingBox(),
+  ]);
+  expect(narrowEntryBounds).not.toBeNull();
+  expect(narrowDentalBounds).not.toBeNull();
+  expect(
+    narrowEntryBounds!.x + narrowEntryBounds!.width,
+  ).toBeLessThanOrEqual(narrowDentalBounds!.x + narrowDentalBounds!.width + 1);
+
+  const fracture = structuredDental.getByRole("button", {
+    name: "Fracture",
+    exact: true,
+  });
+  await fracture.click();
+  await expect(fracture).toHaveCount(0);
+  const fractureGroup = structuredDental.getByRole("group", {
+    name: "Fracture dental observations",
+    exact: true,
+  });
+  const addAnotherFracture = fractureGroup.getByRole("button", {
+    name: "Add another Fracture",
+    exact: true,
+  });
+  await addAnotherFracture.click();
+  const fractureHeading = fractureGroup.locator("legend");
+  await expect(fractureHeading).toHaveCount(1);
+  await expect(fractureHeading).toHaveText("Fracture (2 entries)");
+  const secondFracture = fractureGroup.getByRole("group", {
+    name: "Fracture entry 2",
+    exact: true,
+  });
+  await expect(secondFracture).toBeVisible();
+  const [lastEntryBottom, addAnotherTop] = await Promise.all([
+    secondFracture.evaluate(
+      (element) => element.getBoundingClientRect().bottom,
+    ),
+    addAnotherFracture.evaluate(
+      (element) => element.getBoundingClientRect().top,
+    ),
+  ]);
+  expect(addAnotherTop).toBeGreaterThanOrEqual(lastEntryBottom);
+  await expect(
+    fractureGroup.getByRole("group", {
+      name: "Fracture entry 1",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    structuredDental.getByRole("textbox", {
+      name: "Tooth/area",
+      exact: true,
+    }),
+  ).toHaveCount(3);
+
+  for (const observation of [
+    "Discoloration",
+    "Enamel hypoplasia",
+    "Fluorosis",
+  ]) {
+    await structuredDental
+      .getByRole("button", { name: observation, exact: true })
+      .click();
+    const observationGroup = structuredDental.getByRole("group", {
+      name: `${observation} dental observations`,
+      exact: true,
+    });
+    const addAnother = observationGroup.getByRole("button", {
+      name: `Add another ${observation}`,
+      exact: true,
+    });
+    await expect(addAnother).toBeVisible();
+    await addAnother.click();
+    await expect(observationGroup.locator("legend")).toHaveText(
+      `${observation} (2 entries)`,
+    );
+  }
+
+  await disclosure.click();
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(surface).toHaveCount(0);
 });
 
 test("Recare Exam applies reviewed normal intraoral observations with compact output", async ({
@@ -218,10 +528,17 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   });
   await freeText.fill("Legacy observation");
 
-  const normalFlow = structuredIntraoral.getByRole("checkbox", {
-    name: "Normal flow",
-    exact: true,
-  });
+  const normalFlow = intraoralObservationCard(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
+  await expect(
+    structuredIntraoral.getByRole("button", {
+      name: "Apply normal structured observations",
+      exact: true,
+    }),
+  ).toHaveClass(/bg-sky-700/);
   page.once("dialog", async (dialog) => {
     await dialog.dismiss();
   });
@@ -232,7 +549,7 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
     })
     .click();
   await expect(freeText).toHaveValue("Legacy observation");
-  await expect(normalFlow).not.toBeChecked();
+  await expect(normalFlow).toHaveCount(0);
 
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
@@ -249,32 +566,43 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
 
   await expect(intraoralStatus).toContainText("Findings");
   await expect(freeText).toHaveValue("");
-  await expect(normalFlow).toBeChecked();
+  await expect(normalFlow).toBeVisible();
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Intraoral:\n  - Buccal mucosa: pink; moist; no lesions; no swelling\.\n  - Tongue: pink; moist; symmetrical; no lesions\.\n  - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n  - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n  - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n  - Saliva: clear; normal flow\./
   );
 
-  const reducedFlow = structuredIntraoral.getByRole("checkbox", {
-    name: "Reduced flow",
-    exact: true,
-  });
-  await reducedFlow.check();
-  await expect(reducedFlow).toBeChecked();
-  await expect(normalFlow).not.toBeChecked();
+  const reducedFlow = intraoralObservationCard(
+    structuredIntraoral,
+    "Saliva",
+    "Reduced flow",
+  );
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Saliva",
+    "Reduced flow",
+  );
+  await expect(reducedFlow).toBeVisible();
+  await expect(normalFlow).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toContainText("reduced flow");
   await expect(page.locator("#recare-summary")).not.toContainText("normal flow");
 
-  const noSwelling = structuredIntraoral.getByRole("checkbox", {
-    name: "No swelling",
-    exact: true,
-  }).first();
-  const swelling = structuredIntraoral.getByRole("checkbox", {
-    name: "Swelling",
-    exact: true,
-  }).first();
-  await swelling.check();
-  await expect(swelling).toBeChecked();
-  await expect(noSwelling).not.toBeChecked();
+  const noSwelling = intraoralObservationCard(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "No swelling",
+  );
+  const swelling = intraoralObservationCard(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Swelling",
+  );
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Swelling",
+  );
+  await expect(swelling).toBeVisible();
+  await expect(noSwelling).toHaveCount(0);
 
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
@@ -291,7 +619,7 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   await expect(intraoralStatus).toContainText("Not assessed");
   await expect(freeText).toHaveCount(0);
   await expect(normalFlow).toHaveCount(0);
-  await expect(page.locator("#recare-summary")).toHaveValue("");
+  await expect(page.locator("#recare-summary")).not.toHaveValue(/Intraoral:/);
 });
 
 test("Recare Exam preserves intraoral findings when destructive actions are cancelled and isolates accepted WNL", async ({
@@ -316,11 +644,16 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
     name: "Structured intraoral observations",
     exact: true,
   });
-  const normalFlow = structuredIntraoral.getByRole("checkbox", {
-    name: "Normal flow",
-    exact: true,
-  });
-  await normalFlow.check();
+  const normalFlow = intraoralObservationCard(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
 
   await page.getByLabel("Overbite (mm)", { exact: true }).fill("4");
   const cariesRisk = page.getByRole("button", {
@@ -346,7 +679,7 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
   await page.getByRole("option", { name: "WNL", exact: true }).click();
   await expect(intraoralStatus).toContainText("Findings");
   await expect(freeText).toHaveValue("Synthetic intraoral observation");
-  await expect(normalFlow).toBeChecked();
+  await expect(normalFlow).toBeVisible();
 
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
@@ -362,7 +695,7 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
     .click();
   await expect(intraoralStatus).toContainText("Findings");
   await expect(freeText).toHaveValue("Synthetic intraoral observation");
-  await expect(normalFlow).toBeChecked();
+  await expect(normalFlow).toBeVisible();
 
   page.once("dialog", async (dialog) => {
     await dialog.accept();
@@ -394,64 +727,73 @@ test("Recare Exam exposes only supported structured annotations and keeps saliva
     name: "Structured intraoral observations",
     exact: true,
   });
-  const buccalUlcer = structuredIntraoral
-    .getByRole("checkbox", { name: "Ulcer", exact: true })
-    .first();
-  await buccalUlcer.check();
-  const buccalUlcerCard = buccalUlcer.locator("xpath=../..");
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Ulcer",
+  );
+  const buccalUlcerCard = intraoralObservationCard(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Ulcer",
+  );
   await buccalUlcerCard
-    .getByLabel("Location", { exact: true })
+    .getByLabel("Ulcer location", { exact: true })
     .fill("Right posterior");
   await buccalUlcerCard
-    .getByLabel("Measurement (mm)", { exact: true })
+    .getByLabel("Ulcer measurement (mm)", { exact: true })
     .fill("4");
   await buccalUlcerCard
-    .getByLabel("Comment", { exact: true })
+    .getByLabel("Ulcer notes", { exact: true })
     .fill("Synthetic note");
 
-  const lineaAlba = structuredIntraoral.getByRole("checkbox", {
-    name: "Linea alba",
-    exact: true,
-  });
-  await lineaAlba.check();
-  const lineaAlbaCard = lineaAlba.locator("xpath=../..");
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Linea alba",
+  );
+  const lineaAlbaCard = intraoralObservationCard(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Linea alba",
+  );
   await expect(
-    lineaAlbaCard.getByLabel("Location", { exact: true }),
+    lineaAlbaCard.getByLabel("Linea alba location", { exact: true }),
   ).toHaveCount(0);
   await expect(
-    lineaAlbaCard.getByLabel("Measurement (mm)", { exact: true }),
+    lineaAlbaCard.getByLabel("Linea alba measurement (mm)", { exact: true }),
   ).toHaveCount(0);
   const laterality = lineaAlbaCard.getByRole("button", {
-    name: "Laterality",
+    name: "Linea alba laterality",
     exact: true,
   });
   await laterality.click();
   await page.getByRole("option", { name: "Bilateral", exact: true }).click();
 
-  await structuredIntraoral
-    .getByRole("checkbox", { name: "Coated", exact: true })
-    .check();
-  await structuredIntraoral
-    .getByRole("checkbox", { name: "Fissured", exact: true })
-    .check();
+  await toggleIntraoralObservation(structuredIntraoral, "Tongue", "Coated");
+  await toggleIntraoralObservation(structuredIntraoral, "Tongue", "Fissured");
 
-  const normalFlow = structuredIntraoral.getByRole("checkbox", {
-    name: "Normal flow",
-    exact: true,
-  });
-  await normalFlow.check();
-  const normalFlowCard = normalFlow.locator("xpath=../..");
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
+  const normalFlowCard = intraoralObservationCard(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
   await expect(
-    normalFlowCard.getByLabel("Location", { exact: true }),
+    normalFlowCard.getByLabel("Normal flow location", { exact: true }),
   ).toHaveCount(0);
   await expect(
     normalFlowCard.getByRole("button", {
-      name: "Laterality",
+      name: "Normal flow laterality",
       exact: true,
     }),
   ).toHaveCount(0);
   await expect(
-    normalFlowCard.getByLabel("Measurement (mm)", { exact: true }),
+    normalFlowCard.getByLabel("Normal flow measurement (mm)", { exact: true }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("list", {
@@ -467,7 +809,12 @@ test("Recare Exam exposes only supported structured annotations and keeps saliva
   await page
     .getByRole("option", { name: "Hyposalivation Starter", exact: true })
     .click();
-  await normalFlow.uncheck();
+  await toggleIntraoralObservation(
+    structuredIntraoral,
+    "Saliva",
+    "Normal flow",
+  );
+  await expect(normalFlowCard).toHaveCount(0);
   await expect(
     page
       .getByRole("list", { name: "Caries risk factors selected values" })
@@ -529,7 +876,7 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     .getByLabel("Tooth/area or region", { exact: true })
     .fill("tooth 16");
   await expect(page.locator("#recare-summary")).toHaveValue(
-    "Additional occlusal findings: Crossbite (location: Posterior, Left, tooth 16).",
+    /Additional occlusal findings: Crossbite \(location: Posterior, Left, tooth 16\)\.$/,
   );
 
   let catalogueStorage = await page.evaluate(() =>
@@ -558,7 +905,7 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     })
     .click();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    "Additional occlusal findings: Synthetic edge-to-edge relationship; Crossbite (location: Posterior, Left, tooth 16).",
+    /Additional occlusal findings: Synthetic edge-to-edge relationship; Crossbite \(location: Posterior, Left, tooth 16\)\.$/,
   );
 
   await additionalFindings.fill("Synthetic functional shift");
@@ -612,17 +959,11 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
   });
   await expect(intraoralStatus).toContainText("Findings");
   await expect(
-    structuredIntraoral.getByRole("checkbox", {
-      name: "Fissured",
-      exact: true,
-    }),
-  ).toBeChecked();
+    intraoralObservationCard(structuredIntraoral, "Tongue", "Fissured"),
+  ).toBeVisible();
   await expect(
-    structuredIntraoral.getByRole("checkbox", {
-      name: "Normal flow",
-      exact: true,
-    }),
-  ).toBeChecked();
+    intraoralObservationCard(structuredIntraoral, "Saliva", "Normal flow"),
+  ).toBeVisible();
   await expect(
     page.getByLabel("Overbite (mm)", { exact: true }),
   ).toHaveValue("3");
@@ -652,10 +993,7 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
 
   await expect(intraoralStatus).toContainText("Not assessed");
   await expect(
-    structuredIntraoral.getByRole("checkbox", {
-      name: "Fissured",
-      exact: true,
-    }),
+    intraoralObservationCard(structuredIntraoral, "Tongue", "Fissured"),
   ).toHaveCount(0);
   await expect(
     page.getByLabel("Overbite (mm)", { exact: true }),
@@ -665,7 +1003,9 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
       name: "Additional occlusal findings selected values",
     }),
   ).toHaveCount(0);
-  await expect(page.locator("#recare-summary")).toHaveValue("");
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /Intraoral:|Overbite:|Additional occlusal findings:/,
+  );
 
   await additionalFindings.focus();
   await expect(

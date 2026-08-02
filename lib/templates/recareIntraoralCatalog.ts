@@ -14,6 +14,7 @@ export type RecareIntraoralOption = {
   id: string;
   label: string;
   noteFragment: string;
+  classification: "normal" | "abnormal" | "normal_variation";
   supportsLocation: boolean;
   supportsLaterality: boolean;
   supportsMeasurement: boolean;
@@ -40,6 +41,7 @@ type RawOption = {
   id: string;
   label: string;
   noteFragment: string;
+  classification?: "normal" | "abnormal" | "normal_variation";
   supportsLocation?: boolean;
   supportsLaterality?: boolean;
   supportsMeasurement?: boolean;
@@ -58,6 +60,7 @@ export const recareIntraoralStructures: RecareIntraoralStructure[] =
         id: option.id,
         label: option.label,
         noteFragment: option.noteFragment,
+        classification: option.classification ?? "abnormal",
         supportsLocation: Boolean(option.supportsLocation),
         supportsLaterality: Boolean(option.supportsLaterality),
         supportsMeasurement: Boolean(option.supportsMeasurement),

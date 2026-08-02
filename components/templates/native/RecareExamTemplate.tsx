@@ -15,8 +15,13 @@ import type {
   RecareExamForm,
   RecareIntraoralFinding,
   RecareOcclusalFinding,
+  RecareToothFinding,
   RecareTreatmentEntry,
 } from "@/lib/templates/recareExam";
+import {
+  recareToothOptions,
+  recareToothWnlOptionIds,
+} from "@/lib/templates/recareTeethCatalog";
 import {
   createEmptyRecareExamForm,
   hasRequiredRecareExamFields,
@@ -28,8 +33,15 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
-import { formControlClass } from "@/components/forms/controlStyles";
+import {
+  DropdownChevron,
+  formControlClass,
+} from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
+import {
+  FixedChoiceMultiCombobox,
+  type FixedChoiceMultiComboboxGroup,
+} from "@/components/forms/FixedChoiceMultiCombobox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
@@ -37,6 +49,7 @@ import {
   recareIntraoralLocationChoices,
   recareIntraoralOptionConflicts,
   recareIntraoralStructures,
+  type RecareIntraoralStructure,
 } from "@/lib/templates/recareIntraoralCatalog";
 
 const inputClass = `mt-1 ${formControlClass()}`;
@@ -239,6 +252,360 @@ function CheckboxField({
   );
 }
 
+function TeethAssessment({
+  form,
+  onChange,
+}: {
+  form: RecareExamForm;
+  onChange: (patch: Partial<RecareExamForm>) => void;
+}) {
+  const findings = form.toothFindings ?? [];
+  const status = form.teethStatus ?? "not-assessed";
+  const hasDocumented =
+    findings.length > 0 || Boolean(form.additionalToothFindings?.trim());
+  const structuredObservationCount =
+    findings.length + Number(Boolean(form.additionalToothFindings?.trim()));
+  const structuredObservationSummary =
+    status === "wnl"
+      ? "WNL"
+      : structuredObservationCount
+        ? `${structuredObservationCount} ${
+            structuredObservationCount === 1 ? "observation" : "observations"
+          } documented`
+        : "Not assessed";
+  const shouldAutoExpandStructuredObservations = status === "findings";
+  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
+    shouldAutoExpandStructuredObservations,
+  );
+
+  useEffect(() => {
+    if (shouldAutoExpandStructuredObservations) {
+      setStructuredObservationsOpen(true);
+    }
+  }, [shouldAutoExpandStructuredObservations]);
+
+  const createFinding = (optionId: string): RecareToothFinding => ({
+    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    optionId,
+    toothAreas: [],
+  });
+  function setStatus(next: ExamStatus) {
+    if (next === "wnl") {
+      if (
+        hasDocumented &&
+        !window.confirm(
+          "Clear the documented Teeth findings and set this assessment to WNL?"
+        )
+      )
+        return;
+      onChange({
+        teethStatus: "wnl",
+        toothFindings: recareToothWnlOptionIds.map(createFinding),
+        additionalToothFindings: "",
+      });
+    } else if (next === "not-assessed") {
+      if (
+        hasDocumented &&
+        !window.confirm(
+          "Clear all documented Teeth observations and return this assessment to Not assessed?"
+        )
+      )
+        return;
+      onChange({
+        teethStatus: next,
+        toothFindings: [],
+        additionalToothFindings: "",
+      });
+    } else onChange({ teethStatus: next });
+  }
+  function applyNormalStructuredObservations() {
+    if (
+      hasDocumented &&
+      !window.confirm(
+        "Replace all entered dental findings with the reviewed normal structured observations?"
+      )
+    )
+      return;
+    onChange({
+      teethStatus: "findings",
+      toothFindings: recareToothWnlOptionIds.map(createFinding),
+      additionalToothFindings: "",
+    });
+  }
+  function add(optionId: string) {
+    const option = recareToothOptions.find((item) => item.id === optionId);
+    if (!option) return;
+    const conflicts = new Set(option.conflictsWithOptionIds);
+    const removed = findings.filter((item) => conflicts.has(item.optionId));
+    if (
+      removed.some(
+        (item) =>
+          item.toothAreas.length ||
+          item.surface ||
+          item.activity ||
+          item.millerGrade ||
+          item.comment
+      ) &&
+      !window.confirm(
+        "Replace the conflicting documented tooth observation and discard its annotations?"
+      )
+    )
+      return;
+    onChange({
+      teethStatus: "findings",
+      toothFindings: [
+        ...findings.filter((item) => !conflicts.has(item.optionId)),
+        createFinding(optionId),
+      ],
+    });
+  }
+  function patch(id: string, changes: Partial<RecareToothFinding>) {
+    onChange({
+      teethStatus: "findings",
+      toothFindings: findings.map((item) =>
+        item.id === id ? { ...item, ...changes } : item
+      ),
+    });
+  }
+  return (
+    <div className="space-y-4">
+      <FixedChoiceListbox
+        id="recare-teeth-status"
+        label="Teeth"
+        value={status}
+        options={examStatusOptions}
+        onChange={setStatus}
+      />
+      <fieldset
+        className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+        aria-label="Structured dental observations"
+      >
+        <button
+          id="recare-structured-dental-observations"
+          type="button"
+          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+          aria-expanded={structuredObservationsOpen}
+          aria-controls="recare-structured-dental-observations-content"
+          onClick={() => setStructuredObservationsOpen((open) => !open)}
+        >
+          <span className="min-w-0">Structured dental observations</span>
+          <span className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
+              {structuredObservationSummary}
+            </span>
+            <DropdownChevron open={structuredObservationsOpen} />
+          </span>
+          <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
+            {structuredObservationSummary}
+          </span>
+        </button>
+        {structuredObservationsOpen ? (
+          <div
+            id="recare-structured-dental-observations-content"
+            className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700"
+          >
+            <>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Apply the reviewed normal observations or select individual
+                  observations. Both document Findings.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+                    onClick={applyNormalStructuredObservations}
+                  >
+                    Apply normal structured observations
+                  </button>
+                  <button
+                    type="button"
+                    className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
+                    onClick={() => setStatus("not-assessed")}
+                    disabled={status === "not-assessed" && !hasDocumented}
+                  >
+                    Clear dental observations
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {recareToothOptions
+                    .filter(
+                      (option) =>
+                        !findings.some(
+                          (finding) => finding.optionId === option.id,
+                        ),
+                    )
+                    .map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900`}
+                        onClick={() => add(option.id)}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                </div>
+                {recareToothOptions.flatMap((option) => {
+                  const optionFindings = findings.filter(
+                    (finding) => finding.optionId === option.id,
+                  );
+                  if (!optionFindings.length) return [];
+                  const clinicalFieldCount =
+                    Number(option.supportsTooth) +
+                    Number(option.supportsSurface) +
+                    Number(option.supportsActivity) +
+                    Number(option.supportsGrade && !option.fixedGrade);
+                  const detailGridClass =
+                    clinicalFieldCount > 0
+                      ? "grid min-w-0 items-end gap-3 sm:grid-cols-2 [&>*]:min-w-0"
+                      : "grid min-w-0 items-end gap-3 [&>*]:min-w-0";
+                  const clinicalGridClass =
+                    clinicalFieldCount >= 3
+                      ? "grid min-w-0 grid-cols-3 items-end gap-3 [&>*]:min-w-0"
+                      : clinicalFieldCount === 2
+                        ? "grid min-w-0 grid-cols-2 items-end gap-3 [&>*]:min-w-0"
+                        : "grid min-w-0 grid-cols-1 items-end gap-3 [&>*]:min-w-0";
+                  return [
+                    <fieldset
+                      key={option.id}
+                      className="min-w-0 space-y-3"
+                      aria-label={`${option.label} dental observations`}
+                    >
+                      <legend className="px-1 text-sm font-semibold">
+                        {option.label}
+                        {optionFindings.length > 1
+                          ? ` (${optionFindings.length} entries)`
+                          : ""}
+                      </legend>
+                      {optionFindings.map((finding, index) => (
+                        <div
+                          key={finding.id}
+                          role="group"
+                          aria-label={`${option.label} entry ${index + 1}`}
+                          className="min-w-0 rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                        >
+                          <div className={detailGridClass}>
+                            {clinicalFieldCount > 0 ? (
+                              <div className={clinicalGridClass}>
+                                {option.supportsTooth ? (
+                                  <TextField
+                                    id={`tooth-area-${finding.id}`}
+                                    label="Tooth/area"
+                                    value={finding.toothAreas.join(", ")}
+                                    onChange={(value) =>
+                                      patch(finding.id, {
+                                        toothAreas: value
+                                          .split(",")
+                                          .map((item) => item.trim())
+                                          .filter(Boolean),
+                                      })
+                                    }
+                                  />
+                                ) : null}
+                                {option.supportsSurface ? (
+                                  <TextField
+                                    id={`tooth-surface-${finding.id}`}
+                                    label="Surface(s)"
+                                    value={finding.surface ?? ""}
+                                    onChange={(surface) =>
+                                      patch(finding.id, { surface })
+                                    }
+                                  />
+                                ) : null}
+                                {option.supportsActivity ? (
+                                  <FixedChoiceListbox
+                                    id={`tooth-activity-${finding.id}`}
+                                    label="Activity"
+                                    value={finding.activity ?? ""}
+                                    options={[
+                                      { value: "", label: "Not assessed" },
+                                      { value: "active", label: "Active" },
+                                      { value: "inactive", label: "Inactive" },
+                                    ]}
+                                    onChange={(activity) =>
+                                      patch(finding.id, {
+                                        activity: activity || undefined,
+                                      })
+                                    }
+                                  />
+                                ) : null}
+                                {option.supportsGrade && !option.fixedGrade ? (
+                                  <FixedChoiceListbox
+                                    id={`tooth-grade-${finding.id}`}
+                                    label="Mobility — Miller Index"
+                                    value={finding.millerGrade ?? ""}
+                                    options={[
+                                      { value: "", label: "Select grade" },
+                                      { value: "M1", label: "M1" },
+                                      { value: "M2", label: "M2" },
+                                      { value: "M3", label: "M3" },
+                                    ]}
+                                    onChange={(millerGrade) =>
+                                      patch(finding.id, {
+                                        millerGrade: millerGrade || undefined,
+                                      })
+                                    }
+                                  />
+                                ) : null}
+                              </div>
+                            ) : null}
+                            <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-3 [&>*]:min-w-0">
+                              <TextField
+                                id={`tooth-notes-${finding.id}`}
+                                label="Notes"
+                                value={finding.comment ?? ""}
+                                onChange={(comment) =>
+                                  patch(finding.id, { comment })
+                                }
+                              />
+                              <button
+                                type="button"
+                                className={treatmentRowRemoveButtonClass}
+                                onClick={() =>
+                                  onChange({
+                                    toothFindings: findings.filter(
+                                      (item) => item.id !== finding.id,
+                                    ),
+                                  })
+                                }
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      {option.allowMultipleInstances ? (
+                        <button
+                          type="button"
+                          className={treatmentRowButtonClass}
+                          onClick={() => add(option.id)}
+                        >
+                          Add another {option.label}
+                        </button>
+                      ) : null}
+                    </fieldset>,
+                  ];
+                })}
+                <TextareaField
+                  id="recare-additional-tooth-findings"
+                  label="Additional tooth findings"
+                  value={form.additionalToothFindings ?? ""}
+                  onChange={(additionalToothFindings) =>
+                    onChange({
+                      teethStatus: "findings",
+                      additionalToothFindings,
+                    })
+                  }
+                />
+            </>
+          </div>
+        ) : null}
+      </fieldset>
+    </div>
+  );
+}
+
 function TreatmentEntryList({
   id,
   label,
@@ -434,6 +801,23 @@ function ExamFinding({
   );
 }
 
+function recareIntraoralChoiceGroups(
+  structure: RecareIntraoralStructure,
+): FixedChoiceMultiComboboxGroup[] {
+  const groups = [
+    { classification: "normal", label: "Normal" },
+    { classification: "abnormal", label: "Abnormal" },
+    { classification: "normal_variation", label: "Common variations" },
+  ] as const;
+
+  return groups.flatMap((group) => {
+    const choices = structure.options
+      .filter((option) => option.classification === group.classification)
+      .map((option) => option.label);
+    return choices.length ? [{ label: group.label, choices }] : [];
+  });
+}
+
 function StructuredIntraoralFindings({
   status,
   values,
@@ -449,6 +833,24 @@ function StructuredIntraoralFindings({
   clearDisabled: boolean;
   onChange: (values: RecareIntraoralFinding[]) => void;
 }) {
+  const structuredObservationSummary = values.length
+    ? `${values.length} ${
+        values.length === 1 ? "observation" : "observations"
+      } documented`
+    : status === "wnl"
+      ? "WNL"
+      : "Not assessed";
+  const shouldAutoExpandStructuredObservations = status === "findings";
+  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
+    shouldAutoExpandStructuredObservations,
+  );
+
+  useEffect(() => {
+    if (shouldAutoExpandStructuredObservations) {
+      setStructuredObservationsOpen(true);
+    }
+  }, [shouldAutoExpandStructuredObservations]);
+
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
     onChange(
       values.map((value) =>
@@ -456,145 +858,210 @@ function StructuredIntraoralFindings({
       )
     );
   }
+
+  function updateStructureFindings(
+    structure: RecareIntraoralStructure,
+    selectedLabels: string[],
+  ) {
+    const structureOptionIds = new Set(
+      structure.options.map((option) => option.id),
+    );
+    const currentOptionIds = values
+      .filter((value) => structureOptionIds.has(value.optionId))
+      .map((value) => value.optionId);
+    let nextOptionIds = structure.options
+      .filter((option) => selectedLabels.includes(option.label))
+      .map((option) => option.id);
+    const addedOptionId = nextOptionIds.find(
+      (optionId) => !currentOptionIds.includes(optionId),
+    );
+    if (addedOptionId) {
+      const conflicts = recareIntraoralOptionConflicts.get(addedOptionId);
+      nextOptionIds = nextOptionIds.filter(
+        (optionId) => !conflicts?.has(optionId),
+      );
+    }
+
+    onChange([
+      ...values.filter((value) => !structureOptionIds.has(value.optionId)),
+      ...nextOptionIds.map(
+        (optionId) =>
+          values.find((value) => value.optionId === optionId) ?? {
+            optionId,
+            structureId: structure.id,
+          },
+      ),
+    ]);
+  }
   return (
-    <fieldset className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-      <legend className="px-1 text-sm font-semibold">
-        Structured intraoral observations
-      </legend>
-      <p className="text-xs text-slate-500 dark:text-slate-400">
-        Apply the reviewed normal observations or select individual
-        observations. Both document Findings.
-      </p>
-      <div className="flex flex-wrap gap-2">
-        <button
-          type="button"
-          className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-          onClick={onApplyNormal}
+    <fieldset
+      className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
+      aria-label="Structured intraoral observations"
+    >
+      <button
+        id="recare-structured-intraoral-observations"
+        type="button"
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+        aria-expanded={structuredObservationsOpen}
+        aria-controls="recare-structured-intraoral-observations-content"
+        onClick={() => setStructuredObservationsOpen((open) => !open)}
+      >
+        <span className="min-w-0">Structured intraoral observations</span>
+        <span className="flex shrink-0 items-center gap-3">
+          <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
+            {structuredObservationSummary}
+          </span>
+          <DropdownChevron open={structuredObservationsOpen} />
+        </span>
+        <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
+          {structuredObservationSummary}
+        </span>
+      </button>
+      {structuredObservationsOpen ? (
+        <div
+          id="recare-structured-intraoral-observations-content"
+          className="space-y-4 pt-2"
         >
-          Apply normal structured observations
-        </button>
-        <button
-          type="button"
-          className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-          onClick={onClear}
-          disabled={clearDisabled}
-        >
-          Clear intraoral observations
-        </button>
-      </div>
-      {status === "findings"
-        ? recareIntraoralStructures.map((structure) => (
-            <div key={structure.id} className="space-y-2">
-              <h3 className="text-sm font-semibold">{structure.label}</h3>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {structure.options.map((option) => {
-                  const selected = values.find(
-                    (value) => value.optionId === option.id
-                  );
-                  return (
-                    <div
-                      key={option.id}
-                      className="rounded-lg border border-slate-200 p-2 dark:border-slate-700"
-                    >
-                      <label className="flex gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="mt-1 h-4 w-4 accent-sky-700"
-                          checked={Boolean(selected)}
-                          onChange={(event) =>
-                            onChange(
-                              event.target.checked
-                                ? [
-                                    ...values.filter(
-                                      (value) =>
-                                        !recareIntraoralOptionConflicts
-                                          .get(option.id)
-                                          ?.has(value.optionId),
-                                    ),
-                                    {
-                                      optionId: option.id,
-                                      structureId: structure.id,
-                                    },
-                                  ]
-                                : values.filter(
-                                    (value) => value.optionId !== option.id
-                                  )
-                            )
-                          }
-                        />
-                        <span>{option.label}</span>
-                      </label>
-                      {selected ? (
-                        <div className="mt-2 space-y-2">
-                          {option.supportsLocation ? (
-                            <TextField
-                              id={`recare-${option.id}-location`}
-                              label="Location"
-                              value={(selected.locations ?? []).join(", ")}
-                              onChange={(value) =>
-                                patch(option.id, {
-                                  locations: value
-                                    .split(",")
-                                    .map((item) => item.trim())
-                                    .filter(Boolean),
-                                })
-                              }
-                              placeholder="Tooth/area or region"
-                            />
-                          ) : null}
-                          {option.supportsLaterality ? (
-                            <FixedChoiceListbox
-                              id={`recare-${option.id}-laterality`}
-                              label="Laterality"
-                              value={selected.laterality ?? ""}
-                              options={[
-                                { value: "", label: "None" },
-                                { value: "Right", label: "Right" },
-                                { value: "Left", label: "Left" },
-                                { value: "Bilateral", label: "Bilateral" },
-                              ]}
-                              onChange={(value) =>
-                                patch(option.id, { laterality: value })
-                              }
-                            />
-                          ) : null}
-                          {option.supportsMeasurement ? (
-                            <TextField
-                              id={`recare-${option.id}-measurement`}
-                              label={`Measurement${
-                                option.measurementUnits.length === 1
-                                  ? ` (${option.measurementUnits[0]})`
-                                  : ""
-                              }`}
-                              value={selected.measurement ?? ""}
-                              onChange={(value) =>
-                                patch(option.id, {
-                                  measurement: value,
-                                  measurementUnit: option.measurementUnits[0],
-                                })
-                              }
-                              inputMode="decimal"
-                            />
-                          ) : null}
-                          {structure.supportsComment ? (
-                            <TextField
-                              id={`recare-${option.id}-comment`}
-                              label="Comment"
-                              value={selected.comment ?? ""}
-                              onChange={(value) =>
-                                patch(option.id, { comment: value })
-                              }
-                            />
-                          ) : null}
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Apply the reviewed normal observations or document individual
+            findings. Both document Findings.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+              onClick={onApplyNormal}
+            >
+              Apply normal structured observations
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+              onClick={onClear}
+              disabled={clearDisabled}
+            >
+              Clear intraoral observations
+            </button>
+          </div>
+          {recareIntraoralStructures.map((structure) => {
+            const selectedOptions = structure.options.filter((option) =>
+              values.some((value) => value.optionId === option.id),
+            );
+            return (
+              <fieldset
+                key={structure.id}
+                className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+              >
+                <legend className="font-medium">{structure.label}</legend>
+                <FixedChoiceMultiCombobox
+                  id={`recare-${structure.id.replaceAll(".", "-")}-observations`}
+                  label={`${structure.label} observations`}
+                  choices={structure.options.map((option) => option.label)}
+                  choiceGroups={recareIntraoralChoiceGroups(structure)}
+                  values={selectedOptions.map((option) => option.label)}
+                  onChange={(selectedLabels) =>
+                    updateStructureFindings(structure, selectedLabels)
+                  }
+                  customPlaceholder={`Search ${structure.label.toLocaleLowerCase(
+                    "en-CA",
+                  )} observations`}
+                  customHelpText=""
+                  showSelectedChips={false}
+                  allowCustomValues={false}
+                />
+                {selectedOptions.length ? (
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {selectedOptions.map((option) => {
+                      const selected = values.find(
+                        (value) => value.optionId === option.id,
+                      )!;
+                      return (
+                        <div
+                          key={option.id}
+                          role="group"
+                          aria-label={`${structure.label}: ${option.label}`}
+                          className="rounded-lg border border-slate-200 p-3 dark:border-slate-700"
+                        >
+                          <h4 className="text-sm font-semibold">
+                            {option.label}
+                          </h4>
+                          <div className="mt-3 grid gap-3">
+                            {option.supportsLocation ? (
+                              <TextField
+                                id={`recare-${option.id}-location`}
+                                label={`${option.label} location`}
+                                value={(selected.locations ?? []).join(", ")}
+                                onChange={(value) =>
+                                  patch(option.id, {
+                                    locations: value
+                                      .split(",")
+                                      .map((item) => item.trim())
+                                      .filter(Boolean),
+                                  })
+                                }
+                                placeholder="Tooth/area or region"
+                              />
+                            ) : null}
+                            {option.supportsLaterality ? (
+                              <FixedChoiceListbox
+                                id={`recare-${option.id}-laterality`}
+                                label={`${option.label} laterality`}
+                                value={selected.laterality ?? ""}
+                                options={[
+                                  { value: "", label: "None" },
+                                  { value: "Right", label: "Right" },
+                                  { value: "Left", label: "Left" },
+                                  {
+                                    value: "Bilateral",
+                                    label: "Bilateral",
+                                  },
+                                ]}
+                                onChange={(value) =>
+                                  patch(option.id, { laterality: value })
+                                }
+                              />
+                            ) : null}
+                            {option.supportsMeasurement ? (
+                              <TextField
+                                id={`recare-${option.id}-measurement`}
+                                label={`${option.label} measurement${
+                                  option.measurementUnits.length === 1
+                                    ? ` (${option.measurementUnits[0]})`
+                                    : ""
+                                }`}
+                                value={selected.measurement ?? ""}
+                                onChange={(value) =>
+                                  patch(option.id, {
+                                    measurement: value,
+                                    measurementUnit:
+                                      option.measurementUnits[0],
+                                  })
+                                }
+                                inputMode="decimal"
+                              />
+                            ) : null}
+                            {structure.supportsComment ? (
+                              <TextField
+                                id={`recare-${option.id}-comment`}
+                                label={`${option.label} notes`}
+                                value={selected.comment ?? ""}
+                                onChange={(value) =>
+                                  patch(option.id, { comment: value })
+                                }
+                                placeholder="Optional encounter-specific note"
+                              />
+                            ) : null}
+                          </div>
                         </div>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))
-        : null}
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </fieldset>
+            );
+          })}
+        </div>
+      ) : null}
     </fieldset>
   );
 }
@@ -1151,7 +1618,7 @@ export function RecareExamTemplate({
             />
             <ExamFinding
               id="recare-masseter"
-              label="Palpation of the masseter test"
+              label="Masseter palpation"
               status={form.masseterStatus}
               findings={form.masseterFindings}
               onStatusChange={(value) => updateField("masseterStatus", value)}
@@ -1161,7 +1628,7 @@ export function RecareExamTemplate({
             />
             <ExamFinding
               id="recare-tmj-load"
-              label="Load TMJ joint test"
+              label="TMJ loading test"
               status={form.tmjLoadStatus}
               findings={form.tmjLoadFindings}
               onStatusChange={(value) => updateField("tmjLoadStatus", value)}
@@ -1203,7 +1670,7 @@ export function RecareExamTemplate({
               onChange={(value) => updateField("oralHabits", value)}
             />
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
                 <CatalogueCombobox
                   id="recare-right-molar-occlusion"
@@ -1440,6 +1907,13 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Odontogram and Caries Risk">
+            <TeethAssessment
+              form={form}
+              onChange={(patch) => {
+                setForm((current) => ({ ...current, ...patch }));
+                setCopyMessage("");
+              }}
+            />
             <CheckboxField
               id="recare-odontogram-up-to-date"
               label="Odontogram up to date"

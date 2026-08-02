@@ -1,6 +1,6 @@
 {
   "$schema": "./hygienenote-gingival-ioe.schema.json",
-  "schemaVersion": "1.1.0",
+  "schemaVersion": "1.2.0",
   "catalogId": "hygienenote.gingival-and-ioe",
   "title": "HygieneNote Gingival Description and Intraoral Examination",
   "source": {
@@ -1339,8 +1339,8 @@
           "id": "ioe.teeth",
           "label": "Teeth",
           "sourceRowId": "teeth",
-          "implementationMode": "reuse_existing_or_summary",
-          "enabledByDefault": false,
+          "implementationMode": "reuse_existing_or_direct",
+          "enabledByDefault": true,
           "defaultStatus": "not_assessed",
           "statusOptions": [
             {
@@ -1356,8 +1356,20 @@
               "label": "Findings documented"
             }
           ],
-          "selectionMode": "multiple_when_findings",
+          "selectionMode": "repeatable_findings",
           "wnlText": "Teeth intact, with no caries or mobility noted.",
+          "wnlPreset": {
+            "label": "Apply normal structured observations",
+            "requiresExplicitAction": true,
+            "selectedOptionIds": [
+              "ioe.teeth.intact",
+              "ioe.teeth.no_caries",
+              "ioe.teeth.no_mobility"
+            ],
+            "generatedNoteText": "Teeth intact, with no caries or mobility noted."
+          },
+          "supportsAdditionalFindingsText": true,
+          "additionalFindingsLabel": "Additional tooth findings",
           "options": [
             {
               "id": "ioe.teeth.intact",
@@ -1365,7 +1377,12 @@
               "classification": "normal",
               "noteFragment": "intact",
               "sourceCategory": "normal_findings",
-              "sourceTerm": "Intact"
+              "sourceTerm": "Intact",
+              "conflictsWithOptionIds": [
+                "ioe.teeth.caries",
+                "ioe.teeth.initial_noncavitated_caries",
+                "ioe.teeth.fracture"
+              ]
             },
             {
               "id": "ioe.teeth.no_caries",
@@ -1373,7 +1390,11 @@
               "classification": "normal",
               "noteFragment": "no caries",
               "sourceCategory": "normal_findings",
-              "sourceTerm": "no caries"
+              "sourceTerm": "no caries",
+              "conflictsWithOptionIds": [
+                "ioe.teeth.caries",
+                "ioe.teeth.initial_noncavitated_caries"
+              ]
             },
             {
               "id": "ioe.teeth.no_mobility",
@@ -1381,7 +1402,11 @@
               "classification": "normal",
               "noteFragment": "no mobility",
               "sourceCategory": "normal_findings",
-              "sourceTerm": "no mobility"
+              "sourceTerm": "no mobility",
+              "supportsGrade": true,
+              "gradeSystem": "Miller Index",
+              "fixedGrade": "M0",
+              "conflictsWithOptionIds": ["ioe.teeth.mobility"]
             },
             {
               "id": "ioe.teeth.caries",
@@ -1391,7 +1416,36 @@
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "Caries",
               "supportsTooth": true,
-              "supportsSurface": true
+              "requiresToothOrArea": true,
+              "supportsSurface": true,
+              "surfaceInputMode": "free_text",
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": [
+                "ioe.teeth.intact",
+                "ioe.teeth.no_caries"
+              ]
+            },
+            {
+              "id": "ioe.teeth.initial_noncavitated_caries",
+              "label": "Initial/noncavitated caries lesion",
+              "classification": "abnormal",
+              "noteFragment": "initial/noncavitated caries lesion",
+              "sourceCategory": "approved_extension",
+              "sourceTerm": "Initial/noncavitated caries lesion",
+              "supportsTooth": true,
+              "requiresToothOrArea": true,
+              "supportsSurface": true,
+              "surfaceInputMode": "free_text",
+              "supportsActivity": true,
+              "activityOptions": ["active", "inactive"],
+              "activityRequired": false,
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": [
+                "ioe.teeth.intact",
+                "ioe.teeth.no_caries"
+              ],
+              "reviewStatus": "approved_2026-08-01",
+              "contextNote": "Approved Slice 3 extension; do not infer management, treatment, monitoring, recommendation, or caries-risk state from lesion stage or activity."
             },
             {
               "id": "ioe.teeth.fracture",
@@ -1400,7 +1454,10 @@
               "noteFragment": "fracture",
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "fractures",
-              "supportsTooth": true
+              "supportsTooth": true,
+              "requiresToothOrArea": true,
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": ["ioe.teeth.intact"]
             },
             {
               "id": "ioe.teeth.discoloration",
@@ -1410,7 +1467,8 @@
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "discoloration",
               "supportsLocation": true,
-              "supportsTooth": true
+              "supportsTooth": true,
+              "allowMultipleInstances": true
             },
             {
               "id": "ioe.teeth.mobility",
@@ -1420,7 +1478,13 @@
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "mobility",
               "supportsTooth": true,
-              "supportsGrade": true
+              "requiresToothOrArea": true,
+              "supportsGrade": true,
+              "gradeSystem": "Miller Index",
+              "gradeOptions": ["M1", "M2", "M3"],
+              "gradeRequired": true,
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": ["ioe.teeth.no_mobility"]
             },
             {
               "id": "ioe.teeth.enamel_hypoplasia",
@@ -1429,7 +1493,8 @@
               "noteFragment": "enamel hypoplasia",
               "sourceCategory": "common_variations",
               "sourceTerm": "Enamel hypoplasia",
-              "supportsTooth": true
+              "supportsTooth": true,
+              "allowMultipleInstances": true
             },
             {
               "id": "ioe.teeth.fluorosis",
@@ -1438,7 +1503,9 @@
               "noteFragment": "fluorosis",
               "sourceCategory": "common_variations",
               "sourceTerm": "fluorosis",
-              "supportsLocation": true
+              "supportsLocation": true,
+              "supportsTooth": true,
+              "allowMultipleInstances": true
             }
           ],
           "supportsComment": true,
@@ -1449,7 +1516,8 @@
             "existing examination fields"
           ],
           "notes": [
-            "Do not create duplicate tooth-level state if equivalent fields already exist."
+            "Own structured Teeth state inside the existing Recare Odontogram and Caries Risk area without synchronizing the three controls.",
+            "Initial/noncavitated lesion stage and activity never imply management or treatment."
           ]
         },
         {
@@ -1651,7 +1719,12 @@
     {
       "id": "review.ioe_duplicate_sections",
       "question": "Do Teeth, Occlusion, Saliva, Gingiva, or bleeding already exist elsewhere in the form?",
-      "currentDecision": "Route Gingival Description to Adult Hygiene; route structured soft-tissue IOE, Saliva, and occlusal additions to existing Recare owners; create no direct IOE Gingiva state; defer Teeth."
+      "currentDecision": "Route Gingival Description to Adult Hygiene; route structured soft-tissue IOE, Saliva, occlusal additions, and the approved structured Teeth assessment to existing Recare owners; create no direct IOE Gingiva state. Teeth remains independent from odontogram and Caries Risk state."
+    },
+    {
+      "id": "review.teeth_slice_3",
+      "question": "How should Recare represent WNL, caries lesions, mobility, repeatable tooth findings, and Tooth/area annotations?",
+      "currentDecision": "Approved 2026-08-01 in Slice 3. Use explicit Not assessed/WNL/Findings state; repeatable Caries, Initial/noncavitated caries lesion, and Mobility rows; M0 as No mobility and M1-M3 for Mobility; reviewed conflicts and required Tooth/area metadata; optional initial-lesion activity; free-text surfaces; no inferred management, treatment, odontogram status, or Caries Risk."
     },
     {
       "id": "review.occlusion_overbite_measurement_units",

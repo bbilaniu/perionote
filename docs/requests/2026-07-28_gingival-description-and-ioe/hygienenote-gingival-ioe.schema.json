@@ -150,7 +150,30 @@
         "supportsTooth": {
           "type": "boolean"
         },
+        "requiresToothOrArea": {
+          "type": "boolean"
+        },
         "supportsSurface": {
+          "type": "boolean"
+        },
+        "surfaceInputMode": {
+          "enum": ["free_text"]
+        },
+        "allowMultipleInstances": {
+          "type": "boolean"
+        },
+        "supportsActivity": {
+          "type": "boolean"
+        },
+        "activityOptions": {
+          "type": "array",
+          "items": {
+            "enum": ["active", "inactive"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "activityRequired": {
           "type": "boolean"
         },
         "supportsMeasurement": {
@@ -172,6 +195,32 @@
         },
         "supportsGrade": {
           "type": "boolean"
+        },
+        "gradeSystem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gradeOptions": {
+          "type": "array",
+          "items": {
+            "enum": ["M0", "M1", "M2", "M3"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "fixedGrade": {
+          "enum": ["M0", "M1", "M2", "M3"]
+        },
+        "gradeRequired": {
+          "type": "boolean"
+        },
+        "conflictsWithOptionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
         },
         "reviewStatus": {
           "type": "string"
@@ -212,9 +261,112 @@
               }
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "requiresToothOrArea": {
+                "const": true
+              }
+            },
+            "required": ["requiresToothOrArea"]
+          },
+          "then": {
+            "properties": {
+              "supportsTooth": {
+                "const": true
+              }
+            },
+            "required": ["supportsTooth"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportsSurface": {
+                "const": true
+              }
+            },
+            "required": ["supportsSurface"]
+          },
+          "then": {
+            "required": ["surfaceInputMode"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportsActivity": {
+                "const": true
+              }
+            },
+            "required": ["supportsActivity"]
+          },
+          "then": {
+            "required": ["activityOptions", "activityRequired"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportsGrade": {
+                "const": true
+              }
+            },
+            "required": ["supportsGrade"]
+          },
+          "then": {
+            "required": ["gradeSystem"],
+            "oneOf": [
+              {
+                "required": ["fixedGrade"],
+                "not": {
+                  "required": ["gradeOptions"]
+                }
+              },
+              {
+                "required": ["gradeOptions"],
+                "not": {
+                  "required": ["fixedGrade"]
+                }
+              }
+            ]
+          }
         }
       ],
       "additionalProperties": true
+    },
+    "wnlPreset": {
+      "type": "object",
+      "required": [
+        "label",
+        "requiresExplicitAction",
+        "selectedOptionIds",
+        "generatedNoteText"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiresExplicitAction": {
+          "const": true
+        },
+        "selectedOptionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "generatedNoteText": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
     },
     "dimension": {
       "type": "object",
@@ -252,7 +404,7 @@
           }
         },
         "wnlPreset": {
-          "type": "object"
+          "$ref": "#/$defs/wnlPreset"
         }
       },
       "additionalProperties": true
@@ -298,6 +450,25 @@
           "items": {
             "$ref": "#/$defs/catalogOption"
           }
+        },
+        "selectionMode": {
+          "enum": ["multiple_when_findings", "repeatable_findings"]
+        },
+        "wnlText": {
+          "type": "string"
+        },
+        "wnlPreset": {
+          "$ref": "#/$defs/wnlPreset"
+        },
+        "supportsComment": {
+          "type": "boolean"
+        },
+        "supportsAdditionalFindingsText": {
+          "type": "boolean"
+        },
+        "additionalFindingsLabel": {
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": true
