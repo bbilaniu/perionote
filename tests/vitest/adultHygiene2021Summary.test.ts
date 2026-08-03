@@ -1,12 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
   createEmptyAdultHygiene2021Form,
+  dyclonineRinseTreatment,
   hasRequiredAdultHygiene2021Fields,
+  standardOheStatement,
+  standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
-import { createGingivalDescriptionWnlAssessment } from "@/lib/templates/gingivalDescriptionCatalog";
+import {
+  applyGingivitisObservationPreset,
+  createGingivalDescriptionWnlAssessment,
+  hasConflictingGingivitisPresetObservations,
+} from "@/lib/templates/gingivalDescriptionCatalog";
 
 describe("buildAdultHygiene2021Summary", () => {
   it("starts empty without inferring clinical documentation", () => {
@@ -168,6 +175,71 @@ Date Booked: 2026-11-15`);
     );
   });
 
+  it("applies generalized gingivitis observations while preserving unrelated findings", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    const current = {
+      status: "findings" as const,
+      customFindings: "Synthetic additional observation",
+      findings: [
+        {
+          optionId: "gingiva.color.coral_pink",
+          extent: "generalized" as const,
+          locations: [],
+          measurement: "",
+          comment: "",
+        },
+        {
+          optionId: "gingiva.position.no_recession",
+          extent: "" as const,
+          locations: [],
+          measurement: "",
+          comment: "",
+        },
+      ],
+    };
+
+    expect(hasConflictingGingivitisPresetObservations(current)).toBe(true);
+    form.gingivalDescription = applyGingivitisObservationPreset(current);
+
+    expect(form.gingivalDescription.findings.map(({ optionId }) => optionId))
+      .toEqual([
+        "gingiva.position.no_recession",
+        "gingiva.color.marginal_redness",
+        "gingiva.contour.rolled_margins",
+        "gingiva.consistency.spongy",
+        "gingiva.surface.smooth_attached",
+      ]);
+    expect(
+      hasConflictingGingivitisPresetObservations(form.gingivalDescription),
+    ).toBe(false);
+    expect(
+      applyGingivitisObservationPreset(form.gingivalDescription).findings,
+    ).toEqual(form.gingivalDescription.findings);
+    const localizedPreset = {
+      ...form.gingivalDescription,
+      findings: form.gingivalDescription.findings.map((finding) =>
+        finding.optionId === "gingiva.color.marginal_redness"
+          ? { ...finding, extent: "localized" as const, locations: ["Q1"] }
+          : finding,
+      ),
+    };
+    expect(hasConflictingGingivitisPresetObservations(localizedPreset)).toBe(
+      true,
+    );
+    expect(
+      applyGingivitisObservationPreset(localizedPreset).findings.find(
+        ({ optionId }) => optionId === "gingiva.color.marginal_redness",
+      ),
+    ).toMatchObject({ extent: "generalized", locations: [] });
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Gingival Description:
+  - Color: marginal redness (extent: generalized).
+  - Contour / Shape: rolled margins (extent: generalized).
+  - Consistency: spongy (extent: generalized).
+  - Surface / Texture: smooth attached gingiva (extent: generalized).
+  - Position / Size: no recession.
+  Observations: Synthetic additional observation.`);
+  });
+
   it("formats custom gingival findings alone or beside structured observations", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.gingivalDescription = {
@@ -288,6 +360,22 @@ Calculus: Localized moderate marginal; Synthetic calculus note.
 Bleeding: Generalized mild; Synthetic bleeding note.`);
   });
 
+  it("adds areas only to localized hygiene findings", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      plaqueChoice: "Localized moderate interproximal",
+      plaqueAreas: ["S4", "Q1", "teeth 14–16"],
+      stainChoice: "Generalized slight",
+      stainAreas: ["Q2"],
+      bleedingChoice: "Localized mild",
+      bleedingAreas: ["mandible"],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Plaque: Localized moderate interproximal — areas: Q1, S4, teeth 14–16.
+Stain: Generalized slight.
+Bleeding: Localized mild — areas: mandible.`);
+  });
+
   it("emits a hygiene comment without requiring a structured finding", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
@@ -351,6 +439,20 @@ OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and ris
 OHE notes: Demonstrated brushing modifications.`);
   });
 
+  it("emits the reviewed standard and additional OHE wording only when selected", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      standardOheStatementApplies: true,
+      oheTopicsReviewed: [
+        "Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues",
+        "Review of importance of maintaining a 4-month recall",
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`${standardOheStatement}.
+OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues; Review of importance of maintaining a 4-month recall.`);
+  });
+
   it("accepts custom flossing and brushing frequencies directly", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
@@ -387,6 +489,27 @@ OHE notes: Demonstrated brushing modifications.`);
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
       "Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing"
+    );
+  });
+
+  it("formats the standard treatment preset and optional Dyclonine application time", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.treatmentCompleted = [
+      ...standardTreatmentCompletedPreset.map((entry, index) => ({
+        id: `standard-${index}`,
+        treatmentType: entry.treatmentType,
+        toothAreas: [...entry.toothAreas],
+      })),
+      {
+        id: "dyclonine",
+        treatmentType: dyclonineRinseTreatment,
+        toothAreas: [],
+        applicationTime: "60 seconds",
+      },
+    ];
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Treatment completed today: 3U scale (Cavitron and hand instrumentation) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2.5% NaF Varnish application — full mouth; OHE; Dyclonine rinse 5 ml — time of application/use: 60 seconds",
     );
   });
 

@@ -1,6 +1,8 @@
 import {
   type AdultHygiene2021Form,
+  dyclonineRinseTreatment,
   orderTreatmentToothAreas,
+  standardOheStatement,
 } from "@/lib/templates/adultHygiene2021";
 import {
   choiceLabel,
@@ -82,17 +84,24 @@ function labelledLine(label: string, value: string): string {
 function findingWithCommentLine(
   label: string,
   finding: string,
-  comment: string
+  comment: string,
+  areas: string[] = [],
 ): string {
   const cleanFinding = trimmed(finding);
   const cleanComment = trimmed(comment);
-  if (cleanFinding && cleanComment) {
+  const cleanAreas = /^localized\b/i.test(cleanFinding)
+    ? orderTreatmentToothAreas(areas)
+    : [];
+  const findingWithAreas = cleanAreas.length
+    ? `${cleanFinding} — areas: ${cleanAreas.join(", ")}`
+    : cleanFinding;
+  if (findingWithAreas && cleanComment) {
     return `${label}: ${withTerminalPunctuation(
-      `${cleanFinding}; ${cleanComment}`
+      `${findingWithAreas}; ${cleanComment}`
     )}`;
   }
-  return cleanFinding
-    ? labelledLine(label, cleanFinding)
+  return findingWithAreas
+    ? labelledLine(label, findingWithAreas)
     : labelledLine(`${label} comment`, cleanComment);
 }
 
@@ -392,17 +401,29 @@ export function buildAdultHygiene2021Summary(
       form.listChiefConcerns
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
-    findingWithCommentLine("Plaque", form.plaqueChoice, form.plaqueComment),
-    findingWithCommentLine("Stain", form.stainChoice, form.stainComment),
+    findingWithCommentLine(
+      "Plaque",
+      form.plaqueChoice,
+      form.plaqueComment,
+      form.plaqueAreas ?? [],
+    ),
+    findingWithCommentLine(
+      "Stain",
+      form.stainChoice,
+      form.stainComment,
+      form.stainAreas ?? [],
+    ),
     findingWithCommentLine(
       "Calculus",
       form.calculusChoice,
-      form.calculusComment
+      form.calculusComment,
+      form.calculusAreas ?? [],
     ),
     findingWithCommentLine(
       "Bleeding",
       form.bleedingChoice,
-      form.bleedingComment
+      form.bleedingComment,
+      form.bleedingAreas ?? [],
     ),
   ];
 
@@ -435,6 +456,9 @@ export function buildAdultHygiene2021Summary(
     form.diseaseProcessReviewed
       ? "REVIEWED DISEASE PROCESS WITH PATIENT TODAY"
       : "",
+    form.standardOheStatementApplies
+      ? withTerminalPunctuation(standardOheStatement)
+      : "",
     oheTopicLine(form.oheTopicsReviewed),
     labelledLine("OHE notes", form.oheNotes),
     currentHabits.length
@@ -454,9 +478,15 @@ export function buildAdultHygiene2021Summary(
           const treatmentType = trimmed(entry.treatmentType);
           if (!treatmentType) return "";
           const toothAreas = orderTreatmentToothAreas(entry.toothAreas);
-          return toothAreas.length
+          const treatmentWithAreas = toothAreas.length
             ? `${treatmentType} — ${toothAreas.join(", ")}`
             : treatmentType;
+          const applicationTime = trimmed(entry.applicationTime ?? "");
+          return treatmentType === dyclonineRinseTreatment && applicationTime
+            ? `${treatmentWithAreas}${
+                toothAreas.length ? ";" : " —"
+              } time of application/use: ${applicationTime}`
+            : treatmentWithAreas;
         })
         .filter(Boolean);
       return completed.length

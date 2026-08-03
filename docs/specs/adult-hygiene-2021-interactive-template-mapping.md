@@ -94,8 +94,8 @@ values listed below. Anesthetic remains unseeded pending redesign:
 | `periodontal.fmp-done`           | Periodontal Assessment     | FMP done                                  | `full-mouth-periodontal-charting-done` | 5 complete options   | Single value                                                         |
 | `periodontal.health-gingivitis`  | Periodontal Assessment     | Health/Gingivitis                         | `health`                               | 4 complete options   | Single value                                                         |
 | `oral-hygiene.compliance`        | Oral Hygiene and Education | Oral hygiene compliance                   | `ohi-compliance`                       | 6 complete options   | Single value                                                         |
-| `oral-hygiene.aids-reviewed`     | Oral Hygiene and Education | OH aids reviewed/recommended              | `ohi-aids-reviewed-recommended`        | 8 complete options   | Multiple values                                                      |
-| `hygiene-treatment.completed`    | Treatment                  | Treatment completed today: treatment type | `hygiene-treatment`                    | 8 complete options   | Structured rows; reusable treatment type plus multi-value Tooth/area |
+| `oral-hygiene.aids-reviewed`     | Oral Hygiene and Education | OH aids reviewed/recommended              | `ohi-aids-reviewed-recommended`        | 9 reviewed starters  | Multiple values                                                      |
+| `hygiene-treatment.completed`    | Treatment                  | Treatment completed today: treatment type | `hygiene-treatment`                    | 16 reviewed starters | Structured rows; reusable treatment type plus multi-value Tooth/area |
 | `hygiene-treatment.anesthetic`   | Treatment                  | Anesthetic                                | `hygiene-anaesthetic`                  | None—rework required | Single value                                                         |
 | `hygiene-treatment.desensitizer` | Treatment                  | Desensitizer                              | `desensitizer`                         | 4 complete options   | Single value                                                         |
 | `scheduling.recall-interval`     | Intervals and Next Visit   | Recommended recall interval               | `recommended-recall-interval`          | 3 complete options   | Single value                                                         |
@@ -109,8 +109,8 @@ The exact public starter labels are:
 - **FMP done:** `YES, ALL FINDINGS DISCUSSED WITH PATIENT`; `NO, COMPLETED WITHIN A YEAR`; `NO, IN ORTHO`; `NO, NOT APPLICABLE`; `NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT`.
 - **Health/Gingivitis:** `HEALTH INTACT PERIODONTAL SUPPORT`; `GINGIVITIS INTACT PERIODONTAL SUPPORT`; `HEALTH- REDUCED PERIODONTAL SUPPORT`; `GINGIVITIS- REDUCED PERIODONTAL SUPPORT`.
 - **Oral hygiene compliance:** `Poor`; `Fair`; `Good`; `Excellent`; `Poor–fair`; `Fair–good`.
-- **OH aids reviewed/recommended:** `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TOOTHBRUSHING TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ELECTRIC TOOTHBRUSH`.
-- **Treatment completed today:** `1U scale (cavitron and hand scaling)`; `2U scale (cavitron and hand scaling)`; `3U scale (cavitron and hand scaling)`; `4U scale (cavitron and hand scaling)`; `FMP`; `1U polish`; `Fluoride varnish`; `Crystal X-PUR`.
+- **OH aids reviewed/recommended:** `BASS-BRUSHING TECHNIQUE`; `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TOOTHBRUSHING TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ELECTRIC TOOTHBRUSH`.
+- **Treatment completed today:** the eight accepted source values plus the eight reviewed issue 68 starters documented in the Treatment section below.
 - **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
 - **Recommended recall interval:** `12-month recall`; `6-month recall`; `9-month recall`.
 - **Recommended hygiene interval:** `3-month scale`; `4-month scale`; `6-month scale`; `N/A`.
@@ -342,10 +342,10 @@ valid.
 | --- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
 | A11 | `Patient Chief Concern: [SELECT/INSERT: PATIENT CC]` | Ordered catalogue-backed multi-value **Patient chief concern** with encounter-only custom entries; `Nothing` is mutually exclusive; optional per-note list-format checkbox | Current values: `patient-specific`; reusable values: `catalogue`; format: `administrative` | Inline `Patient Chief Concern: {values joined with "; "}` by default, or heading plus indented bullets |
 | A12 | `Hygiene Area of Concern:`                           | Textarea: **Hygiene area of concern**                                                                                                                                      | `patient-specific`                                                                         | `Hygiene Area of Concern: {text}`                                                                      |
-| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped **Extent** and **Intensity** facets plus multi-value **Location**, with independent **Plaque comment**                                                             | Facets: `appCore`; comment: `patient-specific`                                             | `Plaque: {extent intensity location(s)}; {comment}.`; comment-only state uses `Plaque comment:`        |
-| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, with independent **Stain comment**                                                                               | Facets: `appCore`; comment: `patient-specific`                                             | `Stain: {extent intensity}; {comment}.`; comment-only state uses `Stain comment:`                      |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, with independent **Calculus comment**                                                              | Facets: `appCore`; comment: `patient-specific`                                             | `Calculus: {extent intensity location(s)}; {comment}.`; comment-only state uses `Calculus comment:`    |
-| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, with independent **Bleeding comment**                                                                                          | Facets: `appCore`; comment: `patient-specific`                                             | `Bleeding: {extent severity}; {comment}.`; comment-only state uses `Bleeding comment:`                 |
+| A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped **Extent** and **Intensity** facets plus multi-value **Location**, conditional localized **Areas**, and independent **Plaque comment**                              | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Plaque: {extent intensity location(s)} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized |
+| A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, conditional localized **Areas**, with independent **Stain comment**                                               | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Stain: {extent intensity} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized               |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, conditional localized **Areas**, with independent **Calculus comment**                              | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Calculus: {extent intensity location(s)} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized |
+| A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, conditional localized **Areas**, with independent **Bleeding comment**                                                          | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Bleeding: {extent severity} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized             |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
@@ -381,6 +381,12 @@ of encoding clinical compatibility rules. Selecting **None** for Stain clears
 its other facets, and selecting another Stain facet clears **None**. Existing
 complete strings are parsed into the same facets when demo or imported values
 are loaded.
+
+When **Localized** is selected, each finding also exposes an **Areas** control
+with arches, quadrants, sextants, and encounter-only custom tooth/area text.
+The control is hidden and its values are omitted from output for Generalized,
+None, or an incomplete extent. Hidden localized areas remain in page memory so
+switching back to Localized restores the clinician's explicit entries.
 
 ### Periodontal Assessment
 
@@ -539,6 +545,7 @@ JSON import/export.
 | A26  | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY`                                           | Unchecked checkbox: **Disease process reviewed with patient today**                                                                                  | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
 | A26a | Additive OHE extension                                                                  | Grouped fixed multi-value control: **Additional OHE topics reviewed**                                                                                | `appCore`; no value selected by default                                                | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed                 |
 | A26b | Additive OHE extension                                                                  | Optional textarea: **OHE notes**                                                                                                                     | `patient-specific`                                                                     | `OHE notes: {entered text}` only when entered                                                                                         |
+| A26c | Issue 68 reviewed extension                                                             | Explicit **Apply standard OHE** button with a reversible applied state                                                                               | `appCore`; no default                                                                  | Exact reviewed diagnoses/risk, etiology, brushing/flossing demonstration, and Prevident/Opti-Rinse statement                         |
 | A27  | `Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]` | Two editable suggestion boxes: **Flossing frequency** and **Brushing frequency**; each accepts a standard suggestion or directly entered custom text | Suggestions: `appCore`; current entered values: `patient-specific`                     | `Patient is currently: {documented flossing}; {documented brushing}.`                                                                 |
 | A28  | `Hygiene goal:`                                                                         | Textarea: **Hygiene goal**                                                                                                                           | `patient-specific`                                                                     | `Hygiene goal: {text}`                                                                                                                |
 
@@ -551,10 +558,11 @@ field; there is no separate Other field and typed values are not saved.
 In the form, these two frequency fields appear immediately beneath the Oral
 hygiene compliance and comment row. Their generated-note position remains in
 the accepted source order.
-Eight of nine visible OHI-aids values are complete; one remains
-unresolved, and the scrollbar means additional values may not have been
-captured. The eight complete captured values are approved public starter
-values; the unresolved value remains excluded.
+Eight of nine originally visible OHI-aids values are complete; one remains
+unresolved, and the scrollbar means additional source values may not have been
+captured. Those eight captured values remain approved public starters. Issue
+68 adds the ninth reviewed starter, **BASS-BRUSHING TECHNIQUE**; the unresolved
+source value remains excluded.
 
 The additive OHE topic and notes controls do not move, rename, or replace any
 accepted 2021 fields or output lines. Both start empty. Existing notes
@@ -563,24 +571,39 @@ topic or OHE note. The topic menu is visually grouped into home-care
 techniques, disease and risk, and prevention and maintenance. It uses fixed
 reviewed choices; non-standard discussion belongs in OHE notes.
 
+Issue 68 adds **BASS-BRUSHING TECHNIQUE** to the editable OH-aids starter
+catalogue, plus fixed additional topics for bruxism-guard counselling and
+maintaining a 4-month recall. The standard OHE statement is never inferred or
+preselected; its button must be pressed for the exact reviewed wording to enter
+the generated note, and a separate clear action removes it.
+
 ### Treatment
 
 | ID  | Source                                                       | Proposed control                                                                                                                                              | Classification                                                                                                        | Generated output                                                                                              |
 | --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE`        | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea                                                              | `patient-specific` clinical decision                                                                                  | A `Treatment recommended:` block containing only explicitly selected or entered items                         |
-| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional multi-value **Tooth/area**, including encounter-only custom text | Row and Tooth/area: `patient-specific`; reusable treatment types: `catalogue`; fixed Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional comma-separated Tooth/area values}` joined with `; ` |
+| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional multi-value **Tooth/area**, including encounter-only custom text; Dyclonine exposes optional **Time of application/use**; an explicit button adds the reviewed standard rows | Row, Tooth/area, and timing: `patient-specific`; reusable treatment types: `catalogue`; fixed Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional comma-separated Tooth/area values}{ — or ; time of application/use: value}` joined with `; ` |
 | A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]`            | Catalogue-backed editable text: **Anesthetic**                                                                                                                | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Anesthetic: {text}`                                                                                          |
 | A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]`                | Catalogue-backed editable text: **Desensitizer**                                                                                                              | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Desensitizer: {text}`                                                                                        |
 
 Hygiene maintenance is an explicit option, not a default or recommendation.
-All eight visible Treatment completed values and all four Desensitizer values
-are approved public starter values. Anesthetic remains unseeded and must be
-reworked before its options are reconsidered. Selecting an item records text
-only and never infers dose, amount, safety, appropriateness, or treatment.
+All eight originally visible Treatment completed values, the eight additional
+issue 68 treatment values, and all four Desensitizer values are approved public
+starter values. Anesthetic remains unseeded and must be reworked before its
+options are reconsidered. Selecting an item records text only and never infers
+dose, amount, safety, appropriateness, or treatment.
 Tooth/area starts with no selection for every row. Any number of the 13
 approved fixed choices may be selected simultaneously, and custom text may be
 added to the current encounter. Tooth/area is not a catalogue: custom values
 are discarded on reset or reload and cannot become reusable suggestions.
+
+Issue 68 adds reviewed starter values for the selective aesthetic-zone polish,
+FluoriMax varnish, Advantage Arrest silver diamine fluoride, Dyclonine rinse,
+DDS Recall Exam, resin-based sealant application, OHE, and the requested 3U
+Cavitron/hand-instrumentation wording. **Apply standard treatment** appends only
+missing reviewed rows and is idempotent. Dyclonine's optional timing field is
+free text so a clinician can document either a clock time or duration without
+the application inferring one.
 
 ### Appliances and Relevant History
 

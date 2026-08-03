@@ -29,11 +29,15 @@ import {
   brushingFrequencyChoices,
   createEmptyAdultHygiene2021Form,
   diseaseAndRiskOheTopicChoices,
+  dyclonineRinseTreatment,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
   homeCareOheTopicChoices,
   oheTopicChoices,
+  orderTreatmentToothAreas,
   preventionAndMaintenanceOheTopicChoices,
+  standardOheStatement,
+  standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import type {
@@ -44,10 +48,12 @@ import type {
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import {
+  applyGingivitisObservationPreset,
   copyGingivalDescriptionAssessment,
   createEmptyGingivalDescriptionAssessment,
   createGingivalDescriptionWnlAssessment,
   gingivalDescriptionCatalog,
+  hasConflictingGingivitisPresetObservations,
   type GingivalCatalogDimension,
   type GingivalDescriptionAssessment,
   type GingivalDescriptionFinding,
@@ -162,6 +168,7 @@ const gingivalChoiceGroupDefinitions = {
       optionIds: [
         "gingiva.color.coral_pink",
         "gingiva.color.red_erythematous",
+        "gingiva.color.marginal_redness",
         "gingiva.color.bright_red",
         "gingiva.color.bluish_red",
         "gingiva.color.pale_pink",
@@ -654,10 +661,12 @@ function FacetedChoiceWithComment({
   id,
   label,
   choice,
+  areas,
   comment,
   facetChoices,
   facetGroups,
   onChoiceChange,
+  onAreasChange,
   onCommentChange,
   formatChoice = (values) => values.join(" "),
   standaloneValue,
@@ -665,10 +674,12 @@ function FacetedChoiceWithComment({
   id: string;
   label: string;
   choice: string;
+  areas: string[];
   comment: string;
   facetChoices: readonly string[];
   facetGroups: readonly FixedChoiceMultiComboboxGroup[];
   onChoiceChange: (choice: string) => void;
+  onAreasChange: (areas: string[]) => void;
   onCommentChange: (comment: string) => void;
   formatChoice?: (values: string[]) => string;
   standaloneValue?: string;
@@ -709,6 +720,17 @@ function FacetedChoiceWithComment({
         onChange={onCommentChange}
         placeholder="Optional comment"
       />
+      {selectedFacets.includes("Localized") ? (
+        <div className="md:col-span-2">
+          <ClinicalLocationMultiCombobox
+            id={`${id}-areas`}
+            label={`${label} areas`}
+            preset="finding"
+            values={areas}
+            onChange={onAreasChange}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -2233,6 +2255,18 @@ function GingivalDescriptionControl({
     onChange(createGingivalDescriptionWnlAssessment());
   }
 
+  function applyGingivitisObservations() {
+    if (
+      hasConflictingGingivitisPresetObservations(assessment) &&
+      !window.confirm(
+        "Replace conflicting Gingival Description observations with the reviewed generalized gingivitis observations?",
+      )
+    ) {
+      return;
+    }
+    onChange(applyGingivitisObservationPreset(assessment));
+  }
+
   function clearAssessment() {
     if (
       hasObservations &&
@@ -2310,6 +2344,13 @@ function GingivalDescriptionControl({
                 onClick={applyNormalStructuredObservations}
               >
                 Apply normal structured observations
+              </button>
+              <button
+                type="button"
+                className={`${buttonClass} bg-rose-700 text-white hover:bg-rose-800`}
+                onClick={applyGingivitisObservations}
+              >
+                Apply gingivitis observations
               </button>
               <button
                 type="button"
@@ -2448,10 +2489,12 @@ function GingivalDescriptionControl({
 
 function TreatmentCompletedList({
   entries,
+  onApplyStandard,
   onAdd,
   onChange,
 }: {
   entries: AdultHygieneTreatmentCompletedEntry[];
+  onApplyStandard: () => void;
   onAdd: () => void;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
 }) {
@@ -2484,6 +2527,13 @@ function TreatmentCompletedList({
         Treatment types can be remembered. Select one or more standard
         Tooth/area choices, or add custom text for this note only.
       </p>
+      <button
+        type="button"
+        className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+        onClick={onApplyStandard}
+      >
+        Apply standard treatment
+      </button>
       {entries.length ? (
         <ol
           className="space-y-3"
@@ -2516,6 +2566,20 @@ function TreatmentCompletedList({
                     updateEntry(entry.id, { toothAreas: values })
                   }
                 />
+                {entry.treatmentType.normalize("NFKC").trim() ===
+                dyclonineRinseTreatment ? (
+                  <div className="md:col-span-2">
+                    <TextField
+                      id={`adult-hygiene-treatment-completed-${entry.id}-application-time`}
+                      label="Time of application/use"
+                      value={entry.applicationTime ?? ""}
+                      onChange={(applicationTime) =>
+                        updateEntry(entry.id, { applicationTime })
+                      }
+                      placeholder="Enter a clock time or duration"
+                    />
+                  </div>
+                ) : null}
                 <div className="flex flex-wrap items-start gap-2 md:col-span-2">
                   <TooltipActionButton
                     tooltip="Move this treatment line earlier in the note."
@@ -2720,6 +2784,10 @@ export function AdultHygiene2021Template({
       },
       psrPocketing: [...fixture.psrPocketing],
       patientChiefConcern: [...fixture.patientChiefConcern],
+      plaqueAreas: [...(fixture.plaqueAreas ?? [])],
+      stainAreas: [...(fixture.stainAreas ?? [])],
+      calculusAreas: [...(fixture.calculusAreas ?? [])],
+      bleedingAreas: [...(fixture.bleedingAreas ?? [])],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
       oheTopicsReviewed: [...fixture.oheTopicsReviewed],
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
@@ -2749,6 +2817,36 @@ export function AdultHygiene2021Template({
       treatmentType: "",
       toothAreas: [],
     };
+  }
+
+  function applyStandardOhe() {
+    updateField("standardOheStatementApplies", true);
+  }
+
+  function applyStandardTreatment() {
+    const entryKey = (entry: {
+      treatmentType: string;
+      toothAreas: readonly string[];
+    }) =>
+      `${entry.treatmentType.normalize("NFKC").trim().toLocaleLowerCase("en-CA")}|${orderTreatmentToothAreas(
+        [...entry.toothAreas],
+      )
+        .map((area) => area.toLocaleLowerCase("en-CA"))
+        .join("|")}`;
+    const existingKeys = new Set(form.treatmentCompleted.map(entryKey));
+    const additions = standardTreatmentCompletedPreset
+      .filter((entry) => !existingKeys.has(entryKey(entry)))
+      .map((entry) => ({
+        ...createTreatmentCompletedEntry(),
+        treatmentType: entry.treatmentType,
+        toothAreas: [...entry.toothAreas],
+      }));
+    if (additions.length) {
+      updateField("treatmentCompleted", [
+        ...form.treatmentCompleted,
+        ...additions,
+      ]);
+    }
   }
 
   return (
@@ -2985,10 +3083,12 @@ export function AdultHygiene2021Template({
               id="adult-hygiene-plaque"
               label="Plaque"
               choice={form.plaqueChoice}
+              areas={form.plaqueAreas}
               comment={form.plaqueComment}
               facetChoices={plaqueFacetChoices}
               facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
+              onAreasChange={(value) => updateField("plaqueAreas", value)}
               onCommentChange={(value) => updateField("plaqueComment", value)}
               formatChoice={(values) =>
                 formatChoiceWithJoinedLocations(
@@ -3001,10 +3101,12 @@ export function AdultHygiene2021Template({
               id="adult-hygiene-stain"
               label="Stain"
               choice={form.stainChoice}
+              areas={form.stainAreas}
               comment={form.stainComment}
               facetChoices={stainFacetChoices}
               facetGroups={stainFacetGroups}
               onChoiceChange={(value) => updateField("stainChoice", value)}
+              onAreasChange={(value) => updateField("stainAreas", value)}
               onCommentChange={(value) => updateField("stainComment", value)}
               standaloneValue="None"
             />
@@ -3012,10 +3114,12 @@ export function AdultHygiene2021Template({
               id="adult-hygiene-calculus"
               label="Calculus"
               choice={form.calculusChoice}
+              areas={form.calculusAreas}
               comment={form.calculusComment}
               facetChoices={calculusFacetChoices}
               facetGroups={calculusFacetGroups}
               onChoiceChange={(value) => updateField("calculusChoice", value)}
+              onAreasChange={(value) => updateField("calculusAreas", value)}
               onCommentChange={(value) => updateField("calculusComment", value)}
               formatChoice={(values) =>
                 formatChoiceWithJoinedLocations(
@@ -3028,10 +3132,12 @@ export function AdultHygiene2021Template({
               id="adult-hygiene-bleeding"
               label="Bleeding"
               choice={form.bleedingChoice}
+              areas={form.bleedingAreas}
               comment={form.bleedingComment}
               facetChoices={bleedingFacetChoices}
               facetGroups={bleedingFacetGroups}
               onChoiceChange={(value) => updateField("bleedingChoice", value)}
+              onAreasChange={(value) => updateField("bleedingAreas", value)}
               onCommentChange={(value) => updateField("bleedingComment", value)}
             />
           </Section>
@@ -3144,6 +3250,37 @@ export function AdultHygiene2021Template({
               onChange={(value) => updateField("ohiAidsReviewed", value)}
               roomySelectionActions
             />
+            <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+              <div>
+                <h3 className="font-semibold">Standard OHE</h3>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  {standardOheStatement}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+                  disabled={form.standardOheStatementApplies}
+                  onClick={applyStandardOhe}
+                >
+                  {form.standardOheStatementApplies
+                    ? "Standard OHE applied"
+                    : "Apply standard OHE"}
+                </button>
+                {form.standardOheStatementApplies ? (
+                  <button
+                    type="button"
+                    className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+                    onClick={() =>
+                      updateField("standardOheStatementApplies", false)
+                    }
+                  >
+                    Clear standard OHE
+                  </button>
+                ) : null}
+              </div>
+            </div>
             <CheckboxField
               id="adult-hygiene-disease-process-reviewed"
               label="Disease process reviewed with patient today"
@@ -3200,6 +3337,7 @@ export function AdultHygiene2021Template({
             </fieldset>
             <TreatmentCompletedList
               entries={form.treatmentCompleted}
+              onApplyStandard={applyStandardTreatment}
               onAdd={() =>
                 updateField("treatmentCompleted", [
                   ...form.treatmentCompleted,
