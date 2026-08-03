@@ -311,7 +311,8 @@
       },
       "sourceNormalizationNotes": [
         "The source statement about tissue position relative to the CEJ and root coverage in younger patients is preserved in source.sourceTables but is not converted into a selectable normalized finding.",
-        "Observation, diagnosis, etiology, patient education, and recommendation remain separate concepts."
+        "Observation, diagnosis, etiology, patient education, and recommendation remain separate concepts.",
+        "Marginal redness and the explicit gingivitis observation preset were added from the clinically reviewed wording in GitHub issue 68 on 2026-08-03; they were not inferred from the archived Word source."
       ],
       "dimensions": [
         {
@@ -345,6 +346,14 @@
               "noteFragment": "red / erythematous",
               "sourceCategory": "abnormal_findings",
               "sourceTerm": "Red"
+            },
+            {
+              "id": "gingiva.color.marginal_redness",
+              "label": "Marginal redness",
+              "classification": "abnormal",
+              "noteFragment": "marginal redness",
+              "sourceCategory": "reviewed_issue_request",
+              "sourceTerm": "marginal redness"
             },
             {
               "id": "gingiva.color.bright_red",

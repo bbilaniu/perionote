@@ -6,7 +6,22 @@ import {
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { treatmentToothAreaChoices } from "@/lib/templates/adultHygiene2021";
 
-export type ClinicalLocationPreset = "gingival" | "treatment";
+export type ClinicalLocationPreset = "finding" | "gingival" | "treatment";
+
+export const localizedFindingAreaChoices = [
+  "maxilla",
+  "mandible",
+  "Q1",
+  "Q2",
+  "Q3",
+  "Q4",
+  "S1",
+  "S2",
+  "S3",
+  "S4",
+  "S5",
+  "S6",
+] as const;
 
 export const gingivalLocationChoices = [
   "maxilla",
@@ -74,6 +89,24 @@ const gingivalChoiceGroups = [
   },
 ] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
 
+const localizedFindingChoiceGroups = [
+  {
+    label: "Arches",
+    choices: ["maxilla", "mandible"],
+    columns: 2,
+  },
+  {
+    label: "Quadrants",
+    choices: ["Q1", "Q2", "Q4", "Q3"],
+    columns: 2,
+  },
+  {
+    label: "Sextants",
+    choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
+    columns: 3,
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
 export function ClinicalLocationMultiCombobox({
   id,
   label,
@@ -90,9 +123,15 @@ export function ClinicalLocationMultiCombobox({
   const choices =
     preset === "treatment"
       ? treatmentToothAreaChoices
-      : gingivalLocationChoices;
+      : preset === "finding"
+        ? localizedFindingAreaChoices
+        : gingivalLocationChoices;
   const choiceGroups =
-    preset === "treatment" ? treatmentChoiceGroups : gingivalChoiceGroups;
+    preset === "treatment"
+      ? treatmentChoiceGroups
+      : preset === "finding"
+        ? localizedFindingChoiceGroups
+        : gingivalChoiceGroups;
 
   return (
     <FixedChoiceMultiCombobox
@@ -105,7 +144,9 @@ export function ClinicalLocationMultiCombobox({
       customPlaceholder={
         preset === "treatment"
           ? "Search or add a Tooth/area"
-          : "Search or add a location"
+          : preset === "finding"
+            ? "Search or add an area"
+            : "Search or add a location"
       }
       showSelectedChips={false}
     />

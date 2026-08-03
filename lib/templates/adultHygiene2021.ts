@@ -88,6 +88,8 @@ export const diseaseAndRiskOheTopicChoices = [
 export const preventionAndMaintenanceOheTopicChoices = [
   "Review benefits of Prevident or Opti-Rinse",
   "Importance of maintaining the recommended hygiene interval",
+  "Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues",
+  "Review of importance of maintaining a 4-month recall",
 ] as const;
 
 export const oheTopicChoices = [
@@ -150,7 +152,30 @@ export type AdultHygieneTreatmentCompletedEntry = {
   id: string;
   treatmentType: string;
   toothAreas: string[];
+  applicationTime?: string;
 };
+
+export const standardOheStatement =
+  "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
+
+export const dyclonineRinseTreatment = "Dyclonine rinse 5 ml";
+
+export const standardTreatmentCompletedPreset = [
+  {
+    treatmentType: "3U scale (Cavitron and hand instrumentation)",
+    toothAreas: ["full mouth"],
+  },
+  {
+    treatmentType:
+      "1U polish - Selective polish of aesthetic zone as per patient's request",
+    toothAreas: [],
+  },
+  {
+    treatmentType: "FluoriMax 2.5% NaF Varnish application",
+    toothAreas: ["full mouth"],
+  },
+  { treatmentType: "OHE", toothAreas: [] },
+] as const;
 
 export interface AdultHygiene2021Form {
   patientId: string;
@@ -171,12 +196,16 @@ export interface AdultHygiene2021Form {
   listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
+  plaqueAreas: string[];
   plaqueComment: string;
   stainChoice: string;
+  stainAreas: string[];
   stainComment: string;
   calculusChoice: string;
+  calculusAreas: string[];
   calculusComment: string;
   bleedingChoice: string;
+  bleedingAreas: string[];
   bleedingComment: string;
   psrPocketing: [string, string, string, string, string, string];
   recession: string;
@@ -188,6 +217,7 @@ export interface AdultHygiene2021Form {
   homeCareInstructionReviewed: boolean;
   ohiAidsReviewed: string[];
   diseaseProcessReviewed: boolean;
+  standardOheStatementApplies: boolean;
   oheTopicsReviewed: string[];
   oheNotes: string;
   flossingFrequency: string;
@@ -232,12 +262,16 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     listChiefConcerns: false,
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
+    plaqueAreas: [],
     plaqueComment: "",
     stainChoice: "",
+    stainAreas: [],
     stainComment: "",
     calculusChoice: "",
+    calculusAreas: [],
     calculusComment: "",
     bleedingChoice: "",
+    bleedingAreas: [],
     bleedingComment: "",
     psrPocketing: ["", "", "", "", "", ""],
     recession: "",
@@ -249,6 +283,7 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     homeCareInstructionReviewed: false,
     ohiAidsReviewed: [],
     diseaseProcessReviewed: false,
+    standardOheStatementApplies: false,
     oheTopicsReviewed: [],
     oheNotes: "",
     flossingFrequency: "",

@@ -206,6 +206,7 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
+      "BASS-BRUSHING TECHNIQUE",
       "SULCABRUSH",
       "SUPERFLOSS",
       "FLOSS THREADERS",
@@ -223,10 +224,18 @@ describe("local catalogues", () => {
       "1U scale (cavitron and hand scaling)",
       "2U scale (cavitron and hand scaling)",
       "3U scale (cavitron and hand scaling)",
+      "3U scale (Cavitron and hand instrumentation)",
       "4U scale (cavitron and hand scaling)",
       "FMP",
       "1U polish",
+      "1U polish - Selective polish of aesthetic zone as per patient's request",
       "Fluoride varnish",
+      "FluoriMax 2.5% NaF Varnish application",
+      "Advantage Arrest® Silver Diamine Fluoride 38% application",
+      "Dyclonine rinse 5 ml",
+      "DDS Recall Exam",
+      "Sealant application, resin-based material",
+      "OHE",
       "Crystal X-PUR",
     ]);
     expect(

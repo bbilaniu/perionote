@@ -1155,6 +1155,147 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
   );
 });
 
+test("Adult Hygiene captures areas only for localized hygiene findings", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await page.locator("#adult-hygiene-plaque-choice").click();
+  const plaqueOptions = page.getByRole("dialog", {
+    name: "Plaque options",
+    exact: true,
+  });
+  await plaqueOptions
+    .getByRole("group", { name: "Extent Plaque choices", exact: true })
+    .getByText("Localized", { exact: true })
+    .click();
+  await plaqueOptions
+    .getByRole("group", { name: "Intensity Plaque choices", exact: true })
+    .getByText("moderate", { exact: true })
+    .click();
+  await plaqueOptions.getByRole("button", { name: "Done", exact: true }).click();
+
+  const plaqueAreas = page.getByRole("button", {
+    name: "Plaque areas",
+    exact: true,
+  });
+  await expect(plaqueAreas).toContainText("Select Plaque areas");
+  await plaqueAreas.click();
+  const areaOptions = page.getByRole("dialog", {
+    name: "Plaque areas options",
+    exact: true,
+  });
+  await areaOptions.getByText("Q1", { exact: true }).click();
+  await areaOptions
+    .getByRole("textbox", { name: "Search or add custom Plaque areas" })
+    .fill("teeth 14–16");
+  await areaOptions
+    .getByRole("button", {
+      name: "Add “teeth 14–16” to this note",
+      exact: true,
+    })
+    .click();
+  await areaOptions.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Plaque: Localized moderate — areas: Q1, teeth 14–16\./,
+  );
+
+  await page.locator("#adult-hygiene-plaque-choice").click();
+  await plaqueOptions
+    .getByRole("group", { name: "Extent Plaque choices", exact: true })
+    .getByText("Generalized", { exact: true })
+    .click();
+  await plaqueOptions.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(plaqueAreas).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Plaque: Generalized moderate\./,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /areas:/,
+  );
+});
+
+test("Adult Hygiene applies the reviewed gingivitis observation preset", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .getByRole("button", { name: /Structured gingival observations/ })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Apply gingivitis observations",
+      exact: true,
+    })
+    .click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Color: marginal redness \(extent: generalized\)\.[\s\S]*Contour \/ Shape: rolled margins \(extent: generalized\)\.[\s\S]*Consistency: spongy \(extent: generalized\)\.[\s\S]*Surface \/ Texture: smooth attached gingiva \(extent: generalized\)\./,
+  );
+});
+
+test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine timing", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const ohiAids = page.locator("#adult-hygiene-ohi-aids");
+  await ohiAids.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "BASS-BRUSHING TECHNIQUE Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  const oralHygieneSection = page
+    .getByRole("heading", { name: "Oral Hygiene and Education", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await oralHygieneSection
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient's diagnoses and risk factors were explained to them\.[\s\S]*Reviewed benefits of Prevident 5000 or Opti-Rinse 0\.05%/,
+  );
+
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+  const completedRows = page
+    .getByRole("list", { name: "Treatment completed today entries" })
+    .locator(":scope > li");
+  await expect(completedRows).toHaveCount(4);
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+  await expect(completedRows).toHaveCount(4);
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Treatment completed today: 3U scale \(Cavitron and hand instrumentation\) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2\.5% NaF Varnish application — full mouth; OHE/,
+  );
+
+  await page
+    .getByRole("button", { name: "Add treatment completed", exact: true })
+    .click();
+  const dyclonineRow = completedRows.nth(4);
+  const treatmentType = dyclonineRow.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await treatmentType.focus();
+  await page
+    .getByRole("option", {
+      name: "Dyclonine rinse 5 ml Starter",
+      exact: true,
+    })
+    .click();
+  await dyclonineRow
+    .getByRole("textbox", { name: "Time of application/use", exact: true })
+    .fill("60 seconds");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Dyclonine rinse 5 ml — time of application\/use: 60 seconds/,
+  );
+});
+
 test("Adult Hygiene catalogue values persist while encounter selections do not", async ({
   page,
 }) => {
