@@ -55,18 +55,48 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
     page.getByRole("heading", { name: "Clinical Templates" }),
   ).toBeVisible();
   await expect(
-    page.locator('a[href="/templates/clinic/recare-exam/"]'),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Interactive", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.locator(
-      'a[href="/templates/clinic/recare-exam/interactive/"]',
-    ),
-  ).toBeVisible();
-  await expect(page.getByText("Interactive · pilot")).toBeVisible();
+    page.getByRole("button", { name: "Original", exact: true }),
+  ).toHaveAttribute("aria-pressed", "false");
+
+  const recareCard = page
+    .getByRole("article")
+    .filter({ hasText: "Recare Exam" });
+  await expect(
+    recareCard.getByRole("link", { name: "Open interactive Recare Exam" }),
+  ).toHaveAttribute("href", "/templates/clinic/recare-exam/interactive/");
+  await expect(
+    recareCard.getByRole("link", { name: "View original template" }),
+  ).toHaveAttribute("href", "/templates/clinic/recare-exam/");
+  await expect(recareCard.getByText("Interactive · pilot")).toBeVisible();
+
+  const originalOnlyCard = page
+    .getByRole("article")
+    .filter({ hasText: "Local Anesthetic" });
+  await expect(
+    originalOnlyCard.getByRole("link", {
+      name: "Open original Local Anesthetic",
+    }),
+  ).toHaveAttribute("href", "/templates/clinic/local-anesthetic/");
+
+  await page.getByRole("button", { name: "Original", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Original", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    recareCard.getByRole("link", { name: "Open original Recare Exam" }),
+  ).toHaveAttribute("href", "/templates/clinic/recare-exam/");
+  await expect(
+    recareCard.getByRole("link", { name: "Open interactive version" }),
+  ).toHaveAttribute("href", "/templates/clinic/recare-exam/interactive/");
 
   await Promise.all([
     page.waitForURL("**/templates/clinic/recare-exam/"),
-    page.locator('a[href="/templates/clinic/recare-exam/"]').click(),
+    recareCard
+      .getByRole("link", { name: "Open original Recare Exam" })
+      .click(),
   ]);
   await expect(
     page.getByRole("heading", { name: "Recare Exam", exact: true }),
@@ -77,6 +107,45 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
     "href",
     "/templates/clinic/recare-exam/interactive/",
   );
+});
+
+test("clinical template cards follow the selected default destination", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic");
+
+  const adultHygieneCard = page
+    .getByRole("article")
+    .filter({ hasText: "2021 Adult Hygiene" });
+  await Promise.all([
+    page.waitForURL("**/templates/clinic/adult-hygiene-2021/interactive/"),
+    adultHygieneCard
+      .getByText("Comprehensive adult hygiene assessment and treatment note.")
+      .click(),
+  ]);
+
+  await page.goto("/templates/clinic");
+  await page.getByRole("button", { name: "Original", exact: true }).click();
+  const recareCard = page
+    .getByRole("article")
+    .filter({ hasText: "Recare Exam" });
+  await Promise.all([
+    page.waitForURL("**/templates/clinic/recare-exam/"),
+    recareCard
+      .getByText("Periodic exam note covering clinical findings and planning.")
+      .click(),
+  ]);
+
+  await page.goto("/templates/clinic");
+  const originalOnlyCard = page
+    .getByRole("article")
+    .filter({ hasText: "Local Anesthetic" });
+  await Promise.all([
+    page.waitForURL("**/templates/clinic/local-anesthetic/"),
+    originalOnlyCard
+      .getByText("Short local anesthetic treatment addendum.")
+      .click(),
+  ]);
 });
 
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
