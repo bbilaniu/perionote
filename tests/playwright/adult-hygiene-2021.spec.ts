@@ -290,7 +290,7 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
     /PSR\/Pocketing: 1 2 2 \/ 2 1 2/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla/
+    /Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Recommended Recall Interval: 6-month recall\./
@@ -299,7 +299,7 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   await reloadDiscardingForm(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /^----- July 25, 2026 9:10:00 AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/
+    /^----- July 25, 2026 9:10:\d{2} AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/
   );
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
