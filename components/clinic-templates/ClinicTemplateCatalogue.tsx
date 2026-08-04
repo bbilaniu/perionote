@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type MouseEvent, useState } from "react";
+import { type MouseEvent, type ReactNode, useState } from "react";
 import { FullPageLink } from "@/components/FullPageLink";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
@@ -25,6 +25,7 @@ export type ClinicTemplateCatalogueGroup = {
 };
 
 type DefaultCardDestination = "interactive" | "original";
+type TemplateVisibility = "all" | "interactive";
 
 const titleLinkClass =
   "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
@@ -36,51 +37,99 @@ export function ClinicTemplateCatalogue({
 }) {
   const [defaultDestination, setDefaultDestination] =
     useState<DefaultCardDestination>("interactive");
+  const [templateVisibility, setTemplateVisibility] =
+    useState<TemplateVisibility>("all");
+  const visibleGroups = groups
+    .map((group) => ({
+      ...group,
+      categories: group.categories
+        .map((category) => ({
+          ...category,
+          templates:
+            templateVisibility === "interactive"
+              ? category.templates.filter(
+                  (template) => template.interactiveLifecycle,
+                )
+              : category.templates,
+        }))
+        .filter(
+          (category) =>
+            templateVisibility === "all" || category.templates.length > 0,
+        ),
+    }))
+    .filter(
+      (group) => templateVisibility === "all" || group.categories.length > 0,
+    );
 
   return (
     <>
       <section
-        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900"
-        aria-labelledby="clinic-template-default-heading"
+        className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between dark:border-slate-800 dark:bg-slate-900"
+        aria-labelledby="clinic-template-preferences-heading"
       >
         <div>
           <h2
-            id="clinic-template-default-heading"
+            id="clinic-template-preferences-heading"
             className="font-semibold"
           >
-            Default card action
+            Template preferences
           </h2>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Choose which version opens when you select a template card.
-            Templates without an interactive version always open the original.
+            Choose what opens from a card and which templates appear below.
           </p>
         </div>
-        <div
-          role="group"
-          aria-label="Default card action"
-          className="grid shrink-0 grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
-        >
-          {(["interactive", "original"] as const).map((destination) => {
-            const selected = defaultDestination === destination;
-            const label =
-              destination === "interactive" ? "Interactive" : "Original";
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Show templates
+            </p>
+            <div
+              role="group"
+              aria-label="Show templates"
+              className="grid grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
+            >
+              {(["all", "interactive"] as const).map((visibility) => {
+                const selected = templateVisibility === visibility;
+                const label = visibility === "all" ? "All" : "Interactive only";
 
-            return (
-              <button
-                key={destination}
-                type="button"
-                aria-pressed={selected}
-                className={`rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 ${
-                  selected
-                    ? "bg-chart-accent text-white shadow-sm"
-                    : "text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800"
-                }`}
-                onClick={() => setDefaultDestination(destination)}
-              >
-                {label}
-              </button>
-            );
-          })}
+                return (
+                  <SegmentButton
+                    key={visibility}
+                    selected={selected}
+                    onClick={() => setTemplateVisibility(visibility)}
+                  >
+                    {label}
+                  </SegmentButton>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Card opens
+            </p>
+            <div
+              role="group"
+              aria-label="Card opens"
+              className="grid grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
+            >
+              {(["interactive", "original"] as const).map((destination) => {
+                const selected = defaultDestination === destination;
+                const label =
+                  destination === "interactive" ? "Interactive" : "Original";
+
+                return (
+                  <SegmentButton
+                    key={destination}
+                    selected={selected}
+                    onClick={() => setDefaultDestination(destination)}
+                  >
+                    {label}
+                  </SegmentButton>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -99,9 +148,7 @@ export function ClinicTemplateCatalogue({
             <dd className="inline"> — selected or inserted by the user.</dd>
           </div>
           <div>
-            <dt className="inline font-medium">
-              [UNRESOLVED PLACEHOLDER: …]
-            </dt>
+            <dt className="inline font-medium">[UNRESOLVED PLACEHOLDER: …]</dt>
             <dd className="inline">
               {" "}
               — present in the note but not declared in its source package.
@@ -110,7 +157,7 @@ export function ClinicTemplateCatalogue({
         </dl>
       </aside>
 
-      {groups.map((group) => (
+      {visibleGroups.map((group) => (
         <section key={group.title} className="space-y-5">
           <header>
             <h2 className="text-xl font-semibold">{group.title}</h2>
@@ -151,8 +198,8 @@ export function ClinicTemplateCatalogue({
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-slate-300 px-5 py-4 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-400">
-                    This category is ready for the clinic&apos;s next treatment or
-                    referral addendum.
+                    This category is ready for the clinic&apos;s next treatment
+                    or referral addendum.
                   </div>
                 )}
               </section>
@@ -161,6 +208,31 @@ export function ClinicTemplateCatalogue({
         </section>
       ))}
     </>
+  );
+}
+
+function SegmentButton({
+  selected,
+  onClick,
+  children,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      className={`rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 ${
+        selected
+          ? "bg-chart-accent text-white shadow-sm"
+          : "text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800"
+      }`}
+      onClick={onClick}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -173,7 +245,8 @@ function ClinicTemplateCard({
 }) {
   const originalHref = `/templates/clinic/${template.slug}/`;
   const interactiveHref = `${originalHref}interactive/`;
-  const opensInteractive = Boolean(template.interactiveLifecycle) &&
+  const opensInteractive =
+    Boolean(template.interactiveLifecycle) &&
     defaultDestination === "interactive";
   const defaultHref = opensInteractive ? interactiveHref : originalHref;
 

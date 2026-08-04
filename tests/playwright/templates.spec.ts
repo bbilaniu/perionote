@@ -55,11 +55,20 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
     page.getByRole("heading", { name: "Clinical Templates" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Interactive", exact: true }),
+    page
+      .getByRole("group", { name: "Card opens" })
+      .getByRole("button", { name: "Interactive", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
-    page.getByRole("button", { name: "Original", exact: true }),
+    page
+      .getByRole("group", { name: "Card opens" })
+      .getByRole("button", { name: "Original", exact: true }),
   ).toHaveAttribute("aria-pressed", "false");
+  await expect(
+    page
+      .getByRole("group", { name: "Show templates" })
+      .getByRole("button", { name: "All", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
 
   const recareCard = page
     .getByRole("article")
@@ -81,9 +90,14 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
     }),
   ).toHaveAttribute("href", "/templates/clinic/local-anesthetic/");
 
-  await page.getByRole("button", { name: "Original", exact: true }).click();
+  await page
+    .getByRole("group", { name: "Card opens" })
+    .getByRole("button", { name: "Original", exact: true })
+    .click();
   await expect(
-    page.getByRole("button", { name: "Original", exact: true }),
+    page
+      .getByRole("group", { name: "Card opens" })
+      .getByRole("button", { name: "Original", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   await expect(
     recareCard.getByRole("link", { name: "Open original Recare Exam" }),
@@ -125,7 +139,10 @@ test("clinical template cards follow the selected default destination", async ({
   ]);
 
   await page.goto("/templates/clinic");
-  await page.getByRole("button", { name: "Original", exact: true }).click();
+  await page
+    .getByRole("group", { name: "Card opens" })
+    .getByRole("button", { name: "Original", exact: true })
+    .click();
   const recareCard = page
     .getByRole("article")
     .filter({ hasText: "Recare Exam" });
@@ -146,6 +163,43 @@ test("clinical template cards follow the selected default destination", async ({
       .getByText("Short local anesthetic treatment addendum.")
       .click(),
   ]);
+});
+
+test("clinical template catalogue can show only interactive versions", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic");
+
+  const showTemplates = page.getByRole("group", { name: "Show templates" });
+  await showTemplates
+    .getByRole("button", { name: "Interactive available", exact: true })
+    .click();
+
+  await expect(
+    showTemplates.getByRole("button", {
+      name: "Interactive available",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article").filter({ hasText: "Recare Exam" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "View original template" }),
+  ).toHaveCount(2);
+
+  await showTemplates
+    .getByRole("button", { name: "All", exact: true })
+    .click();
+  await expect(
+    page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
+  ).toBeVisible();
 });
 
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
