@@ -2925,20 +2925,6 @@ export function AdultHygiene2021Template({
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-          Pilot interactive conversion
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          2021 Adult Hygiene
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-          Complete the form and copy a structured Adult Hygiene note. Encounter
-          values remain only in this page&apos;s memory. Deliberately remembered
-          catalogue suggestions stay only in this browser profile.
-        </p>
-      </header>
-
       <form
         className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
         autoComplete="off"
@@ -2948,6 +2934,21 @@ export function AdultHygiene2021Template({
         }}
       >
         <div className="space-y-6">
+          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+              Pilot interactive conversion
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+              2021 Adult Hygiene
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
+              Complete the form and copy a structured Adult Hygiene note.
+              Encounter values remain only in this page&apos;s memory.
+              Deliberately remembered catalogue suggestions stay only in this
+              browser profile.
+            </p>
+          </header>
+
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
               <TextField

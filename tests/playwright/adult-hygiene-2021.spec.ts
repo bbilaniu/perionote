@@ -37,6 +37,35 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
+test("interactive banners share the first row with Generated Note on wide screens", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  for (const url of [
+    adultHygieneUrl,
+    "/templates/clinic/recare-exam/interactive",
+  ]) {
+    await page.goto(url);
+
+    const banner = page
+      .getByText("Pilot interactive conversion", { exact: true })
+      .locator("xpath=ancestor::header[1]");
+    const generatedNoteCard = page
+      .getByRole("heading", { name: "Generated Note", exact: true })
+      .locator("xpath=ancestor::section[1]");
+    const [bannerBox, generatedNoteBox] = await Promise.all([
+      banner.boundingBox(),
+      generatedNoteCard.boundingBox(),
+    ]);
+
+    expect(bannerBox).not.toBeNull();
+    expect(generatedNoteBox).not.toBeNull();
+    expect(generatedNoteBox!.y).toBeCloseTo(bannerBox!.y, 0);
+    expect(bannerBox!.x + bannerBox!.width).toBeLessThan(generatedNoteBox!.x);
+  }
+});
+
 test("date and time fields stay inside cards on narrow screens", async ({
   page,
 }) => {
