@@ -110,18 +110,24 @@ Date Booked: 2026-11-15`);
     );
   });
 
-  it("omits a stale periodontal disease status for another diagnosis", () => {
+  it("charts status for any assessed periodontal diagnosis without carrying stage or grade", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
       diagnosis: "health",
       status: "stable",
+      statusComment: "Clinician-confirmed current status",
       stage: "II",
       grade: "B",
     };
 
     const summary = buildAdultHygiene2021Summary(form);
-    expect(summary).not.toContain("Periodontal status:");
+    expect(summary).toContain(
+      "Periodontal status: Periodontal disease stability."
+    );
+    expect(summary).toContain(
+      "Periodontal status comment: Clinician-confirmed current status."
+    );
     expect(summary).not.toMatch(/Stage II|Grade B/);
   });
 

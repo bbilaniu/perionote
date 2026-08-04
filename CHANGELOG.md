@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.6.1
+
+### Patch Changes
+
+- Keep periodontal status fields available for every assessed diagnosis and prevent copying when a visible periodontal classification override reason is empty.
+
 ## 0.6.0
 
 ### Minor Changes

@@ -258,7 +258,7 @@ function formatPeriodontalClassification(
         trimmed(classification.gradeOverrideReason)),
   );
   const statusCanBeCharted = Boolean(
-    classification.diagnosis === "periodontitis" &&
+    classification.diagnosis &&
       classification.status &&
       isPeriodontalStatusCompatibleWithContext(
         classification.status,

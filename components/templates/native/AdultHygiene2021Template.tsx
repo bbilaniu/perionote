@@ -901,8 +901,10 @@ function PeriodontalClassificationControl({
   ];
   const isHealthGingivitisDiagnosis =
     value.diagnosis === "health" || value.diagnosis === "gingivitis";
+  const hasAssessedDiagnosis = Boolean(value.diagnosis);
+  const isPeriodontitisDiagnosis = value.diagnosis === "periodontitis";
   const isTreatedPeriodontitisContext =
-    value.diagnosis === "periodontitis" &&
+    isPeriodontitisDiagnosis &&
     value.gingivalHealth.periodontium === "reduced-treated-periodontitis";
   const showGingivalContextWorkflow =
     isHealthGingivitisDiagnosis || isTreatedPeriodontitisContext;
@@ -1856,19 +1858,18 @@ function PeriodontalClassificationControl({
             onChange={(diagnosis) =>
               update({
                 diagnosis,
-              gingivalHealth: {
-                ...value.gingivalHealth,
-                context: "",
-                overrideReason: "",
-              },
+                gingivalHealth: {
+                  ...value.gingivalHealth,
+                  context: "",
+                  overrideReason: "",
+                },
                 ...(diagnosis !== "periodontitis"
                   ? {
-                    stage: "",
-                    grade: "",
-                    status: "",
-                    statusComment: "",
+                      stage: "",
+                      grade: "",
                     }
                   : {}),
+                ...(!diagnosis ? { status: "", statusComment: "" } : {}),
               })
             }
           />
@@ -1882,22 +1883,20 @@ function PeriodontalClassificationControl({
         </div>
       </section>
 
-      {showGingivalContextWorkflow || value.diagnosis === "periodontitis" ? (
+      {hasAssessedDiagnosis ? (
         <fieldset className="space-y-6 border-t border-slate-200 pt-4 dark:border-slate-700">
-
-
-          <section
-            className="space-y-4"
-            aria-labelledby="periodontal-current-condition-heading"
-          >
-            <h3
-              id="periodontal-current-condition-heading"
-              className="font-semibold"
+          {showGingivalContextWorkflow ? (
+            <section
+              className="space-y-4"
+              aria-labelledby="periodontal-current-condition-heading"
             >
-              Current clinical condition
-            </h3>
+              <h3
+                id="periodontal-current-condition-heading"
+                className="font-semibold"
+              >
+                Current clinical condition
+              </h3>
 
-            {showGingivalContextWorkflow ? (
               <>
                 <div className="border-l-4 border-sky-600 pl-4">
                   <h4 className="font-semibold">
@@ -1980,10 +1979,10 @@ function PeriodontalClassificationControl({
                   ) : null}
                 </div>
               </>
-            ) : null}
-          </section>
+            </section>
+          ) : null}
 
-          {value.diagnosis === "periodontitis" ? (
+          {isPeriodontitisDiagnosis ? (
             <section
               className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700"
               aria-labelledby="periodontal-stage-grade-heading"
@@ -2108,29 +2107,30 @@ function PeriodontalClassificationControl({
                     />
                   ) : null}
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <FixedChoiceListbox
-                    id="adult-hygiene-periodontal-status"
-                    label="Current periodontal status"
-                    value={displayedPeriodontalStatus}
-                    options={compatiblePeriodontalStatusChoices}
-                    onChange={(status) =>
-                      update({
-                        status,
-                        ...(!status ? { statusComment: "" } : {}),
-                      })
-                    }
-                  />
-                  <TextField
-                    id="adult-hygiene-periodontal-status-comment"
-                    label="Periodontal status comment"
-                    value={value.statusComment}
-                    onChange={(statusComment) => update({ statusComment })}
-                  />
-                </div>
               </div>
             </section>
           ) : null}
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <FixedChoiceListbox
+              id="adult-hygiene-periodontal-status"
+              label="Current periodontal status"
+              value={displayedPeriodontalStatus}
+              options={compatiblePeriodontalStatusChoices}
+              onChange={(status) =>
+                update({
+                  status,
+                  ...(!status ? { statusComment: "" } : {}),
+                })
+              }
+            />
+            <TextField
+              id="adult-hygiene-periodontal-status-comment"
+              label="Periodontal status comment"
+              value={value.statusComment}
+              onChange={(statusComment) => update({ statusComment })}
+            />
+          </div>
         </fieldset>
       ) : null}
     </div>
@@ -2767,7 +2767,9 @@ export function AdultHygiene2021Template({
     );
     setPeriodontalOverrideErrors({
       context: missingContextOverride
-        ? "Enter a current-condition override reason."
+        ? form.periodontalClassification.diagnosis === "periodontitis"
+          ? "Enter a treated-periodontitis context override reason."
+          : "Enter a Health/Gingivitis classification override reason."
         : "",
       stage: missingStageOverride ? "Enter a stage override reason." : "",
       grade: missingGradeOverride ? "Enter a grade override reason." : "",

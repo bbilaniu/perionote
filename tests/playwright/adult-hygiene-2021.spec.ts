@@ -910,6 +910,13 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
 }) => {
   await page.goto(adultHygieneUrl);
 
+  await expect(
+    page.getByLabel("Current periodontal status", { exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Periodontal status comment", { exact: true })
+  ).toHaveCount(0);
+
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
     .getByRole("option", {
@@ -932,6 +939,12 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await expect(
     page.getByLabel("Treated-periodontitis context", { exact: true })
   ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Current periodontal status", { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Periodontal status comment", { exact: true })
+  ).toBeVisible();
 
   await page.locator("#adult-hygiene-periodontium").click();
   await page
@@ -1004,9 +1017,48 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await page
     .getByRole("option", { name: "Periodontal health", exact: true })
     .click();
-  await expect(page.locator("#adult-hygiene-periodontal-status")).toHaveCount(
-    0
+  await expect(
+    page.getByLabel("Current periodontal status", { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.locator("#adult-hygiene-periodontal-status")
+  ).toHaveAttribute("data-value", "stable");
+  await expect(
+    page.getByLabel("Periodontal status comment", { exact: true })
+  ).toHaveValue("Stable on current maintenance interval");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
   );
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Gingivitis", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Current periodontal status", { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Periodontal status comment", { exact: true })
+  ).toHaveValue("Stable on current maintenance interval");
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Other periodontal condition", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Current periodontal status", { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByLabel("Periodontal status comment", { exact: true })
+  ).toHaveValue("Stable on current maintenance interval");
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Not assessed", exact: true })
+    .click();
+  await expect(
+    page.getByLabel("Current periodontal status", { exact: true })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Periodontal status comment", { exact: true })
+  ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Periodontal status:/
   );
@@ -1708,6 +1760,53 @@ test("Adult Hygiene blocks copy while a visible grade override reason is empty",
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toMatch(
     /Grade C[\s\S]*Grade override: Clinician-selected Grade C\./
+  );
+});
+
+test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reason is empty", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto(adultHygieneUrl);
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-HG-OVERRIDE");
+  await page.locator("#adult-hygiene-rdh").fill("Example RDH");
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-health-gingivitis-context").click();
+  await page
+    .getByRole("option", { name: "HEALTH - INTACT PERIODONTIUM", exact: true })
+    .click();
+  const overrideReason = page.getByLabel(
+    "Health/Gingivitis classification override reason"
+  );
+  await expect(overrideReason).toBeVisible();
+
+  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await expect(
+    page.getByText(
+      "Enter a Health/Gingivitis classification override reason.",
+      { exact: true }
+    )
+  ).toBeVisible();
+  await expect(overrideReason).toHaveAttribute("aria-invalid", "true");
+  await expect(overrideReason).toBeFocused();
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.toBe("sentinel");
+
+  await overrideReason.fill("Clinician-selected health classification");
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.toMatch(
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*CLINICIAN OVERRIDE: Clinician-selected health classification/
   );
 });
 
