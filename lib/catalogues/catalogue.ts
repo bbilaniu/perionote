@@ -221,27 +221,16 @@ const oralHygieneComplianceSeeds = catalogueSeeds("oral-hygiene.compliance", [
 ]);
 
 const treatmentCompletedSeeds = catalogueSeeds("hygiene-treatment.completed", [
-  ["1u-scale", "1U scale (cavitron and hand scaling)"],
-  ["2u-scale", "2U scale (cavitron and hand scaling)"],
-  ["3u-scale", "3U scale (cavitron and hand scaling)"],
-  [
-    "3u-scale-hand-instrumentation",
-    "3U scale (Cavitron and hand instrumentation)",
-  ],
-  ["4u-scale", "4U scale (cavitron and hand scaling)"],
+  ["1u-scale", "1U scale (cavitron and hand instrumentation)"],
+  ["2u-scale", "2U scale (cavitron and hand instrumentation)"],
+  ["3u-scale", "3U scale (cavitron and hand instrumentation)"],
+  //["3u-scale-hand-instrumentation", "3U scale (Cavitron and hand instrumentation)"],
+  ["4u-scale", "4U scale (cavitron and hand instrumentation)"],
   ["fmp", "FMP"],
-  ["1u-polish", "1U polish"],
-  [
-    "1u-polish-selective-aesthetic",
-    "1U polish - Selective polish of aesthetic zone as per patient's request",
-  ],
-  ["fluoride-varnish", "Fluoride varnish"],
+  ["1u-polish", "1U polish - Selective polish of aesthetic zone as per patient's request"],
   ["fluorimax-varnish", "FluoriMax 2.5% NaF Varnish application"],
-  [
-    "advantage-arrest-sdf",
-    "Advantage Arrest® Silver Diamine Fluoride 38% application",
-  ],
-  ["dyclonine-rinse", "Dyclonine rinse 5 ml"],
+  ["advantage-arrest-sdf", "Advantage Arrest® Silver Diamine Fluoride 38% application"],
+  ["dyclonine-rinse", "Dyclonine 1% rinse 5 ml"],
   ["dds-recall-exam", "DDS Recall Exam"],
   ["resin-sealant", "Sealant application, resin-based material"],
   ["ohe", "OHE"],

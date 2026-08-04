@@ -1,6 +1,6 @@
 import {
   type AdultHygiene2021Form,
-  dyclonineRinseTreatment,
+  isDyclonineRinseTreatment,
   orderTreatmentToothAreas,
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2021";
@@ -482,7 +482,7 @@ export function buildAdultHygiene2021Summary(
             ? `${treatmentType} — ${toothAreas.join(", ")}`
             : treatmentType;
           const applicationTime = trimmed(entry.applicationTime ?? "");
-          return treatmentType === dyclonineRinseTreatment && applicationTime
+          return isDyclonineRinseTreatment(treatmentType) && applicationTime
             ? `${treatmentWithAreas}${
                 toothAreas.length ? ";" : " —"
               } time of application/use: ${applicationTime}`

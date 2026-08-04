@@ -158,9 +158,19 @@ export type AdultHygieneTreatmentCompletedEntry = {
 export const standardOheStatement =
   "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
 
-export const dyclonineRinseTreatment = "Dyclonine rinse 5 ml";
+export const dyclonineRinseTreatment = "Dyclonine 1% rinse 5 ml";
+
+export function isDyclonineRinseTreatment(value: string): boolean {
+  const normalized = value
+    .normalize("NFKC")
+    .trim()
+    .toLocaleLowerCase("en-CA");
+  return normalized.includes("dyclonine") && normalized.includes("rinse");
+}
 
 export const standardTreatmentCompletedPreset = [
+  { treatmentType: "Dyclonine 1% rinse 5 ml", toothAreas: ["full mouth"]},
+  { treatmentType: "FMP", toothAreas: ["full mouth"] },
   {
     treatmentType: "3U scale (Cavitron and hand instrumentation)",
     toothAreas: ["full mouth"],

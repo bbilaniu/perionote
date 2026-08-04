@@ -1264,35 +1264,20 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
   const completedRows = page
     .getByRole("list", { name: "Treatment completed today entries" })
     .locator(":scope > li");
-  await expect(completedRows).toHaveCount(4);
+  await expect(completedRows).toHaveCount(6);
+  const dyclonineRow = completedRows.first();
+  const applicationTime = dyclonineRow.getByRole("textbox", {
+    name: "Time of application/use",
+    exact: true,
+  });
+  await expect(applicationTime).toBeVisible();
+  await applicationTime.fill("60 seconds");
   await page
     .getByRole("button", { name: "Apply standard treatment", exact: true })
     .click();
-  await expect(completedRows).toHaveCount(4);
+  await expect(completedRows).toHaveCount(6);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 3U scale \(Cavitron and hand instrumentation\) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2\.5% NaF Varnish application — full mouth; OHE/,
-  );
-
-  await page
-    .getByRole("button", { name: "Add treatment completed", exact: true })
-    .click();
-  const dyclonineRow = completedRows.nth(4);
-  const treatmentType = dyclonineRow.getByRole("combobox", {
-    name: "Treatment type",
-    exact: true,
-  });
-  await treatmentType.focus();
-  await page
-    .getByRole("option", {
-      name: "Dyclonine rinse 5 ml Starter",
-      exact: true,
-    })
-    .click();
-  await dyclonineRow
-    .getByRole("textbox", { name: "Time of application/use", exact: true })
-    .fill("60 seconds");
-  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Dyclonine rinse 5 ml — time of application\/use: 60 seconds/,
+    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; 3U scale \(Cavitron and hand instrumentation\) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2\.5% NaF Varnish application — full mouth; OHE/,
   );
 });
 

@@ -29,10 +29,10 @@ import {
   brushingFrequencyChoices,
   createEmptyAdultHygiene2021Form,
   diseaseAndRiskOheTopicChoices,
-  dyclonineRinseTreatment,
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
   homeCareOheTopicChoices,
+  isDyclonineRinseTreatment,
   oheTopicChoices,
   orderTreatmentToothAreas,
   preventionAndMaintenanceOheTopicChoices,
@@ -2566,8 +2566,7 @@ function TreatmentCompletedList({
                     updateEntry(entry.id, { toothAreas: values })
                   }
                 />
-                {entry.treatmentType.normalize("NFKC").trim() ===
-                dyclonineRinseTreatment ? (
+                {isDyclonineRinseTreatment(entry.treatmentType) ? (
                   <div className="md:col-span-2">
                     <TextField
                       id={`adult-hygiene-treatment-completed-${entry.id}-application-time`}
