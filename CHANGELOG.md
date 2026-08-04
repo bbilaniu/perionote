@@ -1,5 +1,12 @@
 # hygienenote
 
+## 0.6.0
+
+### Minor Changes
+
+- 631a6bb: Add the approved structured Recare tooth-level findings assessment, including repeatable caries and mobility observations.
+- 0e9624e: Add reviewed Adult Hygiene localized areas, gingivitis and OHE presets, and expanded completed-treatment documentation.
+
 ## 0.5.1
 
 ### Patch Changes
