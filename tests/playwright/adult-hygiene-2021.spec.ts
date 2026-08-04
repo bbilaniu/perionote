@@ -591,19 +591,23 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
     "Gingival recession measurement (mm)",
     { exact: true },
   );
-  const gingivalFieldTops = await Promise.all([
-    recessionLocation.evaluate((element) =>
-      element
-        .closest("[data-fixed-multi-combobox]")!
-        .getBoundingClientRect().top,
-    ),
-    recessionMeasurement.evaluate(
-      (element) => element.parentElement!.getBoundingClientRect().top,
-    ),
+  const [recessionLocationBox, recessionMeasurementBox] = await Promise.all([
+    recessionLocation
+      .locator("xpath=ancestor::*[@data-fixed-multi-combobox][1]")
+      .boundingBox(),
+    recessionMeasurement.locator("xpath=parent::*").boundingBox(),
   ]);
-  expect(Math.abs(gingivalFieldTops[0] - gingivalFieldTops[1])).toBeLessThan(
-    2,
+  expect(recessionLocationBox).not.toBeNull();
+  expect(recessionMeasurementBox).not.toBeNull();
+  expect(recessionMeasurementBox!.y).toBeGreaterThan(
+    recessionLocationBox!.y + recessionLocationBox!.height,
   );
+  expect(
+    Math.abs(recessionLocationBox!.x - recessionMeasurementBox!.x),
+  ).toBeLessThan(2);
+  expect(
+    Math.abs(recessionLocationBox!.width - recessionMeasurementBox!.width),
+  ).toBeLessThan(2);
   await recessionLocation.click();
   const recessionLocationOptions = page.getByRole("dialog", {
     name: "Gingival recession location options",
@@ -828,17 +832,17 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
       exact: true,
     })
   ).toBeVisible();
-  const clinicianSelections = page.getByRole("group", {
-    name: "Clinician selections",
+  const currentClinicalCondition = page.getByRole("region", {
+    name: "Current clinical condition",
   });
   await expect(
-    clinicianSelections.getByRole("heading", {
+    currentClinicalCondition.getByRole("heading", {
       name: "Current clinical condition",
       exact: true,
     })
   ).toBeVisible();
   await expect(
-    clinicianSelections.getByLabel("Health/Gingivitis classification")
+    currentClinicalCondition.getByLabel("Health/Gingivitis classification")
   ).toBeVisible();
   await expect(
     page.getByLabel("Confirm selected Health/Gingivitis classification")
@@ -1385,7 +1389,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await treatmentCompleted.focus();
   await page
     .getByRole("option", {
-      name: "1U scale (cavitron and hand scaling) Starter",
+      name: "1U scale (cavitron and hand instrumentation) Starter",
       exact: true,
     })
     .click();
@@ -1478,7 +1482,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/
+    /Treatment completed today: 1U scale \(cavitron and hand instrumentation\) — Q2, Q3, teeth 14–16/
   );
   await completedRow.getByRole("button", { name: "Done", exact: true }).click();
   await expect(toothAreaOptions).toBeHidden();
@@ -1851,6 +1855,7 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
 
   await expect(rblExtent).toContainText("Middle third or beyond");
   await expect(page.getByText(/Stage III; Grade B/)).toBeVisible();
+  await page.getByText("Why this was suggested", { exact: true }).click();
   await expect(
     page.getByText(
       /radiographic bone loss \(RBL\) extends to the middle third of the root or beyond/
@@ -1943,6 +1948,7 @@ test("Adult Hygiene consolidates mutually exclusive complexity findings", async 
     })
     .click();
   await expect(page.getByText(/Stage IV; Grade B/)).toBeVisible();
+  await page.getByText("Why this was suggested", { exact: true }).click();
   await expect(
     page.getByText(
       /severe ridge defects; masticatory dysfunction; bite collapse/

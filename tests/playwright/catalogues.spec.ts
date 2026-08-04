@@ -86,7 +86,12 @@ test("Recare Exam offers public occlusion seeds and remembers providers explicit
   const rightMolar = page.getByRole("combobox", {
     name: "Right molar occlusion",
   });
-  await rightMolar.focus();
+  await page
+    .getByRole("button", {
+      name: "Show Right molar occlusion suggestions",
+      exact: true,
+    })
+    .click();
   await expect(page.getByRole("option", { name: /Cl I Starter/ })).toBeVisible();
   await expect(page.getByRole("option", { name: /Cl II Starter/ })).toBeVisible();
   await expect(page.getByRole("option", { name: /Cl III Starter/ })).toBeVisible();
@@ -116,7 +121,12 @@ test("Recare Exam offers public occlusion seeds and remembers providers explicit
   await reloadDiscardingForm(page);
 
   await expect(dentist).toHaveValue("");
-  await dentist.focus();
+  await page
+    .getByRole("button", {
+      name: "Show Dentist suggestions",
+      exact: true,
+    })
+    .click();
   await expect(
     page.getByRole("option", { name: /Synthetic Dentist Local/ }),
   ).toBeVisible();

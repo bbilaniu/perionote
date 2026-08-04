@@ -172,12 +172,12 @@ test("clinical template catalogue can show only interactive versions", async ({
 
   const showTemplates = page.getByRole("group", { name: "Show templates" });
   await showTemplates
-    .getByRole("button", { name: "Interactive available", exact: true })
+    .getByRole("button", { name: "Interactive only", exact: true })
     .click();
 
   await expect(
     showTemplates.getByRole("button", {
-      name: "Interactive available",
+      name: "Interactive only",
       exact: true,
     }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -245,7 +245,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
     /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\n/,
   );
   expect(copiedNote).toMatch(
-    /\nPATIENT ID: TEST-3003\nDENTIST:\nRDA:\nRDH: Example RDH\n/,
+    /\nPATIENT ID: TEST-3003\nDENTIST:\nRDA:\nRDH: Example RDH$/,
   );
   expect(copiedNote).not.toContain("NOTE STARTED:");
 });

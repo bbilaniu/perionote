@@ -114,7 +114,12 @@ test("Recare and Adult Hygiene share the chief concern catalogue and Nothing rul
     "Food catches between teeth",
   );
 
-  await recareChiefConcern.focus();
+  await page
+    .getByRole("button", {
+      name: "Show Patient's chief concern suggestions",
+      exact: true,
+    })
+    .click();
   await page
     .getByRole("option", {
       name: /Nothing Starter/,
@@ -216,11 +221,16 @@ test("fixed-choice keyboard navigation keeps the active option visible", async (
 }) => {
   await page.goto(adultHygieneUrl);
 
-  const plaque = page.getByRole("button", { name: "Plaque" });
-  await plaque.focus();
-  await plaque.press("ArrowDown");
+  const diagnosis = page.getByRole("button", {
+    name: "Periodontal diagnosis category",
+    exact: true,
+  });
+  await diagnosis.focus();
+  await diagnosis.press("ArrowDown");
 
-  const options = page.getByRole("listbox", { name: "Plaque options" });
+  const options = page.getByRole("listbox", {
+    name: "Periodontal diagnosis category options",
+  });
   await options.press("End");
 
   const activeOptionId = await options.getAttribute("aria-activedescendant");
