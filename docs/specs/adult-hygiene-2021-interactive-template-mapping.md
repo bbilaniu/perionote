@@ -400,8 +400,8 @@ switching back to Localized restores the clinician's explicit entries.
 | A21  | [Reviewed periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)                                                                                                                                                                  | Diagnosis category and separate extent/distribution choices                                                                                                                                            | Choices: `appCore`; encounter selection: `patient-specific`                                                                                    | `Periodontal diagnosis: {extent} periodontitis...` when documented                                                                                                                 |
 | A22  | Stage severity and complexity criteria                                                                                                                                                                                                                                      | Exact typed measurements; synchronized Maximum PPD and deeper-pocket BOP controls shared with Periodontal assessment findings; mutually exclusive bone-loss pattern, furcation, and ridge-defect selectors; and a multi-select for advanced functional complexity findings | Stable criterion IDs and units: `appCore`; entered evidence: `patient-specific`                                                                | Confirmed evidence is generated from the checked-in criterion catalogue                                                                                                            |
 | A23  | Grade progression criteria and modifiers                                                                                                                                                                                                                                    | Direct, indirect, and phenotype evidence plus smoking and diabetes controls                                                                                                                            | Stable criterion IDs, semantic operators, and units: `appCore`; entered evidence: `patient-specific`                                           | Confirmed grade basis and entered modifiers are generated from structured state                                                                                                    |
-| A24  | Stage and grade                                                                                                                                                                                                                                                             | Candidate display followed by independent clinician selections and confirmation checkboxes; override reason appears when the selection differs                                                         | Candidate: derived; selection, confirmation, and override reason: `patient-specific`                                                           | Only confirmed stage/grade and basis are charted; an entered override reason is included                                                                                           |
-| A25  | Current periodontal status                                                                                                                                                                                                                                                  | 2018-aligned fixed choice filtered for compatibility with a confirmed treated-periodontitis context                                                                                                   | Choice: `appCore`; encounter selection: `patient-specific`                                                                                     | `Periodontal status: {selected status}.`; incompatible legacy combinations are omitted                                                                                            |
+| A24  | Stage and grade                                                                                                                                                                                                                                                             | Candidate display followed by independent clinician selections; applying a suggestion or selecting a value records the choice, and an override reason appears beside a differing selection             | Candidate: derived; selection and override reason: `patient-specific`                                                                          | Selected compatible stage/grade and basis are charted; a differing selection requires and includes an override reason                                                             |
+| A25  | Current periodontal status                                                                                                                                                                                                                                                  | 2018-aligned fixed choice filtered for compatibility with the selected treated-periodontitis context, paired with an optional encounter comment                                                        | Choice: `appCore`; encounter selection and comment: `patient-specific`                                                                         | `Periodontal status: {selected status}.` and an optional comment line; incompatible legacy combinations are omitted                                                               |
 
 The six PSR/Pocketing inputs preserve the source's six-position shape and use
 the clinically approved clockwise order `1 2 3 / 6 5 4`, without imposing an
@@ -411,7 +411,7 @@ The legacy editable `periodontal.health-gingivitis` catalogue is no longer an
 encounter control and cannot contribute free text to generated notes. Its
 storage key remains readable for backward-compatible catalogue imports and
 existing browser-local data. The six reviewed replacement contexts are fixed
-application vocabulary and are generated only from confirmed structured state.
+application vocabulary and are generated only after explicit clinician selection.
 
 Periodontal evidence uses the checked-in catalogue and candidate rules in
 `lib/templates/periodontalClassification.ts`, documented by the
@@ -420,7 +420,7 @@ Periodontal assessment findings, extent/distribution, stage evidence, grade evid
 and grade modifiers remain available while the diagnosis category is Not
 assessed. Entering those findings does not select or imply a diagnosis and does
 not add periodontal classification text to the note. Diagnosis-specific
-candidates, clinician confirmation, and generated output remain gated by the
+candidates, clinician selection, and generated output remain gated by the
 selected diagnosis category.
 The periodontal assessment, stage, grade, and modifier controls are grouped in a
 **Structured periodontal observations** disclosure before the diagnosis category.
@@ -428,7 +428,7 @@ It is collapsed as **Not assessed** for a blank encounter, reports the number of
 documented observations when populated, and automatically expands when existing
 or demo observations load. PSR/Pocketing, Recession, and FMP Done remain visible in
 their familiar positions outside this disclosure. Candidate interpretation and
-clinician confirmation also remain outside it so they stay available when the
+clinician selection also remains outside it so it stays available when the
 supporting findings are collapsed.
 Patient-specific Stage and Grade evidence are separate nested disclosures with
 their own documented-observation summaries. Both remain available before a
@@ -436,10 +436,10 @@ diagnosis is selected and never infer Periodontitis. Selecting **Periodontitis /
 history of periodontitis** opens Structured periodontal observations and Stage
 evidence; Grade remains collapsed unless the clinician opens it or grade
 evidence/modifiers are already documented. Candidate interpretation,
-confirmation, and generated Stage/Grade output remain conditional on that
+selection, and generated Stage/Grade output remain conditional on that
 diagnosis/history category. A successfully treated patient stays in this category
 when current findings meet periodontal health thresholds; health is represented
-by the confirmed treated-periodontitis context and periodontal disease stability
+by the selected treated-periodontitis context and periodontal disease stability
 rather than by relabelling the patient with the simple Periodontal health
 diagnosis category.
 Complexity findings use a bone-loss pattern selector with a conditional vertical

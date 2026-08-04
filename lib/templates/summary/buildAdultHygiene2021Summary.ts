@@ -245,7 +245,6 @@ function formatPeriodontalClassification(
   const candidate = classifyPeriodontalCandidate(classification);
   const stageCanBeCharted = Boolean(
     classification.diagnosis === "periodontitis" &&
-      classification.stageConfirmed &&
       classification.stage &&
       (!candidate.stage ||
         classification.stage === candidate.stage ||
@@ -253,11 +252,19 @@ function formatPeriodontalClassification(
   );
   const gradeCanBeCharted = Boolean(
     classification.diagnosis === "periodontitis" &&
-      classification.gradeConfirmed &&
       classification.grade &&
       (!candidate.grade ||
         classification.grade === candidate.grade ||
         trimmed(classification.gradeOverrideReason)),
+  );
+  const statusCanBeCharted = Boolean(
+    classification.diagnosis === "periodontitis" &&
+      classification.status &&
+      isPeriodontalStatusCompatibleWithContext(
+        classification.status,
+        classification.gingivalHealth.context,
+        Boolean(classification.gingivalHealth.context)
+      )
   );
   const diagnosisParts = [
     classification.diagnosis === "periodontitis" && classification.extent
@@ -316,15 +323,14 @@ function formatPeriodontalClassification(
         )}`
       : "",
     modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
-    classification.diagnosis === "periodontitis" &&
-    classification.status &&
-    isPeriodontalStatusCompatibleWithContext(
-      classification.status,
-      classification.gingivalHealth.context,
-      classification.gingivalHealth.confirmed
-    )
+    statusCanBeCharted
       ? `Periodontal status: ${withTerminalPunctuation(
           choiceLabel(periodontalStatusChoices, classification.status)
+        )}`
+      : "",
+    statusCanBeCharted && trimmed(classification.statusComment)
+      ? `Periodontal status comment: ${withTerminalPunctuation(
+          classification.statusComment
         )}`
       : "",
   ].filter(Boolean);

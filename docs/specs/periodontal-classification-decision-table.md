@@ -5,7 +5,7 @@
 **Clinical review status:** Pending clinician sign-off. Candidate results are
 decision support only. A selected diagnosis is clinician-entered, not inferred.
 Candidate contexts, stages, and grades are never charted until the clinician
-accepts or selects them and completes the applicable confirmation.
+applies a suggestion or explicitly selects them.
 
 ## Sources
 
@@ -25,17 +25,17 @@ catalogue in that module.
 | Concern | Decision |
 | --- | --- |
 | Diagnosis and case definition | The application does not diagnose periodontitis, determine whether the formal periodontitis case definition is met, or attribute CAL to periodontitis rather than another cause. The clinician selects the diagnosis category before candidate calculation. |
-| Candidate versus diagnosis | A candidate is never a confirmed diagnosis. Health/Gingivitis or treated-periodontitis context, stage, and grade require their applicable clinician confirmation. |
+| Candidate versus diagnosis | A candidate is never a diagnosis. Health/Gingivitis or treated-periodontitis context, stage, and grade are charted only after the clinician applies the suggestion or explicitly selects a value. |
 | Reference versus finding | Reference thresholds are application data. Only entered measurements and explicitly selected findings are patient-specific evidence. |
-| Generated output | Unconfirmed stage/grade and their basis are omitted. Confirmed basis is generated from criterion IDs and typed values. |
-| Override | A selected context, stage, or grade may differ from its candidate only when a non-empty override reason is entered. Removing the reason clears confirmation. Defensive output checks suppress an override that has no reason. |
+| Generated output | Blank stage/grade selections and their basis are omitted. The basis for selected values is generated from criterion IDs and typed values. |
+| Override | A selected context, stage, or grade may differ from its candidate only when a non-empty override reason is entered. Removing the reason suppresses the incompatible selection from output. |
 | Missing stage data | No stage is suggested. The candidate reports that patient-specific stage evidence is missing. |
 | Missing grade data | For a periodontitis diagnosis, Grade B is shown as a working assumption with a warning. It is not confirmed or charted automatically. |
 | Unsupported exposure | Non-cigarette nicotine exposure is documented separately and never converted to cigarettes/day. |
 | Unknown HbA1c | Diabetes with unknown current HbA1c does not modify the candidate grade. |
 | Health/Gingivitis compatibility | Structured evidence is calculated and confirmed, while generated output retains the familiar ClearDent field heading and charts only entered measurements and declared findings. |
-| Treated context and status | A confirmed stable treated-periodontitis context permits periodontal disease stability; a confirmed inflammation context permits remission/control. Incompatible current-status choices are not charted. |
-| Status scope | Current periodontal disease status is available and charted only with a periodontitis diagnosis. Changing to another diagnosis clears the selected status; output also suppresses stale persisted status defensively. |
+| Treated context and status | A selected stable treated-periodontitis context permits periodontal disease stability; a selected inflammation context permits remission/control. Incompatible current-status choices are not charted. |
+| Status scope | Current periodontal disease status and its optional encounter comment are available and charted only with a periodontitis diagnosis. Changing to another diagnosis clears both; output also suppresses stale persisted values defensively. |
 
 ## Candidate Scope and Prerequisites
 

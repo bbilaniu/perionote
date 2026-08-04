@@ -61,8 +61,7 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
     stage: "II",
     grade: "B",
     status: "remission-control",
-    stageConfirmed: true,
-    gradeConfirmed: true,
+    statusComment: "Synthetic periodontal status comment",
     stageOverrideReason: "",
     gradeOverrideReason: "",
     stageBasis: [
@@ -94,7 +93,6 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
       ppd4OrGreaterWithBop: "no",
       progressiveDestruction: "no",
       context: "inflammation-periodontitis-history",
-      confirmed: true,
       overrideReason: "",
     },
   },

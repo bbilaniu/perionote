@@ -428,7 +428,6 @@ export interface GingivalHealthAssessment {
   ppd4OrGreaterWithBop: AssessedBoolean;
   progressiveDestruction: AssessedBoolean;
   context: HealthGingivitisContext;
-  confirmed: boolean;
   overrideReason: string;
 }
 
@@ -438,8 +437,7 @@ export interface PeriodontalClassification {
   stage: PeriodontitisStage;
   grade: PeriodontitisGrade;
   status: PeriodontalStatus;
-  stageConfirmed: boolean;
-  gradeConfirmed: boolean;
+  statusComment: string;
   stageOverrideReason: string;
   gradeOverrideReason: string;
   stageBasis: PeriodontalCriterionEvidence<PeriodontalStageCriterionId>[];
@@ -457,7 +455,6 @@ export function createEmptyGingivalHealthAssessment(): GingivalHealthAssessment 
     ppd4OrGreaterWithBop: "not-assessed",
     progressiveDestruction: "not-assessed",
     context: "",
-    confirmed: false,
     overrideReason: "",
   };
 }
@@ -469,8 +466,7 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
     stage: "",
     grade: "",
     status: "",
-    stageConfirmed: false,
-    gradeConfirmed: false,
+    statusComment: "",
     stageOverrideReason: "",
     gradeOverrideReason: "",
     stageBasis: [],
@@ -1105,7 +1101,7 @@ export function formatHealthGingivitisBlock(
   classification: PeriodontalClassification,
 ): string {
   const assessment = classification.gingivalHealth;
-  if (!assessment.confirmed || !assessment.context) return "";
+  if (!assessment.context) return "";
   const candidate = classifyGingivalHealthCandidate(classification);
   if (
     assessment.context !== candidate.context &&

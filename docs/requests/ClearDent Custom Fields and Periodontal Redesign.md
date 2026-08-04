@@ -1028,7 +1028,7 @@ For the first HygieneNote periodontal implementation:
 1. Keep the detailed AAP/EFP criteria available on screen.  
 2. Use exact numeric inputs and checkboxes as the primary controls.  
 3. Use sliders only as optional secondary controls for percentages.  
-4. Suggest a stage and grade but require clinician confirmation.  
+4. Suggest a stage and grade but require the clinician to apply the suggestion or explicitly select a value.
 5. Add extent/distribution as a separate field.  
 6. Include smoking and diabetes mellitus modifiers.  
 7. Default to diagnosis plus confirmed basis; concise-only and expanded output may remain explicit alternatives.  

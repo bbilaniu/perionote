@@ -515,7 +515,7 @@ describe("Health/Gingivitis classification", () => {
     });
   });
 
-  it("formats confirmed candidates like the ClearDent field", () => {
+  it("formats selected candidates like the ClearDent field", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "health";
     classification.gingivalHealth = {
@@ -526,7 +526,6 @@ describe("Health/Gingivitis classification", () => {
       attachmentLoss: "absent",
       radiographicBoneLoss: "absent",
       context: "health-intact",
-      confirmed: true,
     };
 
     expect(formatHealthGingivitisBlock(classification))
@@ -537,7 +536,7 @@ describe("Health/Gingivitis classification", () => {
 - NO RADIOGRAPHIC BONE LOSS`);
   });
 
-  it("keeps ClearDent wording for a confirmed treated-periodontitis context", () => {
+  it("keeps ClearDent wording for a selected treated-periodontitis context", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "periodontitis";
     classification.gingivalHealth = {
@@ -550,7 +549,6 @@ describe("Health/Gingivitis classification", () => {
       ppd4OrGreaterWithBop: "no",
       progressiveDestruction: "no",
       context: "health-treated-stable-periodontitis",
-      confirmed: true,
     };
 
     expect(formatHealthGingivitisBlock(classification))
@@ -574,7 +572,6 @@ describe("Health/Gingivitis classification", () => {
       attachmentLoss: "present",
       radiographicBoneLoss: "absent",
       context: "gingivitis-reduced-non-periodontitis",
-      confirmed: true,
     };
 
     expect(formatHealthGingivitisBlock(classification))
@@ -585,14 +582,13 @@ describe("Health/Gingivitis classification", () => {
 - NO RADIOGRAPHIC BONE LOSS`);
   });
 
-  it("omits a confirmed treated context when periodontal support is incompatible", () => {
+  it("omits a selected treated context when periodontal support is incompatible", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "periodontitis";
     classification.gingivalHealth = {
       ...classification.gingivalHealth,
       periodontium: "intact",
       context: "health-treated-stable-periodontitis",
-      confirmed: true,
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe("");
@@ -609,7 +605,6 @@ describe("Health/Gingivitis classification", () => {
       attachmentLoss: "absent",
       radiographicBoneLoss: "absent",
       context: "health-intact",
-      confirmed: true,
       overrideReason: "Clinician-confirmed exception",
     };
 
@@ -633,7 +628,6 @@ describe("Health/Gingivitis classification", () => {
       attachmentLoss: "absent",
       radiographicBoneLoss: "absent",
       context: "health-intact",
-      confirmed: true,
       overrideReason: "",
     };
 

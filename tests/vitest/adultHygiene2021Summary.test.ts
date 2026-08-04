@@ -66,6 +66,7 @@ Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 3 mm;
 Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
 Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
 Periodontal status: Periodontal disease remission/control.
+Periodontal status comment: Synthetic periodontal status comment.
 
 Oral hygiene compliance: Good.
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -117,8 +118,6 @@ Date Booked: 2026-11-15`);
       status: "stable",
       stage: "II",
       grade: "B",
-      stageConfirmed: true,
-      gradeConfirmed: true,
     };
 
     const summary = buildAdultHygiene2021Summary(form);
@@ -522,8 +521,6 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
         extent: "generalized" as const,
         stage: "II" as const,
         grade: "B" as const,
-        stageConfirmed: true,
-        gradeConfirmed: true,
         stageOverrideReason: "Synthetic stage context",
         gradeOverrideReason: "Synthetic grade context",
       },
@@ -556,8 +553,6 @@ Recommended hygiene interval comments: Synthetic hygiene context.`);
       diagnosis: "periodontitis",
       stage: "IV",
       grade: "C",
-      stageConfirmed: true,
-      gradeConfirmed: true,
       stageBasis: [
         {
           criterionId: "stage.interdental-cal",

@@ -873,19 +873,13 @@ function PeriodontalClassificationControl({
     value.gingivalHealth.periodontium === "reduced-treated-periodontitis";
   const showGingivalContextWorkflow =
     isHealthGingivitisDiagnosis || isTreatedPeriodontitisContext;
-  const gingivalCandidateHeading = isTreatedPeriodontitisContext
-    ? "Candidate treated-periodontitis context"
-    : "Candidate Health/Gingivitis classification";
   const gingivalContextLabel = isTreatedPeriodontitisContext
     ? "Treated-periodontitis context"
     : "Health/Gingivitis classification";
-  const gingivalContextConfirmationLabel = isTreatedPeriodontitisContext
-    ? "Confirm selected treated-periodontitis context"
-    : "Confirm selected Health/Gingivitis classification";
   const gingivalContextOverrideLabel = isTreatedPeriodontitisContext
     ? "Treated-periodontitis context override reason"
     : "Health/Gingivitis classification override reason";
-  const requiredContextStatus = value.gingivalHealth.confirmed
+  const requiredContextStatus = value.gingivalHealth.context
     ? requiredPeriodontalStatusForContext(value.gingivalHealth.context)
     : "";
   const compatiblePeriodontalStatusChoices = requiredContextStatus
@@ -896,7 +890,7 @@ function PeriodontalClassificationControl({
   const displayedPeriodontalStatus = isPeriodontalStatusCompatibleWithContext(
     value.status,
     value.gingivalHealth.context,
-    value.gingivalHealth.confirmed,
+    Boolean(value.gingivalHealth.context),
   )
     ? value.status
     : "";
@@ -1053,17 +1047,12 @@ function PeriodontalClassificationControl({
     onChange({ ...value, ...patch });
   }
 
-  function updateGingivalHealth(
-    patch: Partial<GingivalHealthAssessment>,
-    { invalidatesStage = false } = {},
-  ) {
+  function updateGingivalHealth(patch: Partial<GingivalHealthAssessment>) {
     update({
       gingivalHealth: {
         ...value.gingivalHealth,
         ...patch,
-        confirmed: false,
       },
-      ...(invalidatesStage ? { stageConfirmed: false } : {}),
     });
   }
 
@@ -1073,45 +1062,50 @@ function PeriodontalClassificationControl({
     const hidesTreatedPeriodontitisContext =
       value.diagnosis === "periodontitis" &&
       periodontium !== "reduced-treated-periodontitis";
-    updateGingivalHealth({
-      periodontium,
-      ...(hidesTreatedPeriodontitisContext
-        ? { context: "", overrideReason: "" }
-        : {}),
-    });
+    if (hidesTreatedPeriodontitisContext) {
+      update({
+        gingivalHealth: {
+          ...value.gingivalHealth,
+          periodontium,
+          context: "",
+          overrideReason: "",
+        },
+        status: "",
+        statusComment: "",
+      });
+      return;
+    }
+    updateGingivalHealth({ periodontium });
   }
 
   function updateMaximumPpd(rawValue: string) {
     const nextValue = Number(rawValue);
     if (rawValue && !Number.isFinite(nextValue)) return;
-    updateGingivalHealth(
-      {
-        ...(rawValue
-          ? {
-              maximumPpd: {
-                operator: "eq",
-                value: nextValue,
-                unit: "mm",
-              } as const,
-            }
-          : { maximumPpd: undefined }),
-      },
-      { invalidatesStage: true },
-    );
+    updateGingivalHealth({
+      ...(rawValue
+        ? {
+            maximumPpd: {
+              operator: "eq",
+              value: nextValue,
+              unit: "mm",
+            } as const,
+          }
+        : { maximumPpd: undefined }),
+    });
   }
 
-  function updateGingivalContextConfirmation(confirmed: boolean) {
-    const nextConfirmed = Boolean(value.gingivalHealth.context) && confirmed;
-    const requiredStatus = nextConfirmed
-      ? requiredPeriodontalStatusForContext(value.gingivalHealth.context)
+  function updateGingivalContext(context: HealthGingivitisContext) {
+    const requiredStatus = context
+      ? requiredPeriodontalStatusForContext(context)
       : "";
     update({
       gingivalHealth: {
         ...value.gingivalHealth,
-        confirmed: nextConfirmed,
+        context,
+        overrideReason: "",
       },
       ...(requiredStatus && value.status && value.status !== requiredStatus
-        ? { status: "" }
+        ? { status: "", statusComment: "" }
         : {}),
     });
   }
@@ -1131,12 +1125,7 @@ function PeriodontalClassificationControl({
       (evidence) => evidence.criterionId !== criterionId,
     );
     if (!rawValue.trim()) {
-      update({
-        [key]: withoutCriterion,
-        ...(key === "stageBasis"
-          ? { stageConfirmed: false }
-          : { gradeConfirmed: false }),
-      });
+      update({ [key]: withoutCriterion });
       return;
     }
     const nextValue = Number(rawValue);
@@ -1149,9 +1138,6 @@ function PeriodontalClassificationControl({
           measurement: { operator: "eq", value: nextValue, unit },
         },
       ],
-      ...(key === "stageBasis"
-        ? { stageConfirmed: false }
-        : { gradeConfirmed: false }),
     });
   }
 
@@ -1174,9 +1160,6 @@ function PeriodontalClassificationControl({
             { criterionId },
           ]
         : current.filter((evidence) => evidence.criterionId !== criterionId),
-      ...(key === "stageBasis"
-        ? { stageConfirmed: false }
-        : { gradeConfirmed: false }),
     });
   }
 
@@ -1193,7 +1176,6 @@ function PeriodontalClassificationControl({
       gradeBasis: criterionId
         ? [...withoutPhenotype, { criterionId }]
         : withoutPhenotype,
-      gradeConfirmed: false,
     });
   }
 
@@ -1208,7 +1190,6 @@ function PeriodontalClassificationControl({
       stageBasis: criterionId
         ? [...withoutGroup, { criterionId }]
         : withoutGroup,
-      stageConfirmed: false,
     });
   }
 
@@ -1232,7 +1213,7 @@ function PeriodontalClassificationControl({
         verticalEvidence ?? { criterionId: "stage.vertical-bone-loss" },
       );
     }
-    update({ stageBasis, stageConfirmed: false });
+    update({ stageBasis });
   }
 
   function updateVerticalBoneLoss(rawValue: string) {
@@ -1245,7 +1226,6 @@ function PeriodontalClassificationControl({
           ...withoutVerticalBoneLoss,
           { criterionId: "stage.vertical-bone-loss" },
         ],
-        stageConfirmed: false,
       });
       return;
     }
@@ -1259,7 +1239,6 @@ function PeriodontalClassificationControl({
           measurement: { operator: "eq", value: nextValue, unit: "mm" },
         },
       ],
-      stageConfirmed: false,
     });
   }
 
@@ -1278,7 +1257,6 @@ function PeriodontalClassificationControl({
           .filter((option) => selected.has(option.label))
           .map((option) => ({ criterionId: option.value })),
       ],
-      stageConfirmed: false,
     });
   }
 
@@ -1289,12 +1267,12 @@ function PeriodontalClassificationControl({
         : status === "other-exposure"
         ? { status, details: "" }
         : { status };
-    update({ smoking, gradeConfirmed: false });
+    update({ smoking });
   }
 
   function updateDiabetesStatus(status: DiabetesModifier["status"]) {
     const diabetes: DiabetesModifier = { status };
-    update({ diabetes, gradeConfirmed: false });
+    update({ diabetes });
   }
 
   return (
@@ -1752,7 +1730,6 @@ function PeriodontalClassificationControl({
                                     }
                                   : {}),
                               },
-                              gradeConfirmed: false,
                             });
                           }}
                         />
@@ -1817,7 +1794,6 @@ function PeriodontalClassificationControl({
                                     }
                                   : {}),
                               },
-                              gradeConfirmed: false,
                             });
                           }}
                         />
@@ -1831,296 +1807,289 @@ function PeriodontalClassificationControl({
         ) : null}
       </fieldset>
 
-      <div className="grid gap-3 md:grid-cols-2">
-        <FixedChoiceListbox
-          id="adult-hygiene-periodontal-diagnosis"
-          label="Periodontal diagnosis category"
-          value={value.diagnosis}
-          options={periodontalDiagnosisChoices}
-          onChange={(diagnosis) =>
-            update({
-              diagnosis,
+      <section
+        className="space-y-3"
+        aria-labelledby="periodontal-diagnosis-heading"
+      >
+        <h3 id="periodontal-diagnosis-heading" className="font-semibold">
+          Diagnosis and distribution
+        </h3>
+        <div className="grid gap-3 md:grid-cols-2">
+          <FixedChoiceListbox
+            id="adult-hygiene-periodontal-diagnosis"
+            label="Periodontal diagnosis category"
+            value={value.diagnosis}
+            options={periodontalDiagnosisChoices}
+            onChange={(diagnosis) =>
+              update({
+                diagnosis,
               gingivalHealth: {
                 ...value.gingivalHealth,
                 context: "",
-                confirmed: false,
                 overrideReason: "",
               },
-              ...(diagnosis !== "periodontitis"
-                ? {
+                ...(diagnosis !== "periodontitis"
+                  ? {
                     stage: "",
                     grade: "",
                     status: "",
-                    stageConfirmed: false,
-                    gradeConfirmed: false,
-                  }
-                : {}),
-            })
-          }
-        />
-        <FixedChoiceListbox
-          id="adult-hygiene-periodontal-extent"
-          label="Extent/distribution"
-          value={value.extent}
-          options={periodontalExtentChoices}
-          onChange={(extent) => update({ extent })}
-        />
-      </div>
+                    statusComment: "",
+                    }
+                  : {}),
+              })
+            }
+          />
+          <FixedChoiceListbox
+            id="adult-hygiene-periodontal-extent"
+            label="Extent/distribution"
+            value={value.extent}
+            options={periodontalExtentChoices}
+            onChange={(extent) => update({ extent })}
+          />
+        </div>
+      </section>
 
-      {showGingivalContextWorkflow ? (
-        <>
-          <div className="border-l-4 border-sky-600 pl-4">
-            <h3 className="font-semibold">{gingivalCandidateHeading}</h3>
-            <p className="mt-1 text-sm">
-              {gingivalHealthCandidate.context
-                ? choiceLabel(
-                    healthGingivitisContextChoices,
-                    gingivalHealthCandidate.context,
-                  )
-                : "Not available"}
-            </p>
-            {gingivalHealthCandidate.missingFields.length ? (
-              <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                <p>More information is needed to calculate a candidate:</p>
-                <ul className="mt-1 list-disc space-y-1 pl-5">
-                  {gingivalHealthCandidate.missingFields.map((field) => (
-                    <li key={field.id}>
-                      <button
-                        type="button"
-                        className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
-                        onClick={() => navigateToMissingField(field.id)}
-                      >
-                        {field.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-            {gingivalHealthCandidate.warnings.length ? (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-                {gingivalHealthCandidate.warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-            ) : null}
-            {gingivalHealthCandidate.context ? (
-              <button
-                type="button"
-                className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
-                onClick={() =>
-                  updateGingivalHealth({
-                    context: gingivalHealthCandidate.context,
-                    overrideReason: "",
-                  })
-                }
-              >
-                Use candidate
-              </button>
-            ) : null}
-          </div>
+      {showGingivalContextWorkflow || value.diagnosis === "periodontitis" ? (
+        <fieldset className="space-y-6 border-t border-slate-200 pt-4 dark:border-slate-700">
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-3">
-              <FixedChoiceListbox
-                id="adult-hygiene-health-gingivitis-context"
-                label={gingivalContextLabel}
-                value={value.gingivalHealth.context}
-                options={healthGingivitisOptions}
-                onChange={(context) =>
-                  updateGingivalHealth({ context, overrideReason: "" })
-                }
-              />
-              <CheckboxField
-                id="adult-hygiene-health-gingivitis-confirmed"
-                label={gingivalContextConfirmationLabel}
-                checked={value.gingivalHealth.confirmed}
-                disabled={
-                  !value.gingivalHealth.context ||
-                  (value.gingivalHealth.context !==
-                    gingivalHealthCandidate.context &&
-                    !value.gingivalHealth.overrideReason.trim())
-                }
-                onChange={updateGingivalContextConfirmation}
-              />
-            </div>
-            {value.gingivalHealth.context &&
-            value.gingivalHealth.context !== gingivalHealthCandidate.context ? (
-              <TextField
-                id="adult-hygiene-health-gingivitis-override"
-                label={gingivalContextOverrideLabel}
-                value={value.gingivalHealth.overrideReason}
-                onChange={(overrideReason) =>
-                  updateGingivalHealth({ overrideReason })
-                }
-              />
-            ) : null}
-          </div>
-        </>
-      ) : null}
 
-      {value.diagnosis === "periodontitis" ? (
-        <>
-          <div className="border-l-4 border-sky-600 pl-4">
-            <h3 className="font-semibold">
-              Candidate Periodontitis classification
+          <section
+            className="space-y-4"
+            aria-labelledby="periodontal-current-condition-heading"
+          >
+            <h3
+              id="periodontal-current-condition-heading"
+              className="font-semibold"
+            >
+              Current clinical condition
             </h3>
-            <p className="mt-1 text-sm">
-              Stage {candidate.stage || "not available"}; Grade{" "}
-              {candidate.grade || "not available"}
-              {candidate.gradeSource === "assumed"
-                ? " (working assumption)"
-                : ""}
-              .
-            </p>
-            {stageReasons.length ? (
-              <p className="mt-2 text-sm">
-                Stage evidence: {stageReasons.join("; ")}.
-              </p>
-            ) : null}
-            {gradeReasons.length ? (
-              <p className="mt-1 text-sm">
-                Grade evidence: {gradeReasons.join("; ")}.
-              </p>
-            ) : null}
-            {candidate.warnings.length ? (
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-                {candidate.warnings.map((warning) => (
-                  <li key={warning}>{warning}</li>
-                ))}
-              </ul>
-            ) : null}
-            {candidate.stage || candidate.grade ? (
-              <button
-                type="button"
-                className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
-                onClick={() =>
-                  update({
-                    ...(candidate.stage ? { stage: candidate.stage } : {}),
-                    ...(candidate.grade ? { grade: candidate.grade } : {}),
-                    stageConfirmed: false,
-                    gradeConfirmed: false,
-                  })
-                }
-              >
-                Use candidates
-              </button>
-            ) : null}
-          </div>
 
-          <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
-            <legend className="font-semibold">Clinician confirmation</legend>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-3">
-                <FixedChoiceListbox
-                  id="adult-hygiene-periodontitis-stage"
-                  label="Periodontitis stage"
-                  value={value.stage}
-                  options={periodontalStageChoices}
-                  onChange={(stage) =>
-                    update({
-                      stage,
-                      stageConfirmed: false,
-                      stageOverrideReason: "",
-                    })
-                  }
-                />
-                <CheckboxField
-                  id="adult-hygiene-periodontitis-stage-confirmed"
-                  label="Confirm selected stage"
-                  checked={value.stageConfirmed}
-                  disabled={
-                    !value.stage ||
-                    Boolean(
-                      candidate.stage &&
-                        value.stage !== candidate.stage &&
-                        !value.stageOverrideReason.trim(),
-                    )
-                  }
-                  onChange={(stageConfirmed) =>
-                    update({
-                      stageConfirmed: Boolean(value.stage) && stageConfirmed,
-                    })
-                  }
-                />
-                {value.stage &&
-                candidate.stage &&
-                value.stage !== candidate.stage ? (
-                  <TextField
-                    id="adult-hygiene-periodontitis-stage-override"
-                    label="Stage override reason"
-                    value={value.stageOverrideReason}
-                    onChange={(stageOverrideReason) =>
+            {showGingivalContextWorkflow ? (
+              <>
+                <div className="border-l-4 border-sky-600 pl-4">
+                  <h4 className="font-semibold">
+                    Recommended current condition
+                  </h4>
+                  <p className="mt-1 text-sm">
+                    {gingivalHealthCandidate.context
+                      ? choiceLabel(
+                          healthGingivitisContextChoices,
+                          gingivalHealthCandidate.context,
+                        )
+                      : "Not available"}
+                  </p>
+                  {gingivalHealthCandidate.missingFields.length ? (
+                    <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                      <p>
+                        More information is needed to calculate a suggestion:
+                      </p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5">
+                        {gingivalHealthCandidate.missingFields.map(
+                          (field) => (
+                            <li key={field.id}>
+                              <button
+                                type="button"
+                                className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                                onClick={() =>
+                                  navigateToMissingField(field.id)
+                                }
+                              >
+                                {field.label}
+                              </button>
+                            </li>
+                          ),
+                        )}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {gingivalHealthCandidate.warnings.length ? (
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                      {gingivalHealthCandidate.warnings.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {gingivalHealthCandidate.context ? (
+                    <button
+                      type="button"
+                      className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
+                      onClick={() =>
+                        updateGingivalContext(gingivalHealthCandidate.context)
+                      }
+                    >
+                      Apply suggestion
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FixedChoiceListbox
+                    id="adult-hygiene-health-gingivitis-context"
+                    label={gingivalContextLabel}
+                    value={value.gingivalHealth.context}
+                    options={healthGingivitisOptions}
+                    onChange={updateGingivalContext}
+                  />
+                  {value.gingivalHealth.context &&
+                  value.gingivalHealth.context !==
+                    gingivalHealthCandidate.context ? (
+                    <TextField
+                      id="adult-hygiene-health-gingivitis-override"
+                      label={gingivalContextOverrideLabel}
+                      value={value.gingivalHealth.overrideReason}
+                      onChange={(overrideReason) =>
+                        updateGingivalHealth({ overrideReason })
+                      }
+                    />
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+          </section>
+
+          {value.diagnosis === "periodontitis" ? (
+            <section
+              className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700"
+              aria-labelledby="periodontal-stage-grade-heading"
+            >
+              <h3
+                id="periodontal-stage-grade-heading"
+                className="font-semibold"
+              >
+                Periodontitis classification
+              </h3>
+
+              <div className="border-l-4 border-sky-600 pl-4">
+                <h4 className="font-semibold">Recommended stage and grade</h4>
+                <p className="mt-1 text-sm">
+                  Stage {candidate.stage || "not available"}; Grade{" "}
+                  {candidate.grade || "not available"}
+                  {candidate.gradeSource === "assumed"
+                    ? " (working assumption)"
+                    : ""}
+                  .
+                </p>
+                {stageReasons.length || gradeReasons.length ? (
+                  <details className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                    <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
+                      Why this was suggested
+                    </summary>
+                    <div className="mt-2 space-y-1 pl-4">
+                      {stageReasons.length ? (
+                        <p>Stage evidence: {stageReasons.join("; ")}.</p>
+                      ) : null}
+                      {gradeReasons.length ? (
+                        <p>Grade evidence: {gradeReasons.join("; ")}.</p>
+                      ) : null}
+                    </div>
+                  </details>
+                ) : null}
+                {candidate.warnings.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                    {candidate.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {candidate.stage || candidate.grade ? (
+                  <button
+                    type="button"
+                    className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
+                    onClick={() =>
                       update({
-                        stageOverrideReason,
-                        ...(!stageOverrideReason.trim()
-                          ? { stageConfirmed: false }
+                        ...(candidate.stage ? { stage: candidate.stage } : {}),
+                        ...(candidate.grade ? { grade: candidate.grade } : {}),
+                        ...(candidate.stage
+                          ? { stageOverrideReason: "" }
+                          : {}),
+                        ...(candidate.grade
+                          ? { gradeOverrideReason: "" }
                           : {}),
                       })
                     }
-                  />
+                  >
+                    Apply suggestions
+                  </button>
                 ) : null}
               </div>
-              <div className="space-y-3">
-                <FixedChoiceListbox
-                  id="adult-hygiene-periodontitis-grade"
-                  label="Periodontitis grade"
-                  value={value.grade}
-                  options={periodontalGradeChoices}
-                  onChange={(grade) =>
-                    update({
-                      grade,
-                      gradeConfirmed: false,
-                      gradeOverrideReason: "",
-                    })
-                  }
-                />
-                <CheckboxField
-                  id="adult-hygiene-periodontitis-grade-confirmed"
-                  label="Confirm selected grade"
-                  checked={value.gradeConfirmed}
-                  disabled={
-                    !value.grade ||
-                    Boolean(
-                      candidate.grade &&
-                        value.grade !== candidate.grade &&
-                        !value.gradeOverrideReason.trim(),
-                    )
-                  }
-                  onChange={(gradeConfirmed) =>
-                    update({
-                      gradeConfirmed: Boolean(value.grade) && gradeConfirmed,
-                    })
-                  }
-                />
-                {value.grade &&
-                candidate.grade &&
-                value.grade !== candidate.grade ? (
-                  <TextField
-                    id="adult-hygiene-periodontitis-grade-override"
-                    label="Grade override reason"
-                    value={value.gradeOverrideReason}
-                    onChange={(gradeOverrideReason) =>
+
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FixedChoiceListbox
+                    id="adult-hygiene-periodontitis-stage"
+                    label="Periodontitis stage"
+                    value={value.stage}
+                    options={periodontalStageChoices}
+                    onChange={(stage) =>
                       update({
-                        gradeOverrideReason,
-                        ...(!gradeOverrideReason.trim()
-                          ? { gradeConfirmed: false }
-                          : {}),
+                        stage,
+                        stageOverrideReason: "",
                       })
                     }
                   />
-                ) : null}
+                  {value.stage &&
+                  candidate.stage &&
+                  value.stage !== candidate.stage ? (
+                    <TextField
+                      id="adult-hygiene-periodontitis-stage-override"
+                      label="Stage override reason"
+                      value={value.stageOverrideReason}
+                      onChange={(stageOverrideReason) =>
+                        update({ stageOverrideReason })
+                      }
+                    />
+                  ) : null}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FixedChoiceListbox
+                    id="adult-hygiene-periodontitis-grade"
+                    label="Periodontitis grade"
+                    value={value.grade}
+                    options={periodontalGradeChoices}
+                    onChange={(grade) =>
+                      update({
+                        grade,
+                        gradeOverrideReason: "",
+                      })
+                    }
+                  />
+                  {value.grade &&
+                  candidate.grade &&
+                  value.grade !== candidate.grade ? (
+                    <TextField
+                      id="adult-hygiene-periodontitis-grade-override"
+                      label="Grade override reason"
+                      value={value.gradeOverrideReason}
+                      onChange={(gradeOverrideReason) =>
+                        update({ gradeOverrideReason })
+                      }
+                    />
+                  ) : null}
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FixedChoiceListbox
+                    id="adult-hygiene-periodontal-status"
+                    label="Current periodontal status"
+                    value={displayedPeriodontalStatus}
+                    options={compatiblePeriodontalStatusChoices}
+                    onChange={(status) =>
+                      update({
+                        status,
+                        ...(!status ? { statusComment: "" } : {}),
+                      })
+                    }
+                  />
+                  <TextField
+                    id="adult-hygiene-periodontal-status-comment"
+                    label="Periodontal status comment"
+                    value={value.statusComment}
+                    onChange={(statusComment) => update({ statusComment })}
+                  />
+                </div>
               </div>
-            </div>
-            <FixedChoiceListbox
-              id="adult-hygiene-periodontal-status"
-              label="Current periodontal status"
-              value={displayedPeriodontalStatus}
-              options={compatiblePeriodontalStatusChoices}
-              onChange={(status) => update({ status })}
-            />
-          </fieldset>
-        </>
+            </section>
+          ) : null}
+        </fieldset>
       ) : null}
     </div>
   );
@@ -2827,9 +2796,12 @@ export function AdultHygiene2021Template({
       treatmentType: string;
       toothAreas: readonly string[];
     }) =>
-      `${entry.treatmentType.normalize("NFKC").trim().toLocaleLowerCase("en-CA")}|${orderTreatmentToothAreas(
-        [...entry.toothAreas],
-      )
+      `${entry.treatmentType
+        .normalize("NFKC")
+        .trim()
+        .toLocaleLowerCase("en-CA")}|${orderTreatmentToothAreas([
+        ...entry.toothAreas,
+      ])
         .map((area) => area.toLocaleLowerCase("en-CA"))
         .join("|")}`;
     const existingKeys = new Set(form.treatmentCompleted.map(entryKey));
