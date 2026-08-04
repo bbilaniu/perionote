@@ -6,12 +6,54 @@ import {
   hasRequiredRecareExamFields,
 } from "@/lib/templates/recareExam";
 import {
+  createRecareNormalStructuredIntraoralFindings,
+  recareIntraoralOptionConflicts,
+  recareNormalStructuredObservationIds,
+} from "@/lib/templates/recareIntraoralCatalog";
+import {
   buildRecareExamSummary,
   formatNoteHeaderLocalTimestamp,
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
+import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 
 describe("buildRecareExamSummary", () => {
+  it("allows separate entries for every repeatable tooth observation", () => {
+    const repeatableOptionIds = [
+      "ioe.teeth.caries",
+      "ioe.teeth.initial_noncavitated_caries",
+      "ioe.teeth.fracture",
+      "ioe.teeth.discoloration",
+      "ioe.teeth.mobility",
+      "ioe.teeth.enamel_hypoplasia",
+      "ioe.teeth.fluorosis",
+    ];
+
+    expect(
+      recareToothOptions
+        .filter((option) => option.allowMultipleInstances)
+        .map((option) => option.id),
+    ).toEqual(repeatableOptionIds);
+  });
+
+  it("defines bidirectional conflicts for normal and abnormal observations", () => {
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.buccal_mucosa.ulcer")
+        ?.has("ioe.buccal_mucosa.no_lesions")
+    ).toBe(true);
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.buccal_mucosa.no_lesions")
+        ?.has("ioe.buccal_mucosa.ulcer")
+    ).toBe(true);
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.saliva.reduced_flow")
+        ?.has("ioe.saliva.normal_flow")
+    ).toBe(true);
+  });
+
   it("starts empty without inferring findings or treatment", () => {
     const emptyForm = createEmptyRecareExamForm();
 
@@ -39,20 +81,25 @@ Miele Sterilization codes scanned: SYNTH-001
 
 Radiographs: 4 BW; 2 PA
 Intraoral photos: No.
-Patient's chief concern: Food catches between teeth; Synthetic concern for demonstration.
 
-Extraoral: WNL.
-TMJ: Synthetic bilateral clicking without discomfort.
-Palpation of the masseter test: WNL.
-Load TMJ joint test: WNL.
+a) Patient's chief concern: Food catches between teeth; Synthetic concern for demonstration.
 
-Intraoral: WNL.
+b) Extraoral: WNL.
+
+c) TMJ: Synthetic bilateral clicking without discomfort.
+Masseter palpation: WNL.
+TMJ loading test: WNL.
+
+d) Intraoral:
+  - Tongue: fissured (notes: Synthetic observation).
+  - Saliva: normal flow.
 Oral habits: Synthetic clenching history.
 Molar occlusion—right: Synthetic Class I.
 Molar occlusion—left: N/A.
 Skeletal occlusion: N/A.
 Overjet: 2 mm.
-Overbite: 30%.
+Overbite: 30%; 3 mm.
+Additional occlusal findings: Crossbite (location: Posterior, Left).
 
 CPAP: No.
 Occlusal splint: Yes; uses.
@@ -60,7 +107,7 @@ Orthodontic history: Yes.
 Retainers: Fixed.
 Partial/complete removable dentures: No.
 
-Patient would like to improve: Synthetic request to discuss whitening.
+Patient-requested smile or dental improvements: Synthetic request to discuss whitening.
 Additional comments: Synthetic demonstration data only.
 
 ODONTOGRAM UP TO DATE
@@ -90,7 +137,7 @@ Date Booked: 2026-08-15`);
 
     expect(buildRecareExamSummary(form)).toBe(
       `Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today. Synthetic consent detail.
-Medical history reviewed: YES- NO CHANGES.`,
+Medical history reviewed: YES- NO CHANGES.`
     );
   });
 
@@ -104,9 +151,116 @@ Medical history reviewed: YES- NO CHANGES.`,
       listChiefConcerns: true,
     };
 
-    expect(buildRecareExamSummary(form)).toBe(`Patient's chief concern:
+    expect(buildRecareExamSummary(form)).toBe(`a) Patient's chief concern:
   - Food catches between teeth
   - Sensitivity to hot and cold`);
+  });
+
+  it("renders only meaningful lettered examination sections in source order", () => {
+    const summary = buildRecareExamSummary({
+      ...createEmptyRecareExamForm(),
+      chiefConcern: ["Food catches between teeth"],
+      extraoralStatus: "wnl",
+      tmjStatus: "wnl",
+      masseterStatus: "wnl",
+      tmjLoadStatus: "wnl",
+      intraoralStatus: "wnl",
+      treatmentOptions: [
+        {
+          id: "option-1",
+          treatmentType: "Hygiene maintenance",
+          toothArea: "",
+        },
+      ],
+      treatmentPlan: [
+        {
+          id: "plan-1",
+          treatmentType: "Hygiene maintenance",
+          toothArea: "",
+        },
+      ],
+      nextVisit: "Hygiene maintenance",
+      dateBooked: "2026-08-15",
+    });
+
+    expect(summary).toBe(`a) Patient's chief concern: Food catches between teeth.
+
+b) Extraoral: WNL.
+
+c) TMJ: WNL.
+Masseter palpation: WNL.
+TMJ loading test: WNL.
+
+d) Intraoral: WNL.
+
+Treatment Options:
+  1. Hygiene maintenance
+
+Treatment Plan:
+  1. Hygiene maintenance
+
+Next Visit: Hygiene maintenance
+Date Booked: 2026-08-15`);
+    expect(summary.indexOf("a)")).toBeLessThan(summary.indexOf("b)"));
+    expect(summary.indexOf("b)")).toBeLessThan(summary.indexOf("c)"));
+    expect(summary.indexOf("c)")).toBeLessThan(summary.indexOf("d)"));
+    expect(summary).not.toMatch(
+      /[a-d]\) (Treatment Options|Treatment Plan|Next Visit|Date Booked)/,
+    );
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        masseterStatus: "wnl",
+      }),
+    ).toBe(`c) TMJ examination:
+Masseter palpation: WNL.`);
+  });
+
+  it("renders intraoral photographs according to their documentation status", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralPhotosDetails: "Anterior",
+      }),
+    ).toBe("");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralPhotosStatus: "no",
+        intraoralPhotosDetails: "ignored detail",
+      }),
+    ).toBe("Intraoral photos: No.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralPhotosStatus: "yes",
+      }),
+    ).toBe("Intraoral photos: Yes.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralPhotosStatus: "yes",
+        intraoralPhotosDetails: "Anterior; right buccal; left buccal",
+      }),
+    ).toBe("Intraoral photos: Anterior; right buccal; left buccal.");
+  });
+
+  it("renders patient-requested improvements and clinical comments conditionally", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        improvementRequest: "  ",
+      }),
+    ).toBe("");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        improvementRequest: "Discuss whitening",
+        additionalComments: "Patient-specific observation",
+      }),
+    ).toBe(`Patient-requested smile or dental improvements: Discuss whitening.
+Additional comments: Patient-specific observation.`);
   });
 
   it("preserves documented No answers and unknown editable values", () => {
@@ -186,7 +340,8 @@ Treatment Plan:
       listTreatmentPlan: false,
     };
 
-    expect(buildRecareExamSummary(form)).toBe(`Treatment Options: Hygiene maintenance; Restorative consultation — tooth 36
+    expect(buildRecareExamSummary(form))
+      .toBe(`Treatment Options: Hygiene maintenance; Restorative consultation — tooth 36
 
 Treatment Plan: Hygiene maintenance`);
   });
@@ -208,20 +363,336 @@ Caries risk: Factors include imported dry-mouth factor and history of active dec
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         cariesRiskNotes: "Synthetic rationale only",
-      }),
+      })
     ).toBe("Caries risk: Synthetic rationale only.");
+  });
+
+  it("formats approved repeatable tooth findings without inferring management", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      teethStatus: "findings" as const,
+      toothFindings: [
+        {
+          id: "c1",
+          optionId: "ioe.teeth.caries",
+          toothAreas: ["14"],
+          surface: "DO",
+        },
+        {
+          id: "c2",
+          optionId: "ioe.teeth.caries",
+          toothAreas: ["30"],
+          surface: "O",
+        },
+        {
+          id: "i1",
+          optionId: "ioe.teeth.initial_noncavitated_caries",
+          toothAreas: ["15"],
+          surface: "O",
+          activity: "inactive" as const,
+        },
+        {
+          id: "f1",
+          optionId: "ioe.teeth.fracture",
+          toothAreas: ["11"],
+        },
+        {
+          id: "f2",
+          optionId: "ioe.teeth.fracture",
+          toothAreas: ["21"],
+        },
+        {
+          id: "m1",
+          optionId: "ioe.teeth.mobility",
+          toothAreas: ["31", "41"],
+          millerGrade: "M2" as const,
+        },
+        { id: "retired", optionId: "ioe.teeth.retired", toothAreas: ["99"] },
+      ],
+      additionalToothFindings: "Synthetic observation",
+      odontogramUpToDate: true,
+    };
+    expect(buildRecareExamSummary(form)).toBe(`Teeth:
+  - Caries: 14 DO; 30 O.
+  - Initial/noncavitated caries lesion: 15 O (inactive).
+  - Fractures: 11; 21.
+  - Mobility: 31, 41 (M2).
+  Additional observations: Synthetic observation.
+ODONTOGRAM UP TO DATE`);
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        teethStatus: "wnl",
+      })
+    ).toBe("Teeth intact, with no caries or mobility noted.");
+  });
+
+  it("omits empty abnormal tooth findings but retains meaningful selections", () => {
+    const emptyFindings = [
+      {
+        id: "fracture-empty",
+        optionId: "ioe.teeth.fracture",
+        toothAreas: ["  "],
+        comment: "   ",
+      },
+      {
+        id: "hypoplasia-empty",
+        optionId: "ioe.teeth.enamel_hypoplasia",
+        toothAreas: [],
+      },
+      {
+        id: "fluorosis-empty",
+        optionId: "ioe.teeth.fluorosis",
+        toothAreas: [],
+      },
+    ];
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        teethStatus: "findings",
+        toothFindings: emptyFindings,
+      }),
+    ).toBe("");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        teethStatus: "findings",
+        toothFindings: [
+          ...emptyFindings,
+          {
+            id: "intact",
+            optionId: "ioe.teeth.intact",
+            toothAreas: [],
+          },
+          {
+            id: "caries",
+            optionId: "ioe.teeth.caries",
+            toothAreas: ["14"],
+            surface: "B",
+          },
+        ],
+      }),
+    ).toBe(`Teeth:
+  - Intact.
+  - Caries: 14 B.`);
+  });
+
+  it("formats tooth findings compactly without changing tooth notation", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        teethStatus: "findings",
+        toothFindings: [
+          {
+            id: "caries-1",
+            optionId: "ioe.teeth.caries",
+            toothAreas: ["14"],
+            surface: "B",
+          },
+          {
+            id: "caries-2",
+            optionId: "ioe.teeth.caries",
+            toothAreas: ["16"],
+            surface: "MO",
+          },
+          {
+            id: "initial-1",
+            optionId: "ioe.teeth.initial_noncavitated_caries",
+            toothAreas: ["14"],
+            surface: "D",
+            activity: "inactive",
+          },
+          {
+            id: "initial-2",
+            optionId: "ioe.teeth.initial_noncavitated_caries",
+            toothAreas: ["15"],
+            surface: "M",
+          },
+          {
+            id: "discoloration",
+            optionId: "ioe.teeth.discoloration",
+            toothAreas: ["#1.4"],
+            comment: "stains",
+          },
+        ],
+      }),
+    ).toBe(`Teeth:
+  - Caries: 14 B; 16 MO.
+  - Initial/noncavitated caries lesions: 14 D (inactive); 15 M.
+  - Discoloration: #1.4 — stains.`);
   });
 
   it("uses browser-local timestamp components", () => {
     expect(formatRecareExamLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      "2026-01-02 03:04",
+      "2026-01-02 03:04"
     );
     expect(formatNoteHeaderLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      "----- January 2, 2026 3:04:05 AM -----",
+      "----- January 2, 2026 3:04:05 AM -----"
     );
-    expect(formatNoteHeaderLocalTimestamp(new Date(2026, 6, 24, 10, 21, 44))).toBe(
-      "----- July 24, 2026 10:21:44 AM -----",
+    expect(
+      formatNoteHeaderLocalTimestamp(new Date(2026, 6, 24, 10, 21, 44))
+    ).toBe("----- July 24, 2026 10:21:44 AM -----");
+  });
+
+  it("preserves legacy intraoral output and formats Slice 2 findings safely", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        structuredIntraoralFindings: undefined,
+        intraoralStatus: "wnl",
+      })
+    ).toBe("d) Intraoral: WNL.");
+    const hiddenStructuredFinding = {
+      optionId: "ioe.saliva.normal_flow",
+      structureId: "ioe.saliva",
+    };
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "not-assessed",
+        structuredIntraoralFindings: [hiddenStructuredFinding],
+      })
+    ).toBe("");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "wnl",
+        structuredIntraoralFindings: [hiddenStructuredFinding],
+      })
+    ).toBe("d) Intraoral: WNL.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        intraoralFindings: "Legacy observation",
+      })
+    ).toBe("d) Intraoral: Legacy observation.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        intraoralFindings: "Free text",
+        structuredIntraoralFindings: [
+          {
+            optionId: "ioe.buccal_mucosa.ulcer",
+            structureId: "ioe.buccal_mucosa",
+            locations: ["Right posterior"],
+            measurement: "4",
+            measurementUnit: "mm",
+            comment: "Synthetic note",
+          },
+          {
+            optionId: "ioe.unknown.retired",
+            structureId: "ioe.tongue",
+            comment: "must be ignored",
+          },
+        ],
+      })
+    ).toBe(`d) Intraoral:
+  - Buccal mucosa: ulcer (location: Right posterior; measurement: 4 mm; notes: Synthetic note).
+  Observations: Free text.`);
+  });
+
+  it("applies the explicit reviewed normal observations with compact per-structure output", () => {
+    expect(recareNormalStructuredObservationIds).toEqual([
+      "ioe.buccal_mucosa.pink",
+      "ioe.buccal_mucosa.moist",
+      "ioe.buccal_mucosa.no_lesions",
+      "ioe.buccal_mucosa.no_swelling",
+      "ioe.tongue.pink",
+      "ioe.tongue.moist",
+      "ioe.tongue.symmetrical",
+      "ioe.tongue.no_lesions",
+      "ioe.floor_of_mouth.pink",
+      "ioe.floor_of_mouth.smooth",
+      "ioe.floor_of_mouth.no_swelling",
+      "ioe.floor_of_mouth.no_discoloration",
+      "ioe.palate.pink",
+      "ioe.palate.intact",
+      "ioe.palate.no_lesions",
+      "ioe.palate.no_abnormal_growths",
+      "ioe.oropharynx.uvula_midline",
+      "ioe.oropharynx.no_redness",
+      "ioe.oropharynx.no_swelling",
+      "ioe.oropharynx.no_exudate",
+      "ioe.saliva.clear",
+      "ioe.saliva.normal_flow",
+    ]);
+
+    const structuredIntraoralFindings =
+      createRecareNormalStructuredIntraoralFindings();
+    expect(structuredIntraoralFindings).toHaveLength(22);
+    expect(structuredIntraoralFindings.map(({ optionId }) => optionId)).toEqual(
+      recareNormalStructuredObservationIds
     );
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        structuredIntraoralFindings,
+      })
+    ).toBe(`d) Intraoral:
+  - Buccal mucosa: pink; moist; no lesions; no swelling.
+  - Tongue: pink; moist; symmetrical; no lesions.
+  - Floor of mouth: pink; smooth; no swelling; no discoloration.
+  - Palate (hard/soft): pink; intact; no lesions; no abnormal growths.
+  - Oropharynx: uvula midline; no redness; no swelling; no exudate.
+  - Saliva: clear; normal flow.`);
+  });
+
+  it("groups structured observations in catalogue order regardless of selection order", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        structuredIntraoralFindings: [
+          {
+            optionId: "ioe.saliva.normal_flow",
+            structureId: "ioe.saliva",
+          },
+          {
+            optionId: "ioe.buccal_mucosa.ulcer",
+            structureId: "ioe.buccal_mucosa",
+            locations: ["Right"],
+            comment: "monitor",
+          },
+          {
+            optionId: "ioe.buccal_mucosa.pink",
+            structureId: "ioe.buccal_mucosa",
+          },
+          {
+            optionId: "ioe.tongue.fissured",
+            structureId: "ioe.tongue",
+          },
+        ],
+      })
+    ).toBe(`d) Intraoral:
+  - Buccal mucosa: pink; ulcer (location: Right; notes: monitor).
+  - Tongue: fissured.
+  - Saliva: normal flow.`);
+  });
+
+  it("supports percent, millimetre, and dual overbite output", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        overbitePercent: "25",
+      })
+    ).toBe("Overbite: 25%.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        overbiteMm: "2",
+      })
+    ).toBe("Overbite: 2 mm.");
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        overbitePercent: "25",
+        overbiteMm: "2",
+      })
+    ).toBe("Overbite: 25%; 2 mm.");
   });
 });
 

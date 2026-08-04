@@ -115,6 +115,20 @@ describe("local catalogues", () => {
       ).map((item) => item.label),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
     expect(
+      listCatalogueItems(
+        emptyState,
+        "clinical-exam.additional-occlusal-findings",
+    ).map((item) => item.label),
+    ).toEqual([
+      "Crowding",
+      "Spacing",
+      "Rotations",
+      "Open bite",
+      "Crossbite",
+      "Increased overjet",
+      "Increased overbite",
+    ]);
+    expect(
       listCatalogueItems(emptyState, "imaging.radiographs").map(
         (item) => item.label,
       ),
@@ -162,7 +176,7 @@ describe("local catalogues", () => {
       "NO, COMPLETED WITHIN A YEAR",
       "NO, IN ORTHO",
       "NO, NOT APPLICABLE",
-      "NO, RAN OUT OF TIME",
+      "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT",
     ]);
     expect(
       listCatalogueItems(
@@ -192,27 +206,33 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
+      "BASS-BRUSHING TECHNIQUE",
       "SULCABRUSH",
       "SUPERFLOSS",
       "FLOSS THREADERS",
       "C-SHAPE FLOSSING",
-      "PROPER TB TECHNIQUE",
+      "PROPER TOOTHBRUSHING TECHNIQUE",
       "INTERPROXIMAL BRUSH",
       "SOFT PICKS",
-      "PROPER USE OF ETB",
+      "PROPER USE OF ELECTRIC TOOTHBRUSH",
     ]);
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.completed").map(
         (item) => item.label,
       ),
     ).toEqual([
-      "1U scale (cavitron and hand scaling)",
-      "2U scale (cavitron and hand scaling)",
-      "3U scale (cavitron and hand scaling)",
-      "4U scale (cavitron and hand scaling)",
+      "1U scale (cavitron and hand instrumentation)",
+      "2U scale (cavitron and hand instrumentation)",
+      "3U scale (cavitron and hand instrumentation)",
+      "4U scale (cavitron and hand instrumentation)",
       "FMP",
-      "1U polish",
-      "Fluoride varnish",
+      "1U polish - Selective polish of aesthetic zone as per patient's request",
+      "FluoriMax 2.5% NaF Varnish application",
+      "Advantage Arrest® Silver Diamine Fluoride 38% application",
+      "Dyclonine 1% rinse 5 ml",
+      "DDS Recall Exam",
+      "Sealant application, resin-based material",
+      "OHE",
       "Crystal X-PUR",
     ]);
     expect(
@@ -248,12 +268,12 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
-      "6 MOS SCALE",
-      "12 MRC",
-      "3 MOS SCALE",
-      "4 MOS SCALE",
-      "6 MRC",
-      "9 MRC",
+      "6 MONTH SCALE",
+      "12 MONTH RECALL",
+      "3 MONTH SCALE",
+      "4 MONTH SCALE",
+      "6 MONTH RECALL",
+      "9 MONTH RECALL",
       "FOLLOW-UP HYGIENE",
     ]);
 
@@ -295,7 +315,7 @@ describe("local catalogues", () => {
         {
           id: "legacy-treatment-completed",
           catalogueKey: "hygiene-treatment.completed",
-          label: "Fluoride varnish",
+          label: "FluoriMax 2.5% NaF Varnish application",
           hidden: false,
           favorite: false,
           sortOrder: 6,
@@ -315,7 +335,7 @@ describe("local catalogues", () => {
         sortOrder: 2,
       },
       {
-        seedId: "seed.hygiene-treatment.completed.fluoride-varnish",
+        seedId: "seed.hygiene-treatment.completed.fluorimax-varnish",
         hidden: false,
         favorite: false,
         sortOrder: 6,

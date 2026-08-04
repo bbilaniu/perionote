@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const adultHygieneUrl =
-  "/templates/clinic/adult-hygiene-2021/interactive";
+const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
 async function reloadDiscardingForm(page: Page) {
   const dialogPromise = page.waitForEvent("dialog");
@@ -51,7 +50,7 @@ test("date and time fields stay inside cards on narrow screens", async ({
     await page.goto(url);
 
     const temporalFields = page.locator(
-      'input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], input[type="week"]',
+      'input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"], input[type="week"]'
     );
     expect(await temporalFields.count()).toBeGreaterThan(0);
 
@@ -71,7 +70,7 @@ test("date and time fields stay inside cards on narrow screens", async ({
       expect(parentBox).not.toBeNull();
       expect(fieldBox!.x).toBeGreaterThanOrEqual(parentBox!.x);
       expect(fieldBox!.x + fieldBox!.width).toBeLessThanOrEqual(
-        parentBox!.x + parentBox!.width + 1,
+        parentBox!.x + parentBox!.width + 1
       );
     }
   }
@@ -97,8 +96,8 @@ test("Adult Hygiene date fields match the text-field box on narrow screens", asy
     await expect(dateDisplay).toHaveValue("2026-07-28");
     await expect(
       dateDisplay.locator(
-        "xpath=following-sibling::button[@data-date-picker-trigger]",
-      ),
+        "xpath=following-sibling::button[@data-date-picker-trigger]"
+      )
     ).toBeEnabled();
 
     const displayBox = await dateDisplay.boundingBox();
@@ -119,13 +118,13 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(
     page.getByRole("link", {
       name: "Original 2021 Adult Hygiene template",
-    }),
+    })
   ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2021/");
   await expect(
-    page.getByText("Pilot interactive conversion", { exact: true }),
+    page.getByText("Pilot interactive conversion", { exact: true })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
-    "2026-07-25 09:10",
+    "2026-07-25 09:10"
   );
   const consentHistorySection = page
     .getByRole("heading", {
@@ -136,7 +135,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(
     consentHistorySection
       .locator('input, button[data-list-control="fixed-listbox"]')
-      .evaluateAll((controls) => controls.map((control) => control.id)),
+      .evaluateAll((controls) => controls.map((control) => control.id))
   ).resolves.toEqual([
     "adult-hygiene-class5",
     "adult-hygiene-miele-codes",
@@ -151,7 +150,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Enter a Patient ID.")).toBeVisible();
   await expect(
-    page.getByText("Enter at least one of Dentist, RDH, or RDA."),
+    page.getByText("Enter at least one of Dentist, RDH, or RDA.")
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-patient-id")).toBeFocused();
 
@@ -159,7 +158,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.locator("#adult-hygiene-dentist")).toBeFocused();
   await expect(
-    page.evaluate(() => navigator.clipboard.readText()),
+    page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toBe("sentinel");
 
   await page.locator("#adult-hygiene-rdh").fill("Example RDH");
@@ -180,13 +179,13 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     plaqueExtent.getByRole("checkbox", {
       name: "Generalized",
       exact: true,
-    }),
+    })
   ).not.toBeChecked();
   await expect(
     plaqueExtent.getByRole("checkbox", {
       name: "Localized",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await plaqueOptions
     .getByRole("group", {
@@ -206,8 +205,11 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     .getByRole("button", { name: "Done", exact: true })
     .click();
   await page
-    .locator("#adult-hygiene-calculus-other")
-    .fill("Imported calculus wording");
+    .getByLabel("Plaque comment", { exact: true })
+    .fill("Most notable posteriorly");
+  await page
+    .getByLabel("Calculus comment", { exact: true })
+    .fill("Imported calculus comment");
   const ohiAids = page.locator("#adult-hygiene-ohi-aids");
   await ohiAids.fill("Synthetic interdental aid");
   await ohiAids.press("Enter");
@@ -223,7 +225,9 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   const diseaseAndRiskTopics = oheTopicsDialog.getByRole("group", {
     name: "Disease and risk Additional OHE topics reviewed choices",
   });
-  await diseaseAndRiskTopics.getByText("Caries theory", { exact: true }).click();
+  await diseaseAndRiskTopics
+    .getByText("Caries theory", { exact: true })
+    .click();
   await diseaseAndRiskTopics
     .getByText("Caries risk factors", { exact: true })
     .click();
@@ -242,33 +246,33 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await flossingFrequency.fill("Uses floss picks most evenings");
   await brushingFrequency.fill("Brushes after each meal");
   await expect(
-    page.getByLabel("Other flossing frequency", { exact: true }),
+    page.getByLabel("Other flossing frequency", { exact: true })
   ).toHaveCount(0);
   await expect(
-    page.getByLabel("Other brushing frequency", { exact: true }),
+    page.getByLabel("Other brushing frequency", { exact: true })
   ).toHaveCount(0);
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Informed verbal consent given by PATIENT and PARENT for treatment today\./,
+    /Informed verbal consent given by PATIENT and PARENT for treatment today\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Plaque: Localized moderate interproximal\.[\s\S]*Calculus: Imported calculus wording\./,
+    /Plaque: Localized moderate interproximal; Most notable posteriorly\.[\s\S]*Calculus comment: Imported calculus comment\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OH Aids Reviewed\/Recommended: Synthetic interdental aid/,
+    /OH Aids Reviewed\/Recommended: Synthetic interdental aid/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./,
+    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./,
+    /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./
   );
 
   const preview = await page.locator("#adult-hygiene-summary").inputValue();
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
-    page.evaluate(() => navigator.clipboard.readText()),
+    page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toBe(preview);
 });
 
@@ -280,36 +284,758 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
 
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
-    "TEST-AH-1001",
+    "TEST-AH-1001"
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /PSR\/Pocketing: 1 2 2 \/ 2 1 2/,
+    /PSR\/Pocketing: 1 2 2 \/ 2 1 2/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla/,
+    /Treatment completed today: Synthetic scaling — full mouth; Synthetic polishing — maxilla/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Recommended Recall Interval: 6-month recall\./,
+    /Recommended Recall Interval: 6-month recall\./
   );
 
   await reloadDiscardingForm(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /^----- July 25, 2026 9:10:00 AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
+    /^----- July 25, 2026 9:10:00 AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/
   );
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
-      "Clear all entered 2021 Adult Hygiene values and start a new note?",
+      "Clear all entered 2021 Adult Hygiene values and start a new note?"
     );
     await dialog.accept();
   });
   await page.getByRole("button", { name: "Reset form" }).click();
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
-    "2026-07-25 10:25",
+    "2026-07-25 10:25"
+  );
+});
+
+test("Adult Hygiene expands populated structured observations", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  const structuredGingivalObservations = page.getByRole("button", {
+    name: /Structured gingival observations/,
+  });
+
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "id",
+    "adult-hygiene-structured-periodontal-observations"
+  );
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-controls",
+    "adult-hygiene-structured-periodontal-observations-content"
+  );
+  await expect(structuredGingivalObservations).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  await expect(
+    page.locator("#adult-hygiene-structured-periodontal-observations-content")
+  ).toBeVisible();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "14 observations documented"
+  );
+  await expect(structuredGingivalObservations).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  await expect(structuredGingivalObservations).toContainText(
+    "2 observations documented"
+  );
+});
+
+test("Adult Hygiene keeps WNL gingival observations collapsed", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredGingival = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const structuredGingivalDisclosure = structuredGingival.getByRole("button", {
+    name: /Structured gingival observations/,
+  });
+  const gingivalStatus = page.getByRole("button", {
+    name: "Gingival Description",
+    exact: true,
+  });
+
+  await expect(structuredGingivalDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+
+  await expect(gingivalStatus).toContainText("WNL");
+  await expect(structuredGingivalDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await expect(structuredGingivalDisclosure).toContainText(
+    "10 observations documented"
+  );
+  await expect(
+    structuredGingival.getByRole("button", {
+      name: "Color observations",
+      exact: true,
+    })
+  ).toHaveCount(0);
+
+  await structuredGingivalDisclosure.click();
+  const colorObservations = structuredGingival.getByRole("button", {
+    name: "Color observations",
+    exact: true,
+  });
+  await expect(colorObservations).toContainText("Coral pink");
+  await colorObservations.click();
+  await expect(
+    structuredGingival
+      .getByRole("dialog", { name: "Color observations options" })
+      .getByLabel("Coral pink", { exact: true })
+  ).toBeChecked();
+});
+
+test("Adult Hygiene progressively discloses stage and grade evidence", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
+
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  const stageEvidence = page.getByRole("button", {
+    name: /Patient-specific stage evidence/,
+  });
+  const gradeEvidence = page.getByRole("button", {
+    name: /Patient-specific grade evidence/,
+  });
+  await expect(stageEvidence).toHaveAttribute("aria-expanded", "true");
+  await expect(stageEvidence).toContainText("Not assessed");
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toBeVisible();
+  await expect(gradeEvidence).toHaveAttribute("aria-expanded", "false");
+  await expect(gradeEvidence).toContainText("Not assessed");
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toHaveCount(0);
+
+  await gradeEvidence.click();
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toBeVisible();
+});
+
+test("Adult Hygiene prevents conflicting gingival menu selections", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredGingival = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const structuredGingivalDisclosure = structuredGingival.getByRole("button", {
+    name: /Structured gingival observations/,
+  });
+  await structuredGingivalDisclosure.click();
+
+  const colorObservations = structuredGingival.getByRole("button", {
+    name: "Color observations",
+    exact: true,
+  });
+  await colorObservations.click();
+  const colorOptions = structuredGingival.getByRole("dialog", {
+    name: "Color observations options",
+  });
+  await colorOptions.getByText("Coral pink", { exact: true }).click();
+  await colorOptions.getByText("Red / erythematous", { exact: true }).click();
+  await expect(
+    colorOptions.getByLabel("Coral pink", { exact: true })
+  ).not.toBeChecked();
+  await expect(
+    colorOptions.getByLabel("Red / erythematous", { exact: true })
+  ).toBeChecked();
+  await colorObservations.click();
+
+  const positionObservations = structuredGingival.getByRole("button", {
+    name: "Position / Size observations",
+    exact: true,
+  });
+  await positionObservations.click();
+  const positionOptions = structuredGingival.getByRole("dialog", {
+    name: "Position / Size observations options",
+  });
+  await positionOptions.getByText("No recession", { exact: true }).click();
+  await positionOptions.getByText("Root exposure", { exact: true }).click();
+  await expect(
+    positionOptions.getByLabel("No recession", { exact: true })
+  ).not.toBeChecked();
+  await positionOptions
+    .getByText("Gingival recession", { exact: true })
+    .click();
+  await expect(
+    positionOptions.getByLabel("Root exposure", { exact: true })
+  ).toBeChecked();
+  await positionOptions.getByText("No recession", { exact: true }).click();
+  await expect(
+    positionOptions.getByLabel("Gingival recession", { exact: true })
+  ).not.toBeChecked();
+  await expect(
+    positionOptions.getByLabel("Root exposure", { exact: true })
+  ).not.toBeChecked();
+  await expect(structuredGingivalDisclosure).toContainText(
+    "2 observations documented"
+  );
+});
+
+test("Adult Hygiene adds explicit gingival findings and WNL", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredGingival = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const gingivalStatus = page.getByRole("button", {
+    name: "Gingival Description",
+    exact: true,
+  });
+  const structuredGingivalDisclosure = structuredGingival.getByRole("button", {
+    name: /Structured gingival observations/,
+  });
+  await expect(gingivalStatus).toContainText("Not assessed");
+  await expect(structuredGingivalDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await expect(structuredGingivalDisclosure).toContainText("Not assessed");
+  await expect(
+    structuredGingival.getByRole("button", {
+      name: "Gingival Description",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    structuredGingival.getByRole("button", {
+      name: "Position / Size observations",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await structuredGingivalDisclosure.click();
+  await expect(structuredGingivalDisclosure).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  const positionObservations = structuredGingival.getByRole("button", {
+    name: "Position / Size observations",
+    exact: true,
+  });
+  await positionObservations.click();
+  await structuredGingival
+    .getByRole("dialog", { name: "Position / Size observations options" })
+    .getByText("Gingival recession", { exact: true })
+    .click();
+  await positionObservations.click();
+  await expect(gingivalStatus).toContainText("Findings");
+  await expect(structuredGingivalDisclosure).toContainText(
+    "1 observation documented"
+  );
+  const recessionExtent = page.getByRole("button", {
+    name: "Gingival recession extent",
+    exact: true,
+  });
+  await recessionExtent.click();
+  await page.getByRole("option", { name: "Localized", exact: true }).click();
+  const recessionLocation = page.getByRole("button", {
+    name: "Gingival recession location",
+    exact: true,
+  });
+  const recessionMeasurement = page.getByLabel(
+    "Gingival recession measurement (mm)",
+    { exact: true },
+  );
+  const gingivalFieldTops = await Promise.all([
+    recessionLocation.evaluate((element) =>
+      element
+        .closest("[data-fixed-multi-combobox]")!
+        .getBoundingClientRect().top,
+    ),
+    recessionMeasurement.evaluate(
+      (element) => element.parentElement!.getBoundingClientRect().top,
+    ),
+  ]);
+  expect(Math.abs(gingivalFieldTops[0] - gingivalFieldTops[1])).toBeLessThan(
+    2,
+  );
+  await recessionLocation.click();
+  const recessionLocationOptions = page.getByRole("dialog", {
+    name: "Gingival recession location options",
+    exact: true,
+  });
+  await expect(
+    recessionLocationOptions.getByRole("checkbox", {
+      name: "full mouth",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await recessionLocationOptions.getByText("Q1", { exact: true }).click();
+  await recessionLocationOptions
+    .getByText("facial/buccal", { exact: true })
+    .click();
+  await recessionLocationOptions
+    .getByRole("textbox", {
+      name: "Search or add custom Gingival recession location",
+      exact: true,
+    })
+    .fill("tooth 13");
+  await recessionLocationOptions
+    .getByRole("button", {
+      name: "Add “tooth 13” to this note",
+      exact: true,
+    })
+    .click();
+  await recessionLocationOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+  await recessionMeasurement.fill("2");
+
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Gingival Description:\n  - Position \/ Size: gingival recession \(extent: localized; location: Q1, facial\/buccal, tooth 13; measurement: 2 mm\)\./
+  );
+
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "Not assessed", exact: true }).click();
+  await expect(positionObservations).toContainText("Gingival recession");
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Gingival Description/
+  );
+
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "Findings", exact: true }).click();
+  await expect(positionObservations).toContainText("Gingival recession");
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear the documented Gingival Description findings and set this assessment to WNL?"
+    );
+    await dialog.accept();
+  });
+  await gingivalStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(gingivalStatus).toContainText("WNL");
+  await expect(positionObservations).not.toContainText("Gingival recession");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+  );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all documented Gingival Description observations and return this assessment to Not assessed?"
+    );
+    await dialog.accept();
+  });
+  await structuredGingival
+    .getByRole("button", { name: "Clear gingival description", exact: true })
+    .click();
+  await expect(gingivalStatus).toContainText("Not assessed");
+
+  await page
+    .getByRole("button", {
+      name: "Apply normal structured observations",
+      exact: true,
+    })
+    .click();
+  await expect(gingivalStatus).toContainText("WNL");
+  const colorObservations = structuredGingival.getByRole("button", {
+    name: "Color observations",
+    exact: true,
+  });
+  await expect(colorObservations).toContainText("Coral pink");
+  await expect(positionObservations).toContainText("No overgrowth");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+  );
+
+  await positionObservations.click();
+  await structuredGingival
+    .getByRole("dialog", { name: "Position / Size observations options" })
+    .getByText("No overgrowth", { exact: true })
+    .click();
+  await positionObservations.click();
+  await expect(gingivalStatus).toContainText("Findings");
+  const customFindings = page.getByRole("textbox", {
+    name: "Gingival Description findings",
+    exact: true,
+  });
+  await expect(customFindings).toBeVisible();
+  await customFindings.fill("Custom gingival observation");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Gingival Description:\n  - Color: coral pink\.[\s\S]*  - Position \/ Size: no recession\.\n  Observations: Custom gingival observation\./
+  );
+});
+
+test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis output", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  const structuredObservations = page.getByRole("group", {
+    name: "Structured gingival observations",
+    exact: true,
+  });
+  const diagnosis = page.locator("#adult-hygiene-periodontal-diagnosis");
+  const structuredBox = await structuredObservations.boundingBox();
+  const diagnosisBox = await diagnosis.boundingBox();
+  expect(structuredBox).not.toBeNull();
+  expect(diagnosisBox).not.toBeNull();
+  expect(structuredBox!.y).toBeLessThan(diagnosisBox!.y);
+
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await expect(structuredPeriodontalObservations).toContainText("Not assessed");
+  await expect(page.locator("#adult-hygiene-periodontium")).toHaveCount(0);
+  const periodontalObservationsBox =
+    await structuredPeriodontalObservations.boundingBox();
+  expect(periodontalObservationsBox).not.toBeNull();
+  expect(periodontalObservationsBox!.y).toBeLessThan(diagnosisBox!.y);
+
+  await structuredPeriodontalObservations.click();
+  await expect(
+    page.getByText("Periodontal assessment findings", { exact: true })
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-periodontium")).toBeVisible();
+  const periodontalSupportBox = await page
+    .locator('[data-candidate-field="periodontal-support"]')
+    .boundingBox();
+  const progressiveDestructionBox = await page
+    .locator('[data-candidate-field="progressive-destruction"]')
+    .boundingBox();
+  expect(periodontalSupportBox).not.toBeNull();
+  expect(progressiveDestructionBox).not.toBeNull();
+  expect(periodontalSupportBox!.y).toBeGreaterThan(
+    progressiveDestructionBox!.y
+  );
+  const stageEvidence = page.getByRole("button", {
+    name: /Patient-specific stage evidence/,
+  });
+  const gradeEvidence = page.getByRole("button", {
+    name: /Patient-specific grade evidence/,
+  });
+  await expect(stageEvidence).toHaveAttribute("aria-expanded", "false");
+  await expect(gradeEvidence).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toHaveCount(0);
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toHaveCount(0);
+  await stageEvidence.click();
+  await gradeEvidence.click();
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toBeVisible();
+  await expect(
+    page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Severity evidence", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Complexity evidence", exact: true })
+  ).toBeVisible();
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", { name: "Intact periodontal support", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-bop-percent").fill("6");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("3");
+  await expect(page.locator("#adult-hygiene-stage-maximum-ppd")).toHaveValue(
+    "3"
+  );
+  await page.locator("#adult-hygiene-stage-maximum-ppd").fill("2");
+  await expect(page.locator("#adult-hygiene-maximum-ppd")).toHaveValue("2");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("3");
+  await page.locator("#adult-hygiene-attachment-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+  await page.locator("#adult-hygiene-radiographic-bone-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "5 observations documented"
+  );
+  await expect(stageEvidence).toContainText("1 observation documented");
+  await expect(gradeEvidence).toContainText("Not assessed");
+
+  await expect(
+    page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
+  ).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
+  );
+
+  await diagnosis.click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+
+  await expect(
+    page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Health/Gingivitis classification",
+      exact: true,
+    })
+  ).toBeVisible();
+  await structuredPeriodontalObservations.click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "false"
+  );
+  await expect(page.locator("#adult-hygiene-periodontium")).toHaveCount(0);
+  await expect(
+    page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
+  );
+
+  await page
+    .getByRole("button", { name: "Use candidate", exact: true })
+    .click();
+  await page
+    .getByLabel("Confirm selected Health/Gingivitis classification")
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- MAXIMUM PPD: 3 MM\n- BOP: 6%\n- NO RADIOGRAPHIC BONE LOSS/
+  );
+
+  await structuredPeriodontalObservations.click();
+  await page.locator("#adult-hygiene-bop-percent").fill("12");
+  await expect(
+    page.getByLabel("Confirm selected Health/Gingivitis classification")
+  ).not.toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
+  );
+});
+
+test("Adult Hygiene missing candidate items navigate to and highlight findings", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+
+  await expect(
+    page.getByText("More information is needed to calculate a candidate:", {
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Periodontium", exact: true })
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Periodontal support", exact: true })
+    .click();
+
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
+    "true"
+  );
+  await expect(page.locator("#adult-hygiene-periodontium")).toBeFocused();
+  await expect(
+    page.locator('[data-candidate-field="periodontal-support"]')
+  ).toHaveAttribute("data-candidate-highlighted", "true");
+});
+
+test("Adult Hygiene shows treated-periodontitis context only with treated support", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Periodontitis classification",
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate treated-periodontitis context",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Health/Gingivitis classification",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Treated-periodontitis context", { exact: true })
+  ).toHaveCount(0);
+
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", {
+      name: "Reduced support (with a history of treated periodontitis)",
+      exact: true,
+    })
+    .click();
+  await page.locator("#adult-hygiene-bop-percent").fill("5");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("4");
+  await expect(page.locator("#adult-hygiene-stage-maximum-ppd")).toHaveValue(
+    "4"
+  );
+  await page.locator("#adult-hygiene-attachment-loss").click();
+  await page.getByRole("option", { name: "Present", exact: true }).click();
+  await page.locator("#adult-hygiene-radiographic-bone-loss").click();
+  await page.getByRole("option", { name: "Present", exact: true }).click();
+  await page.locator("#adult-hygiene-stage-ppd4-bop").click();
+  await page.getByRole("option", { name: "None", exact: true }).click();
+  await expect(page.locator("#adult-hygiene-ppd4-bop")).toHaveAttribute(
+    "data-value",
+    "no"
+  );
+  await page.locator("#adult-hygiene-progressive-destruction").click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate treated-periodontitis context",
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Health/Gingivitis classification",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Treated-periodontitis context", { exact: true })
+  ).toBeVisible();
+  await page.locator("#adult-hygiene-periodontal-status").click();
+  await page
+    .getByRole("option", {
+      name: "Unstable/recurrent periodontitis",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "Use candidate", exact: true })
+    .click();
+  await page
+    .getByLabel("Confirm selected treated-periodontitis context")
+    .check();
+  await expect(
+    page.locator("#adult-hygiene-periodontal-status")
+  ).toHaveAttribute("data-value", "");
+  await page.locator("#adult-hygiene-periodontal-status").click();
+  await expect(
+    page.getByRole("option", {
+      name: "Unstable/recurrent periodontitis",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await page
+    .getByRole("option", {
+      name: "Periodontal disease stability",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT\n- PROBING ATTACHMENT LOSS PRESENT\n- MAXIMUM PPD: 4 MM\n- BOP: 5%\n- RADIOGRAPHIC BONE LOSS PRESENT\n- SITES WITH PPD >=4 MM AND BOP: NONE\n- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION[\s\S]*Periodontal status: Periodontal disease stability\./
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-periodontal-status")).toHaveCount(
+    0
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Periodontal status:/
+  );
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
+
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", { name: "Intact periodontal support", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate treated-periodontitis context",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await expect(
+    page.getByLabel("Treated-periodontitis context", { exact: true })
+  ).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Health\/Gingivitis:/
   );
 });
 
@@ -317,6 +1043,41 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
+
+  await page.locator("#adult-hygiene-plaque-choice").click();
+  const plaqueOptions = page.getByRole("dialog", {
+    name: "Plaque options",
+    exact: true,
+  });
+  await plaqueOptions
+    .getByRole("group", { name: "Extent Plaque choices", exact: true })
+    .getByText("Localized", { exact: true })
+    .click();
+  await plaqueOptions
+    .getByRole("group", { name: "Intensity Plaque choices", exact: true })
+    .getByText("moderate", { exact: true })
+    .click();
+  const plaqueLocation = plaqueOptions.getByRole("group", {
+    name: "Location Plaque choices",
+    exact: true,
+  });
+  await plaqueLocation.getByText("marginal", { exact: true }).click();
+  await plaqueLocation.getByText("interproximal", { exact: true }).click();
+  await expect(
+    plaqueLocation.getByRole("checkbox", {
+      name: "marginal",
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    plaqueLocation.getByRole("checkbox", {
+      name: "interproximal",
+      exact: true,
+    })
+  ).toBeChecked();
+  await plaqueOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
 
   await page.locator("#adult-hygiene-stain-choice").click();
   const stainOptions = page.getByRole("dialog", {
@@ -329,15 +1090,13 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     .getByText("Localized", { exact: true })
     .click();
   await expect(
-    stainOptions.getByRole("checkbox", { name: "None", exact: true }),
+    stainOptions.getByRole("checkbox", { name: "None", exact: true })
   ).not.toBeChecked();
   await stainOptions
     .getByRole("group", { name: "Intensity Stain choices", exact: true })
     .getByText("slight", { exact: true })
     .click();
-  await stainOptions
-    .getByRole("button", { name: "Done", exact: true })
-    .click();
+  await stainOptions.getByRole("button", { name: "Done", exact: true }).click();
 
   await page.locator("#adult-hygiene-calculus-choice").click();
   const calculusOptions = page.getByRole("dialog", {
@@ -362,13 +1121,13 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     calculusLocation.getByRole("checkbox", {
       name: "marginal",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await expect(
     calculusLocation.getByRole("checkbox", {
       name: "interproximal",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await calculusOptions
     .getByRole("button", { name: "Done", exact: true })
@@ -392,7 +1151,133 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     .click();
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./,
+    /Plaque: Localized moderate marginal\/interproximal\.[\s\S]*Stain: Localized slight\.[\s\S]*Calculus: Generalized moderate marginal\/interproximal\.[\s\S]*Bleeding: Generalized severe\./
+  );
+});
+
+test("Adult Hygiene captures areas only for localized hygiene findings", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  await page.locator("#adult-hygiene-plaque-choice").click();
+  const plaqueOptions = page.getByRole("dialog", {
+    name: "Plaque options",
+    exact: true,
+  });
+  await plaqueOptions
+    .getByRole("group", { name: "Extent Plaque choices", exact: true })
+    .getByText("Localized", { exact: true })
+    .click();
+  await plaqueOptions
+    .getByRole("group", { name: "Intensity Plaque choices", exact: true })
+    .getByText("moderate", { exact: true })
+    .click();
+  await plaqueOptions.getByRole("button", { name: "Done", exact: true }).click();
+
+  const plaqueAreas = page.getByRole("button", {
+    name: "Plaque areas",
+    exact: true,
+  });
+  await expect(plaqueAreas).toContainText("Select Plaque areas");
+  await plaqueAreas.click();
+  const areaOptions = page.getByRole("dialog", {
+    name: "Plaque areas options",
+    exact: true,
+  });
+  await areaOptions.getByText("Q1", { exact: true }).click();
+  await areaOptions
+    .getByRole("textbox", { name: "Search or add custom Plaque areas" })
+    .fill("teeth 14–16");
+  await areaOptions
+    .getByRole("button", {
+      name: "Add “teeth 14–16” to this note",
+      exact: true,
+    })
+    .click();
+  await areaOptions.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Plaque: Localized moderate — areas: Q1, teeth 14–16\./,
+  );
+
+  await page.locator("#adult-hygiene-plaque-choice").click();
+  await plaqueOptions
+    .getByRole("group", { name: "Extent Plaque choices", exact: true })
+    .getByText("Generalized", { exact: true })
+    .click();
+  await plaqueOptions.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(plaqueAreas).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Plaque: Generalized moderate\./,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /areas:/,
+  );
+});
+
+test("Adult Hygiene applies the reviewed gingivitis observation preset", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .getByRole("button", { name: /Structured gingival observations/ })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Apply gingivitis observations",
+      exact: true,
+    })
+    .click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Color: marginal redness \(extent: generalized\)\.[\s\S]*Contour \/ Shape: rolled margins \(extent: generalized\)\.[\s\S]*Consistency: spongy \(extent: generalized\)\.[\s\S]*Surface \/ Texture: smooth attached gingiva \(extent: generalized\)\./,
+  );
+});
+
+test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine timing", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const ohiAids = page.locator("#adult-hygiene-ohi-aids");
+  await ohiAids.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "BASS-BRUSHING TECHNIQUE Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  const oralHygieneSection = page
+    .getByRole("heading", { name: "Oral Hygiene and Education", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  await oralHygieneSection
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient's diagnoses and risk factors were explained to them\.[\s\S]*Reviewed benefits of Prevident 5000 or Opti-Rinse 0\.05%/,
+  );
+
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+  const completedRows = page
+    .getByRole("list", { name: "Treatment completed today entries" })
+    .locator(":scope > li");
+  await expect(completedRows).toHaveCount(6);
+  const dyclonineRow = completedRows.first();
+  const applicationTime = dyclonineRow.getByRole("textbox", {
+    name: "Time of application/use",
+    exact: true,
+  });
+  await expect(applicationTime).toBeVisible();
+  await applicationTime.fill("60 seconds");
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+  await expect(completedRows).toHaveCount(6);
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; 3U scale \(Cavitron and hand instrumentation\) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2\.5% NaF Varnish application — full mouth; OHE/,
   );
 });
 
@@ -415,19 +1300,12 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       page.getByRole("option", {
         name: `${label} Starter`,
         exact: true,
-      }),
+      })
     ).toBeVisible();
   }
 
   for (const [controlId, starter] of [
-    [
-      "#adult-hygiene-fmp-done",
-      "YES, ALL FINDINGS DISCUSSED WITH PATIENT",
-    ],
-    [
-      "#adult-hygiene-health-gingivitis",
-      "HEALTH INTACT PERIODONTAL SUPPORT",
-    ],
+    ["#adult-hygiene-fmp-done", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
     ["#adult-hygiene-compliance", "Good"],
     ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
     ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
@@ -440,7 +1318,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
       page.getByRole("option", {
         name: `${starter} Starter`,
         exact: true,
-      }),
+      })
     ).toBeVisible();
   }
 
@@ -463,9 +1341,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     })
     .click();
 
-  await completedRow
-    .getByText("Select Tooth/area", { exact: true })
-    .click();
+  await completedRow.getByText("Select Tooth/area", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {
     name: "Standard Tooth/area choices",
     exact: true,
@@ -476,7 +1352,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     exact: true,
   });
   await expect(quadrantChoices.locator(":scope > div")).toHaveClass(
-    /grid-cols-2/,
+    /grid-cols-2/
   );
   await expect(quadrantChoices.locator("label")).toHaveText([
     "Q1",
@@ -489,7 +1365,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     exact: true,
   });
   await expect(sextantChoices.locator(":scope > div")).toHaveClass(
-    /grid-cols-3/,
+    /grid-cols-3/
   );
   await expect(sextantChoices.locator("label")).toHaveText([
     "S1",
@@ -513,7 +1389,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await toothAreaOptions.getByText("Q2", { exact: true }).click();
   await expect(q2ToothArea).toBeChecked();
   await expect(
-    toothAreaOptions.locator("[data-selected-indicator]"),
+    toothAreaOptions.locator("[data-selected-indicator]")
   ).toHaveCount(2);
   await completedRow
     .getByRole("textbox", {
@@ -533,36 +1409,34 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
     completedRow.getByRole("checkbox", {
       name: "teeth 14–16 Custom",
       exact: true,
-    }),
+    })
   ).toBeChecked();
   await expect(
     completedRow
       .getByRole("dialog", { name: "Tooth/area options", exact: true })
-      .locator("[data-selected-indicator]"),
+      .locator("[data-selected-indicator]")
   ).toHaveCount(3);
   await expect(
     completedRow.getByRole("button", {
-      name: "Q2, Q3, teeth 14–16",
+      name: "Tooth/area",
       exact: true,
-    }),
-  ).toBeVisible();
+    })
+  ).toContainText("Q2, Q3, teeth 14–16");
   await expect(
     completedRow.getByRole("list", {
       name: "Tooth/area selected values",
       exact: true,
-    }),
+    })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/,
+    /Treatment completed today: 1U scale \(cavitron and hand scaling\) — Q2, Q3, teeth 14–16/
   );
-  await completedRow
-    .getByRole("button", { name: "Done", exact: true })
-    .click();
+  await completedRow.getByRole("button", { name: "Done", exact: true }).click();
   await expect(toothAreaOptions).toBeHidden();
   await expect(
     completedRow.getByRole("button", {
       name: "Move treatment completed item 1 earlier",
-    }),
+    })
   ).toHaveClass(/py-2/);
   const removeCompleted = completedRow.getByRole("button", {
     name: "Remove treatment completed item 1",
@@ -573,14 +1447,14 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     completedRow.getByRole("tooltip").filter({
       hasText: "Remove this treatment line from the note.",
-    }),
+    })
   ).toBeVisible();
 
   const anesthetic = page.locator("#adult-hygiene-anesthetic");
   await anesthetic.focus();
   await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
   await expect(
-    page.getByText("No catalogue suggestions saved yet.", { exact: true }),
+    page.getByText("No catalogue suggestions saved yet.", { exact: true })
   ).toBeVisible();
 
   await medicalHistory.fill("Synthetic reusable history phrase");
@@ -598,7 +1472,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await ohiAids.fill("Synthetic reusable OHI aid");
   await ohiControl.getByRole("button", { name: "Remember and add" }).click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OH Aids Reviewed\/Recommended: Synthetic reusable OHI aid/,
+    /OH Aids Reviewed\/Recommended: Synthetic reusable OHI aid/
   );
   const ohiAidRow = page
     .getByRole("list", {
@@ -609,7 +1483,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     ohiAidRow.getByRole("button", {
       name: "Move Synthetic reusable OHI aid earlier",
-    }),
+    })
   ).toHaveClass(/py-2/);
   const removeOhiAid = ohiAidRow.getByRole("button", {
     name: "Remove Synthetic reusable OHI aid",
@@ -619,7 +1493,7 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     ohiAidRow.getByRole("tooltip").filter({
       hasText: "Remove this value from the note.",
-    }),
+    })
   ).toBeVisible();
 
   await reloadDiscardingForm(page);
@@ -628,30 +1502,30 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable history phrase Local/,
-    }),
+    })
   ).toBeVisible();
 
   await compliance.focus();
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable compliance Local/,
-    }),
+    })
   ).toBeVisible();
 
   await expect(
-    page.getByText("Synthetic reusable OHI aid", { exact: true }),
+    page.getByText("Synthetic reusable OHI aid", { exact: true })
   ).toHaveCount(0);
   await ohiAids.focus();
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable OHI aid Local/,
-    }),
+    })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Synthetic reusable/,
+    /Synthetic reusable/
   );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /teeth 14–16/,
+    /teeth 14–16/
   );
 });
 
@@ -665,10 +1539,11 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
   await expect(sextantInputs).toHaveCount(6);
   await expect(
     sextantInputs.evaluateAll((inputs) =>
-      inputs.map((input) =>
-        document.querySelector(`label[for="${input.id}"]`)?.textContent,
-      ),
-    ),
+      inputs.map(
+        (input) =>
+          document.querySelector(`label[for="${input.id}"]`)?.textContent
+      )
+    )
   ).resolves.toEqual([
     "Sextant 1",
     "Sextant 2",
@@ -684,33 +1559,305 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
       .fill(`${sextant}`);
   }
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /PSR\/Pocketing: 1 2 3 \/ 6 5 4/,
+    /PSR\/Pocketing: 1 2 3 \/ 6 5 4/
   );
 });
 
-test("Adult Hygiene keeps comments independent from their main values", async ({
+test("Adult Hygiene requires confirmation for structured periodontal candidates", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
 
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await expect(
+    page.getByRole("heading", {
+      name: "Candidate Periodontitis classification",
+      exact: true,
+    })
+  ).toHaveCount(0);
+  await page.locator("#adult-hygiene-periodontal-extent").click();
+  await page.getByRole("option", { name: "Generalized", exact: true }).click();
+  await structuredPeriodontalObservations.click();
   await page
-    .getByLabel("Periodontitis stage comments", { exact: true })
-    .fill("Synthetic stage context");
-  await page.locator("#adult-hygiene-periodontitis-stage-choice").click();
-  await page
-    .getByRole("option", { name: "Stage II (P2)", exact: true })
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
     .click();
-
   await page
-    .getByLabel("Periodontitis grade comments", { exact: true })
-    .fill("Synthetic grade context");
-  await page.locator("#adult-hygiene-periodontitis-grade-choice").click();
+    .getByRole("button", { name: /Patient-specific grade evidence/ })
+    .click();
+  await page.locator("#adult-hygiene-stage-interdental-cal").fill("5");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("6");
+  await page.locator("#adult-hygiene-grade-bone-loss-age-ratio").fill("0.72");
+  await expect(structuredPeriodontalObservations).toContainText(
+    "3 observations documented"
+  );
+  await structuredPeriodontalObservations.click();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Periodontal diagnosis:|Stage III|Grade B/
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
     .getByRole("option", {
-      name: "Grade B: moderate rate",
+      name: "Periodontitis / history of periodontitis",
       exact: true,
     })
     .click();
+  await expect(
+    page.locator("#adult-hygiene-periodontal-extent")
+  ).toHaveAttribute("data-value", "generalized");
+
+  await expect(
+    page.getByText("Stage III; Grade B.", { exact: false })
+  ).toBeVisible();
+  await expect(
+    page.getByText(/Stage evidence: interdental CAL 5 mm; maximum PPD 6 mm\./)
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Stage III|Grade B/
+  );
+
+  await page.getByRole("button", { name: "Use candidates" }).click();
+  await expect(
+    page.locator("#adult-hygiene-periodontitis-stage")
+  ).toHaveAttribute("data-value", "III");
+  await expect(
+    page.locator("#adult-hygiene-periodontitis-grade")
+  ).toHaveAttribute("data-value", "B");
+  await page.getByLabel("Confirm selected stage").check();
+  await page.getByLabel("Confirm selected grade").check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\.[\s\S]*Stage basis: interdental CAL 5 mm; maximum PPD 6 mm\.[\s\S]*Grade basis: bone-loss\/age ratio 0\.72\./
+  );
+
+  await page.locator("#adult-hygiene-periodontitis-stage").click();
+  await page
+    .getByRole("option", { name: "Stage IV (P4)", exact: true })
+    .click();
+  await expect(page.getByLabel("Confirm selected stage")).not.toBeChecked();
+  await expect(page.getByLabel("Stage override reason")).toBeVisible();
+  await expect(page.getByLabel("Confirm selected stage")).toBeDisabled();
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Stage IV|Stage basis:/
+  );
+  await page
+    .getByLabel("Stage override reason")
+    .fill("Clinician-confirmed Stage IV complexity");
+  await expect(page.getByLabel("Confirm selected stage")).toBeEnabled();
+  await page.getByLabel("Confirm selected stage").check();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Stage IV[\s\S]*Stage override: Clinician-confirmed Stage IV complexity\./
+  );
+  await page.getByLabel("Stage override reason").fill("");
+  await expect(page.getByLabel("Confirm selected stage")).not.toBeChecked();
+  await expect(page.getByLabel("Confirm selected stage")).toBeDisabled();
+});
+
+test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .getByRole("button", { name: /Structured periodontal observations/ })
+    .click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
+
+  const rblPercent = page.getByLabel("Radiographic bone loss (RBL) (%)", {
+    exact: true,
+  });
+  const rblExtent = page.getByRole("button", {
+    name: "Radiographic bone loss (RBL) extent",
+    exact: true,
+  });
+
+  await expect(rblPercent).toHaveAttribute("min", "0");
+  await expect(rblPercent).toHaveAttribute("max", "100");
+  await expect(rblExtent).toContainText("Not assessed");
+  await rblPercent.fill("20");
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
+  await expect(page.getByText(/Stage II; Grade B/)).toBeVisible();
+
+  await rblPercent.fill("");
+  await rblExtent.click();
+  await page
+    .getByRole("option", { name: "Middle third or beyond", exact: true })
+    .click();
+
+  await expect(rblExtent).toContainText("Middle third or beyond");
+  await expect(page.getByText(/Stage III; Grade B/)).toBeVisible();
+  await expect(
+    page.getByText(
+      /radiographic bone loss \(RBL\) extends to the middle third of the root or beyond/
+    )
+  ).toBeVisible();
+});
+
+test("Adult Hygiene consolidates mutually exclusive complexity findings", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await structuredPeriodontalObservations.click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
+
+  await expect(
+    page.locator("#adult-hygiene-stage-furcation-class-ii")
+  ).toHaveCount(0);
+  await expect(
+    page.locator("#adult-hygiene-stage-masticatory-dysfunction")
+  ).toHaveCount(0);
+
+  const boneLossPattern = page.getByRole("button", {
+    name: "Bone-loss pattern",
+    exact: true,
+  });
+  await expect(boneLossPattern).toContainText("Not assessed");
+  await boneLossPattern.click();
+  await page.getByRole("option", { name: "Vertical", exact: true }).click();
+  await page
+    .getByLabel("Vertical (angular) bone loss (mm)", { exact: true })
+    .fill("3");
+  await expect(structuredPeriodontalObservations).toContainText(
+    "1 observation documented"
+  );
+
+  const furcation = page.getByRole("button", {
+    name: "Highest furcation involvement",
+    exact: true,
+  });
+  await furcation.click();
+  await page.getByRole("option", { name: "Class II", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "2 observations documented"
+  );
+  await furcation.click();
+  await page.getByRole("option", { name: "Class III", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "2 observations documented"
+  );
+
+  const ridgeDefect = page.getByRole("button", {
+    name: "Worst ridge defect",
+    exact: true,
+  });
+  await ridgeDefect.click();
+  await page.getByRole("option", { name: "Moderate", exact: true }).click();
+  await ridgeDefect.click();
+  await page.getByRole("option", { name: "Severe", exact: true }).click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "3 observations documented"
+  );
+
+  const advancedComplexity = page.getByRole("button", {
+    name: "Advanced functional complexity",
+    exact: true,
+  });
+  await advancedComplexity.click();
+  const complexityOptions = page.getByRole("dialog", {
+    name: "Advanced functional complexity options",
+  });
+  await complexityOptions
+    .getByText("Masticatory dysfunction", { exact: true })
+    .click();
+  await complexityOptions.getByText("Bite collapse", { exact: true }).click();
+  await advancedComplexity.click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "5 observations documented"
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
+  await expect(page.getByText(/Stage IV; Grade B/)).toBeVisible();
+  await expect(
+    page.getByText(
+      /severe ridge defects; masticatory dysfunction; bite collapse/
+    )
+  ).toBeVisible();
+});
+
+test("Adult Hygiene keeps grade phenotype evidence mutually exclusive", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const structuredPeriodontalObservations = page.getByRole("button", {
+    name: /Structured periodontal observations/,
+  });
+  await structuredPeriodontalObservations.click();
+  await page
+    .getByRole("button", { name: /Patient-specific grade evidence/ })
+    .click();
+
+  const phenotype = page.getByRole("button", {
+    name: "Destruction relative to biofilm",
+    exact: true,
+  });
+  await expect(phenotype).toContainText("Not assessed");
+  await expect(
+    page.getByRole("checkbox", {
+      name: "Destruction low relative to biofilm",
+      exact: true,
+    })
+  ).toHaveCount(0);
+
+  await phenotype.click();
+  await page
+    .getByRole("option", {
+      name: "Destruction low relative to biofilm",
+      exact: true,
+    })
+    .click();
+  await expect(structuredPeriodontalObservations).toContainText(
+    "1 observation documented"
+  );
+
+  await page.locator("#adult-hygiene-periodontal-diagnosis").click();
+  await page
+    .getByRole("option", {
+      name: "Periodontitis / history of periodontitis",
+      exact: true,
+    })
+    .click();
+  await expect(page.getByText(/Stage not available; Grade A/)).toBeVisible();
+
+  await phenotype.click();
+  await page
+    .getByRole("option", {
+      name: "Destruction exceeds expectations given biofilm",
+      exact: true,
+    })
+    .click();
+  await expect(phenotype).toContainText(
+    "Destruction exceeds expectations given biofilm"
+  );
+  await expect(structuredPeriodontalObservations).toContainText(
+    "1 observation documented"
+  );
+  await expect(page.getByText(/Stage not available; Grade C/)).toBeVisible();
+});
+
+test("Adult Hygiene keeps compliance and interval comments independent", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
 
   await page
     .getByLabel("Oral hygiene compliance comment", { exact: true })
@@ -732,6 +1879,6 @@ test("Adult Hygiene keeps comments independent from their main values", async ({
     .fill("4-month scale");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontitis Stage: Stage II \(P2\)\.[\s\S]*Periodontitis stage comments: Synthetic stage context\.[\s\S]*Periodontitis Grade: Grade B: moderate rate\.[\s\S]*Periodontitis grade comments: Synthetic grade context\.[\s\S]*Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./,
+    /Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
   );
 });

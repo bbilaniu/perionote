@@ -216,9 +216,14 @@ Next.js generated files are isolated by workflow so concurrent checks do not
 overwrite a running development server:
 
 - `npm run dev` uses `.next-dev`
-- `npm run build` uses an isolated project copy under `.next-build`, then
-  publishes its static export to `out`
+- `npm run build` uses an isolated project copy in the operating system's
+  temporary directory, then publishes its static export to `out`
 - Playwright's managed development server uses `.next-playwright`
+
+Each development output directory has a single-writer lock. Starting a second
+server for the same output fails with the owning process ID instead of allowing
+concurrent writes that can corrupt generated chunks. Use the npm scripts rather
+than invoking `next dev` directly so the workflow isolation remains active.
 
 First-time required Chromium E2E setup:
 

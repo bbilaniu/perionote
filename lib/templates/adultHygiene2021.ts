@@ -3,6 +3,14 @@ import type {
   PremedicationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import {
+  createEmptyGingivalDescriptionAssessment,
+  type GingivalDescriptionAssessment,
+} from "@/lib/templates/gingivalDescriptionCatalog";
+import {
+  createEmptyPeriodontalClassification,
+  type PeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
 
 export const plaqueChoices = [
   "Localized mild interproximal",
@@ -47,21 +55,6 @@ export const bleedingChoices = [
   "Generalized severe",
 ] as const;
 
-export const periodontitisStageChoices = [
-  "Stage I (P1)",
-  "Stage II (P2)",
-  "Stage III (P3)",
-  "Stage IV (P4)",
-  "N/A",
-] as const;
-
-export const periodontitisGradeChoices = [
-  "Grade A: slow rate",
-  "Grade B: moderate rate",
-  "Grade C: rapid rate",
-  "N/A",
-] as const;
-
 export const flossingFrequencyChoices = [
   "Flossing 1x/day",
   "Flossing 2x/day",
@@ -95,6 +88,8 @@ export const diseaseAndRiskOheTopicChoices = [
 export const preventionAndMaintenanceOheTopicChoices = [
   "Review benefits of Prevident or Opti-Rinse",
   "Importance of maintaining the recommended hygiene interval",
+  "Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues",
+  "Review of importance of maintaining a 4-month recall",
 ] as const;
 
 export const oheTopicChoices = [
@@ -126,14 +121,14 @@ export function normalizeTreatmentToothArea(value: string) {
 export function canonicalTreatmentToothArea(value: string) {
   const normalized = normalizeTreatmentToothArea(value);
   return treatmentToothAreaChoices.find(
-    (choice) => normalizeTreatmentToothArea(choice) === normalized,
+    (choice) => normalizeTreatmentToothArea(choice) === normalized
   );
 }
 
 export function orderTreatmentToothAreas(values: string[]) {
   const normalizedValues = new Set(values.map(normalizeTreatmentToothArea));
   const fixedValues = treatmentToothAreaChoices.filter((choice) =>
-    normalizedValues.has(normalizeTreatmentToothArea(choice)),
+    normalizedValues.has(normalizeTreatmentToothArea(choice))
   );
   const seen = new Set(fixedValues.map(normalizeTreatmentToothArea));
   const customValues = values
@@ -157,7 +152,40 @@ export type AdultHygieneTreatmentCompletedEntry = {
   id: string;
   treatmentType: string;
   toothAreas: string[];
+  applicationTime?: string;
 };
+
+export const standardOheStatement =
+  "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
+
+export const dyclonineRinseTreatment = "Dyclonine 1% rinse 5 ml";
+
+export function isDyclonineRinseTreatment(value: string): boolean {
+  const normalized = value
+    .normalize("NFKC")
+    .trim()
+    .toLocaleLowerCase("en-CA");
+  return normalized.includes("dyclonine") && normalized.includes("rinse");
+}
+
+export const standardTreatmentCompletedPreset = [
+  { treatmentType: "Dyclonine 1% rinse 5 ml", toothAreas: ["full mouth"]},
+  { treatmentType: "FMP", toothAreas: ["full mouth"] },
+  {
+    treatmentType: "3U scale (Cavitron and hand instrumentation)",
+    toothAreas: ["full mouth"],
+  },
+  {
+    treatmentType:
+      "1U polish - Selective polish of aesthetic zone as per patient's request",
+    toothAreas: [],
+  },
+  {
+    treatmentType: "FluoriMax 2.5% NaF Varnish application",
+    toothAreas: ["full mouth"],
+  },
+  { treatmentType: "OHE", toothAreas: [] },
+] as const;
 
 export interface AdultHygiene2021Form {
   patientId: string;
@@ -178,26 +206,28 @@ export interface AdultHygiene2021Form {
   listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
   plaqueChoice: string;
-  plaqueOther: string;
+  plaqueAreas: string[];
+  plaqueComment: string;
   stainChoice: string;
-  stainOther: string;
+  stainAreas: string[];
+  stainComment: string;
   calculusChoice: string;
-  calculusOther: string;
+  calculusAreas: string[];
+  calculusComment: string;
   bleedingChoice: string;
-  bleedingOther: string;
+  bleedingAreas: string[];
+  bleedingComment: string;
   psrPocketing: [string, string, string, string, string, string];
   recession: string;
   fmpDone: string;
-  healthGingivitis: string;
-  periodontitisStageChoice: string;
-  periodontitisStageComments: string;
-  periodontitisGradeChoice: string;
-  periodontitisGradeComments: string;
+  gingivalDescription?: GingivalDescriptionAssessment;
+  periodontalClassification: PeriodontalClassification;
   oralHygieneCompliance: string;
   oralHygieneComplianceComment: string;
   homeCareInstructionReviewed: boolean;
   ohiAidsReviewed: string[];
   diseaseProcessReviewed: boolean;
+  standardOheStatementApplies: boolean;
   oheTopicsReviewed: string[];
   oheNotes: string;
   flossingFrequency: string;
@@ -242,26 +272,28 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     listChiefConcerns: false,
     hygieneAreaOfConcern: "",
     plaqueChoice: "",
-    plaqueOther: "",
+    plaqueAreas: [],
+    plaqueComment: "",
     stainChoice: "",
-    stainOther: "",
+    stainAreas: [],
+    stainComment: "",
     calculusChoice: "",
-    calculusOther: "",
+    calculusAreas: [],
+    calculusComment: "",
     bleedingChoice: "",
-    bleedingOther: "",
+    bleedingAreas: [],
+    bleedingComment: "",
     psrPocketing: ["", "", "", "", "", ""],
     recession: "",
     fmpDone: "",
-    healthGingivitis: "",
-    periodontitisStageChoice: "",
-    periodontitisStageComments: "",
-    periodontitisGradeChoice: "",
-    periodontitisGradeComments: "",
+    gingivalDescription: createEmptyGingivalDescriptionAssessment(),
+    periodontalClassification: createEmptyPeriodontalClassification(),
     oralHygieneCompliance: "",
     oralHygieneComplianceComment: "",
     homeCareInstructionReviewed: false,
     ohiAidsReviewed: [],
     diseaseProcessReviewed: false,
+    standardOheStatementApplies: false,
     oheTopicsReviewed: [],
     oheNotes: "",
     flossingFrequency: "",
@@ -288,7 +320,7 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
 }
 
 export function hasRequiredAdultHygiene2021Fields(
-  form: AdultHygiene2021Form,
+  form: AdultHygiene2021Form
 ): boolean {
   return (
     Boolean(form.patientId.trim()) &&

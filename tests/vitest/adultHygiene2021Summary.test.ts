@@ -1,11 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
   createEmptyAdultHygiene2021Form,
+  dyclonineRinseTreatment,
   hasRequiredAdultHygiene2021Fields,
+  isDyclonineRinseTreatment,
+  standardOheStatement,
+  standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import {
+  applyGingivitisObservationPreset,
+  createGingivalDescriptionWnlAssessment,
+  hasConflictingGingivitisPresetObservations,
+} from "@/lib/templates/gingivalDescriptionCatalog";
 
 describe("buildAdultHygiene2021Summary", () => {
   it("starts empty without inferring clinical documentation", () => {
@@ -15,10 +24,9 @@ describe("buildAdultHygiene2021Summary", () => {
   });
 
   it("builds the accepted source-ordered note from synthetic data", () => {
-    const summary = buildAdultHygiene2021Summary(
-      adultHygiene2021Fixture,
-      { startedAt: new Date(2026, 6, 25, 14, 5, 6) },
-    );
+    const summary = buildAdultHygiene2021Summary(adultHygiene2021Fixture, {
+      startedAt: new Date(2026, 6, 25, 14, 5, 6),
+    });
 
     expect(summary).toBe(`----- July 25, 2026 2:05:06 PM -----
 PATIENT ID: TEST-AH-1001
@@ -43,9 +51,21 @@ Bleeding: Localized mild.
 PSR/Pocketing: 1 2 2 / 2 1 2
 Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
-Health/Gingivitis: Synthetic gingival-health documentation.
-Periodontitis Stage: Stage II (P2).
-Periodontitis Grade: Grade B: moderate rate.
+Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
+- PROBING ATTACHMENT LOSS PRESENT
+- MAXIMUM PPD: 3 MM
+- BOP: 18%
+- RADIOGRAPHIC BONE LOSS PRESENT
+- SITES WITH PPD >=4 MM AND BOP: NONE
+- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION
+Gingival Description:
+  - Color: coral pink (extent: generalized).
+  - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
+Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
+Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 3 mm; mostly horizontal bone loss.
+Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
+Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
+Periodontal status: Periodontal disease remission/control.
 
 Oral hygiene compliance: Good.
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -75,6 +95,223 @@ Date Booked: 2026-11-15`);
     expect(summary).not.toContain("Not documented");
   });
 
+  it("omits a current status that contradicts a confirmed treated context", () => {
+    const form = {
+      ...adultHygiene2021Fixture,
+      periodontalClassification: {
+        ...adultHygiene2021Fixture.periodontalClassification,
+        status: "stable" as const,
+      },
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).not.toContain(
+      "Periodontal status:"
+    );
+  });
+
+  it("omits a stale periodontal disease status for another diagnosis", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "health",
+      status: "stable",
+      stage: "II",
+      grade: "B",
+      stageConfirmed: true,
+      gradeConfirmed: true,
+    };
+
+    const summary = buildAdultHygiene2021Summary(form);
+    expect(summary).not.toContain("Periodontal status:");
+    expect(summary).not.toMatch(/Stage II|Grade B/);
+  });
+
+  it("preserves output when the optional gingival description is absent", () => {
+    const current = createEmptyAdultHygiene2021Form();
+    const oldShape = { ...current };
+    delete oldShape.gingivalDescription;
+    expect(buildAdultHygiene2021Summary(oldShape)).toBe("");
+    current.gingivalDescription = {
+      status: "not_assessed",
+      customFindings: "Retained custom observation",
+      findings: [
+        {
+          optionId: "gingiva.color.coral_pink",
+          extent: "generalized",
+          locations: [],
+          measurement: "",
+          comment: "retained but hidden",
+        },
+      ],
+    };
+    expect(buildAdultHygiene2021Summary(current)).toBe("");
+  });
+
+  it("suppresses periodontitis modifiers for another diagnosis category", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "gingivitis",
+      smoking: {
+        status: "cigarettes",
+        measurement: {
+          operator: "eq",
+          value: 12,
+          unit: "cigarettes-per-day",
+        },
+      },
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe("");
+  });
+
+  it("formats explicit gingival WNL from the reviewed preset", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.gingivalDescription = createGingivalDescriptionWnlAssessment();
+    expect(
+      form.gingivalDescription.findings.map(({ optionId }) => optionId)
+    ).toHaveLength(10);
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted."
+    );
+  });
+
+  it("applies generalized gingivitis observations while preserving unrelated findings", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    const current = {
+      status: "findings" as const,
+      customFindings: "Synthetic additional observation",
+      findings: [
+        {
+          optionId: "gingiva.color.coral_pink",
+          extent: "generalized" as const,
+          locations: [],
+          measurement: "",
+          comment: "",
+        },
+        {
+          optionId: "gingiva.position.no_recession",
+          extent: "" as const,
+          locations: [],
+          measurement: "",
+          comment: "",
+        },
+      ],
+    };
+
+    expect(hasConflictingGingivitisPresetObservations(current)).toBe(true);
+    form.gingivalDescription = applyGingivitisObservationPreset(current);
+
+    expect(form.gingivalDescription.findings.map(({ optionId }) => optionId))
+      .toEqual([
+        "gingiva.position.no_recession",
+        "gingiva.color.marginal_redness",
+        "gingiva.contour.rolled_margins",
+        "gingiva.consistency.spongy",
+        "gingiva.surface.smooth_attached",
+      ]);
+    expect(
+      hasConflictingGingivitisPresetObservations(form.gingivalDescription),
+    ).toBe(false);
+    expect(
+      applyGingivitisObservationPreset(form.gingivalDescription).findings,
+    ).toEqual(form.gingivalDescription.findings);
+    const localizedPreset = {
+      ...form.gingivalDescription,
+      findings: form.gingivalDescription.findings.map((finding) =>
+        finding.optionId === "gingiva.color.marginal_redness"
+          ? { ...finding, extent: "localized" as const, locations: ["Q1"] }
+          : finding,
+      ),
+    };
+    expect(hasConflictingGingivitisPresetObservations(localizedPreset)).toBe(
+      true,
+    );
+    expect(
+      applyGingivitisObservationPreset(localizedPreset).findings.find(
+        ({ optionId }) => optionId === "gingiva.color.marginal_redness",
+      ),
+    ).toMatchObject({ extent: "generalized", locations: [] });
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Gingival Description:
+  - Color: marginal redness (extent: generalized).
+  - Contour / Shape: rolled margins (extent: generalized).
+  - Consistency: spongy (extent: generalized).
+  - Surface / Texture: smooth attached gingiva (extent: generalized).
+  - Position / Size: no recession.
+  Observations: Synthetic additional observation.`);
+  });
+
+  it("formats custom gingival findings alone or beside structured observations", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.gingivalDescription = {
+      status: "findings",
+      findings: [],
+      customFindings: "Custom gingival observation",
+    };
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Gingival Description: Custom gingival observation."
+    );
+
+    form.gingivalDescription.findings = [
+      {
+        optionId: "gingiva.color.coral_pink",
+        extent: "",
+        locations: [],
+        measurement: "",
+        comment: "",
+      },
+    ];
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Gingival Description:
+  - Color: coral pink.
+  Observations: Custom gingival observation.`);
+  });
+
+  it("keeps original periodontal lines beside ordered structured findings", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.bleedingChoice = "Localized mild";
+    form.recession = "Existing unrestricted recession";
+    form.gingivalDescription = {
+      status: "findings",
+      findings: [
+        {
+          optionId: "retired.option",
+          extent: "localized",
+          locations: ["ignored"],
+          measurement: "7",
+          comment: "ignored",
+        },
+        {
+          optionId: "gingiva.position.recession",
+          extent: "localized",
+          locations: ["Q1", "tooth 13 facial"],
+          measurement: "1.5",
+          comment: "monitored",
+        },
+        {
+          optionId: "gingiva.color.physiologic_pigmentation",
+          extent: "generalized",
+          locations: [],
+          measurement: "unsupported",
+          comment: "normal variation",
+        },
+        {
+          optionId: "gingiva.color.coral_pink",
+          extent: "",
+          locations: [],
+          measurement: "",
+          comment: "",
+        },
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Bleeding: Localized mild.
+
+Recession: Existing unrestricted recession.
+Gingival Description:
+  - Color: coral pink; physiologic pigmentation (extent: generalized; notes: normal variation).
+  - Position / Size: gingival recession (extent: localized; location: Q1, tooth 13 facial; measurement: 1.5 mm; notes: monitored).`);
+  });
+
   it("supports independent consent sources and position-preserving partial PSR values", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
@@ -89,7 +326,7 @@ Date Booked: 2026-11-15`);
         string,
         string,
         string,
-        string,
+        string
       ],
     };
 
@@ -104,15 +341,50 @@ Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatmen
 PSR/Pocketing: 1 _ 3 / _ 2 _`);
   });
 
-  it("uses editable Other values without retaining the unselected choice", () => {
+  it("keeps hygiene findings and their comments independent", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
       plaqueChoice: "Localized mild interproximal",
-      plaqueOther: "Imported plaque wording",
+      plaqueComment: "Most notable posteriorly",
+      stainChoice: "Generalized moderate",
+      stainComment: "Synthetic extrinsic stain note",
+      calculusChoice: "Localized moderate marginal",
+      calculusComment: "Synthetic calculus note",
+      bleedingChoice: "Generalized mild",
+      bleedingComment: "Synthetic bleeding note",
+    };
+
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Plaque: Localized mild interproximal; Most notable posteriorly.
+Stain: Generalized moderate; Synthetic extrinsic stain note.
+Calculus: Localized moderate marginal; Synthetic calculus note.
+Bleeding: Generalized mild; Synthetic bleeding note.`);
+  });
+
+  it("adds areas only to localized hygiene findings", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      plaqueChoice: "Localized moderate interproximal",
+      plaqueAreas: ["S4", "Q1", "teeth 14–16"],
+      stainChoice: "Generalized slight",
+      stainAreas: ["Q2"],
+      bleedingChoice: "Localized mild",
+      bleedingAreas: ["mandible"],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Plaque: Localized moderate interproximal — areas: Q1, S4, teeth 14–16.
+Stain: Generalized slight.
+Bleeding: Localized mild — areas: mandible.`);
+  });
+
+  it("emits a hygiene comment without requiring a structured finding", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      calculusComment: "Encounter-specific calculus comment",
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Plaque: Imported plaque wording.",
+      "Calculus comment: Encounter-specific calculus comment."
     );
   });
 
@@ -120,15 +392,15 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
     expect(
       applyPatientChiefConcernSelectionRules(
         ["Food catches between teeth"],
-        ["Food catches between teeth", "Nothing"],
-      ),
+        ["Food catches between teeth", "Nothing"]
+      )
     ).toEqual(["Nothing"]);
 
     expect(
       applyPatientChiefConcernSelectionRules(
         ["Nothing"],
-        ["Nothing", "Sore gums upon brushing/flossing"],
-      ),
+        ["Nothing", "Sore gums upon brushing/flossing"]
+      )
     ).toEqual(["Sore gums upon brushing/flossing"]);
   });
 
@@ -162,11 +434,24 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
       oheNotes: "Demonstrated brushing modifications",
     };
 
-    expect(
-      buildAdultHygiene2021Summary(form),
-    ).toBe(`REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`REVIEWED DISEASE PROCESS WITH PATIENT TODAY
 OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and risk factors; Importance of maintaining the recommended hygiene interval.
 OHE notes: Demonstrated brushing modifications.`);
+  });
+
+  it("emits the reviewed standard and additional OHE wording only when selected", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      standardOheStatementApplies: true,
+      oheTopicsReviewed: [
+        "Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues",
+        "Review of importance of maintaining a 4-month recall",
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`${standardOheStatement}.
+OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues; Review of importance of maintaining a 4-month recall.`);
   });
 
   it("accepts custom flossing and brushing frequencies directly", () => {
@@ -177,7 +462,7 @@ OHE notes: Demonstrated brushing modifications.`);
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Patient is currently: Uses floss picks most evenings; Brushes after each meal.",
+      "Patient is currently: Uses floss picks most evenings; Brushes after each meal."
     );
   });
 
@@ -204,17 +489,44 @@ OHE notes: Demonstrated brushing modifications.`);
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing",
+      "Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing"
     );
   });
 
-  it("keeps stage, grade, compliance, and interval comments independent", () => {
+  it("formats the standard treatment preset and optional Dyclonine application time", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.treatmentCompleted = [
+      ...standardTreatmentCompletedPreset.map((entry, index) => ({
+        id: `standard-${index}`,
+        treatmentType: entry.treatmentType,
+        toothAreas: [...entry.toothAreas],
+        ...(isDyclonineRinseTreatment(entry.treatmentType)
+          ? { applicationTime: "60 seconds" }
+          : {}),
+      })),
+    ];
+
+    expect(dyclonineRinseTreatment).toBe("Dyclonine 1% rinse 5 ml");
+    expect(isDyclonineRinseTreatment("Dyclonine rinse 5 ml")).toBe(true);
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application/use: 60 seconds; FMP — full mouth; 3U scale (Cavitron and hand instrumentation) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2.5% NaF Varnish application — full mouth; OHE",
+    );
+  });
+
+  it("keeps classification overrides, compliance, and interval comments independent", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
-      periodontitisStageChoice: "Stage II (P2)",
-      periodontitisStageComments: "Synthetic stage context",
-      periodontitisGradeChoice: "Grade B: moderate rate",
-      periodontitisGradeComments: "Synthetic grade context",
+      periodontalClassification: {
+        ...createEmptyAdultHygiene2021Form().periodontalClassification,
+        diagnosis: "periodontitis" as const,
+        extent: "generalized" as const,
+        stage: "II" as const,
+        grade: "B" as const,
+        stageConfirmed: true,
+        gradeConfirmed: true,
+        stageOverrideReason: "Synthetic stage context",
+        gradeOverrideReason: "Synthetic grade context",
+      },
       oralHygieneCompliance: "Good",
       oralHygieneComplianceComment: "Synthetic compliance context",
       recallInterval: "6-month recall",
@@ -223,10 +535,10 @@ OHE notes: Demonstrated brushing modifications.`);
       hygieneIntervalComments: "Synthetic hygiene context",
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`Periodontitis Stage: Stage II (P2).
-Periodontitis stage comments: Synthetic stage context.
-Periodontitis Grade: Grade B: moderate rate.
-Periodontitis grade comments: Synthetic grade context.
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Periodontal diagnosis: Generalized periodontitis, Stage II, Grade B.
+Stage override: Synthetic stage context.
+Grade override: Synthetic grade context.
 
 Oral hygiene compliance: Good.
 Oral hygiene compliance comment: Synthetic compliance context.
@@ -235,5 +547,33 @@ Recommended Recall Interval: 6-month recall.
 Recommended recall interval comments: Synthetic recall context.
 Recommended Hygiene Interval: 4-month scale.
 Recommended hygiene interval comments: Synthetic hygiene context.`);
+  });
+
+  it("does not chart stage or grade overrides without reasons", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "periodontitis",
+      stage: "IV",
+      grade: "C",
+      stageConfirmed: true,
+      gradeConfirmed: true,
+      stageBasis: [
+        {
+          criterionId: "stage.interdental-cal",
+          measurement: { operator: "eq", value: 3, unit: "mm" },
+        },
+      ],
+      gradeBasis: [
+        {
+          criterionId: "grade.bone-loss-age-ratio",
+          measurement: { operator: "eq", value: 0.5, unit: "ratio" },
+        },
+      ],
+    };
+
+    const summary = buildAdultHygiene2021Summary(form);
+    expect(summary).toBe("Periodontal diagnosis: Periodontitis.");
+    expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis|Grade basis/);
   });
 });

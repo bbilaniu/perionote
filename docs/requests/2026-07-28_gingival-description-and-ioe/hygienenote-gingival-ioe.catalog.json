@@ -1,0 +1,1744 @@
+{
+  "$schema": "./hygienenote-gingival-ioe.schema.json",
+  "schemaVersion": "1.2.0",
+  "catalogId": "hygienenote.gingival-and-ioe",
+  "title": "HygieneNote Gingival Description and Intraoral Examination",
+  "source": {
+    "documentName": "DH Note.docx",
+    "sourcePages": [2, 3, 4],
+    "excludedFromImplementation": ["chief_concerns"],
+    "exclusionReason": "Chief Concern was already implemented before this specification.",
+    "sourceTables": [
+      {
+        "tableId": "gingival_description",
+        "sourceTableNumber": 1,
+        "headers": [
+          "Descriptor",
+          "Normal Findings",
+          "Abnormal Findings",
+          "Normal Clinical Notes",
+          "Abnormal Clinical Notes"
+        ],
+        "rows": [
+          {
+            "rowId": "color",
+            "sourceRowNumber": 2,
+            "cells": {
+              "Descriptor": "Color",
+              "Normal Findings": "Coral pink, with slight pigmentation in some ethnicities.",
+              "Abnormal Findings": "Red, bright red, bluish-red, pale pink, or white patches.",
+              "Normal Clinical Notes": "Gingiva appears coral pink with no erythema or discoloration.",
+              "Abnormal Clinical Notes": "Gingiva exhibits generalized redness in the anterior maxilla, indicative of inflammation. A localized bluish tint on the gingiva of #24–25 suggests cyanosis."
+            }
+          },
+          {
+            "rowId": "contour_shape",
+            "sourceRowNumber": 3,
+            "cells": {
+              "Descriptor": "Contour / Shape",
+              "Normal Findings": "Knife-edged margins, flat against the teeth. Papillae fill embrasures.",
+              "Abnormal Findings": "Rounded, rolled, or bulbous margins; blunted, cratered, or enlarged papillae.",
+              "Normal Clinical Notes": "Gingival margins are knife-edged and flat against the teeth. Papillae completely fill the embrasures.",
+              "Abnormal Clinical Notes": "Gingival margins around #7–10 are rolled and rounded. Papillae between #8–9 are blunted."
+            }
+          },
+          {
+            "rowId": "consistency",
+            "sourceRowNumber": 4,
+            "cells": {
+              "Descriptor": "Consistency",
+              "Normal Findings": "Firm and resilient when palpated.",
+              "Abnormal Findings": "Soft, spongy, or fibrotic; easily displaced with air or probing.",
+              "Normal Clinical Notes": "Gingiva is firm and resilient to palpation, with no areas of softness detected.",
+              "Abnormal Clinical Notes": "Gingiva is soft and spongy in the posterior sextants. Tissue compresses easily with air, and slight edema is present in the #18–19 region."
+            }
+          },
+          {
+            "rowId": "surface_texture",
+            "sourceRowNumber": 5,
+            "cells": {
+              "Descriptor": "Surface / Texture",
+              "Normal Findings": "Stippled appearance on attached gingiva; smooth on marginal gingiva.",
+              "Abnormal Findings": "Smooth, shiny, or excessively stippled (fibrotic).",
+              "Normal Clinical Notes": "Attached gingiva displays appropriate stippling; marginal gingiva is smooth and intact.",
+              "Abnormal Clinical Notes": "Gingiva in the mandibular anterior region appears smooth and shiny with loss of stippling. A localized fibrotic texture is noted in the #2–3 area."
+            }
+          },
+          {
+            "rowId": "position_size",
+            "sourceRowNumber": 6,
+            "cells": {
+              "Descriptor": "Position / Size",
+              "Normal Findings": "At or slightly below the CEJ, covering the root in younger patients.",
+              "Abnormal Findings": "Receded (root exposure), or enlarged/overgrown tissue.",
+              "Normal Clinical Notes": "Gingival margins are at or slightly below the CEJ with no recession or overgrowth noted.",
+              "Abnormal Clinical Notes": "Localized gingival recession of 3 mm is noted on #6–7 with root exposure. Generalized gingival overgrowth is present in the maxillary posterior region."
+            }
+          }
+        ]
+      },
+      {
+        "tableId": "ioe",
+        "sourceTableNumber": 2,
+        "headers": [
+          "Structure",
+          "Normal Findings",
+          "Abnormal Findings",
+          "Common Variations",
+          "Example Clinical Documentation"
+        ],
+        "rows": [
+          {
+            "rowId": "buccal_mucosa",
+            "sourceRowNumber": 2,
+            "cells": {
+              "Structure": "Buccal Mucosa",
+              "Normal Findings": "Pink, moist, no lesions or swelling",
+              "Abnormal Findings": "Ulcers, white/red patches, swelling",
+              "Common Variations": "Fordyce granules, linea alba",
+              "Example Clinical Documentation": "Buccal mucosa: Pink, moist, and intact bilaterally. Linea alba observed on the right side, consistent with the patient's occlusion history. No pathology detected."
+            }
+          },
+          {
+            "rowId": "gingiva",
+            "sourceRowNumber": 3,
+            "cells": {
+              "Structure": "Gingiva",
+              "Normal Findings": "Coral pink, firm, knife-edged margins, no bleeding",
+              "Abnormal Findings": "Red, swollen, receding, bleeding",
+              "Common Variations": "Slight redness (mild gingivitis)",
+              "Example Clinical Documentation": "Gingiva: Generalized coral pink with localized redness in the posterior mandible. Bleeding noted upon probing in areas #30–31. Patient advised on oral hygiene improvements."
+            }
+          },
+          {
+            "rowId": "tongue",
+            "sourceRowNumber": 4,
+            "cells": {
+              "Structure": "Tongue",
+              "Normal Findings": "Pink, moist, symmetrical, no lesions",
+              "Abnormal Findings": "Coated, fissured, swollen, lesions",
+              "Common Variations": "Scalloped edges, geographic tongue",
+              "Example Clinical Documentation": "Tongue: Pink, moist, and symmetrical. Scalloping noted on the lateral borders, likely due to tongue thrust or parafunctional habits. Patient denies pain or discomfort."
+            }
+          },
+          {
+            "rowId": "floor_of_mouth",
+            "sourceRowNumber": 5,
+            "cells": {
+              "Structure": "Floor of Mouth",
+              "Normal Findings": "Pink, smooth, no swelling or discoloration",
+              "Abnormal Findings": "Swelling, masses, blue/black discoloration",
+              "Common Variations": "Prominent lingual veins",
+              "Example Clinical Documentation": "Floor of mouth: Pink, smooth, and intact. Prominent veins observed bilaterally. No abnormalities noted."
+            }
+          },
+          {
+            "rowId": "palate_hard_soft",
+            "sourceRowNumber": 6,
+            "cells": {
+              "Structure": "Palate (Hard/Soft)",
+              "Normal Findings": "Pink, intact, no lesions or abnormal growths",
+              "Abnormal Findings": "Ulcers, red/white patches, petechiae",
+              "Common Variations": "Torus palatinus",
+              "Example Clinical Documentation": "Palate: Torus palatinus observed on the midline of the hard palate. Mucosa pink and intact. No lesions or tenderness reported."
+            }
+          },
+          {
+            "rowId": "oropharynx",
+            "sourceRowNumber": 7,
+            "cells": {
+              "Structure": "Oropharynx",
+              "Normal Findings": "Uvula midline, no redness, swelling, or exudate",
+              "Abnormal Findings": "Redness, swelling, asymmetry, exudate",
+              "Common Variations": "Enlarged tonsils without exudate",
+              "Example Clinical Documentation": "Oropharynx: Uvula midline. No swelling or exudate noted. Tonsils slightly enlarged but symmetrical. No complaints of pain or difficulty swallowing."
+            }
+          },
+          {
+            "rowId": "teeth",
+            "sourceRowNumber": 8,
+            "cells": {
+              "Structure": "Teeth",
+              "Normal Findings": "Intact, no caries, no mobility",
+              "Abnormal Findings": "Caries, fractures, discoloration, mobility",
+              "Common Variations": "Enamel hypoplasia, fluorosis",
+              "Example Clinical Documentation": "Teeth: Caries noted on #18 (MOD) and #30 (DO). Slight discoloration present on anterior teeth due to mild fluorosis. Patient educated on restorative treatment options."
+            }
+          },
+          {
+            "rowId": "occlusion",
+            "sourceRowNumber": 9,
+            "cells": {
+              "Structure": "Occlusion",
+              "Normal Findings": "Class I (normal bite)",
+              "Abnormal Findings": "Class II or III, open bite, crossbite, increased overjet/overbite",
+              "Common Variations": "Slight malocclusion",
+              "Example Clinical Documentation": "Occlusion: Class II Division 1 observed. Overjet measured at 5 mm. Patient advised on potential orthodontic options for correction if desired."
+            }
+          },
+          {
+            "rowId": "saliva",
+            "sourceRowNumber": 10,
+            "cells": {
+              "Structure": "Saliva",
+              "Normal Findings": "Clear, normal flow",
+              "Abnormal Findings": "Thick, sticky, reduced flow",
+              "Common Variations": "Slightly viscous saliva",
+              "Example Clinical Documentation": "Saliva: Clear with adequate flow noted. Patient denies symptoms of dry mouth. Re-evaluate at the next visit for signs of potential xerostomia."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "implementationPolicies": {
+    "sourceOfTruth": "normalizedSections",
+    "rawSourceTablesAreAuditOnly": true,
+    "canonicalFixedSelectionValue": "stable_option_id",
+    "generatedTextIsNotCanonicalSelectionValue": true,
+    "defaultAssessmentStatus": "not_assessed",
+    "unselectedDoesNotMeanNormal": true,
+    "wnlRequiresExplicitUserAction": true,
+    "allowMultipleFindings": true,
+    "suppressEmptySectionsInGeneratedNote": true,
+    "toothNumbersInSourceExamplesAreReferenceOnly": true,
+    "doNotHardcodeSourceToothNumberingSystem": true,
+    "doNotAutoInfer": [
+      "diagnosis",
+      "etiology",
+      "causal association",
+      "pathology status",
+      "patient symptoms",
+      "caries risk factor",
+      "patient education",
+      "treatment recommendation",
+      "follow-up plan"
+    ],
+    "doNotAutoGeneratePhrases": [
+      "indicative of inflammation",
+      "suggests cyanosis",
+      "likely due to tongue thrust or parafunctional habits",
+      "consistent with the patient's occlusion history",
+      "No pathology detected",
+      "Patient advised",
+      "Patient educated",
+      "Re-evaluate at the next visit"
+    ]
+  },
+  "sharedModels": {
+    "classificationValues": [
+      {
+        "id": "normal",
+        "label": "Normal"
+      },
+      {
+        "id": "normal_variation",
+        "label": "Normal variation"
+      },
+      {
+        "id": "abnormal",
+        "label": "Abnormal"
+      }
+    ],
+    "assessmentStatusOptions": [
+      {
+        "id": "not_assessed",
+        "label": "Not assessed"
+      },
+      {
+        "id": "wnl",
+        "label": "Within normal limits"
+      },
+      {
+        "id": "findings",
+        "label": "Findings documented"
+      }
+    ],
+    "location": {
+      "supportedScopes": ["generalized", "localized"],
+      "supportedSelectors": [
+        "free_text_region",
+        "arch",
+        "quadrant",
+        "sextant",
+        "tooth",
+        "tooth_range",
+        "surface",
+        "laterality"
+      ],
+      "reuseExistingProjectSelectors": true
+    }
+  },
+  "normalizedSections": {
+    "gingivalDescription": {
+      "id": "gingival_description",
+      "label": "Gingival Description",
+      "defaultStatus": "not_assessed",
+      "statusOptions": [
+        {
+          "id": "not_assessed",
+          "label": "Not assessed"
+        },
+        {
+          "id": "wnl",
+          "label": "Within normal limits"
+        },
+        {
+          "id": "findings",
+          "label": "Findings documented"
+        }
+      ],
+      "selectionMode": "multiple_per_dimension",
+      "supportsExtent": true,
+      "supportsLocation": true,
+      "supportsComment": true,
+      "wnlPreset": {
+        "label": "Set gingival description to WNL",
+        "requiresExplicitAction": true,
+        "selectedOptionIds": [
+          "gingiva.color.coral_pink",
+          "gingiva.contour.knife_edged_margins",
+          "gingiva.contour.flat_against_teeth",
+          "gingiva.contour.papillae_fill_embrasures",
+          "gingiva.consistency.firm",
+          "gingiva.consistency.resilient",
+          "gingiva.surface.stippled_attached",
+          "gingiva.surface.smooth_marginal",
+          "gingiva.position.no_recession",
+          "gingiva.position.no_overgrowth"
+        ],
+        "generatedNoteText": "Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted."
+      },
+      "sourceNormalizationNotes": [
+        "The source statement about tissue position relative to the CEJ and root coverage in younger patients is preserved in source.sourceTables but is not converted into a selectable normalized finding.",
+        "Observation, diagnosis, etiology, patient education, and recommendation remain separate concepts.",
+        "Marginal redness and the explicit gingivitis observation preset were added from the clinically reviewed wording in GitHub issue 68 on 2026-08-03; they were not inferred from the archived Word source."
+      ],
+      "dimensions": [
+        {
+          "id": "gingiva.color",
+          "label": "Color",
+          "sourceRowId": "color",
+          "selectionMode": "multiple",
+          "supportsLocation": true,
+          "options": [
+            {
+              "id": "gingiva.color.coral_pink",
+              "label": "Coral pink",
+              "classification": "normal",
+              "noteFragment": "coral pink",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Coral pink"
+            },
+            {
+              "id": "gingiva.color.physiologic_pigmentation",
+              "label": "Physiologic pigmentation",
+              "classification": "normal_variation",
+              "noteFragment": "physiologic pigmentation",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "slight pigmentation in some ethnicities",
+              "reviewStatus": "terminology_review_recommended"
+            },
+            {
+              "id": "gingiva.color.red_erythematous",
+              "label": "Red / erythematous",
+              "classification": "abnormal",
+              "noteFragment": "red / erythematous",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Red"
+            },
+            {
+              "id": "gingiva.color.marginal_redness",
+              "label": "Marginal redness",
+              "classification": "abnormal",
+              "noteFragment": "marginal redness",
+              "sourceCategory": "reviewed_issue_request",
+              "sourceTerm": "marginal redness"
+            },
+            {
+              "id": "gingiva.color.bright_red",
+              "label": "Bright red",
+              "classification": "abnormal",
+              "noteFragment": "bright red",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "bright red"
+            },
+            {
+              "id": "gingiva.color.bluish_red",
+              "label": "Bluish-red",
+              "classification": "abnormal",
+              "noteFragment": "bluish-red",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "bluish-red",
+              "automationNote": "Do not infer cyanosis from this observation."
+            },
+            {
+              "id": "gingiva.color.pale_pink",
+              "label": "Pale pink",
+              "classification": "abnormal",
+              "noteFragment": "pale pink",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "pale pink"
+            },
+            {
+              "id": "gingiva.color.white_patch",
+              "label": "White patch",
+              "classification": "abnormal",
+              "noteFragment": "white patch",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "white patches",
+              "supportsLocation": true
+            }
+          ]
+        },
+        {
+          "id": "gingiva.contour",
+          "label": "Contour / Shape",
+          "sourceRowId": "contour_shape",
+          "selectionMode": "multiple",
+          "supportsLocation": true,
+          "options": [
+            {
+              "id": "gingiva.contour.knife_edged_margins",
+              "label": "Knife-edged margins",
+              "classification": "normal",
+              "noteFragment": "knife-edged margins",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Knife-edged margins"
+            },
+            {
+              "id": "gingiva.contour.flat_against_teeth",
+              "label": "Flat against the teeth",
+              "classification": "normal",
+              "noteFragment": "flat against the teeth",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "flat against the teeth"
+            },
+            {
+              "id": "gingiva.contour.papillae_fill_embrasures",
+              "label": "Papillae fill embrasures",
+              "classification": "normal",
+              "noteFragment": "papillae filling the embrasures",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Papillae fill embrasures"
+            },
+            {
+              "id": "gingiva.contour.rounded_margins",
+              "label": "Rounded margins",
+              "classification": "abnormal",
+              "noteFragment": "rounded margins",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Rounded"
+            },
+            {
+              "id": "gingiva.contour.rolled_margins",
+              "label": "Rolled margins",
+              "classification": "abnormal",
+              "noteFragment": "rolled margins",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "rolled"
+            },
+            {
+              "id": "gingiva.contour.bulbous_margins",
+              "label": "Bulbous margins",
+              "classification": "abnormal",
+              "noteFragment": "bulbous margins",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "bulbous margins"
+            },
+            {
+              "id": "gingiva.contour.blunted_papillae",
+              "label": "Blunted papillae",
+              "classification": "abnormal",
+              "noteFragment": "blunted papillae",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "blunted papillae"
+            },
+            {
+              "id": "gingiva.contour.cratered_papillae",
+              "label": "Cratered papillae",
+              "classification": "abnormal",
+              "noteFragment": "cratered papillae",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "cratered papillae"
+            },
+            {
+              "id": "gingiva.contour.enlarged_papillae",
+              "label": "Enlarged papillae",
+              "classification": "abnormal",
+              "noteFragment": "enlarged papillae",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "enlarged papillae"
+            }
+          ]
+        },
+        {
+          "id": "gingiva.consistency",
+          "label": "Consistency",
+          "sourceRowId": "consistency",
+          "selectionMode": "multiple",
+          "supportsLocation": true,
+          "options": [
+            {
+              "id": "gingiva.consistency.firm",
+              "label": "Firm",
+              "classification": "normal",
+              "noteFragment": "firm",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Firm"
+            },
+            {
+              "id": "gingiva.consistency.resilient",
+              "label": "Resilient",
+              "classification": "normal",
+              "noteFragment": "resilient",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "resilient"
+            },
+            {
+              "id": "gingiva.consistency.soft",
+              "label": "Soft",
+              "classification": "abnormal",
+              "noteFragment": "soft",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Soft"
+            },
+            {
+              "id": "gingiva.consistency.spongy",
+              "label": "Spongy",
+              "classification": "abnormal",
+              "noteFragment": "spongy",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "spongy"
+            },
+            {
+              "id": "gingiva.consistency.fibrotic",
+              "label": "Fibrotic",
+              "classification": "abnormal",
+              "noteFragment": "fibrotic",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "fibrotic"
+            },
+            {
+              "id": "gingiva.consistency.easily_displaced",
+              "label": "Easily displaced with air or probing",
+              "classification": "abnormal",
+              "noteFragment": "easily displaced with air or probing",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "easily displaced with air or probing"
+            },
+            {
+              "id": "gingiva.consistency.edematous",
+              "label": "Edematous",
+              "classification": "abnormal",
+              "noteFragment": "edematous",
+              "sourceCategory": "example_documentation",
+              "sourceTerm": "slight edema is present",
+              "supportsLocation": true
+            }
+          ]
+        },
+        {
+          "id": "gingiva.surface",
+          "label": "Surface / Texture",
+          "sourceRowId": "surface_texture",
+          "selectionMode": "multiple",
+          "supportsLocation": true,
+          "options": [
+            {
+              "id": "gingiva.surface.stippled_attached",
+              "label": "Stippled attached gingiva",
+              "classification": "normal",
+              "noteFragment": "appropriate stippling of attached gingiva",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Stippled appearance on attached gingiva"
+            },
+            {
+              "id": "gingiva.surface.smooth_marginal",
+              "label": "Smooth marginal gingiva",
+              "classification": "normal",
+              "noteFragment": "smooth marginal gingiva",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "smooth on marginal gingiva"
+            },
+            {
+              "id": "gingiva.surface.smooth_attached",
+              "label": "Smooth attached gingiva",
+              "classification": "abnormal",
+              "noteFragment": "smooth attached gingiva",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Smooth",
+              "contextNote": "Use for attached gingiva; marginal gingiva may normally be smooth."
+            },
+            {
+              "id": "gingiva.surface.shiny",
+              "label": "Shiny",
+              "classification": "abnormal",
+              "noteFragment": "shiny",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "shiny"
+            },
+            {
+              "id": "gingiva.surface.loss_of_stippling",
+              "label": "Loss of stippling",
+              "classification": "abnormal",
+              "noteFragment": "loss of stippling",
+              "sourceCategory": "example_documentation",
+              "sourceTerm": "loss of stippling"
+            },
+            {
+              "id": "gingiva.surface.excessive_stippling_fibrotic",
+              "label": "Excessive stippling / fibrotic texture",
+              "classification": "abnormal",
+              "noteFragment": "excessive stippling / fibrotic texture",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "excessively stippled (fibrotic)"
+            }
+          ]
+        },
+        {
+          "id": "gingiva.position",
+          "label": "Position / Size",
+          "sourceRowId": "position_size",
+          "selectionMode": "multiple",
+          "supportsLocation": true,
+          "options": [
+            {
+              "id": "gingiva.position.no_recession",
+              "label": "No recession",
+              "classification": "normal",
+              "noteFragment": "no recession",
+              "sourceCategory": "normal_clinical_notes",
+              "sourceTerm": "no recession"
+            },
+            {
+              "id": "gingiva.position.no_overgrowth",
+              "label": "No overgrowth",
+              "classification": "normal",
+              "noteFragment": "no overgrowth",
+              "sourceCategory": "normal_clinical_notes",
+              "sourceTerm": "no overgrowth"
+            },
+            {
+              "id": "gingiva.position.recession",
+              "label": "Gingival recession",
+              "classification": "abnormal",
+              "noteFragment": "gingival recession",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Receded",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "gingiva.position.root_exposure",
+              "label": "Root exposure",
+              "classification": "abnormal",
+              "noteFragment": "root exposure",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "root exposure",
+              "supportsLocation": true
+            },
+            {
+              "id": "gingiva.position.enlargement",
+              "label": "Gingival enlargement",
+              "classification": "abnormal",
+              "noteFragment": "gingival enlargement",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "enlarged",
+              "supportsLocation": true
+            },
+            {
+              "id": "gingiva.position.overgrowth",
+              "label": "Gingival overgrowth",
+              "classification": "abnormal",
+              "noteFragment": "gingival overgrowth",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "overgrown tissue",
+              "supportsLocation": true
+            }
+          ]
+        }
+      ]
+    },
+    "ioe": {
+      "id": "ioe",
+      "label": "Intraoral Examination",
+      "defaultStatus": "not_assessed",
+      "statusOptions": [
+        {
+          "id": "not_assessed",
+          "label": "Not assessed"
+        },
+        {
+          "id": "wnl",
+          "label": "Within normal limits"
+        },
+        {
+          "id": "findings",
+          "label": "Findings documented"
+        }
+      ],
+      "bulkWnlAction": {
+        "label": "Mark examined IOE structures WNL",
+        "requiresExplicitAction": true,
+        "individualStructuresRemainEditable": true
+      },
+      "structures": [
+        {
+          "id": "ioe.buccal_mucosa",
+          "label": "Buccal mucosa",
+          "sourceRowId": "buccal_mucosa",
+          "implementationMode": "direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Buccal mucosa pink, moist, and intact, with no lesions or swelling.",
+          "options": [
+            {
+              "id": "ioe.buccal_mucosa.pink",
+              "label": "Pink",
+              "classification": "normal",
+              "noteFragment": "pink",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Pink"
+            },
+            {
+              "id": "ioe.buccal_mucosa.moist",
+              "label": "Moist",
+              "classification": "normal",
+              "noteFragment": "moist",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "moist"
+            },
+            {
+              "id": "ioe.buccal_mucosa.no_lesions",
+              "label": "No lesions",
+              "classification": "normal",
+              "noteFragment": "no lesions",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no lesions"
+            },
+            {
+              "id": "ioe.buccal_mucosa.no_swelling",
+              "label": "No swelling",
+              "classification": "normal",
+              "noteFragment": "no swelling",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no swelling"
+            },
+            {
+              "id": "ioe.buccal_mucosa.ulcer",
+              "label": "Ulcer",
+              "classification": "abnormal",
+              "noteFragment": "ulcer",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Ulcers",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.buccal_mucosa.white_patch",
+              "label": "White patch",
+              "classification": "abnormal",
+              "noteFragment": "white patch",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "white patches",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.buccal_mucosa.red_patch",
+              "label": "Red patch",
+              "classification": "abnormal",
+              "noteFragment": "red patch",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "red patches",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.buccal_mucosa.swelling",
+              "label": "Swelling",
+              "classification": "abnormal",
+              "noteFragment": "swelling",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "swelling",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.buccal_mucosa.fordyce_granules",
+              "label": "Fordyce granules",
+              "classification": "normal_variation",
+              "noteFragment": "Fordyce granules",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Fordyce granules",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.buccal_mucosa.linea_alba",
+              "label": "Linea alba",
+              "classification": "normal_variation",
+              "noteFragment": "linea alba",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "linea alba",
+              "supportsLaterality": true
+            }
+          ],
+          "supportsComment": true
+        },
+        {
+          "id": "ioe.gingiva",
+          "label": "Gingiva",
+          "sourceRowId": "gingiva",
+          "implementationMode": "derived_from_gingival_description",
+          "enabledByDefault": false,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Use the WNL output from the Gingival Description section.",
+          "options": [
+            {
+              "id": "ioe.gingiva.coral_pink",
+              "label": "Coral pink",
+              "classification": "normal",
+              "noteFragment": "coral pink",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Coral pink"
+            },
+            {
+              "id": "ioe.gingiva.firm",
+              "label": "Firm",
+              "classification": "normal",
+              "noteFragment": "firm",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "firm"
+            },
+            {
+              "id": "ioe.gingiva.knife_edged_margins",
+              "label": "Knife-edged margins",
+              "classification": "normal",
+              "noteFragment": "knife-edged margins",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "knife-edged margins"
+            },
+            {
+              "id": "ioe.gingiva.no_bleeding",
+              "label": "No bleeding",
+              "classification": "normal",
+              "noteFragment": "no bleeding",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no bleeding"
+            },
+            {
+              "id": "ioe.gingiva.red",
+              "label": "Red",
+              "classification": "abnormal",
+              "noteFragment": "red",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Red"
+            },
+            {
+              "id": "ioe.gingiva.swollen",
+              "label": "Swollen",
+              "classification": "abnormal",
+              "noteFragment": "swollen",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "swollen"
+            },
+            {
+              "id": "ioe.gingiva.receding",
+              "label": "Receding",
+              "classification": "abnormal",
+              "noteFragment": "receding",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "receding"
+            },
+            {
+              "id": "ioe.gingiva.bleeding",
+              "label": "Bleeding",
+              "classification": "abnormal",
+              "noteFragment": "bleeding",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "bleeding"
+            },
+            {
+              "id": "ioe.gingiva.slight_redness",
+              "label": "Slight redness",
+              "classification": "normal_variation",
+              "noteFragment": "slight redness",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Slight redness",
+              "automationNote": "Do not automatically diagnose mild gingivitis from this observation."
+            }
+          ],
+          "supportsComment": true,
+          "duplicateCheck": ["gingival description", "bleeding on probing"],
+          "notes": ["Do not create a second independent gingival state model."]
+        },
+        {
+          "id": "ioe.tongue",
+          "label": "Tongue",
+          "sourceRowId": "tongue",
+          "implementationMode": "direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Tongue pink, moist, symmetrical, and without lesions.",
+          "options": [
+            {
+              "id": "ioe.tongue.pink",
+              "label": "Pink",
+              "classification": "normal",
+              "noteFragment": "pink",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Pink"
+            },
+            {
+              "id": "ioe.tongue.moist",
+              "label": "Moist",
+              "classification": "normal",
+              "noteFragment": "moist",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "moist"
+            },
+            {
+              "id": "ioe.tongue.symmetrical",
+              "label": "Symmetrical",
+              "classification": "normal",
+              "noteFragment": "symmetrical",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "symmetrical"
+            },
+            {
+              "id": "ioe.tongue.no_lesions",
+              "label": "No lesions",
+              "classification": "normal",
+              "noteFragment": "no lesions",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no lesions"
+            },
+            {
+              "id": "ioe.tongue.coated",
+              "label": "Coated",
+              "classification": "normal_variation",
+              "noteFragment": "coated",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Coated",
+              "reviewStatus": "classification_review_resolved",
+              "classificationNote": "Treat as an observed normal variation; do not infer pathology, cause, or treatment."
+            },
+            {
+              "id": "ioe.tongue.fissured",
+              "label": "Fissured",
+              "classification": "normal_variation",
+              "noteFragment": "fissured",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "fissured",
+              "reviewStatus": "classification_review_resolved",
+              "classificationNote": "Treat as an observed normal variation; do not infer pathology, cause, or treatment."
+            },
+            {
+              "id": "ioe.tongue.swollen",
+              "label": "Swollen",
+              "classification": "abnormal",
+              "noteFragment": "swollen",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "swollen",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.tongue.lesion",
+              "label": "Lesion",
+              "classification": "abnormal",
+              "noteFragment": "lesion",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "lesions",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.tongue.scalloped_edges",
+              "label": "Scalloped edges",
+              "classification": "normal_variation",
+              "noteFragment": "scalloped lateral borders",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Scalloped edges",
+              "automationNote": "Do not infer tongue thrust or parafunctional habits."
+            },
+            {
+              "id": "ioe.tongue.geographic_tongue",
+              "label": "Geographic tongue",
+              "classification": "normal_variation",
+              "noteFragment": "geographic tongue",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "geographic tongue"
+            }
+          ],
+          "supportsComment": true
+        },
+        {
+          "id": "ioe.floor_of_mouth",
+          "label": "Floor of mouth",
+          "sourceRowId": "floor_of_mouth",
+          "implementationMode": "direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Floor of mouth pink and smooth, with no swelling or discoloration.",
+          "options": [
+            {
+              "id": "ioe.floor_of_mouth.pink",
+              "label": "Pink",
+              "classification": "normal",
+              "noteFragment": "pink",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Pink"
+            },
+            {
+              "id": "ioe.floor_of_mouth.smooth",
+              "label": "Smooth",
+              "classification": "normal",
+              "noteFragment": "smooth",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "smooth"
+            },
+            {
+              "id": "ioe.floor_of_mouth.no_swelling",
+              "label": "No swelling",
+              "classification": "normal",
+              "noteFragment": "no swelling",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no swelling"
+            },
+            {
+              "id": "ioe.floor_of_mouth.no_discoloration",
+              "label": "No discoloration",
+              "classification": "normal",
+              "noteFragment": "no discoloration",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no discoloration"
+            },
+            {
+              "id": "ioe.floor_of_mouth.swelling",
+              "label": "Swelling",
+              "classification": "abnormal",
+              "noteFragment": "swelling",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Swelling",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.floor_of_mouth.mass",
+              "label": "Mass",
+              "classification": "abnormal",
+              "noteFragment": "mass",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "masses",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.floor_of_mouth.blue_discoloration",
+              "label": "Blue discoloration",
+              "classification": "abnormal",
+              "noteFragment": "blue discoloration",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "blue discoloration",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.floor_of_mouth.black_discoloration",
+              "label": "Black discoloration",
+              "classification": "abnormal",
+              "noteFragment": "black discoloration",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "black discoloration",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.floor_of_mouth.prominent_lingual_veins",
+              "label": "Prominent lingual veins",
+              "classification": "normal_variation",
+              "noteFragment": "prominent lingual veins",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Prominent lingual veins",
+              "supportsLaterality": true
+            }
+          ],
+          "supportsComment": true
+        },
+        {
+          "id": "ioe.palate",
+          "label": "Palate (hard/soft)",
+          "sourceRowId": "palate_hard_soft",
+          "implementationMode": "direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Hard and soft palate pink and intact, with no lesions or abnormal growths.",
+          "options": [
+            {
+              "id": "ioe.palate.pink",
+              "label": "Pink",
+              "classification": "normal",
+              "noteFragment": "pink",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Pink"
+            },
+            {
+              "id": "ioe.palate.intact",
+              "label": "Intact",
+              "classification": "normal",
+              "noteFragment": "intact",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "intact"
+            },
+            {
+              "id": "ioe.palate.no_lesions",
+              "label": "No lesions",
+              "classification": "normal",
+              "noteFragment": "no lesions",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no lesions"
+            },
+            {
+              "id": "ioe.palate.no_abnormal_growths",
+              "label": "No abnormal growths",
+              "classification": "normal",
+              "noteFragment": "no abnormal growths",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no abnormal growths"
+            },
+            {
+              "id": "ioe.palate.ulcer",
+              "label": "Ulcer",
+              "classification": "abnormal",
+              "noteFragment": "ulcer",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Ulcers",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.palate.red_patch",
+              "label": "Red patch",
+              "classification": "abnormal",
+              "noteFragment": "red patch",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "red patches",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.palate.white_patch",
+              "label": "White patch",
+              "classification": "abnormal",
+              "noteFragment": "white patch",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "white patches",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.palate.petechiae",
+              "label": "Petechiae",
+              "classification": "abnormal",
+              "noteFragment": "petechiae",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "petechiae",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.palate.torus_palatinus",
+              "label": "Torus palatinus",
+              "classification": "normal_variation",
+              "noteFragment": "torus palatinus",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Torus palatinus",
+              "supportsLocation": true
+            }
+          ],
+          "supportsComment": true,
+          "notes": [
+            "The source combines hard and soft palate. Split only if the existing form architecture already distinguishes them."
+          ]
+        },
+        {
+          "id": "ioe.oropharynx",
+          "label": "Oropharynx",
+          "sourceRowId": "oropharynx",
+          "implementationMode": "direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Uvula midline, with no oropharyngeal redness, swelling, or exudate.",
+          "options": [
+            {
+              "id": "ioe.oropharynx.uvula_midline",
+              "label": "Uvula midline",
+              "classification": "normal",
+              "noteFragment": "uvula midline",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Uvula midline"
+            },
+            {
+              "id": "ioe.oropharynx.no_redness",
+              "label": "No redness",
+              "classification": "normal",
+              "noteFragment": "no redness",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no redness"
+            },
+            {
+              "id": "ioe.oropharynx.no_swelling",
+              "label": "No swelling",
+              "classification": "normal",
+              "noteFragment": "no swelling",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no swelling"
+            },
+            {
+              "id": "ioe.oropharynx.no_exudate",
+              "label": "No exudate",
+              "classification": "normal",
+              "noteFragment": "no exudate",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no exudate"
+            },
+            {
+              "id": "ioe.oropharynx.redness",
+              "label": "Redness",
+              "classification": "abnormal",
+              "noteFragment": "redness",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Redness"
+            },
+            {
+              "id": "ioe.oropharynx.swelling",
+              "label": "Swelling",
+              "classification": "abnormal",
+              "noteFragment": "swelling",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "swelling"
+            },
+            {
+              "id": "ioe.oropharynx.asymmetry",
+              "label": "Asymmetry",
+              "classification": "abnormal",
+              "noteFragment": "asymmetry",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "asymmetry"
+            },
+            {
+              "id": "ioe.oropharynx.exudate",
+              "label": "Exudate",
+              "classification": "abnormal",
+              "noteFragment": "exudate",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "exudate"
+            },
+            {
+              "id": "ioe.oropharynx.enlarged_tonsils_without_exudate",
+              "label": "Enlarged tonsils without exudate",
+              "classification": "normal_variation",
+              "noteFragment": "enlarged tonsils without exudate",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Enlarged tonsils without exudate"
+            }
+          ],
+          "supportsComment": true
+        },
+        {
+          "id": "ioe.teeth",
+          "label": "Teeth",
+          "sourceRowId": "teeth",
+          "implementationMode": "reuse_existing_or_direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "repeatable_findings",
+          "wnlText": "Teeth intact, with no caries or mobility noted.",
+          "wnlPreset": {
+            "label": "Apply normal structured observations",
+            "requiresExplicitAction": true,
+            "selectedOptionIds": [
+              "ioe.teeth.intact",
+              "ioe.teeth.no_caries",
+              "ioe.teeth.no_mobility"
+            ],
+            "generatedNoteText": "Teeth intact, with no caries or mobility noted."
+          },
+          "supportsAdditionalFindingsText": true,
+          "additionalFindingsLabel": "Additional tooth findings",
+          "options": [
+            {
+              "id": "ioe.teeth.intact",
+              "label": "Intact",
+              "classification": "normal",
+              "noteFragment": "intact",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Intact",
+              "conflictsWithOptionIds": [
+                "ioe.teeth.caries",
+                "ioe.teeth.initial_noncavitated_caries",
+                "ioe.teeth.fracture"
+              ]
+            },
+            {
+              "id": "ioe.teeth.no_caries",
+              "label": "No caries",
+              "classification": "normal",
+              "noteFragment": "no caries",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no caries",
+              "conflictsWithOptionIds": [
+                "ioe.teeth.caries",
+                "ioe.teeth.initial_noncavitated_caries"
+              ]
+            },
+            {
+              "id": "ioe.teeth.no_mobility",
+              "label": "No mobility",
+              "classification": "normal",
+              "noteFragment": "no mobility",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "no mobility",
+              "supportsGrade": true,
+              "gradeSystem": "Miller Index",
+              "fixedGrade": "M0",
+              "conflictsWithOptionIds": ["ioe.teeth.mobility"]
+            },
+            {
+              "id": "ioe.teeth.caries",
+              "label": "Caries",
+              "classification": "abnormal",
+              "noteFragment": "caries",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Caries",
+              "supportsTooth": true,
+              "requiresToothOrArea": true,
+              "supportsSurface": true,
+              "surfaceInputMode": "free_text",
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": [
+                "ioe.teeth.intact",
+                "ioe.teeth.no_caries"
+              ]
+            },
+            {
+              "id": "ioe.teeth.initial_noncavitated_caries",
+              "label": "Initial/noncavitated caries lesion",
+              "classification": "abnormal",
+              "noteFragment": "initial/noncavitated caries lesion",
+              "sourceCategory": "approved_extension",
+              "sourceTerm": "Initial/noncavitated caries lesion",
+              "supportsTooth": true,
+              "requiresToothOrArea": true,
+              "supportsSurface": true,
+              "surfaceInputMode": "free_text",
+              "supportsActivity": true,
+              "activityOptions": ["active", "inactive"],
+              "activityRequired": false,
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": [
+                "ioe.teeth.intact",
+                "ioe.teeth.no_caries"
+              ],
+              "reviewStatus": "approved_2026-08-01",
+              "contextNote": "Approved Slice 3 extension; do not infer management, treatment, monitoring, recommendation, or caries-risk state from lesion stage or activity."
+            },
+            {
+              "id": "ioe.teeth.fracture",
+              "label": "Fracture",
+              "classification": "abnormal",
+              "noteFragment": "fracture",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "fractures",
+              "supportsTooth": true,
+              "requiresToothOrArea": true,
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": ["ioe.teeth.intact"]
+            },
+            {
+              "id": "ioe.teeth.discoloration",
+              "label": "Discoloration",
+              "classification": "abnormal",
+              "noteFragment": "discoloration",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "discoloration",
+              "supportsLocation": true,
+              "supportsTooth": true,
+              "allowMultipleInstances": true
+            },
+            {
+              "id": "ioe.teeth.mobility",
+              "label": "Mobility",
+              "classification": "abnormal",
+              "noteFragment": "mobility",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "mobility",
+              "supportsTooth": true,
+              "requiresToothOrArea": true,
+              "supportsGrade": true,
+              "gradeSystem": "Miller Index",
+              "gradeOptions": ["M1", "M2", "M3"],
+              "gradeRequired": true,
+              "allowMultipleInstances": true,
+              "conflictsWithOptionIds": ["ioe.teeth.no_mobility"]
+            },
+            {
+              "id": "ioe.teeth.enamel_hypoplasia",
+              "label": "Enamel hypoplasia",
+              "classification": "normal_variation",
+              "noteFragment": "enamel hypoplasia",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Enamel hypoplasia",
+              "supportsTooth": true,
+              "allowMultipleInstances": true
+            },
+            {
+              "id": "ioe.teeth.fluorosis",
+              "label": "Fluorosis",
+              "classification": "normal_variation",
+              "noteFragment": "fluorosis",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "fluorosis",
+              "supportsLocation": true,
+              "supportsTooth": true,
+              "allowMultipleInstances": true
+            }
+          ],
+          "supportsComment": true,
+          "duplicateCheck": [
+            "dentition",
+            "caries",
+            "mobility",
+            "existing examination fields"
+          ],
+          "notes": [
+            "Own structured Teeth state inside the existing Recare Odontogram and Caries Risk area without synchronizing the three controls.",
+            "Initial/noncavitated lesion stage and activity never imply management or treatment."
+          ]
+        },
+        {
+          "id": "ioe.occlusion",
+          "label": "Occlusion",
+          "sourceRowId": "occlusion",
+          "implementationMode": "reuse_existing_or_summary",
+          "enabledByDefault": false,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Class I occlusion.",
+          "options": [
+            {
+              "id": "ioe.occlusion.class_i",
+              "label": "Class I",
+              "classification": "normal",
+              "noteFragment": "Class I occlusion",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Class I (normal bite)"
+            },
+            {
+              "id": "ioe.occlusion.class_ii",
+              "label": "Class II",
+              "classification": "abnormal",
+              "noteFragment": "Class II occlusion",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Class II"
+            },
+            {
+              "id": "ioe.occlusion.class_iii",
+              "label": "Class III",
+              "classification": "abnormal",
+              "noteFragment": "Class III occlusion",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Class III"
+            },
+            {
+              "id": "ioe.occlusion.open_bite",
+              "label": "Open bite",
+              "classification": "abnormal",
+              "noteFragment": "open bite",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "open bite",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.occlusion.crossbite",
+              "label": "Crossbite",
+              "classification": "abnormal",
+              "noteFragment": "crossbite",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "crossbite",
+              "supportsLocation": true
+            },
+            {
+              "id": "ioe.occlusion.increased_overjet",
+              "label": "Increased overjet",
+              "classification": "abnormal",
+              "noteFragment": "increased overjet",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "increased overjet",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnit": "mm"
+            },
+            {
+              "id": "ioe.occlusion.increased_overbite",
+              "label": "Increased overbite",
+              "classification": "abnormal",
+              "noteFragment": "increased overbite",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "increased overbite",
+              "supportsLocation": true,
+              "supportsMeasurement": true,
+              "measurementUnits": ["percent", "mm"],
+              "allowMultipleMeasurements": true
+            }
+          ],
+          "supportsComment": true,
+          "duplicateCheck": ["occlusion", "overjet", "overbite", "crossbite"],
+          "notes": [
+            "Do not create duplicate occlusion state if equivalent fields already exist.",
+            "The raw source wording 'Slight malocclusion' is retained in sourceTables for audit only and is deliberately excluded from normalized and runtime choices as clinically non-specific."
+          ]
+        },
+        {
+          "id": "ioe.saliva",
+          "label": "Saliva",
+          "sourceRowId": "saliva",
+          "implementationMode": "reuse_existing_or_direct",
+          "enabledByDefault": true,
+          "defaultStatus": "not_assessed",
+          "statusOptions": [
+            {
+              "id": "not_assessed",
+              "label": "Not assessed"
+            },
+            {
+              "id": "wnl",
+              "label": "Within normal limits"
+            },
+            {
+              "id": "findings",
+              "label": "Findings documented"
+            }
+          ],
+          "selectionMode": "multiple_when_findings",
+          "wnlText": "Saliva clear with normal flow.",
+          "options": [
+            {
+              "id": "ioe.saliva.clear",
+              "label": "Clear",
+              "classification": "normal",
+              "noteFragment": "clear",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "Clear"
+            },
+            {
+              "id": "ioe.saliva.normal_flow",
+              "label": "Normal flow",
+              "classification": "normal",
+              "noteFragment": "normal flow",
+              "sourceCategory": "normal_findings",
+              "sourceTerm": "normal flow"
+            },
+            {
+              "id": "ioe.saliva.thick",
+              "label": "Thick",
+              "classification": "abnormal",
+              "noteFragment": "thick",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "Thick"
+            },
+            {
+              "id": "ioe.saliva.sticky",
+              "label": "Sticky",
+              "classification": "abnormal",
+              "noteFragment": "sticky",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "sticky"
+            },
+            {
+              "id": "ioe.saliva.reduced_flow",
+              "label": "Reduced flow",
+              "classification": "abnormal",
+              "noteFragment": "reduced flow",
+              "sourceCategory": "abnormal_findings",
+              "sourceTerm": "reduced flow"
+            },
+            {
+              "id": "ioe.saliva.slightly_viscous",
+              "label": "Slightly viscous",
+              "classification": "normal_variation",
+              "noteFragment": "slightly viscous",
+              "sourceCategory": "common_variations",
+              "sourceTerm": "Slightly viscous saliva"
+            }
+          ],
+          "supportsComment": true,
+          "duplicateCheck": [
+            "xerostomia",
+            "salivary flow",
+            "existing hygiene assessment fields"
+          ]
+        }
+      ]
+    }
+  },
+  "reviewItems": [
+    {
+      "id": "review.source_position_cej_wording",
+      "question": "Should any CEJ/root-coverage wording from the source become a selectable normal finding?",
+      "currentDecision": "No; preserve it only in raw source transcription until clinically reviewed."
+    },
+    {
+      "id": "review.tongue_fissured_classification",
+      "question": "Should fissured tongue remain abnormal or be treated as a normal variation?",
+      "currentDecision": "Treat as a normal variation. Preserve the source classification only in the audit transcription and do not infer pathology."
+    },
+    {
+      "id": "review.tongue_coated_classification",
+      "question": "Should coated tongue always be classified as abnormal?",
+      "currentDecision": "Treat as a normal variation. Preserve the source classification only in the audit transcription and do not infer pathology."
+    },
+    {
+      "id": "review.ioe_duplicate_sections",
+      "question": "Do Teeth, Occlusion, Saliva, Gingiva, or bleeding already exist elsewhere in the form?",
+      "currentDecision": "Route Gingival Description to Adult Hygiene; route structured soft-tissue IOE, Saliva, occlusal additions, and the approved structured Teeth assessment to existing Recare owners; create no direct IOE Gingiva state. Teeth remains independent from odontogram and Caries Risk state."
+    },
+    {
+      "id": "review.teeth_slice_3",
+      "question": "How should Recare represent WNL, caries lesions, mobility, repeatable tooth findings, and Tooth/area annotations?",
+      "currentDecision": "Approved 2026-08-01 in Slice 3. Use explicit Not assessed/WNL/Findings state; repeatable Caries, Initial/noncavitated caries lesion, and Mobility rows; M0 as No mobility and M1-M3 for Mobility; reviewed conflicts and required Tooth/area metadata; optional initial-lesion activity; free-text surfaces; no inferred management, treatment, odontogram status, or Caries Risk."
+    },
+    {
+      "id": "review.occlusion_overbite_measurement_units",
+      "question": "Should overbite be recorded in percent or millimetres?",
+      "currentDecision": "Preserve Recare percent recording and add an independent millimetre value; allow either or both."
+    }
+  ]
+}

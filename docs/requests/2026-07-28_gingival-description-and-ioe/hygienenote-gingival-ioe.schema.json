@@ -1,0 +1,497 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "hygienenote-gingival-ioe.schema.json",
+  "title": "HygieneNote Gingival and IOE Catalog",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "catalogId",
+    "source",
+    "implementationPolicies",
+    "normalizedSections"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "string"
+    },
+    "catalogId": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "required": ["documentName", "sourceTables"],
+      "properties": {
+        "documentName": {
+          "type": "string"
+        },
+        "sourcePages": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "sourceTables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceTable"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "implementationPolicies": {
+      "type": "object"
+    },
+    "sharedModels": {
+      "type": "object"
+    },
+    "normalizedSections": {
+      "type": "object",
+      "required": ["gingivalDescription", "ioe"],
+      "properties": {
+        "gingivalDescription": {
+          "$ref": "#/$defs/gingivalSection"
+        },
+        "ioe": {
+          "$ref": "#/$defs/ioeSection"
+        }
+      },
+      "additionalProperties": false
+    },
+    "reviewItems": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "$defs": {
+    "sourceTable": {
+      "type": "object",
+      "required": ["tableId", "headers", "rows"],
+      "properties": {
+        "tableId": {
+          "type": "string"
+        },
+        "sourceTableNumber": {
+          "type": "integer"
+        },
+        "headers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "statusOption": {
+      "type": "object",
+      "required": ["id", "label"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "catalogOption": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "classification",
+        "noteFragment",
+        "sourceCategory",
+        "sourceTerm"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "classification": {
+          "enum": ["normal", "normal_variation", "abnormal"]
+        },
+        "noteFragment": {
+          "type": "string"
+        },
+        "sourceCategory": {
+          "type": "string"
+        },
+        "sourceTerm": {
+          "type": "string"
+        },
+        "supportsLocation": {
+          "type": "boolean"
+        },
+        "supportsLaterality": {
+          "type": "boolean"
+        },
+        "supportsTooth": {
+          "type": "boolean"
+        },
+        "requiresToothOrArea": {
+          "type": "boolean"
+        },
+        "supportsSurface": {
+          "type": "boolean"
+        },
+        "surfaceInputMode": {
+          "enum": ["free_text"]
+        },
+        "allowMultipleInstances": {
+          "type": "boolean"
+        },
+        "supportsActivity": {
+          "type": "boolean"
+        },
+        "activityOptions": {
+          "type": "array",
+          "items": {
+            "enum": ["active", "inactive"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "activityRequired": {
+          "type": "boolean"
+        },
+        "supportsMeasurement": {
+          "type": "boolean"
+        },
+        "measurementUnit": {
+          "enum": ["mm", "percent"]
+        },
+        "measurementUnits": {
+          "type": "array",
+          "items": {
+            "enum": ["mm", "percent"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "allowMultipleMeasurements": {
+          "type": "boolean"
+        },
+        "supportsGrade": {
+          "type": "boolean"
+        },
+        "gradeSystem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gradeOptions": {
+          "type": "array",
+          "items": {
+            "enum": ["M0", "M1", "M2", "M3"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "fixedGrade": {
+          "enum": ["M0", "M1", "M2", "M3"]
+        },
+        "gradeRequired": {
+          "type": "boolean"
+        },
+        "conflictsWithOptionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "reviewStatus": {
+          "type": "string"
+        },
+        "classificationNote": {
+          "type": "string"
+        },
+        "automationNote": {
+          "type": "string"
+        },
+        "contextNote": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "supportsMeasurement": {
+                "const": true
+              }
+            },
+            "required": ["supportsMeasurement"]
+          },
+          "then": {
+            "oneOf": [
+              {
+                "required": ["measurementUnit"],
+                "not": {
+                  "required": ["measurementUnits"]
+                }
+              },
+              {
+                "required": ["measurementUnits"],
+                "not": {
+                  "required": ["measurementUnit"]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "requiresToothOrArea": {
+                "const": true
+              }
+            },
+            "required": ["requiresToothOrArea"]
+          },
+          "then": {
+            "properties": {
+              "supportsTooth": {
+                "const": true
+              }
+            },
+            "required": ["supportsTooth"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportsSurface": {
+                "const": true
+              }
+            },
+            "required": ["supportsSurface"]
+          },
+          "then": {
+            "required": ["surfaceInputMode"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportsActivity": {
+                "const": true
+              }
+            },
+            "required": ["supportsActivity"]
+          },
+          "then": {
+            "required": ["activityOptions", "activityRequired"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "supportsGrade": {
+                "const": true
+              }
+            },
+            "required": ["supportsGrade"]
+          },
+          "then": {
+            "required": ["gradeSystem"],
+            "oneOf": [
+              {
+                "required": ["fixedGrade"],
+                "not": {
+                  "required": ["gradeOptions"]
+                }
+              },
+              {
+                "required": ["gradeOptions"],
+                "not": {
+                  "required": ["fixedGrade"]
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "wnlPreset": {
+      "type": "object",
+      "required": [
+        "label",
+        "requiresExplicitAction",
+        "selectedOptionIds",
+        "generatedNoteText"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "requiresExplicitAction": {
+          "const": true
+        },
+        "selectedOptionIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "generatedNoteText": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "dimension": {
+      "type": "object",
+      "required": ["id", "label", "options"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/catalogOption"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "gingivalSection": {
+      "type": "object",
+      "required": ["id", "label", "dimensions", "wnlPreset"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dimension"
+          }
+        },
+        "wnlPreset": {
+          "$ref": "#/$defs/wnlPreset"
+        }
+      },
+      "additionalProperties": true
+    },
+    "ioeStructure": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "implementationMode",
+        "statusOptions",
+        "options"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "implementationMode": {
+          "enum": [
+            "direct",
+            "derived_from_gingival_description",
+            "reuse_existing_or_summary",
+            "reuse_existing_or_direct"
+          ]
+        },
+        "enabledByDefault": {
+          "type": "boolean"
+        },
+        "defaultStatus": {
+          "enum": ["not_assessed", "wnl", "findings"]
+        },
+        "statusOptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/statusOption"
+          }
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/catalogOption"
+          }
+        },
+        "selectionMode": {
+          "enum": ["multiple_when_findings", "repeatable_findings"]
+        },
+        "wnlText": {
+          "type": "string"
+        },
+        "wnlPreset": {
+          "$ref": "#/$defs/wnlPreset"
+        },
+        "supportsComment": {
+          "type": "boolean"
+        },
+        "supportsAdditionalFindingsText": {
+          "type": "boolean"
+        },
+        "additionalFindingsLabel": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": true
+    },
+    "ioeSection": {
+      "type": "object",
+      "required": ["id", "label", "structures"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "structures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ioeStructure"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
