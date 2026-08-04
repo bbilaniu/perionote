@@ -1671,6 +1671,46 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   );
 });
 
+test("Adult Hygiene blocks copy while a visible grade override reason is empty", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto(adultHygieneUrl);
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+
+  await page.locator("#adult-hygiene-periodontitis-grade").click();
+  await page
+    .getByRole("option", { name: "Grade C: rapid rate", exact: true })
+    .click();
+  const gradeOverrideReason = page.getByLabel("Grade override reason");
+  await expect(gradeOverrideReason).toBeVisible();
+
+  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await expect(
+    page.getByText("Enter a grade override reason.", { exact: true })
+  ).toBeVisible();
+  await expect(gradeOverrideReason).toHaveAttribute("aria-invalid", "true");
+  await expect(gradeOverrideReason).toBeFocused();
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.toBe("sentinel");
+
+  await gradeOverrideReason.fill("Clinician-selected Grade C");
+  await expect(
+    page.getByText("Enter a grade override reason.", { exact: true })
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.toMatch(
+    /Grade C[\s\S]*Grade override: Clinician-selected Grade C\./
+  );
+});
+
 test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
   page,
 }) => {
