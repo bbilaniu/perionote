@@ -59,10 +59,20 @@ Periodontal assessment findings:
 - Radiographic bone loss (RBL): Present.
 - Sites with PPD >=4 mm and BOP: None.
 - Evidence of progressive periodontal destruction: No.
-- Patient-specific stage evidence: interdental CAL 3 mm; radiographic bone loss 20%; mostly horizontal bone loss.
-- Patient-specific grade evidence: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
-- Smoking: non-smoker.
-- Diabetes: no diagnosis of diabetes / normoglycemic.
+Patient-specific stage evidence:
+  Severity evidence:
+    - radiographic bone loss 20%.
+    - interdental CAL 3 mm.
+  Complexity evidence:
+    - maximum PPD 3 mm.
+    - mostly horizontal bone loss.
+Patient-specific grade evidence:
+  Progression evidence:
+    - bone-loss/age ratio 0.72.
+    - destruction commensurate with biofilm.
+  Grade modifiers:
+    - Smoking: non-smoker.
+    - Diabetes: no diagnosis of diabetes / normoglycemic.
 Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 - PROBING ATTACHMENT LOSS PRESENT
 - MAXIMUM PPD: 3 MM
@@ -164,7 +174,7 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(current)).toBe("");
   });
 
-  it("charts entered modifiers while suppressing another diagnosis interpretation", () => {
+  it("charts entered grade modifiers while suppressing another diagnosis interpretation", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -180,9 +190,10 @@ Date Booked: 2026-11-15`);
     };
 
     const summary = buildAdultHygiene2021Summary(form);
-    expect(summary).toBe(`Periodontal assessment findings:
-- Smoking: smokes 12 cigarettes/day.`);
-    expect(summary).not.toContain("Grade modifiers:");
+    expect(summary).toBe(`Patient-specific grade evidence:
+  Grade modifiers:
+    - Smoking: smokes 12 cigarettes/day.`);
+    expect(summary).not.toContain("Periodontal diagnosis:");
   });
 
   it("charts entered structured periodontal observations before classification", () => {
@@ -222,8 +233,14 @@ Date Booked: 2026-11-15`);
 - Radiographic bone loss (RBL): Absent.
 - Sites with PPD >=4 mm and BOP: None.
 - Evidence of progressive periodontal destruction: No.
-- Patient-specific stage evidence: interdental CAL 3 mm.
-- Patient-specific grade evidence: bone-loss/age ratio 0.72.`);
+Patient-specific stage evidence:
+  Severity evidence:
+    - interdental CAL 3 mm.
+  Complexity evidence:
+    - maximum PPD 3 mm.
+Patient-specific grade evidence:
+  Progression evidence:
+    - bone-loss/age ratio 0.72.`);
   });
 
   it("formats explicit gingival WNL from the reviewed preset", () => {
@@ -631,9 +648,12 @@ Recommended hygiene interval comments: Synthetic hygiene context.`);
 
     const summary = buildAdultHygiene2021Summary(form);
     expect(summary)
-      .toBe(`Periodontal assessment findings:
-- Patient-specific stage evidence: interdental CAL 3 mm.
-- Patient-specific grade evidence: bone-loss/age ratio 0.5.
+      .toBe(`Patient-specific stage evidence:
+  Severity evidence:
+    - interdental CAL 3 mm.
+Patient-specific grade evidence:
+  Progression evidence:
+    - bone-loss/age ratio 0.5.
 Periodontal diagnosis: Periodontitis.`);
     expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis:|Grade basis:/);
   });

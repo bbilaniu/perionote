@@ -14,6 +14,7 @@ import {
   formatSmokingModifier,
   isPeriodontalStatusCompatibleWithContext,
   periodontalPeriodontiumChoices,
+  periodontalStageCriterionCatalogue,
   periodontalStageEvidence,
   periodontalStatusChoices,
   type PeriodontalClassification,
@@ -338,7 +339,7 @@ function formatPeriodontalClassification(
   ].filter(Boolean);
 }
 
-function formatPeriodontalObservations(
+function formatPeriodontalAssessmentFindings(
   classification: PeriodontalClassification
 ): string {
   const assessment = classification.gingivalHealth;
@@ -381,31 +382,72 @@ function formatPeriodontalObservations(
       ? "Evidence of progressive periodontal destruction: Yes."
       : "",
   ].filter(Boolean);
-  const stageEvidence = classification.stageBasis
-        .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
-        .filter(Boolean);
-  const gradeEvidence = classification.gradeBasis
+  return findings.length
+    ? [
+        "Periodontal assessment findings:",
+        ...findings.map((line) => `- ${line}`),
+      ].join("\n")
+    : "";
+}
+
+function formatEvidenceSubsection(label: string, items: string[]): string[] {
+  return items.length
+    ? [
+        `  ${label}:`,
+        ...items.map((item) => `    - ${withTerminalPunctuation(item)}`),
+      ]
+    : [];
+}
+
+function formatPatientSpecificStageEvidence(
+  classification: PeriodontalClassification
+): string {
+  const evidence = periodontalStageEvidence(classification);
+  const evidenceForGroup = (group: "severity" | "complexity") =>
+    evidence
+      .filter(({ criterionId }) =>
+        periodontalStageCriterionCatalogue.some(
+          (criterion) =>
+            criterion.id === criterionId && criterion.group === group
+        )
+      )
+      .map((item) => formatPeriodontalEvidence(item, "ascii"))
+      .filter(Boolean);
+  const lines = [
+    ...formatEvidenceSubsection(
+      "Severity evidence",
+      evidenceForGroup("severity")
+    ),
+    ...formatEvidenceSubsection(
+      "Complexity evidence",
+      evidenceForGroup("complexity")
+    ),
+  ];
+
+  return lines.length
+    ? ["Patient-specific stage evidence:", ...lines].join("\n")
+    : "";
+}
+
+function formatPatientSpecificGradeEvidence(
+  classification: PeriodontalClassification
+): string {
+  const progressionEvidence = classification.gradeBasis
     .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
     .filter(Boolean);
   const smoking = formatSmokingModifier(classification.smoking, "ascii");
   const diabetes = formatDiabetesModifier(classification.diabetes, "ascii");
-  const lines = [
-    ...findings,
-    stageEvidence.length
-      ? `Patient-specific stage evidence: ${stageEvidence.join("; ")}.`
-      : "",
-    gradeEvidence.length
-      ? `Patient-specific grade evidence: ${gradeEvidence.join("; ")}.`
-      : "",
-    smoking ? `Smoking: ${withTerminalPunctuation(smoking)}` : "",
-    diabetes ? `Diabetes: ${withTerminalPunctuation(diabetes)}` : "",
+  const modifiers = [
+    smoking ? `Smoking: ${smoking}` : "",
+    diabetes ? `Diabetes: ${diabetes}` : "",
   ].filter(Boolean);
+  const lines = [
+    ...formatEvidenceSubsection("Progression evidence", progressionEvidence),
+    ...formatEvidenceSubsection("Grade modifiers", modifiers),
+  ];
 
   return lines.length
-    ? [
-        "Periodontal assessment findings:",
-        ...lines.map((line) => `- ${line}`),
-      ].join("\n")
+    ? ["Patient-specific grade evidence:", ...lines].join("\n")
     : "";
 }
 
@@ -516,7 +558,9 @@ export function buildAdultHygiene2021Summary(
     psrPocketingLine(form.psrPocketing),
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
-    formatPeriodontalObservations(form.periodontalClassification),
+    formatPeriodontalAssessmentFindings(form.periodontalClassification),
+    formatPatientSpecificStageEvidence(form.periodontalClassification),
+    formatPatientSpecificGradeEvidence(form.periodontalClassification),
     healthGingivitisBlock,
     formatGingivalDescription(form.gingivalDescription),
     ...periodontalClassificationLines,

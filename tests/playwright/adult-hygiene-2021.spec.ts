@@ -492,13 +492,13 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
   ).toBeVisible();
   await page.locator("#adult-hygiene-stage-interdental-cal").fill("3");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Patient-specific stage evidence: interdental CAL 3 mm\./
+    /Patient-specific stage evidence:\n  Severity evidence:\n    - interdental CAL 3 mm\./
   );
   await page
     .locator("#adult-hygiene-grade-bone-loss-age-ratio")
     .fill("0.72");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Patient-specific grade evidence: bone-loss\/age ratio 0\.72\./
+    /Patient-specific grade evidence:\n  Progression evidence:\n    - bone-loss\/age ratio 0\.72\./
   );
 });
 
