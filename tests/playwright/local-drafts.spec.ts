@@ -1,0 +1,75 @@
+import { expect, test } from "@playwright/test";
+import { INTERACTIVE_DRAFT_STORAGE_PREFIX } from "@/lib/templates/localDrafts";
+
+const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
+const recareExamUrl = "/templates/clinic/recare-exam/interactive";
+
+test("Adult Hygiene autosaves after ten seconds and restores its tab after reload", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic autosave A");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH");
+
+  await page.waitForTimeout(10_500);
+
+  const savedDrafts = await page.evaluate((prefix) =>
+    Object.entries(window.localStorage)
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([, value]) => value),
+  INTERACTIVE_DRAFT_STORAGE_PREFIX);
+  expect(savedDrafts).toHaveLength(1);
+  expect(savedDrafts[0]).toContain("Synthetic autosave A");
+
+  await page.reload();
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
+    "Synthetic autosave A",
+  );
+  await expect(page.locator("#adult-hygiene-rdh")).toHaveValue(
+    "Synthetic RDH",
+  );
+  await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
+});
+
+test("Recare copy saves independent drafts for multiple open tabs", async ({
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const firstPage = await context.newPage();
+  await firstPage.goto(recareExamUrl);
+  const copiedTabSession = await firstPage.evaluate(() =>
+    Object.entries(window.sessionStorage),
+  );
+  const secondPage = await context.newPage();
+  await secondPage.addInitScript((entries) => {
+    for (const [key, value] of entries) window.sessionStorage.setItem(key, value);
+  }, copiedTabSession);
+  await secondPage.goto(recareExamUrl);
+
+  await firstPage.locator("#recare-patient-id").fill("Synthetic tab A");
+  await firstPage.locator("#recare-rdh").fill("Synthetic RDH A");
+  await firstPage.getByRole("button", { name: "Copy note" }).click();
+  await expect(firstPage.getByText("Note copied.", { exact: true })).toBeVisible();
+
+  await secondPage.locator("#recare-patient-id").fill("Synthetic tab B");
+  await secondPage.locator("#recare-rdh").fill("Synthetic RDH B");
+  await secondPage.getByRole("button", { name: "Copy note" }).click();
+  await expect(secondPage.getByText("Note copied.", { exact: true })).toBeVisible();
+
+  expect(
+    await firstPage.evaluate(
+      (prefix) =>
+        Object.keys(window.localStorage).filter((key) => key.startsWith(prefix))
+          .length,
+      INTERACTIVE_DRAFT_STORAGE_PREFIX,
+    ),
+  ).toBe(2);
+
+  await Promise.all([firstPage.reload(), secondPage.reload()]);
+  await expect(firstPage.locator("#recare-patient-id")).toHaveValue(
+    "Synthetic tab A",
+  );
+  await expect(secondPage.locator("#recare-patient-id")).toHaveValue(
+    "Synthetic tab B",
+  );
+});
