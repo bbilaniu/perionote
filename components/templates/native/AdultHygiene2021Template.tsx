@@ -839,45 +839,12 @@ function documentedObservationSummary(count: number) {
     : "Not assessed";
 }
 
-type PeriodontalOverrideField = "context" | "stage" | "grade";
-type PeriodontalOverrideErrors = Record<PeriodontalOverrideField, string>;
-
-function requiredPeriodontalOverrides(
-  classification: PeriodontalClassification,
-): Record<PeriodontalOverrideField, boolean> {
-  const candidate = classifyPeriodontalCandidate(classification);
-  const gingivalHealthCandidate = classifyGingivalHealthCandidate(classification);
-  return {
-    context: Boolean(
-      classification.gingivalHealth.context &&
-        classification.gingivalHealth.context !== gingivalHealthCandidate.context,
-    ),
-    stage: Boolean(
-      classification.stage &&
-        candidate.stage &&
-        classification.stage !== candidate.stage,
-    ),
-    grade: Boolean(
-      classification.grade &&
-        candidate.grade &&
-        classification.grade !== candidate.grade,
-    ),
-  };
-}
-
 function PeriodontalClassificationControl({
   value,
   onChange,
-  overrideErrors,
-  overrideRefs,
 }: {
   value: PeriodontalClassification;
   onChange: (value: PeriodontalClassification) => void;
-  overrideErrors: PeriodontalOverrideErrors;
-  overrideRefs: Record<
-    PeriodontalOverrideField,
-    RefObject<HTMLInputElement | null>
-  >;
 }) {
   const candidate = classifyPeriodontalCandidate(value);
   const gingivalHealthCandidate = classifyGingivalHealthCandidate(value);
@@ -1973,9 +1940,6 @@ function PeriodontalClassificationControl({
                       id="adult-hygiene-health-gingivitis-override"
                       label={gingivalContextOverrideLabel}
                       value={value.gingivalHealth.overrideReason}
-                      required
-                      error={overrideErrors.context}
-                      inputRef={overrideRefs.context}
                       onChange={(overrideReason) =>
                         updateGingivalHealth({ overrideReason })
                       }
@@ -2073,9 +2037,6 @@ function PeriodontalClassificationControl({
                       id="adult-hygiene-periodontitis-stage-override"
                       label="Stage override reason"
                       value={value.stageOverrideReason}
-                      required
-                      error={overrideErrors.stage}
-                      inputRef={overrideRefs.stage}
                       onChange={(stageOverrideReason) =>
                         update({ stageOverrideReason })
                       }
@@ -2102,9 +2063,6 @@ function PeriodontalClassificationControl({
                       id="adult-hygiene-periodontitis-grade-override"
                       label="Grade override reason"
                       value={value.gradeOverrideReason}
-                      required
-                      error={overrideErrors.grade}
-                      inputRef={overrideRefs.grade}
                       onChange={(gradeOverrideReason) =>
                         update({ gradeOverrideReason })
                       }
@@ -2681,14 +2639,9 @@ export function AdultHygiene2021Template({
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
-  const [periodontalOverrideErrors, setPeriodontalOverrideErrors] =
-    useState<PeriodontalOverrideErrors>({ context: "", stage: "", grade: "" });
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
-  const periodontalContextOverrideRef = useRef<HTMLInputElement>(null);
-  const periodontalStageOverrideRef = useRef<HTMLInputElement>(null);
-  const periodontalGradeOverrideRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
 
   useEffect(() => setStartedAt(new Date()), []);
@@ -2725,27 +2678,6 @@ export function AdultHygiene2021Template({
     ) {
       setProviderError("");
     }
-    if (key === "periodontalClassification") {
-      const classification = value as PeriodontalClassification;
-      const requiredOverrides = requiredPeriodontalOverrides(classification);
-      setPeriodontalOverrideErrors((current) => ({
-        context:
-          requiredOverrides.context &&
-          !classification.gingivalHealth.overrideReason.trim()
-            ? current.context
-            : "",
-        stage:
-          requiredOverrides.stage &&
-          !classification.stageOverrideReason.trim()
-            ? current.stage
-            : "",
-        grade:
-          requiredOverrides.grade &&
-          !classification.gradeOverrideReason.trim()
-            ? current.grade
-            : "",
-      }));
-    }
   }
 
   async function copyNote() {
@@ -2753,50 +2685,20 @@ export function AdultHygiene2021Template({
     const missingProvider = ![form.dentist, form.rdh, form.rda].some((value) =>
       Boolean(value.trim()),
     );
-    const requiredOverrides = requiredPeriodontalOverrides(
-      form.periodontalClassification,
-    );
-    const missingContextOverride =
-      requiredOverrides.context &&
-      !form.periodontalClassification.gingivalHealth.overrideReason.trim();
-    const missingStageOverride =
-      requiredOverrides.stage &&
-      !form.periodontalClassification.stageOverrideReason.trim();
-    const missingGradeOverride =
-      requiredOverrides.grade &&
-      !form.periodontalClassification.gradeOverrideReason.trim();
     setPatientIdError(missingPatientId ? "Enter a Patient ID." : "");
     setProviderError(
       missingProvider ? "Enter at least one of Dentist, RDH, or RDA." : "",
     );
-    setPeriodontalOverrideErrors({
-      context: missingContextOverride
-        ? form.periodontalClassification.diagnosis === "periodontitis"
-          ? "Enter a treated-periodontitis context override reason."
-          : "Enter a Health/Gingivitis classification override reason."
-        : "",
-      stage: missingStageOverride ? "Enter a stage override reason." : "",
-      grade: missingGradeOverride ? "Enter a grade override reason." : "",
-    });
     setCopyMessage("");
     if (
       missingPatientId ||
       missingProvider ||
-      missingContextOverride ||
-      missingStageOverride ||
-      missingGradeOverride ||
       !hasRequiredAdultHygiene2021Fields(form)
     ) {
       requestAnimationFrame(() => {
         const invalidField = missingPatientId
           ? patientIdRef.current
-          : missingProvider
-            ? dentistRef.current
-            : missingContextOverride
-              ? periodontalContextOverrideRef.current
-              : missingStageOverride
-                ? periodontalStageOverrideRef.current
-                : periodontalGradeOverrideRef.current;
+          : dentistRef.current;
         invalidField?.focus();
       });
       return;
@@ -2871,7 +2773,6 @@ export function AdultHygiene2021Template({
     });
     setPatientIdError("");
     setProviderError("");
-    setPeriodontalOverrideErrors({ context: "", stage: "", grade: "" });
     setCopyMessage("Synthetic demo data loaded.");
   }
 
@@ -2881,7 +2782,6 @@ export function AdultHygiene2021Template({
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
-    setPeriodontalOverrideErrors({ context: "", stage: "", grade: "" });
     setCopyMessage("");
     patientIdRef.current?.focus();
   }
@@ -3269,12 +3169,6 @@ export function AdultHygiene2021Template({
             />
             <PeriodontalClassificationControl
               value={form.periodontalClassification}
-              overrideErrors={periodontalOverrideErrors}
-              overrideRefs={{
-                context: periodontalContextOverrideRef,
-                stage: periodontalStageOverrideRef,
-                grade: periodontalGradeOverrideRef,
-              }}
               onChange={(value) =>
                 updateField("periodontalClassification", value)
               }

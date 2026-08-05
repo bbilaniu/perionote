@@ -1102,13 +1102,6 @@ export function formatHealthGingivitisBlock(
 ): string {
   const assessment = classification.gingivalHealth;
   if (!assessment.context) return "";
-  const candidate = classifyGingivalHealthCandidate(classification);
-  if (
-    assessment.context !== candidate.context &&
-    !assessment.overrideReason.trim()
-  ) {
-    return "";
-  }
   const selectedContext = healthGingivitisContextChoices.find(
     (choice) => choice.value === assessment.context,
   );
@@ -1121,47 +1114,17 @@ export function formatHealthGingivitisBlock(
     healthGingivitisContextChoices,
     assessment.context,
   );
-  const evidenceLines = [
-    assessment.attachmentLoss === "absent"
-      ? "NO PROBING ATTACHMENT LOSS"
-      : assessment.attachmentLoss === "present"
-      ? "PROBING ATTACHMENT LOSS PRESENT"
-      : "",
-    assessment.maximumPpd
-      ? `MAXIMUM PPD: ${formatClinicalMeasurement(
-          assessment.maximumPpd,
-          "ascii",
-        ).toUpperCase()}`
-      : "",
-    assessment.bopPercent
-      ? `BOP: ${formatClinicalMeasurement(
-          assessment.bopPercent,
-          "ascii",
-        ).toUpperCase()}`
-      : "",
-    assessment.radiographicBoneLoss === "absent"
-      ? "NO RADIOGRAPHIC BONE LOSS"
-      : assessment.radiographicBoneLoss === "present"
-      ? "RADIOGRAPHIC BONE LOSS PRESENT"
-      : "",
-    assessment.ppd4OrGreaterWithBop === "no"
-      ? "SITES WITH PPD >=4 MM AND BOP: NONE"
-      : assessment.ppd4OrGreaterWithBop === "yes"
-      ? "SITES WITH PPD >=4 MM AND BOP: PRESENT"
-      : "",
-    assessment.progressiveDestruction === "no"
-      ? "NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION"
-      : assessment.progressiveDestruction === "yes"
-      ? "EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION PRESENT"
-      : "",
-    assessment.overrideReason.trim()
-      ? `CLINICIAN OVERRIDE: ${assessment.overrideReason.trim()}`
-      : "",
-  ].filter(Boolean);
+  const overrideReason = assessment.overrideReason.trim();
   return [
     `Health/Gingivitis: ${contextLabel}`,
-    ...evidenceLines.map((line) => `- ${line}`),
-  ].join("\n");
+    overrideReason
+      ? `Health/Gingivitis override: ${overrideReason}${
+          /[.!?]$/.test(overrideReason) ? "" : "."
+        }`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function formatSmokingModifier(

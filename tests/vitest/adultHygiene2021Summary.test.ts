@@ -84,12 +84,6 @@ Patient-specific grade evidence:
     - Diabetes: no diagnosis of diabetes / normoglycemic.
 
 Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
-- PROBING ATTACHMENT LOSS PRESENT
-- MAXIMUM PPD: 3 MM
-- BOP: 18%
-- RADIOGRAPHIC BONE LOSS PRESENT
-- SITES WITH PPD >=4 MM AND BOP: NONE
-- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION
 Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
 Periodontal status: Periodontal disease remission/control.
 Periodontal status comment: Synthetic periodontal status comment.
@@ -673,7 +667,7 @@ Recommended Hygiene Interval: 4-month scale.
 Recommended hygiene interval comments: Synthetic hygiene context.`);
   });
 
-  it("does not chart stage or grade overrides without reasons", () => {
+  it("charts manual stage and grade selections without requiring reasons", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -704,7 +698,7 @@ Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.5.
 
-Periodontal diagnosis: Periodontitis.`);
-    expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis:|Grade basis:/);
+Periodontal diagnosis: Periodontitis, Stage IV, Grade C.`);
+    expect(summary).not.toMatch(/Stage override:|Grade override:/);
   });
 });

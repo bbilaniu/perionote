@@ -935,7 +935,10 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     .getByRole("button", { name: "Apply suggestion", exact: true })
     .click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- MAXIMUM PPD: 3 MM\n- BOP: 6%\n- NO RADIOGRAPHIC BONE LOSS/
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /- (NO PROBING ATTACHMENT LOSS|MAXIMUM PPD:|BOP:|NO RADIOGRAPHIC BONE LOSS)/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 6%\./
@@ -943,8 +946,8 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
 
   await structuredPeriodontalObservations.click();
   await page.locator("#adult-hygiene-bop-percent").fill("12");
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Health\/Gingivitis:/
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 12%\./
@@ -1027,6 +1030,12 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     page.getByLabel("Periodontal status comment", { exact: true })
   ).toBeVisible();
 
+  await page
+    .getByRole("button", { name: /Structured periodontal observations/ })
+    .click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
   await page.locator("#adult-hygiene-periodontium").click();
   await page
     .getByRole("option", {
@@ -1091,7 +1100,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .getByLabel("Periodontal status comment")
     .fill("Stable on current maintenance interval");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT\n- PROBING ATTACHMENT LOSS PRESENT\n- MAXIMUM PPD: 4 MM\n- BOP: 5%\n- RADIOGRAPHIC BONE LOSS PRESENT\n- SITES WITH PPD >=4 MM AND BOP: NONE\n- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
+    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
   );
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
@@ -1693,7 +1702,7 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
   );
 });
 
-test("Adult Hygiene charts selected periodontal classifications and requires override reasons", async ({
+test("Adult Hygiene charts selected periodontal classifications with optional override reasons", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
@@ -1792,8 +1801,11 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   expect(statusCommentBox!.x).toBeGreaterThan(statusBox!.x);
   expect(Math.abs(statusCommentBox!.y - statusBox!.y)).toBeLessThan(2);
   expect(Math.abs(statusCommentBox!.width - statusBox!.width)).toBeLessThan(2);
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Stage IV/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Stage override:/
   );
   await page
     .getByLabel("Stage override reason")
@@ -1802,12 +1814,15 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
     /Stage IV[\s\S]*Stage override: Clinician-confirmed Stage IV complexity\./
   );
   await page.getByLabel("Stage override reason").fill("");
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Stage IV/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Stage override:/
   );
 });
 
-test("Adult Hygiene blocks copy while a visible grade override reason is empty", async ({
+test("Adult Hygiene copies a manual grade selection without requiring an override reason", async ({
   page,
   context,
 }) => {
@@ -1822,22 +1837,16 @@ test("Adult Hygiene blocks copy while a visible grade override reason is empty",
   const gradeOverrideReason = page.getByLabel("Grade override reason");
   await expect(gradeOverrideReason).toBeVisible();
 
-  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
-
-  await expect(
-    page.getByText("Enter a grade override reason.", { exact: true })
-  ).toBeVisible();
-  await expect(gradeOverrideReason).toHaveAttribute("aria-invalid", "true");
-  await expect(gradeOverrideReason).toBeFocused();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
-  ).resolves.toBe("sentinel");
+  ).resolves.toMatch(/Grade C/);
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.not.toMatch(/Grade override:/);
 
   await gradeOverrideReason.fill("Clinician-selected Grade C");
-  await expect(
-    page.getByText("Enter a grade override reason.", { exact: true })
-  ).toHaveCount(0);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -1847,7 +1856,7 @@ test("Adult Hygiene blocks copy while a visible grade override reason is empty",
   );
 });
 
-test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reason is empty", async ({
+test("Adult Hygiene copies a manual Health/Gingivitis selection without requiring an override reason", async ({
   page,
   context,
 }) => {
@@ -1869,20 +1878,16 @@ test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reaso
   );
   await expect(overrideReason).toBeVisible();
 
-  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
-
-  await expect(
-    page.getByText(
-      "Enter a Health/Gingivitis classification override reason.",
-      { exact: true }
-    )
-  ).toBeVisible();
-  await expect(overrideReason).toHaveAttribute("aria-invalid", "true");
-  await expect(overrideReason).toBeFocused();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
-  ).resolves.toBe("sentinel");
+  ).resolves.toContain(
+    "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM"
+  );
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.not.toContain("Health/Gingivitis override:");
 
   await overrideReason.fill("Clinician-selected health classification");
   await page.getByRole("button", { name: "Copy note" }).click();
@@ -1890,7 +1895,7 @@ test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reaso
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toMatch(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*CLINICIAN OVERRIDE: Clinician-selected health classification/
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*Health\/Gingivitis override: Clinician-selected health classification\./
   );
 });
 

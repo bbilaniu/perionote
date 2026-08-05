@@ -6,7 +6,6 @@ import {
 } from "@/lib/templates/adultHygiene2021";
 import {
   choiceLabel,
-  classifyPeriodontalCandidate,
   formatClinicalMeasurement,
   formatDiabetesModifier,
   formatHealthGingivitisBlock,
@@ -290,20 +289,13 @@ function formatPeriodontalClassification(
   const diagnosis = classification.diagnosis
     ? diagnosisLabels[classification.diagnosis]
     : "";
-  const candidate = classifyPeriodontalCandidate(classification);
   const stageCanBeCharted = Boolean(
     classification.diagnosis === "periodontitis" &&
-      classification.stage &&
-      (!candidate.stage ||
-        classification.stage === candidate.stage ||
-        trimmed(classification.stageOverrideReason)),
+      classification.stage,
   );
   const gradeCanBeCharted = Boolean(
     classification.diagnosis === "periodontitis" &&
-      classification.grade &&
-      (!candidate.grade ||
-        classification.grade === candidate.grade ||
-        trimmed(classification.gradeOverrideReason)),
+      classification.grade,
   );
   const statusCanBeCharted = Boolean(
     classification.diagnosis &&
