@@ -35,6 +35,13 @@ to reopen their own draft. A new tab does not silently adopt another tab's
 draft. Instead, other recent drafts for the same template are listed with
 explicit **Restore** and **Delete** actions.
 
+A central **Saved drafts** page lists all current recovery drafts in the
+browser profile with template name, start time, save time, and scheduled
+deletion time. It does not render patient identifiers or form content. Opening
+a draft assigns its random identifier to the current tab before navigating to
+the matching interactive form; the identifier is not placed in the URL. The
+page also provides an explicit **Delete** action for each draft.
+
 Drafts are saved:
 
 - every ten seconds while the page remains open;
@@ -117,6 +124,7 @@ avoids silently placing one patient's content into a fresh note.
 - Copying produces an immediate recovery checkpoint.
 - Multiple open notes do not intentionally overwrite one another.
 - Recovery remains local and works without network access or an account.
+- A single page makes drafts from every supported template discoverable.
 - Retention and deletion behavior is visible and testable.
 
 ### Trade-offs
@@ -156,6 +164,7 @@ protect against the principal same-profile and same-origin threats.
 - Unit tests cover format round trips, malformed data rejection, sorting, and
   seven-day pruning.
 - Browser tests cover the ten-second save, reload restoration, save-on-copy,
-  and isolation of two concurrent tabs.
+  isolation of two concurrent tabs, and listing, opening, and deleting a draft
+  from the central recovery page.
 - Existing summary fixtures continue to verify that persistence does not alter
   generated clinical text.

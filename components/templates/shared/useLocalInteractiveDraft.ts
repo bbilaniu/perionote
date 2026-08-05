@@ -16,7 +16,9 @@ const autosaveIntervalMs = 10_000;
 const tabMarkerWindowNamePrefix = "hygienenote-interactive-draft-tab-v1:";
 
 function tabMarkerStorageKey(templateId: string): string {
-  return `hygienenote.interactive-draft.tab-marker.v1.${encodeURIComponent(templateId)}`;
+  return `hygienenote.interactive-draft.tab-marker.v1.${encodeURIComponent(
+    templateId,
+  )}`;
 }
 
 function currentTabMarker(): string {
@@ -26,6 +28,20 @@ function currentTabMarker(): string {
   const marker = createInteractiveDraftId();
   window.name = `${tabMarkerWindowNamePrefix}${marker}`;
   return marker;
+}
+
+export function selectInteractiveDraftForCurrentTab(
+  templateId: string,
+  draftId: string,
+): void {
+  window.sessionStorage.setItem(
+    interactiveDraftTabStorageKey(templateId),
+    draftId,
+  );
+  window.sessionStorage.setItem(
+    tabMarkerStorageKey(templateId),
+    currentTabMarker(),
+  );
 }
 
 export type LocalDraftSaveResult = "saved" | "removed" | "skipped" | "failed";
@@ -145,14 +161,7 @@ export function useLocalInteractiveDraft<T>({
           return;
         }
         draftIdRef.current = draft.draftId;
-        window.sessionStorage.setItem(
-          interactiveDraftTabStorageKey(templateId),
-          draft.draftId,
-        );
-        window.sessionStorage.setItem(
-          tabMarkerStorageKey(templateId),
-          currentTabMarker(),
-        );
+        selectInteractiveDraftForCurrentTab(templateId, draft.draftId);
         onRestoreRef.current(draft);
         setLastSavedAt(new Date(draft.savedAt));
         setRestoredAt(new Date(draft.savedAt));
@@ -218,7 +227,10 @@ export function useLocalInteractiveDraft<T>({
     const interval = window.setInterval(saveNow, autosaveIntervalMs);
     const handlePageHide = () => saveNow();
     const handleStorage = (event: StorageEvent) => {
-      if (!event.key || event.key.startsWith("hygienenote.interactive-draft.")) {
+      if (
+        !event.key ||
+        event.key.startsWith("hygienenote.interactive-draft.")
+      ) {
         refreshRecoverableDrafts();
       }
     };

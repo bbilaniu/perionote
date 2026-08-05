@@ -3,6 +3,7 @@ import {
   INTERACTIVE_DRAFT_RETENTION_MS,
   INTERACTIVE_DRAFT_STORAGE_PREFIX,
   interactiveDraftStorageKey,
+  listInteractiveDraftSummaries,
   listInteractiveDrafts,
   matchesDraftShape,
   pruneInteractiveDrafts,
@@ -79,6 +80,47 @@ describe("interactive local drafts", () => {
     ).toEqual(["newer-tab", "older-tab"]);
   });
 
+  it("lists metadata across templates without exposing form contents", () => {
+    const storage = new MemoryStorage();
+    writeInteractiveDraft(storage, {
+      templateId: "adult-hygiene-2021",
+      draftId: "adult-tab",
+      form: { patientId: "Synthetic private patient", selected: ["4 BW"] },
+      startedAt: new Date("2026-08-05T15:00:00.000Z"),
+      now: new Date("2026-08-05T15:01:00.000Z"),
+    });
+    writeInteractiveDraft(storage, {
+      templateId: "recare-exam",
+      draftId: "recare-tab",
+      form: { patientId: "Synthetic other patient", selected: ["2 PA"] },
+      startedAt: new Date("2026-08-05T16:00:00.000Z"),
+      now: new Date("2026-08-05T16:01:00.000Z"),
+    });
+
+    const summaries = listInteractiveDraftSummaries(
+      storage,
+      Date.parse("2026-08-05T17:00:00.000Z"),
+    );
+
+    expect(summaries).toEqual([
+      {
+        templateId: "recare-exam",
+        draftId: "recare-tab",
+        savedAt: "2026-08-05T16:01:00.000Z",
+        startedAt: "2026-08-05T16:00:00.000Z",
+      },
+      {
+        templateId: "adult-hygiene-2021",
+        draftId: "adult-tab",
+        savedAt: "2026-08-05T15:01:00.000Z",
+        startedAt: "2026-08-05T15:00:00.000Z",
+      },
+    ]);
+    expect(JSON.stringify(summaries)).not.toContain(
+      "Synthetic private patient",
+    );
+  });
+
   it("deletes drafts older than seven days and malformed owned values", () => {
     const storage = new MemoryStorage();
     const now = Date.parse("2026-08-05T17:00:00.000Z");
@@ -111,7 +153,9 @@ describe("interactive local drafts", () => {
         interactiveDraftStorageKey("synthetic-template", "retained"),
       ),
     ).not.toBeNull();
-    expect(storage.getItem(`${INTERACTIVE_DRAFT_STORAGE_PREFIX}broken`)).toBeNull();
+    expect(
+      storage.getItem(`${INTERACTIVE_DRAFT_STORAGE_PREFIX}broken`),
+    ).toBeNull();
     expect(storage.getItem("unrelated")).toBe("not-json");
   });
 
@@ -162,6 +206,13 @@ describe("interactive local drafts", () => {
         storage,
         "synthetic-template",
         isExampleForm,
+        Date.parse("2026-08-05T18:00:00.000Z"),
+      ),
+    ).toEqual([]);
+    expect(storage.getItem(key)).not.toBeNull();
+    expect(
+      listInteractiveDraftSummaries(
+        storage,
         Date.parse("2026-08-05T18:00:00.000Z"),
       ),
     ).toEqual([]);

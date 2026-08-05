@@ -13,6 +13,11 @@ export type InteractiveDraft<T> = {
   form: T;
 };
 
+export type InteractiveDraftSummary = Omit<
+  InteractiveDraft<unknown>,
+  "form" | "kind" | "schemaVersion"
+>;
+
 type StorageLike = Pick<
   Storage,
   "getItem" | "setItem" | "removeItem" | "key" | "length"
@@ -66,7 +71,9 @@ export function interactiveDraftStorageKey(
 }
 
 export function interactiveDraftTabStorageKey(templateId: string): string {
-  return `hygienenote.interactive-draft.tab.v1.${encodeURIComponent(templateId)}`;
+  return `hygienenote.interactive-draft.tab.v1.${encodeURIComponent(
+    templateId,
+  )}`;
 }
 
 export function createInteractiveDraftId(): string {
@@ -98,6 +105,37 @@ function parseDraft<T>(
       return undefined;
     }
     return value as InteractiveDraft<T>;
+  } catch {
+    return undefined;
+  }
+}
+
+function parseDraftSummary(
+  raw: string | null,
+): InteractiveDraftSummary | undefined {
+  if (!raw) return undefined;
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (
+      !isRecord(value) ||
+      value.kind !== "hygienenote.interactive-draft" ||
+      value.schemaVersion !== INTERACTIVE_DRAFT_SCHEMA_VERSION ||
+      typeof value.templateId !== "string" ||
+      !value.templateId ||
+      typeof value.draftId !== "string" ||
+      !value.draftId ||
+      !isValidDate(value.savedAt) ||
+      !isValidDate(value.startedAt) ||
+      !("form" in value)
+    ) {
+      return undefined;
+    }
+    return {
+      templateId: value.templateId,
+      draftId: value.draftId,
+      savedAt: value.savedAt,
+      startedAt: value.startedAt,
+    };
   } catch {
     return undefined;
   }
@@ -140,6 +178,34 @@ export function listInteractiveDrafts<T>(
     }
   }
   return drafts.sort(
+    (first, second) => Date.parse(second.savedAt) - Date.parse(first.savedAt),
+  );
+}
+
+export function listInteractiveDraftSummaries(
+  storage: StorageLike,
+  now = Date.now(),
+): InteractiveDraftSummary[] {
+  pruneInteractiveDrafts(storage, now);
+  const summaries: InteractiveDraftSummary[] = [];
+  const keys: string[] = [];
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (key?.startsWith(INTERACTIVE_DRAFT_STORAGE_PREFIX)) keys.push(key);
+  }
+  for (const key of keys) {
+    const raw = storage.getItem(key);
+    const summary = parseDraftSummary(raw);
+    if (
+      summary &&
+      key === interactiveDraftStorageKey(summary.templateId, summary.draftId)
+    ) {
+      summaries.push(summary);
+    } else if (!hasUnsupportedDraftSchema(raw)) {
+      storage.removeItem(key);
+    }
+  }
+  return summaries.sort(
     (first, second) => Date.parse(second.savedAt) - Date.parse(first.savedAt),
   );
 }
