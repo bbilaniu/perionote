@@ -1010,7 +1010,7 @@ function PeriodontalClassificationControl({
     hasStructuredObservations,
   );
   const [stageEvidenceOpen, setStageEvidenceOpen] = useState(
-    hasStageSectionObservations || value.diagnosis === "periodontitis",
+    hasStageSectionObservations,
   );
   const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
     gradeObservationCount > 0,
@@ -1031,12 +1031,6 @@ function PeriodontalClassificationControl({
   useEffect(() => {
     if (gradeObservationCount > 0) setGradeEvidenceOpen(true);
   }, [gradeObservationCount]);
-
-  useEffect(() => {
-    if (value.diagnosis !== "periodontitis") return;
-    setStructuredObservationsOpen(true);
-    setStageEvidenceOpen(true);
-  }, [value.diagnosis]);
 
   useEffect(() => {
     if (!pendingMissingField || !structuredObservationsOpen) return;

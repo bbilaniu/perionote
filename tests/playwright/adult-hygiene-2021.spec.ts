@@ -467,6 +467,15 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
 
   await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
+    "false"
+  );
+  await expect(
+    page.getByRole("button", { name: /Patient-specific stage evidence/ })
+  ).toHaveCount(0);
+
+  await structuredPeriodontalObservations.click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
     "true"
   );
   const stageEvidence = page.getByRole("button", {
@@ -475,17 +484,21 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
   const gradeEvidence = page.getByRole("button", {
     name: /Patient-specific grade evidence/,
   });
-  await expect(stageEvidence).toHaveAttribute("aria-expanded", "true");
+  await expect(stageEvidence).toHaveAttribute("aria-expanded", "false");
   await expect(stageEvidence).toContainText("Not assessed");
   await expect(
     page.locator("#adult-hygiene-stage-interdental-cal")
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(gradeEvidence).toHaveAttribute("aria-expanded", "false");
   await expect(gradeEvidence).toContainText("Not assessed");
   await expect(
     page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
   ).toHaveCount(0);
 
+  await stageEvidence.click();
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toBeVisible();
   await gradeEvidence.click();
   await expect(
     page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
