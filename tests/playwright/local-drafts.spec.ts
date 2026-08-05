@@ -92,6 +92,16 @@ test("saved drafts page opens and deletes a local draft without listing patient 
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
 
+  page.once("dialog", (dialog) => {
+    expect(dialog.message()).toContain(
+      "current local draft will remain available",
+    );
+    return dialog.accept();
+  });
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
+  await expect(page.locator("#adult-hygiene-rdh")).toHaveValue("");
+
   await page.goto("/drafts");
   await expect(
     page.getByRole("heading", { name: "Saved local drafts" }),
@@ -114,7 +124,41 @@ test("saved drafts page opens and deletes a local draft without listing patient 
 
   await page.goto("/drafts");
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Delete" }).click();
+  await page.getByRole("button", { name: "Delete draft" }).click();
+  await expect(
+    page.getByRole("heading", { name: "No saved drafts" }),
+  ).toBeVisible();
+});
+
+test("saved drafts page warns separately before deleting all drafts", async ({
+  context,
+  page,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto(adultHygieneUrl);
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic draft one");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH one");
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic draft two");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH two");
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await page.goto("/drafts");
+  await expect(page.getByRole("button", { name: "Open draft" })).toHaveCount(2);
+  await expect(
+    page.getByText(/permanently removes every local recovery draft/),
+  ).toBeVisible();
+
+  page.once("dialog", (dialog) => {
+    expect(dialog.message()).toContain("cannot be undone");
+    expect(dialog.message()).toContain("other tabs may save a new draft again");
+    return dialog.accept();
+  });
+  await page.getByRole("button", { name: "Delete all drafts" }).click();
+  await expect(page.getByText("Deleted 2 saved local drafts.")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "No saved drafts" }),
   ).toBeVisible();

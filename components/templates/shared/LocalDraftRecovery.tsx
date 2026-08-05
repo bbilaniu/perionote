@@ -17,14 +17,12 @@ export function LocalDraftRecovery<T>({
   restoredAt,
   storageError,
   onRestore,
-  onDelete,
 }: {
   drafts: InteractiveDraft<T>[];
   lastSavedAt: Date | null;
   restoredAt: Date | null;
   storageError: string;
   onRestore: (draftId: string) => void;
-  onDelete: (draftId: string) => void;
 }) {
   return (
     <section
@@ -79,22 +77,13 @@ export function LocalDraftRecovery<T>({
                   Started {formatDraftTime(draft.startedAt)} · saved{" "}
                   {formatDraftTime(draft.savedAt)}
                 </span>
-                <span className="flex gap-2">
-                  <button
-                    type="button"
-                    className="rounded-lg bg-sky-700 px-3 py-1.5 font-semibold text-white hover:bg-sky-800"
-                    onClick={() => onRestore(draft.draftId)}
-                  >
-                    Restore
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold text-red-800 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950"
-                    onClick={() => onDelete(draft.draftId)}
-                  >
-                    Delete
-                  </button>
-                </span>
+                <button
+                  type="button"
+                  className="rounded-lg bg-sky-700 px-3 py-1.5 font-semibold text-white hover:bg-sky-800"
+                  onClick={() => onRestore(draft.draftId)}
+                >
+                  Restore
+                </button>
               </li>
             ))}
           </ul>

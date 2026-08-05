@@ -245,6 +245,16 @@ export function deleteInteractiveDraft(
   storage.removeItem(interactiveDraftStorageKey(templateId, draftId));
 }
 
+export function deleteAllInteractiveDrafts(storage: StorageLike): number {
+  const keys: string[] = [];
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (key?.startsWith(INTERACTIVE_DRAFT_STORAGE_PREFIX)) keys.push(key);
+  }
+  for (const key of keys) storage.removeItem(key);
+  return keys.length;
+}
+
 export function pruneInteractiveDrafts(
   storage: StorageLike,
   now = Date.now(),

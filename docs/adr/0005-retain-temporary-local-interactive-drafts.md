@@ -33,7 +33,7 @@ fully completed form state in `localStorage`. Each tab receives a random draft
 identifier held in `sessionStorage`; browser-restored tabs use that identifier
 to reopen their own draft. A new tab does not silently adopt another tab's
 draft. Instead, other recent drafts for the same template are listed with
-explicit **Restore** and **Delete** actions.
+an explicit **Restore** action and a link to the central draft manager.
 
 A central **Saved drafts** page lists all current recovery drafts in the
 browser profile with template name, start time, save time, and scheduled
@@ -41,6 +41,10 @@ deletion time. It does not render patient identifiers or form content. Opening
 a draft assigns its random identifier to the current tab before navigating to
 the matching interactive form; the identifier is not placed in the URL. The
 page also provides an explicit **Delete** action for each draft.
+Deletion controls are centralized on this page. A visually separate danger
+section can delete every HygieneNote recovery draft in the browser profile,
+but only after a warning that the action is permanent and that forms open in
+other tabs may create drafts again.
 
 Drafts are saved:
 
@@ -48,9 +52,12 @@ Drafts are saved:
 - immediately when the user attempts to copy the note; and
 - when the browser emits `pagehide`, as an additional best-effort safeguard.
 
-Resetting a form deletes that tab's current recovery draft. Empty forms are not
-retained. Drafts older than seven days from their most recent successful save
-are deleted during startup, recovery listing, and the ten-second save cycle.
+Resetting a non-empty form first checkpoints its current recovery draft, then
+assigns the tab a new random identifier and clears the live form. The saved
+snapshot remains available until explicitly deleted or expired; the new empty
+form is not retained. Drafts older than seven days from their most recent
+successful save are deleted during startup, recovery listing, and the
+ten-second save cycle.
 
 ### Use a versioned, validated format
 
@@ -77,8 +84,9 @@ sole purpose is recovery of an unfinished interactive note after local failure.
   browser, operating system, device controls, and profile isolation.
 - Access: scripts and people with access to the same browser origin/profile may
   be able to read the drafts.
-- Retention and deletion: rolling seven-day retention, explicit deletion for
-  recoverable drafts, and deletion of the active draft on form reset. Clearing
+- Retention and deletion: rolling seven-day retention, explicit per-draft
+  deletion, and a separately warned delete-all action on the central draft
+  manager. Form reset preserves a checkpoint rather than deleting it. Clearing
   site data also removes all drafts.
 - Export and backup: no draft export, cloud synchronization, or automatic
   backup is added.
@@ -125,6 +133,7 @@ avoids silently placing one patient's content into a fresh note.
 - Multiple open notes do not intentionally overwrite one another.
 - Recovery remains local and works without network access or an account.
 - A single page makes drafts from every supported template discoverable.
+- Resetting a form does not also delete its most recent recovery snapshot.
 - Retention and deletion behavior is visible and testable.
 
 ### Trade-offs
@@ -164,7 +173,7 @@ protect against the principal same-profile and same-origin threats.
 - Unit tests cover format round trips, malformed data rejection, sorting, and
   seven-day pruning.
 - Browser tests cover the ten-second save, reload restoration, save-on-copy,
-  isolation of two concurrent tabs, and listing, opening, and deleting a draft
-  from the central recovery page.
+  isolation of two concurrent tabs, reset-without-deletion, and listing,
+  opening, deleting, and bulk deleting drafts from the central recovery page.
 - Existing summary fixtures continue to verify that persistence does not alter
   generated clinical text.

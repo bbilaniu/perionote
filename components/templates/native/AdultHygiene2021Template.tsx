@@ -160,7 +160,7 @@ const stageEvidenceGroups = [
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
 const adultHygieneDiscardWarning =
-  "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
+  "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 
@@ -2832,7 +2832,7 @@ export function AdultHygiene2021Template({
 
   function resetForm() {
     if (!window.confirm(adultHygieneDiscardWarning)) return;
-    localDraft.clearCurrentDraft();
+    localDraft.beginNewDraft();
     setForm(createEmptyAdultHygiene2021Form());
     setStartedAt(new Date());
     setPatientIdError("");
@@ -2915,7 +2915,6 @@ export function AdultHygiene2021Template({
             restoredAt={localDraft.restoredAt}
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
-            onDelete={localDraft.deleteDraft}
           />
 
           <Section title="Patient and Visit Context">

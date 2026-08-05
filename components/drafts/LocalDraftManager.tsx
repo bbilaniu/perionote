@@ -8,6 +8,7 @@ import {
   isInteractiveDraftTemplateId,
 } from "@/lib/templates/interactiveDraftTemplates";
 import {
+  deleteAllInteractiveDrafts,
   deleteInteractiveDraft,
   INTERACTIVE_DRAFT_RETENTION_MS,
   listInteractiveDraftSummaries,
@@ -25,6 +26,7 @@ export function LocalDraftManager() {
   const router = useRouter();
   const [drafts, setDrafts] = useState<InteractiveDraftSummary[]>([]);
   const [storageError, setStorageError] = useState("");
+  const [actionMessage, setActionMessage] = useState("");
   const [loaded, setLoaded] = useState(false);
 
   const refreshDrafts = useCallback(() => {
@@ -64,6 +66,7 @@ export function LocalDraftManager() {
   const openDraft = (draft: InteractiveDraftSummary) => {
     if (!isInteractiveDraftTemplateId(draft.templateId)) return;
     try {
+      setActionMessage("");
       selectInteractiveDraftForCurrentTab(draft.templateId, draft.draftId);
       router.push(interactiveDraftTemplates[draft.templateId].href);
     } catch {
@@ -77,6 +80,7 @@ export function LocalDraftManager() {
       : "unavailable template";
     if (!window.confirm(`Delete the ${templateLabel} local draft?`)) return;
     try {
+      setActionMessage("");
       deleteInteractiveDraft(
         window.localStorage,
         draft.templateId,
@@ -86,6 +90,29 @@ export function LocalDraftManager() {
     } catch {
       setStorageError(
         "The local draft could not be deleted. Clear this site's browser data to remove it.",
+      );
+    }
+  };
+
+  const deleteAllDrafts = () => {
+    if (
+      !window.confirm(
+        "Delete all saved local drafts? This permanently removes every HygieneNote recovery draft from this browser profile and cannot be undone. Open interactive forms in other tabs may save a new draft again.",
+      )
+    ) {
+      return;
+    }
+    try {
+      const deletedCount = deleteAllInteractiveDrafts(window.localStorage);
+      refreshDrafts();
+      setActionMessage(
+        deletedCount === 1
+          ? "Deleted 1 saved local draft."
+          : `Deleted ${deletedCount} saved local drafts.`,
+      );
+    } catch {
+      setStorageError(
+        "The saved drafts could not all be deleted. Clear this site's browser data to remove them.",
       );
     }
   };
@@ -109,6 +136,15 @@ export function LocalDraftManager() {
           role="alert"
         >
           {storageError}
+        </p>
+      ) : null}
+
+      {actionMessage ? (
+        <p
+          className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200"
+          role="status"
+        >
+          {actionMessage}
         </p>
       ) : null}
 
@@ -191,7 +227,7 @@ export function LocalDraftManager() {
                       className="rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950"
                       onClick={() => deleteDraft(draft)}
                     >
-                      Delete
+                      Delete draft
                     </button>
                   </div>
                 </div>
@@ -200,6 +236,25 @@ export function LocalDraftManager() {
           })}
         </ul>
       ) : null}
+
+      <section className="rounded-xl border border-red-300 bg-red-50 p-5 dark:border-red-900 dark:bg-red-950/30">
+        <h2 className="text-lg font-semibold text-red-900 dark:text-red-100">
+          Delete all saved drafts
+        </h2>
+        <p className="mt-2 max-w-3xl text-sm text-red-800 dark:text-red-200">
+          This permanently removes every local recovery draft from this browser
+          profile and cannot be undone. Interactive forms open in other tabs may
+          save a new draft again.
+        </p>
+        <button
+          type="button"
+          className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={!drafts.length}
+          onClick={deleteAllDrafts}
+        >
+          Delete all drafts
+        </button>
+      </section>
     </section>
   );
 }

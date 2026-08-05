@@ -305,7 +305,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   ).resolves.toBe(preview);
 });
 
-test("Adult Hygiene demo output survives reload and reset deletes its draft", async ({
+test("Adult Hygiene demo output survives reload and reset preserves its draft", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date(2026, 6, 25, 9, 10) });

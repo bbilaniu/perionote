@@ -128,24 +128,21 @@ export function useLocalInteractiveDraft<T>({
     }
   }, [templateId]);
 
-  const clearCurrentDraft = useCallback(() => {
+  const beginNewDraft = useCallback(() => {
+    saveNow();
+    const draftId = createInteractiveDraftId();
+    draftIdRef.current = draftId;
     try {
-      if (draftIdRef.current) {
-        deleteInteractiveDraft(
-          window.localStorage,
-          templateId,
-          draftIdRef.current,
-        );
-      }
-      setLastSavedAt(null);
-      setRestoredAt(null);
-      refreshRecoverableDrafts();
+      selectInteractiveDraftForCurrentTab(templateId, draftId);
     } catch {
       setStorageError(
-        "The local draft could not be deleted. Clear this site's browser data to remove it.",
+        "The new form is ready, but its local draft could not be initialized.",
       );
     }
-  }, [refreshRecoverableDrafts, templateId]);
+    setLastSavedAt(null);
+    setRestoredAt(null);
+    refreshRecoverableDrafts();
+  }, [refreshRecoverableDrafts, saveNow, templateId]);
 
   const restoreDraft = useCallback(
     (draftId: string) => {
@@ -169,20 +166,6 @@ export function useLocalInteractiveDraft<T>({
         refreshRecoverableDrafts();
       } catch {
         setStorageError("The selected local draft could not be restored.");
-      }
-    },
-    [refreshRecoverableDrafts, templateId],
-  );
-
-  const deleteDraft = useCallback(
-    (draftId: string) => {
-      try {
-        deleteInteractiveDraft(window.localStorage, templateId, draftId);
-        refreshRecoverableDrafts();
-      } catch {
-        setStorageError(
-          "The local draft could not be deleted. Clear this site's browser data to remove it.",
-        );
       }
     },
     [refreshRecoverableDrafts, templateId],
@@ -249,8 +232,7 @@ export function useLocalInteractiveDraft<T>({
     restoredAt,
     storageError,
     saveNow,
-    clearCurrentDraft,
+    beginNewDraft,
     restoreDraft,
-    deleteDraft,
   };
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  deleteAllInteractiveDrafts,
   INTERACTIVE_DRAFT_RETENTION_MS,
   INTERACTIVE_DRAFT_STORAGE_PREFIX,
   interactiveDraftStorageKey,
@@ -157,6 +158,33 @@ describe("interactive local drafts", () => {
       storage.getItem(`${INTERACTIVE_DRAFT_STORAGE_PREFIX}broken`),
     ).toBeNull();
     expect(storage.getItem("unrelated")).toBe("not-json");
+  });
+
+  it("deletes every owned draft while preserving unrelated browser data", () => {
+    const storage = new MemoryStorage();
+    writeInteractiveDraft(storage, {
+      templateId: "adult-hygiene-2021",
+      draftId: "adult-tab",
+      form: emptyForm,
+      startedAt: new Date("2026-08-05T15:00:00.000Z"),
+      now: new Date("2026-08-05T15:01:00.000Z"),
+    });
+    writeInteractiveDraft(storage, {
+      templateId: "recare-exam",
+      draftId: "recare-tab",
+      form: emptyForm,
+      startedAt: new Date("2026-08-05T16:00:00.000Z"),
+      now: new Date("2026-08-05T16:01:00.000Z"),
+    });
+    storage.setItem("unrelated", "retained");
+
+    expect(deleteAllInteractiveDrafts(storage)).toBe(2);
+    expect(storage.getItem("unrelated")).toBe("retained");
+    expect(
+      [...Array(storage.length).keys()]
+        .map((index) => storage.key(index))
+        .some((key) => key?.startsWith(INTERACTIVE_DRAFT_STORAGE_PREFIX)),
+    ).toBe(false);
   });
 
   it("rejects malformed form state before restoration", () => {

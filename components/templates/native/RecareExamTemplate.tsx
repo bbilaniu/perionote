@@ -64,7 +64,7 @@ const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
 const recareNoteDiscardWarning =
-  "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
+  "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
 
@@ -1360,7 +1360,7 @@ export function RecareExamTemplate({
       return;
     }
 
-    localDraft.clearCurrentDraft();
+    localDraft.beginNewDraft();
     setForm(createEmptyRecareExamForm());
     setStartedAt(new Date());
     setPatientIdError("");
@@ -1411,7 +1411,6 @@ export function RecareExamTemplate({
             restoredAt={localDraft.restoredAt}
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
-            onDelete={localDraft.deleteDraft}
           />
 
           <Section title="Patient and Visit Context">
