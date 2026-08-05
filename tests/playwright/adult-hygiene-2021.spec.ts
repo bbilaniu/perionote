@@ -490,6 +490,16 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
   await expect(
     page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
   ).toBeVisible();
+  await page.locator("#adult-hygiene-stage-interdental-cal").fill("3");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient-specific stage evidence: interdental CAL 3 mm\./
+  );
+  await page
+    .locator("#adult-hygiene-grade-bone-loss-age-ratio")
+    .fill("0.72");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient-specific grade evidence: bone-loss\/age ratio 0\.72\./
+  );
 });
 
 test("Adult Hygiene prevents conflicting gingival menu selections", async ({
@@ -846,6 +856,9 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Health\/Gingivitis:/
   );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal assessment findings:\n- Periodontal support: Intact periodontal support\.\n- Bleeding on probing \(BOP\): 6%\.\n- Maximum PPD: 3 mm\.\n- Probing attachment loss: Absent\.\n- Radiographic bone loss \(RBL\): Absent\./
+  );
 
   await diagnosis.click();
   await page
@@ -895,11 +908,17 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- MAXIMUM PPD: 3 MM\n- BOP: 6%\n- NO RADIOGRAPHIC BONE LOSS/
   );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 6%\./
+  );
 
   await structuredPeriodontalObservations.click();
   await page.locator("#adult-hygiene-bop-percent").fill("12");
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Health\/Gingivitis:/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 12%\./
   );
 });
 

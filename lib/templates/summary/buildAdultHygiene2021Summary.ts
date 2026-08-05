@@ -7,11 +7,13 @@ import {
 import {
   choiceLabel,
   classifyPeriodontalCandidate,
+  formatClinicalMeasurement,
   formatDiabetesModifier,
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
   formatSmokingModifier,
   isPeriodontalStatusCompatibleWithContext,
+  periodontalPeriodontiumChoices,
   periodontalStageEvidence,
   periodontalStatusChoices,
   type PeriodontalClassification,
@@ -336,6 +338,77 @@ function formatPeriodontalClassification(
   ].filter(Boolean);
 }
 
+function formatPeriodontalObservations(
+  classification: PeriodontalClassification
+): string {
+  const assessment = classification.gingivalHealth;
+  const findings = [
+    assessment.periodontium
+      ? `Periodontal support: ${withTerminalPunctuation(
+          choiceLabel(periodontalPeriodontiumChoices, assessment.periodontium)
+        )}`
+      : "",
+    assessment.bopPercent
+      ? `Bleeding on probing (BOP): ${formatClinicalMeasurement(
+          assessment.bopPercent,
+          "ascii"
+        )}.`
+      : "",
+    assessment.maximumPpd
+      ? `Maximum PPD: ${formatClinicalMeasurement(
+          assessment.maximumPpd,
+          "ascii"
+        )}.`
+      : "",
+    assessment.attachmentLoss === "absent"
+      ? "Probing attachment loss: Absent."
+      : assessment.attachmentLoss === "present"
+      ? "Probing attachment loss: Present."
+      : "",
+    assessment.radiographicBoneLoss === "absent"
+      ? "Radiographic bone loss (RBL): Absent."
+      : assessment.radiographicBoneLoss === "present"
+      ? "Radiographic bone loss (RBL): Present."
+      : "",
+    assessment.ppd4OrGreaterWithBop === "no"
+      ? "Sites with PPD >=4 mm and BOP: None."
+      : assessment.ppd4OrGreaterWithBop === "yes"
+      ? "Sites with PPD >=4 mm and BOP: One or more."
+      : "",
+    assessment.progressiveDestruction === "no"
+      ? "Evidence of progressive periodontal destruction: No."
+      : assessment.progressiveDestruction === "yes"
+      ? "Evidence of progressive periodontal destruction: Yes."
+      : "",
+  ].filter(Boolean);
+  const stageEvidence = classification.stageBasis
+        .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+        .filter(Boolean);
+  const gradeEvidence = classification.gradeBasis
+    .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+    .filter(Boolean);
+  const smoking = formatSmokingModifier(classification.smoking, "ascii");
+  const diabetes = formatDiabetesModifier(classification.diabetes, "ascii");
+  const lines = [
+    ...findings,
+    stageEvidence.length
+      ? `Patient-specific stage evidence: ${stageEvidence.join("; ")}.`
+      : "",
+    gradeEvidence.length
+      ? `Patient-specific grade evidence: ${gradeEvidence.join("; ")}.`
+      : "",
+    smoking ? `Smoking: ${withTerminalPunctuation(smoking)}` : "",
+    diabetes ? `Diabetes: ${withTerminalPunctuation(diabetes)}` : "",
+  ].filter(Boolean);
+
+  return lines.length
+    ? [
+        "Periodontal assessment findings:",
+        ...lines.map((line) => `- ${line}`),
+      ].join("\n")
+    : "";
+}
+
 export function buildAdultHygiene2021Summary(
   form: AdultHygiene2021Form,
   options: BuildAdultHygiene2021SummaryOptions = {}
@@ -433,13 +506,20 @@ export function buildAdultHygiene2021Summary(
     ),
   ];
 
+  const healthGingivitisBlock = formatHealthGingivitisBlock(
+    form.periodontalClassification
+  );
+  const periodontalClassificationLines = formatPeriodontalClassification(
+    form.periodontalClassification
+  );
   const periodontalAssessment = [
     psrPocketingLine(form.psrPocketing),
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
-    formatHealthGingivitisBlock(form.periodontalClassification),
+    formatPeriodontalObservations(form.periodontalClassification),
+    healthGingivitisBlock,
     formatGingivalDescription(form.gingivalDescription),
-    ...formatPeriodontalClassification(form.periodontalClassification),
+    ...periodontalClassificationLines,
   ];
 
   const currentHabits = [

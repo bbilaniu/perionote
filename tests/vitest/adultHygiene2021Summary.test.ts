@@ -51,6 +51,18 @@ Bleeding: Localized mild.
 PSR/Pocketing: 1 2 2 / 2 1 2
 Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
+Periodontal assessment findings:
+- Periodontal support: Reduced support (with a history of treated periodontitis).
+- Bleeding on probing (BOP): 18%.
+- Maximum PPD: 3 mm.
+- Probing attachment loss: Present.
+- Radiographic bone loss (RBL): Present.
+- Sites with PPD >=4 mm and BOP: None.
+- Evidence of progressive periodontal destruction: No.
+- Patient-specific stage evidence: interdental CAL 3 mm; radiographic bone loss 20%; mostly horizontal bone loss.
+- Patient-specific grade evidence: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
+- Smoking: non-smoker.
+- Diabetes: no diagnosis of diabetes / normoglycemic.
 Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 - PROBING ATTACHMENT LOSS PRESENT
 - MAXIMUM PPD: 3 MM
@@ -152,7 +164,7 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(current)).toBe("");
   });
 
-  it("suppresses periodontitis modifiers for another diagnosis category", () => {
+  it("charts entered modifiers while suppressing another diagnosis interpretation", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -167,7 +179,51 @@ Date Booked: 2026-11-15`);
       },
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe("");
+    const summary = buildAdultHygiene2021Summary(form);
+    expect(summary).toBe(`Periodontal assessment findings:
+- Smoking: smokes 12 cigarettes/day.`);
+    expect(summary).not.toContain("Grade modifiers:");
+  });
+
+  it("charts entered structured periodontal observations before classification", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      gingivalHealth: {
+        ...form.periodontalClassification.gingivalHealth,
+        periodontium: "intact",
+        bopPercent: { operator: "eq", value: 6, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+        attachmentLoss: "absent",
+        radiographicBoneLoss: "absent",
+        ppd4OrGreaterWithBop: "no",
+        progressiveDestruction: "no",
+      },
+      stageBasis: [
+        {
+          criterionId: "stage.interdental-cal",
+          measurement: { operator: "eq", value: 3, unit: "mm" },
+        },
+      ],
+      gradeBasis: [
+        {
+          criterionId: "grade.bone-loss-age-ratio",
+          measurement: { operator: "eq", value: 0.72, unit: "ratio" },
+        },
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Periodontal assessment findings:
+- Periodontal support: Intact periodontal support.
+- Bleeding on probing (BOP): 6%.
+- Maximum PPD: 3 mm.
+- Probing attachment loss: Absent.
+- Radiographic bone loss (RBL): Absent.
+- Sites with PPD >=4 mm and BOP: None.
+- Evidence of progressive periodontal destruction: No.
+- Patient-specific stage evidence: interdental CAL 3 mm.
+- Patient-specific grade evidence: bone-loss/age ratio 0.72.`);
   });
 
   it("formats explicit gingival WNL from the reviewed preset", () => {
@@ -574,7 +630,11 @@ Recommended hygiene interval comments: Synthetic hygiene context.`);
     };
 
     const summary = buildAdultHygiene2021Summary(form);
-    expect(summary).toBe("Periodontal diagnosis: Periodontitis.");
-    expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis|Grade basis/);
+    expect(summary)
+      .toBe(`Periodontal assessment findings:
+- Patient-specific stage evidence: interdental CAL 3 mm.
+- Patient-specific grade evidence: bone-loss/age ratio 0.5.
+Periodontal diagnosis: Periodontitis.`);
+    expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis:|Grade basis:/);
   });
 });
