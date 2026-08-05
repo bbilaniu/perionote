@@ -155,6 +155,8 @@ export type AdultHygieneTreatmentCompletedEntry = {
   applicationTime?: string;
 };
 
+export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
+
 export const standardOheStatement =
   "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
 
@@ -222,6 +224,9 @@ export interface AdultHygiene2021Form {
   fmpDone: string;
   gingivalDescription?: GingivalDescriptionAssessment;
   periodontalClassification: PeriodontalClassification;
+  cariesRiskLevel: CariesRiskLevel;
+  cariesRiskFactors: string[];
+  cariesRiskNotes: string;
   oralHygieneCompliance: string;
   oralHygieneComplianceComment: string;
   homeCareInstructionReviewed: boolean;
@@ -288,6 +293,9 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     fmpDone: "",
     gingivalDescription: createEmptyGingivalDescriptionAssessment(),
     periodontalClassification: createEmptyPeriodontalClassification(),
+    cariesRiskLevel: "",
+    cariesRiskFactors: [],
+    cariesRiskNotes: "",
     oralHygieneCompliance: "",
     oralHygieneComplianceComment: "",
     homeCareInstructionReviewed: false,

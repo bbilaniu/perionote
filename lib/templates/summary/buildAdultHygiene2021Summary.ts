@@ -6,12 +6,14 @@ import {
 } from "@/lib/templates/adultHygiene2021";
 import {
   choiceLabel,
-  classifyPeriodontalCandidate,
+  formatClinicalMeasurement,
   formatDiabetesModifier,
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
   formatSmokingModifier,
   isPeriodontalStatusCompatibleWithContext,
+  periodontalPeriodontiumChoices,
+  periodontalStageCriterionCatalogue,
   periodontalStageEvidence,
   periodontalStatusChoices,
   type PeriodontalClassification,
@@ -39,6 +41,51 @@ function withTerminalPunctuation(value: string): string {
   const cleanValue = trimmed(value);
   if (!cleanValue) return "";
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
+}
+
+function joinNaturalLanguageList(values: string[]): string {
+  if (values.length <= 1) return values[0] ?? "";
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+}
+
+function lowerFirst(value: string): string {
+  return value ? `${value[0].toLocaleLowerCase("en-CA")}${value.slice(1)}` : "";
+}
+
+function cariesRiskFactor(value: string): string {
+  const cleanValue = trimmed(value);
+  return cleanValue === "History of caries in the last 36 months"
+    ? "history of active decay in the last 36 months"
+    : lowerFirst(cleanValue);
+}
+
+function cariesRiskLine(
+  level: AdultHygiene2021Form["cariesRiskLevel"],
+  factors: string[],
+  notes: string
+): string {
+  const cleanFactors = factors.map(trimmed).filter(Boolean);
+  const cleanNotes = trimmed(notes);
+  if (!level && cleanFactors.length === 0 && !cleanNotes) return "";
+
+  let line = level
+    ? `${level} caries risk`
+    : cleanFactors.length
+    ? `Factors include ${joinNaturalLanguageList(
+        cleanFactors.map(cariesRiskFactor)
+      )}`
+    : "";
+
+  if (level && cleanFactors.length) {
+    line += ` due to ${joinNaturalLanguageList(
+      cleanFactors.map(cariesRiskFactor)
+    )}`;
+  }
+
+  if (!line) return `Caries risk: ${withTerminalPunctuation(cleanNotes)}`;
+  if (!cleanNotes) return `Caries risk: ${line}`;
+  return `Caries risk: ${line}. ${withTerminalPunctuation(cleanNotes)}`;
 }
 
 function oheTopicLine(values: string[]): string {
@@ -242,20 +289,13 @@ function formatPeriodontalClassification(
   const diagnosis = classification.diagnosis
     ? diagnosisLabels[classification.diagnosis]
     : "";
-  const candidate = classifyPeriodontalCandidate(classification);
   const stageCanBeCharted = Boolean(
     classification.diagnosis === "periodontitis" &&
-      classification.stage &&
-      (!candidate.stage ||
-        classification.stage === candidate.stage ||
-        trimmed(classification.stageOverrideReason)),
+      classification.stage,
   );
   const gradeCanBeCharted = Boolean(
     classification.diagnosis === "periodontitis" &&
-      classification.grade &&
-      (!candidate.grade ||
-        classification.grade === candidate.grade ||
-        trimmed(classification.gradeOverrideReason)),
+      classification.grade,
   );
   const statusCanBeCharted = Boolean(
     classification.diagnosis &&
@@ -282,47 +322,24 @@ function formatPeriodontalClassification(
       ? `Grade ${classification.grade}`
       : "",
   ].filter(Boolean);
-  const stageBasis =
-    stageCanBeCharted
-      ? periodontalStageEvidence(classification)
-          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
-          .filter(Boolean)
-      : [];
-  const gradeBasis =
-    gradeCanBeCharted
-      ? classification.gradeBasis
-          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
-          .filter(Boolean)
-      : [];
-  const modifiers =
-    classification.diagnosis === "periodontitis"
-      ? [
-          formatSmokingModifier(classification.smoking, "ascii"),
-          formatDiabetesModifier(classification.diabetes, "ascii"),
-        ].filter(Boolean)
-      : [];
-
   return [
     diagnosisParts.length
       ? `Periodontal diagnosis: ${withTerminalPunctuation(
           diagnosisParts.join(", ")
         )}`
       : "",
-    stageBasis.length ? `Stage basis: ${stageBasis.join("; ")}.` : "",
     stageCanBeCharted &&
     trimmed(classification.stageOverrideReason)
       ? `Stage override: ${withTerminalPunctuation(
           classification.stageOverrideReason
         )}`
       : "",
-    gradeBasis.length ? `Grade basis: ${gradeBasis.join("; ")}.` : "",
     gradeCanBeCharted &&
     trimmed(classification.gradeOverrideReason)
       ? `Grade override: ${withTerminalPunctuation(
           classification.gradeOverrideReason
         )}`
       : "",
-    modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
     statusCanBeCharted
       ? `Periodontal status: ${withTerminalPunctuation(
           choiceLabel(periodontalStatusChoices, classification.status)
@@ -334,6 +351,118 @@ function formatPeriodontalClassification(
         )}`
       : "",
   ].filter(Boolean);
+}
+
+function formatPeriodontalAssessmentFindings(
+  classification: PeriodontalClassification
+): string {
+  const assessment = classification.gingivalHealth;
+  const findings = [
+    assessment.periodontium
+      ? `Periodontal support: ${withTerminalPunctuation(
+          choiceLabel(periodontalPeriodontiumChoices, assessment.periodontium)
+        )}`
+      : "",
+    assessment.bopPercent
+      ? `Bleeding on probing (BOP): ${formatClinicalMeasurement(
+          assessment.bopPercent,
+          "ascii"
+        )}.`
+      : "",
+    assessment.maximumPpd
+      ? `Maximum PPD: ${formatClinicalMeasurement(
+          assessment.maximumPpd,
+          "ascii"
+        )}.`
+      : "",
+    assessment.attachmentLoss === "absent"
+      ? "Probing attachment loss: Absent."
+      : assessment.attachmentLoss === "present"
+      ? "Probing attachment loss: Present."
+      : "",
+    assessment.radiographicBoneLoss === "absent"
+      ? "Radiographic bone loss (RBL): Absent."
+      : assessment.radiographicBoneLoss === "present"
+      ? "Radiographic bone loss (RBL): Present."
+      : "",
+    assessment.ppd4OrGreaterWithBop === "no"
+      ? "Sites with PPD >=4 mm and BOP: None."
+      : assessment.ppd4OrGreaterWithBop === "yes"
+      ? "Sites with PPD >=4 mm and BOP: One or more."
+      : "",
+    assessment.progressiveDestruction === "no"
+      ? "Evidence of progressive periodontal destruction: No."
+      : assessment.progressiveDestruction === "yes"
+      ? "Evidence of progressive periodontal destruction: Yes."
+      : "",
+  ].filter(Boolean);
+  return findings.length
+    ? [
+        "Periodontal assessment findings:",
+        ...findings.map((line) => `  - ${line}`),
+      ].join("\n")
+    : "";
+}
+
+function formatEvidenceSubsection(label: string, items: string[]): string[] {
+  return items.length
+    ? [
+        `  ${label}:`,
+        ...items.map((item) => `    - ${withTerminalPunctuation(item)}`),
+      ]
+    : [];
+}
+
+function formatPatientSpecificStageEvidence(
+  classification: PeriodontalClassification
+): string {
+  const evidence = periodontalStageEvidence(classification);
+  const evidenceForGroup = (group: "severity" | "complexity") =>
+    evidence
+      .filter(({ criterionId }) =>
+        periodontalStageCriterionCatalogue.some(
+          (criterion) =>
+            criterion.id === criterionId && criterion.group === group
+        )
+      )
+      .map((item) => formatPeriodontalEvidence(item, "ascii"))
+      .filter(Boolean);
+  const lines = [
+    ...formatEvidenceSubsection(
+      "Severity evidence",
+      evidenceForGroup("severity")
+    ),
+    ...formatEvidenceSubsection(
+      "Complexity evidence",
+      evidenceForGroup("complexity")
+    ),
+  ];
+
+  return lines.length
+    ? ["Patient-specific stage evidence:", ...lines].join("\n")
+    : "";
+}
+
+function formatPatientSpecificGradeEvidence(
+  classification: PeriodontalClassification
+): string {
+  const progressionEvidence = classification.gradeBasis
+    .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
+    .filter(Boolean);
+  const smoking = formatSmokingModifier(classification.smoking, "ascii");
+  const diabetes = formatDiabetesModifier(classification.diabetes, "ascii");
+  const modifiers = [
+    smoking ? `Smoking: ${smoking}` : "",
+    diabetes ? `Diabetes: ${diabetes}` : "",
+  ].filter(Boolean);
+  const lines = [
+    ...formatEvidenceSubsection("Progression evidence", progressionEvidence),
+    ...formatEvidenceSubsection("Grade modifiers", modifiers),
+  ];
+
+  return lines.length
+    ? ["Patient-specific grade evidence:", ...lines].join("\n")
+    : "";
 }
 
 export function buildAdultHygiene2021Summary(
@@ -378,7 +507,7 @@ export function buildAdultHygiene2021Summary(
         .join(" ")
     : "";
 
-  const consentHistoryAndSterilization = [
+  const sterilization = [
     form.class5IndicatorStatus === "not-documented"
       ? ""
       : `Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: ${
@@ -387,6 +516,9 @@ export function buildAdultHygiene2021Summary(
     trimmed(form.mieleCodes)
       ? `Miele Sterilization Codes Scanned: ${trimmed(form.mieleCodes)}`
       : "",
+  ];
+
+  const consentAndHistory = [
     consentLine,
     labelledLine("Medical history reviewed", form.medicalHistoryReview),
     form.premedicationStatus === "not-required"
@@ -400,13 +532,16 @@ export function buildAdultHygiene2021Summary(
       : "",
   ];
 
-  const concernsAndFindings = [
+  const concerns = [
     formatPatientChiefConcerns(
       "Patient Chief Concern",
       form.patientChiefConcern,
       form.listChiefConcerns
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
+  ];
+
+  const hygieneFindings = [
     findingWithCommentLine(
       "Plaque",
       form.plaqueChoice,
@@ -433,13 +568,39 @@ export function buildAdultHygiene2021Summary(
     ),
   ];
 
-  const periodontalAssessment = [
+  const healthGingivitisBlock = formatHealthGingivitisBlock(
+    form.periodontalClassification
+  );
+  const periodontalClassificationLines = formatPeriodontalClassification(
+    form.periodontalClassification
+  );
+  const periodontalScreening = [
     psrPocketingLine(form.psrPocketing),
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
-    formatHealthGingivitisBlock(form.periodontalClassification),
+  ];
+  const gingivalDescription = [
     formatGingivalDescription(form.gingivalDescription),
-    ...formatPeriodontalClassification(form.periodontalClassification),
+  ];
+  const periodontalAssessmentFindings = [
+    formatPeriodontalAssessmentFindings(form.periodontalClassification),
+  ];
+  const patientSpecificStageEvidence = [
+    formatPatientSpecificStageEvidence(form.periodontalClassification),
+  ];
+  const patientSpecificGradeEvidence = [
+    formatPatientSpecificGradeEvidence(form.periodontalClassification),
+  ];
+  const periodontalDiagnosis = [
+    healthGingivitisBlock,
+    ...periodontalClassificationLines,
+  ];
+  const cariesRisk = [
+    cariesRiskLine(
+      form.cariesRiskLevel,
+      form.cariesRiskFactors,
+      form.cariesRiskNotes
+    ),
   ];
 
   const currentHabits = [
@@ -544,9 +705,17 @@ export function buildAdultHygiene2021Summary(
 
   const groups = [
     patientAndTeam,
-    consentHistoryAndSterilization,
-    concernsAndFindings,
-    periodontalAssessment,
+    sterilization,
+    consentAndHistory,
+    concerns,
+    hygieneFindings,
+    periodontalScreening,
+    gingivalDescription,
+    periodontalAssessmentFindings,
+    patientSpecificStageEvidence,
+    patientSpecificGradeEvidence,
+    periodontalDiagnosis,
+    cariesRisk,
     oralHygieneAndEducation,
     treatment,
     appliancesAndHistory,

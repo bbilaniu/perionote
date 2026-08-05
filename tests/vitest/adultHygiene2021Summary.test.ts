@@ -37,12 +37,14 @@ Last Recall Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
 Miele Sterilization Codes Scanned: SYNTH-AH-001
+
 Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic history reviewed with no changes.
 Premedication Required: No.
 
 Patient Chief Concern: Sensitivity to hot and cold; Food catches between teeth.
 Hygiene Area of Concern: Synthetic lower anterior concern.
+
 Plaque: Localized moderate interproximal.
 Stain: Localized slight.
 Calculus: Localized moderate marginal.
@@ -51,22 +53,42 @@ Bleeding: Localized mild.
 PSR/Pocketing: 1 2 2 / 2 1 2
 Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
-Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
-- PROBING ATTACHMENT LOSS PRESENT
-- MAXIMUM PPD: 3 MM
-- BOP: 18%
-- RADIOGRAPHIC BONE LOSS PRESENT
-- SITES WITH PPD >=4 MM AND BOP: NONE
-- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION
+
 Gingival Description:
   - Color: coral pink (extent: generalized).
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
+
+Periodontal assessment findings:
+  - Periodontal support: Reduced support (with a history of treated periodontitis).
+  - Bleeding on probing (BOP): 18%.
+  - Maximum PPD: 3 mm.
+  - Probing attachment loss: Present.
+  - Radiographic bone loss (RBL): Present.
+  - Sites with PPD >=4 mm and BOP: None.
+  - Evidence of progressive periodontal destruction: No.
+
+Patient-specific stage evidence:
+  Severity evidence:
+    - radiographic bone loss 20%.
+    - interdental CAL 3 mm.
+  Complexity evidence:
+    - maximum PPD 3 mm.
+    - mostly horizontal bone loss.
+
+Patient-specific grade evidence:
+  Progression evidence:
+    - bone-loss/age ratio 0.72.
+    - destruction commensurate with biofilm.
+  Grade modifiers:
+    - Smoking: non-smoker.
+    - Diabetes: no diagnosis of diabetes / normoglycemic.
+
+Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
-Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 3 mm; mostly horizontal bone loss.
-Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
-Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
 Periodontal status: Periodontal disease remission/control.
 Periodontal status comment: Synthetic periodontal status comment.
+
+Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.
 
 Oral hygiene compliance: Good.
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -94,6 +116,9 @@ Next visit: Synthetic hygiene follow-up.
 Date Booked: 2026-11-15`);
     expect(summary).not.toContain("\n\n\n");
     expect(summary).not.toContain("Not documented");
+    expect(summary).not.toMatch(
+      /^(Stage basis|Grade basis|Grade modifiers):/m
+    );
   });
 
   it("omits a current status that contradicts a confirmed treated context", () => {
@@ -152,7 +177,7 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(current)).toBe("");
   });
 
-  it("suppresses periodontitis modifiers for another diagnosis category", () => {
+  it("charts entered grade modifiers while suppressing another diagnosis interpretation", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -167,7 +192,93 @@ Date Booked: 2026-11-15`);
       },
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe("");
+    const summary = buildAdultHygiene2021Summary(form);
+    expect(summary).toBe(`Patient-specific grade evidence:
+  Grade modifiers:
+    - Smoking: smokes 12 cigarettes/day.`);
+    expect(summary).not.toContain("Periodontal diagnosis:");
+  });
+
+  it("charts cigarette smoking when cigarettes per day is not entered", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      smoking: { status: "cigarettes" },
+    };
+
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Patient-specific grade evidence:
+  Grade modifiers:
+    - Smoking: smokes cigarettes; cigarettes/day not entered.`);
+  });
+
+  it("charts ordered caries risk details without inferring missing values", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      cariesRiskFactors: [
+        "Imported dry-mouth factor",
+        "History of caries in the last 36 months",
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Caries risk: Factors include imported dry-mouth factor and history of active decay in the last 36 months"
+    );
+    expect(
+      buildAdultHygiene2021Summary({
+        ...createEmptyAdultHygiene2021Form(),
+        cariesRiskNotes: "Synthetic rationale only",
+      })
+    ).toBe("Caries risk: Synthetic rationale only.");
+  });
+
+  it("charts entered structured periodontal observations before classification", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      gingivalHealth: {
+        ...form.periodontalClassification.gingivalHealth,
+        periodontium: "intact",
+        bopPercent: { operator: "eq", value: 6, unit: "percent" },
+        maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+        attachmentLoss: "absent",
+        radiographicBoneLoss: "absent",
+        ppd4OrGreaterWithBop: "no",
+        progressiveDestruction: "no",
+      },
+      stageBasis: [
+        {
+          criterionId: "stage.interdental-cal",
+          measurement: { operator: "eq", value: 3, unit: "mm" },
+        },
+      ],
+      gradeBasis: [
+        {
+          criterionId: "grade.bone-loss-age-ratio",
+          measurement: { operator: "eq", value: 0.72, unit: "ratio" },
+        },
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Periodontal assessment findings:
+  - Periodontal support: Intact periodontal support.
+  - Bleeding on probing (BOP): 6%.
+  - Maximum PPD: 3 mm.
+  - Probing attachment loss: Absent.
+  - Radiographic bone loss (RBL): Absent.
+  - Sites with PPD >=4 mm and BOP: None.
+  - Evidence of progressive periodontal destruction: No.
+
+Patient-specific stage evidence:
+  Severity evidence:
+    - interdental CAL 3 mm.
+  Complexity evidence:
+    - maximum PPD 3 mm.
+
+Patient-specific grade evidence:
+  Progression evidence:
+    - bone-loss/age ratio 0.72.`);
   });
 
   it("formats explicit gingival WNL from the reviewed preset", () => {
@@ -312,6 +423,7 @@ Date Booked: 2026-11-15`);
     expect(buildAdultHygiene2021Summary(form)).toBe(`Bleeding: Localized mild.
 
 Recession: Existing unrestricted recession.
+
 Gingival Description:
   - Color: coral pink; physiologic pigmentation (extent: generalized; notes: normal variation).
   - Position / Size: gingival recession (extent: localized; location: Q1, tooth 13 facial; measurement: 1.5 mm; notes: monitored).`);
@@ -417,11 +529,14 @@ Bleeding: Localized mild — areas: mandible.`);
         "Sensitivity to hot and cold",
       ],
       listChiefConcerns: true,
+      plaqueChoice: "Localized moderate interproximal",
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(`Patient Chief Concern:
   - Food catches between teeth
-  - Sensitivity to hot and cold`);
+  - Sensitivity to hot and cold
+
+Plaque: Localized moderate interproximal.`);
   });
 
   it("adds optional OHE topics and notes without replacing existing OHE lines", () => {
@@ -552,7 +667,7 @@ Recommended Hygiene Interval: 4-month scale.
 Recommended hygiene interval comments: Synthetic hygiene context.`);
   });
 
-  it("does not chart stage or grade overrides without reasons", () => {
+  it("charts manual stage and grade selections without requiring reasons", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -574,7 +689,16 @@ Recommended hygiene interval comments: Synthetic hygiene context.`);
     };
 
     const summary = buildAdultHygiene2021Summary(form);
-    expect(summary).toBe("Periodontal diagnosis: Periodontitis.");
-    expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis|Grade basis/);
+    expect(summary)
+      .toBe(`Patient-specific stage evidence:
+  Severity evidence:
+    - interdental CAL 3 mm.
+
+Patient-specific grade evidence:
+  Progression evidence:
+    - bone-loss/age ratio 0.5.
+
+Periodontal diagnosis: Periodontitis, Stage IV, Grade C.`);
+    expect(summary).not.toMatch(/Stage override:|Grade override:/);
   });
 });

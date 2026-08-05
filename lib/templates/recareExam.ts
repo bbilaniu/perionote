@@ -14,8 +14,6 @@ export type RetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
-export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
-
 export type RecareTreatmentEntry = {
   id: string;
   treatmentType: string;
@@ -95,9 +93,6 @@ export interface RecareExamForm {
   toothFindings?: RecareToothFinding[];
   additionalToothFindings?: string;
   odontogramUpToDate: boolean;
-  cariesRiskLevel: CariesRiskLevel;
-  cariesRiskFactors: string[];
-  cariesRiskNotes: string;
   treatmentOptions: RecareTreatmentEntry[];
   listTreatmentOptions: boolean;
   treatmentPlan: RecareTreatmentEntry[];
@@ -161,9 +156,6 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     toothFindings: [],
     additionalToothFindings: "",
     odontogramUpToDate: false,
-    cariesRiskLevel: "",
-    cariesRiskFactors: [],
-    cariesRiskNotes: "",
     treatmentOptions: [],
     listTreatmentOptions: true,
     treatmentPlan: [],

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
+const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
 async function reloadDiscardingForm(page: Page) {
   const dialogPromise = page.waitForEvent("dialog");
@@ -134,12 +135,11 @@ test("Recare Exam offers public occlusion seeds and remembers providers explicit
   await expect(dentist).toHaveValue("Synthetic Dentist");
 });
 
-test("Recare Exam documents odontogram status with catalogue-backed caries risk factors", async ({
+test("Adult Hygiene documents catalogue-backed caries risk factors", async ({
   page,
 }) => {
-  await page.goto(recareExamUrl);
+  await page.goto(adultHygieneUrl);
 
-  await page.getByLabel("Odontogram up to date", { exact: true }).check();
   await page
     .getByRole("button", { name: "Caries risk level", exact: true })
     .click();
@@ -161,8 +161,8 @@ test("Recare Exam documents odontogram status with catalogue-backed caries risk 
     .getByLabel("Caries risk notes", { exact: true })
     .fill("Synthetic rationale reviewed");
 
-  await expect(page.locator("#recare-summary")).toHaveValue(
-    /ODONTOGRAM UP TO DATE\nCaries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.$/,
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Caries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.$/,
   );
 
   await reloadDiscardingForm(page);

@@ -9,7 +9,6 @@ import {
   type RefObject,
 } from "react";
 import type {
-  CariesRiskLevel,
   DocumentationStatus,
   ExamStatus,
   RecareExamForm,
@@ -74,16 +73,6 @@ const examStatusOptions: Array<{ value: ExamStatus; label: string }> = [
   { value: "not-assessed", label: "Not assessed" },
   { value: "wnl", label: "WNL" },
   { value: "findings", label: "Findings" },
-];
-
-const cariesRiskLevelOptions: Array<{
-  value: CariesRiskLevel;
-  label: string;
-}> = [
-  { value: "", label: "None selected" },
-  { value: "Low", label: "Low" },
-  { value: "Moderate", label: "Moderate" },
-  { value: "High", label: "High" },
 ];
 
 function Section({
@@ -1362,20 +1351,6 @@ export function RecareExamTemplate({
 
   return (
     <div className="space-y-6">
-      <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-        <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-          Pilot interactive conversion
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          Recare Exam
-        </h1>
-        <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-          Complete the form and copy a structured Recare Exam note. Entered
-          values remain only in this page&apos;s memory and are discarded when
-          the page reloads or closes.
-        </p>
-      </header>
-
       <form
         className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
         autoComplete="off"
@@ -1385,6 +1360,20 @@ export function RecareExamTemplate({
         }}
       >
         <div className="space-y-6">
+          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
+            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
+              Pilot interactive conversion
+            </p>
+            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+              Recare Exam
+            </h1>
+            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
+              Complete the form and copy a structured Recare Exam note. Entered
+              values remain only in this page&apos;s memory and are discarded
+              when the page reloads or closes.
+            </p>
+          </header>
+
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
               <TextField
@@ -1906,7 +1895,7 @@ export function RecareExamTemplate({
             />
           </Section>
 
-          <Section title="Odontogram and Caries Risk">
+          <Section title="Odontogram">
             <TeethAssessment
               form={form}
               onChange={(patch) => {
@@ -1920,34 +1909,6 @@ export function RecareExamTemplate({
               checked={form.odontogramUpToDate}
               onChange={(value) => updateField("odontogramUpToDate", value)}
             />
-            <div className="grid gap-4 md:grid-cols-2">
-              <FixedChoiceListbox
-                id="recare-caries-risk-level"
-                label="Caries risk level"
-                value={form.cariesRiskLevel}
-                options={cariesRiskLevelOptions}
-                onChange={(value) => updateField("cariesRiskLevel", value)}
-              />
-              <div className="md:col-span-2">
-                <CatalogueMultiCombobox
-                  id="recare-caries-risk-factors"
-                  label="Caries risk factors"
-                  catalogueKey="clinical-exam.caries-risk-factors"
-                  values={form.cariesRiskFactors}
-                  onChange={(value) => updateField("cariesRiskFactors", value)}
-                  roomySelectionActions
-                />
-              </div>
-              <div className="md:col-span-2">
-                <TextareaField
-                  id="recare-caries-risk-notes"
-                  label="Caries risk notes"
-                  placeholder="Document rationale for the caries risk selection."
-                  value={form.cariesRiskNotes}
-                  onChange={(value) => updateField("cariesRiskNotes", value)}
-                />
-              </div>
-            </div>
           </Section>
 
           <Section title="Treatment and Next Visit">

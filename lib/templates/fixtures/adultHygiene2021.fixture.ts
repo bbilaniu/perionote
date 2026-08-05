@@ -96,6 +96,13 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
       overrideReason: "",
     },
   },
+  cariesRiskLevel: "Moderate",
+  cariesRiskFactors: [
+    "High frequency of sugar intake",
+    "Insufficient exposure to fluoride",
+    "History of caries in the last 36 months",
+  ],
+  cariesRiskNotes: "Synthetic diet and home-care factors reviewed.",
   oralHygieneCompliance: "Good",
   oralHygieneComplianceComment: "",
   homeCareInstructionReviewed: true,
