@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { CATALOGUE_STORAGE_KEY } from "@/lib/catalogues/catalogue";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 
@@ -854,8 +855,9 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     /Additional occlusal findings: Crossbite \(location: Posterior, Left, tooth 16\)\.$/,
   );
 
-  let catalogueStorage = await page.evaluate(() =>
-    Object.values(window.localStorage).join("\n"),
+  let catalogueStorage = await page.evaluate(
+    (storageKey) => window.localStorage.getItem(storageKey) ?? "",
+    CATALOGUE_STORAGE_KEY,
   );
   expect(catalogueStorage).not.toContain("tooth 16");
 
@@ -863,8 +865,9 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   await multiControl(page, "Additional occlusal findings")
     .getByRole("button", { name: "Add to note", exact: true })
     .click();
-  catalogueStorage = await page.evaluate(() =>
-    Object.values(window.localStorage).join("\n"),
+  catalogueStorage = await page.evaluate(
+    (storageKey) => window.localStorage.getItem(storageKey) ?? "",
+    CATALOGUE_STORAGE_KEY,
   );
   expect(catalogueStorage).not.toContain(
     "Synthetic edge-to-edge relationship",
@@ -887,8 +890,9 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   await multiControl(page, "Additional occlusal findings")
     .getByRole("button", { name: "Remember and add", exact: true })
     .click();
-  catalogueStorage = await page.evaluate(() =>
-    Object.values(window.localStorage).join("\n"),
+  catalogueStorage = await page.evaluate(
+    (storageKey) => window.localStorage.getItem(storageKey) ?? "",
+    CATALOGUE_STORAGE_KEY,
   );
   expect(catalogueStorage).toContain("Synthetic functional shift");
   expect(catalogueStorage).not.toContain("tooth 16");
@@ -989,8 +993,9 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
       exact: true,
     }),
   ).toBeVisible();
-  const catalogueStorage = await page.evaluate(() =>
-    Object.values(window.localStorage).join("\n"),
+  const catalogueStorage = await page.evaluate(
+    (storageKey) => window.localStorage.getItem(storageKey) ?? "",
+    CATALOGUE_STORAGE_KEY,
   );
   expect(catalogueStorage).not.toContain("Posterior");
   expect(catalogueStorage).not.toContain("Left");

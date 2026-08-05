@@ -43,6 +43,8 @@ import {
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
   recareIntraoralLocationChoices,
@@ -50,6 +52,7 @@ import {
   recareIntraoralStructures,
   type RecareIntraoralStructure,
 } from "@/lib/templates/recareIntraoralCatalog";
+import { matchesDraftShape } from "@/lib/templates/localDrafts";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
@@ -61,7 +64,17 @@ const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
 const recareNoteDiscardWarning =
-  "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
+  "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const recareDraftExemplar = createEmptyRecareExamForm();
+const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
+
+function isRecareDraftForm(value: unknown): value is RecareExamForm {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return matchesDraftShape(
+    { ...recareDraftExemplar, ...value },
+    recareDraftExemplar,
+  );
+}
 
 const statusOptions: Array<{ value: DocumentationStatus; label: string }> = [
   { value: "not-documented", label: "Not documented" },
@@ -1153,8 +1166,23 @@ export function RecareExamTemplate({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
 
+  const localDraft = useLocalInteractiveDraft({
+    templateId: "recare-exam",
+    form,
+    startedAt,
+    isEmpty: (value) => JSON.stringify(value) === emptyRecareDraft,
+    isValidForm: isRecareDraftForm,
+    onRestore: (draft) => {
+      setForm({ ...createEmptyRecareExamForm(), ...draft.form });
+      setStartedAt(new Date(draft.startedAt));
+      setPatientIdError("");
+      setProviderError("");
+      setCopyMessage("");
+    },
+  });
+
   useEffect(() => {
-    setStartedAt(new Date());
+    setStartedAt((current) => current ?? new Date());
   }, []);
 
   useEffect(() => {
@@ -1197,6 +1225,7 @@ export function RecareExamTemplate({
   }
 
   async function copyNote() {
+    const draftSaveResult = localDraft.saveNow();
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rda, form.rdh].some((value) =>
       Boolean(value.trim())
@@ -1222,7 +1251,9 @@ export function RecareExamTemplate({
     const copied = await writeClipboard(summary);
     setCopyMessage(
       copied
-        ? "Note copied."
+        ? draftSaveResult === "failed"
+          ? "Note copied, but the local draft could not be saved."
+          : "Note copied."
         : "The note could not be copied. Select the preview and copy it manually."
     );
   }
@@ -1329,6 +1360,7 @@ export function RecareExamTemplate({
       return;
     }
 
+    localDraft.beginNewDraft();
     setForm(createEmptyRecareExamForm());
     setStartedAt(new Date());
     setPatientIdError("");
@@ -1369,10 +1401,17 @@ export function RecareExamTemplate({
             </h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
               Complete the form and copy a structured Recare Exam note. Entered
-              values remain only in this page&apos;s memory and are discarded
-              when the page reloads or closes.
+              values are kept in a temporary local recovery draft.
             </p>
           </header>
+
+          <LocalDraftRecovery
+            drafts={localDraft.recoverableDrafts}
+            lastSavedAt={localDraft.lastSavedAt}
+            restoredAt={localDraft.restoredAt}
+            storageError={localDraft.storageError}
+            onRestore={localDraft.restoreDraft}
+          />
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">

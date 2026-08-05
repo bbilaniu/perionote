@@ -301,7 +301,7 @@ test("recare exam uses the harmonized consent, history, and sterilization contro
   );
 });
 
-test("recare exam demo preserves paragraph spacing and form values do not persist", async ({
+test("recare exam demo preserves paragraph spacing and restores its local draft", async ({
   page,
   context,
 }) => {
@@ -355,15 +355,15 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   expect(reloadDialog.type()).toBe("beforeunload");
   await reloadDialog.accept();
   await reloadPromise;
-  await expect(page.locator("#recare-patient-id")).toHaveValue("");
+  await expect(page.locator("#recare-patient-id")).toHaveValue("TEST-1001");
   await expect(page.locator("#recare-note-started")).toHaveValue(
-    /\d{4}-\d{2}-\d{2} \d{2}:\d{2}/,
+    initialStartedAt,
   );
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
+    /Treatment Options:\n  1\. Hygiene maintenance\n  2\. Synthetic restorative consultation/,
   );
+  await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 
-  await page.getByRole("button", { name: "Load synthetic demo" }).click();
   const reloadedStartedAt = await page
     .locator("#recare-note-started")
     .inputValue();

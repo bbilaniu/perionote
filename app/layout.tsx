@@ -91,6 +91,12 @@ export default function RootLayout({
                 </Link>
                 <Link
                   className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
+                  href="/drafts"
+                >
+                  Saved drafts
+                </Link>
+                <Link
+                  className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
                   href="/catalogues"
                 >
                   Catalogues

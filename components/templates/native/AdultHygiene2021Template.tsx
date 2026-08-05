@@ -23,6 +23,8 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
@@ -41,6 +43,7 @@ import {
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
+import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import type {
   DocumentationStatus,
   PremedicationStatus,
@@ -157,7 +160,33 @@ const stageEvidenceGroups = [
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
 const adultHygieneDiscardWarning =
-  "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
+  "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
+const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
+
+function isAdultHygieneDraftForm(
+  value: unknown,
+): value is AdultHygiene2021Form {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  const gingivalDescription = candidate.gingivalDescription;
+  return matchesDraftShape(
+    {
+      ...adultHygieneDraftExemplar,
+      ...candidate,
+      gingivalDescription:
+        gingivalDescription &&
+        typeof gingivalDescription === "object" &&
+        !Array.isArray(gingivalDescription)
+          ? {
+              ...adultHygieneDraftExemplar.gingivalDescription,
+              ...gingivalDescription,
+            }
+          : adultHygieneDraftExemplar.gingivalDescription,
+    },
+    adultHygieneDraftExemplar,
+  );
+}
 const gingivalDescriptionStatusOptions: Array<{
   value: GingivalDescriptionStatus;
   label: string;
@@ -2644,7 +2673,29 @@ export function AdultHygiene2021Template({
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
 
-  useEffect(() => setStartedAt(new Date()), []);
+  const localDraft = useLocalInteractiveDraft({
+    templateId: "adult-hygiene-2021",
+    form,
+    startedAt,
+    isEmpty: (value) => JSON.stringify(value) === emptyAdultHygieneDraft,
+    isValidForm: isAdultHygieneDraftForm,
+    onRestore: (draft) => {
+      const emptyForm = createEmptyAdultHygiene2021Form();
+      setForm({
+        ...emptyForm,
+        ...draft.form,
+        gingivalDescription: copyGingivalDescriptionAssessment(
+          draft.form.gingivalDescription,
+        ),
+      });
+      setStartedAt(new Date(draft.startedAt));
+      setPatientIdError("");
+      setProviderError("");
+      setCopyMessage("");
+    },
+  });
+
+  useEffect(() => setStartedAt((current) => current ?? new Date()), []);
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -2681,6 +2732,7 @@ export function AdultHygiene2021Template({
   }
 
   async function copyNote() {
+    const draftSaveResult = localDraft.saveNow();
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rdh, form.rda].some((value) =>
       Boolean(value.trim()),
@@ -2706,7 +2758,9 @@ export function AdultHygiene2021Template({
     const copied = await writeClipboard(summary);
     setCopyMessage(
       copied
-        ? "Note copied."
+        ? draftSaveResult === "failed"
+          ? "Note copied, but the local draft could not be saved."
+          : "Note copied."
         : "The note could not be copied. Select the preview and copy it manually.",
     );
   }
@@ -2778,6 +2832,7 @@ export function AdultHygiene2021Template({
 
   function resetForm() {
     if (!window.confirm(adultHygieneDiscardWarning)) return;
+    localDraft.beginNewDraft();
     setForm(createEmptyAdultHygiene2021Form());
     setStartedAt(new Date());
     setPatientIdError("");
@@ -2848,11 +2903,19 @@ export function AdultHygiene2021Template({
             </h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
               Complete the form and copy a structured Adult Hygiene note.
-              Encounter values remain only in this page&apos;s memory.
-              Deliberately remembered catalogue suggestions stay only in this
-              browser profile.
+              Encounter values are kept in a temporary local recovery draft.
+              Deliberately remembered catalogue suggestions also stay only in
+              this browser profile.
             </p>
           </header>
+
+          <LocalDraftRecovery
+            drafts={localDraft.recoverableDrafts}
+            lastSavedAt={localDraft.lastSavedAt}
+            restoredAt={localDraft.restoredAt}
+            storageError={localDraft.storageError}
+            onRestore={localDraft.restoreDraft}
+          />
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
