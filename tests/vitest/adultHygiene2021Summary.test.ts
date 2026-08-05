@@ -196,6 +196,19 @@ Date Booked: 2026-11-15`);
     expect(summary).not.toContain("Periodontal diagnosis:");
   });
 
+  it("charts cigarette smoking when cigarettes per day is not entered", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      smoking: { status: "cigarettes" },
+    };
+
+    expect(buildAdultHygiene2021Summary(form))
+      .toBe(`Patient-specific grade evidence:
+  Grade modifiers:
+    - Smoking: smokes cigarettes; cigarettes/day not entered.`);
+  });
+
   it("charts entered structured periodontal observations before classification", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {

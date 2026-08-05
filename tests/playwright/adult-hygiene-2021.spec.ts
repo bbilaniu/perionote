@@ -500,6 +500,13 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Patient-specific grade evidence:\n  Progression evidence:\n    - bone-loss\/age ratio 0\.72\./
   );
+  await page.locator("#adult-hygiene-smoking-modifier").click();
+  await page
+    .getByRole("option", { name: "Smokes cigarettes", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient-specific grade evidence:[\s\S]*  Grade modifiers:\n    - Smoking: smokes cigarettes; cigarettes\/day not entered\./
+  );
 });
 
 test("Adult Hygiene prevents conflicting gingival menu selections", async ({

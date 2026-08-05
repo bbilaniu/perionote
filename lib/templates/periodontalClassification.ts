@@ -1172,7 +1172,7 @@ export function formatSmokingModifier(
   if (modifier.status === "cigarettes") {
     return modifier.measurement
       ? `smokes ${formatClinicalMeasurement(modifier.measurement, notation)}`
-      : "";
+      : "smokes cigarettes; cigarettes/day not entered";
   }
   if (modifier.status === "other-exposure") {
     const details = modifier.details.trim();
