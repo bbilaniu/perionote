@@ -324,6 +324,15 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Recommended Recall Interval: 6-month recall\./
   );
+  await expect(
+    page.getByRole("heading", { name: "Caries Risk Assessment", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Caries risk level", exact: true })
+  ).toHaveAttribute("data-value", "Moderate");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal status comment: Synthetic periodontal status comment\.\n\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months\. Synthetic diet and home-care factors reviewed\.\n\nOral hygiene compliance: Good\./
+  );
 
   await reloadDiscardingForm(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
@@ -467,6 +476,15 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
 
   await expect(structuredPeriodontalObservations).toHaveAttribute(
     "aria-expanded",
+    "false"
+  );
+  await expect(
+    page.getByRole("button", { name: /Patient-specific stage evidence/ })
+  ).toHaveCount(0);
+
+  await structuredPeriodontalObservations.click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute(
+    "aria-expanded",
     "true"
   );
   const stageEvidence = page.getByRole("button", {
@@ -475,21 +493,42 @@ test("Adult Hygiene progressively discloses stage and grade evidence", async ({
   const gradeEvidence = page.getByRole("button", {
     name: /Patient-specific grade evidence/,
   });
-  await expect(stageEvidence).toHaveAttribute("aria-expanded", "true");
+  await expect(stageEvidence).toHaveAttribute("aria-expanded", "false");
   await expect(stageEvidence).toContainText("Not assessed");
   await expect(
     page.locator("#adult-hygiene-stage-interdental-cal")
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(gradeEvidence).toHaveAttribute("aria-expanded", "false");
   await expect(gradeEvidence).toContainText("Not assessed");
   await expect(
     page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
   ).toHaveCount(0);
 
+  await stageEvidence.click();
+  await expect(
+    page.locator("#adult-hygiene-stage-interdental-cal")
+  ).toBeVisible();
   await gradeEvidence.click();
   await expect(
     page.locator("#adult-hygiene-grade-bone-loss-age-ratio")
   ).toBeVisible();
+  await page.locator("#adult-hygiene-stage-interdental-cal").fill("3");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient-specific stage evidence:\n  Severity evidence:\n    - interdental CAL 3 mm\./
+  );
+  await page
+    .locator("#adult-hygiene-grade-bone-loss-age-ratio")
+    .fill("0.72");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient-specific grade evidence:\n  Progression evidence:\n    - bone-loss\/age ratio 0\.72\./
+  );
+  await page.locator("#adult-hygiene-smoking-modifier").click();
+  await page
+    .getByRole("option", { name: "Smokes cigarettes", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient-specific grade evidence:[\s\S]*  Grade modifiers:\n    - Smoking: smokes cigarettes; cigarettes\/day not entered\./
+  );
 });
 
 test("Adult Hygiene prevents conflicting gingival menu selections", async ({
@@ -846,6 +885,9 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /Health\/Gingivitis:/
   );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal assessment findings:\n  - Periodontal support: Intact periodontal support\.\n  - Bleeding on probing \(BOP\): 6%\.\n  - Maximum PPD: 3 mm\.\n  - Probing attachment loss: Absent\.\n  - Radiographic bone loss \(RBL\): Absent\./
+  );
 
   await diagnosis.click();
   await page
@@ -893,13 +935,22 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     .getByRole("button", { name: "Apply suggestion", exact: true })
     .click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM\n- NO PROBING ATTACHMENT LOSS\n- MAXIMUM PPD: 3 MM\n- BOP: 6%\n- NO RADIOGRAPHIC BONE LOSS/
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /- (NO PROBING ATTACHMENT LOSS|MAXIMUM PPD:|BOP:|NO RADIOGRAPHIC BONE LOSS)/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 6%\./
   );
 
   await structuredPeriodontalObservations.click();
   await page.locator("#adult-hygiene-bop-percent").fill("12");
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Health\/Gingivitis:/
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM/
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 12%\./
   );
 });
 
@@ -979,6 +1030,12 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     page.getByLabel("Periodontal status comment", { exact: true })
   ).toBeVisible();
 
+  await page
+    .getByRole("button", { name: /Structured periodontal observations/ })
+    .click();
+  await page
+    .getByRole("button", { name: /Patient-specific stage evidence/ })
+    .click();
   await page.locator("#adult-hygiene-periodontium").click();
   await page
     .getByRole("option", {
@@ -1043,7 +1100,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .getByLabel("Periodontal status comment")
     .fill("Stable on current maintenance interval");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT\n- PROBING ATTACHMENT LOSS PRESENT\n- MAXIMUM PPD: 4 MM\n- BOP: 5%\n- RADIOGRAPHIC BONE LOSS PRESENT\n- SITES WITH PPD >=4 MM AND BOP: NONE\n- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
+    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
   );
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
@@ -1645,7 +1702,7 @@ test("Adult Hygiene uses clockwise sextant labels and output", async ({
   );
 });
 
-test("Adult Hygiene charts selected periodontal classifications and requires override reasons", async ({
+test("Adult Hygiene charts selected periodontal classifications with optional override reasons", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
@@ -1711,7 +1768,10 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   await expect(page.getByLabel("Confirm selected stage")).toHaveCount(0);
   await expect(page.getByLabel("Confirm selected grade")).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\.[\s\S]*Stage basis: interdental CAL 5 mm; maximum PPD 6 mm\.[\s\S]*Grade basis: bone-loss\/age ratio 0\.72\./
+    /Patient-specific stage evidence:[\s\S]*interdental CAL 5 mm\.[\s\S]*maximum PPD 6 mm\.[\s\S]*Patient-specific grade evidence:[\s\S]*bone-loss\/age ratio 0\.72\.[\s\S]*Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\./
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /^(Stage basis|Grade basis|Grade modifiers):/m
   );
 
   await page.locator("#adult-hygiene-periodontitis-stage").click();
@@ -1741,8 +1801,11 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   expect(statusCommentBox!.x).toBeGreaterThan(statusBox!.x);
   expect(Math.abs(statusCommentBox!.y - statusBox!.y)).toBeLessThan(2);
   expect(Math.abs(statusCommentBox!.width - statusBox!.width)).toBeLessThan(2);
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Stage IV/
+  );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Stage IV|Stage basis:/
+    /Stage override:/
   );
   await page
     .getByLabel("Stage override reason")
@@ -1751,12 +1814,15 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
     /Stage IV[\s\S]*Stage override: Clinician-confirmed Stage IV complexity\./
   );
   await page.getByLabel("Stage override reason").fill("");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Stage IV/
+  );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Stage IV|Stage basis:/
+    /Stage override:/
   );
 });
 
-test("Adult Hygiene blocks copy while a visible grade override reason is empty", async ({
+test("Adult Hygiene copies a manual grade selection without requiring an override reason", async ({
   page,
   context,
 }) => {
@@ -1771,22 +1837,16 @@ test("Adult Hygiene blocks copy while a visible grade override reason is empty",
   const gradeOverrideReason = page.getByLabel("Grade override reason");
   await expect(gradeOverrideReason).toBeVisible();
 
-  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
-
-  await expect(
-    page.getByText("Enter a grade override reason.", { exact: true })
-  ).toBeVisible();
-  await expect(gradeOverrideReason).toHaveAttribute("aria-invalid", "true");
-  await expect(gradeOverrideReason).toBeFocused();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
-  ).resolves.toBe("sentinel");
+  ).resolves.toMatch(/Grade C/);
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.not.toMatch(/Grade override:/);
 
   await gradeOverrideReason.fill("Clinician-selected Grade C");
-  await expect(
-    page.getByText("Enter a grade override reason.", { exact: true })
-  ).toHaveCount(0);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -1796,7 +1856,7 @@ test("Adult Hygiene blocks copy while a visible grade override reason is empty",
   );
 });
 
-test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reason is empty", async ({
+test("Adult Hygiene copies a manual Health/Gingivitis selection without requiring an override reason", async ({
   page,
   context,
 }) => {
@@ -1818,20 +1878,16 @@ test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reaso
   );
   await expect(overrideReason).toBeVisible();
 
-  await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
-
-  await expect(
-    page.getByText(
-      "Enter a Health/Gingivitis classification override reason.",
-      { exact: true }
-    )
-  ).toBeVisible();
-  await expect(overrideReason).toHaveAttribute("aria-invalid", "true");
-  await expect(overrideReason).toBeFocused();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
-  ).resolves.toBe("sentinel");
+  ).resolves.toContain(
+    "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM"
+  );
+  await expect(
+    page.evaluate(() => navigator.clipboard.readText())
+  ).resolves.not.toContain("Health/Gingivitis override:");
 
   await overrideReason.fill("Clinician-selected health classification");
   await page.getByRole("button", { name: "Copy note" }).click();
@@ -1839,7 +1895,7 @@ test("Adult Hygiene blocks copy while a visible Health/Gingivitis override reaso
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toMatch(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*CLINICIAN OVERRIDE: Clinician-selected health classification/
+    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*Health\/Gingivitis override: Clinician-selected health classification\./
   );
 });
 

@@ -528,12 +528,9 @@ describe("Health/Gingivitis classification", () => {
       context: "health-intact",
     };
 
-    expect(formatHealthGingivitisBlock(classification))
-      .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
-- NO PROBING ATTACHMENT LOSS
-- MAXIMUM PPD: 3 MM
-- BOP: 6%
-- NO RADIOGRAPHIC BONE LOSS`);
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM",
+    );
   });
 
   it("keeps ClearDent wording for a selected treated-periodontitis context", () => {
@@ -551,14 +548,9 @@ describe("Health/Gingivitis classification", () => {
       context: "health-treated-stable-periodontitis",
     };
 
-    expect(formatHealthGingivitisBlock(classification))
-      .toBe(`Health/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT
-- PROBING ATTACHMENT LOSS PRESENT
-- MAXIMUM PPD: 4 MM
-- BOP: 5%
-- RADIOGRAPHIC BONE LOSS PRESENT
-- SITES WITH PPD >=4 MM AND BOP: NONE
-- NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION`);
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Health/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT",
+    );
   });
 
   it("charts declared bone loss instead of a generic possibility", () => {
@@ -574,12 +566,9 @@ describe("Health/Gingivitis classification", () => {
       context: "gingivitis-reduced-non-periodontitis",
     };
 
-    expect(formatHealthGingivitisBlock(classification))
-      .toBe(`Health/Gingivitis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT
-- PROBING ATTACHMENT LOSS PRESENT
-- MAXIMUM PPD: 3 MM
-- BOP: 22%
-- NO RADIOGRAPHIC BONE LOSS`);
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Health/Gingivitis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+    );
   });
 
   it("omits a selected treated context when periodontal support is incompatible", () => {
@@ -594,7 +583,7 @@ describe("Health/Gingivitis classification", () => {
     expect(formatHealthGingivitisBlock(classification)).toBe("");
   });
 
-  it("formats overrides from actual evidence instead of claiming reference criteria", () => {
+  it("formats an optional Health/Gingivitis override reason", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "health";
     classification.gingivalHealth = {
@@ -610,14 +599,10 @@ describe("Health/Gingivitis classification", () => {
 
     expect(formatHealthGingivitisBlock(classification))
       .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
-- NO PROBING ATTACHMENT LOSS
-- MAXIMUM PPD: 3 MM
-- BOP: 12%
-- NO RADIOGRAPHIC BONE LOSS
-- CLINICIAN OVERRIDE: Clinician-confirmed exception`);
+Health/Gingivitis override: Clinician-confirmed exception.`);
   });
 
-  it("does not chart a context override without a reason", () => {
+  it("charts a context override without requiring a reason", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "health";
     classification.gingivalHealth = {
@@ -631,7 +616,9 @@ describe("Health/Gingivitis classification", () => {
       overrideReason: "",
     };
 
-    expect(formatHealthGingivitisBlock(classification)).toBe("");
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM",
+    );
   });
 
   it("requires treated contexts and current periodontal status to agree", () => {

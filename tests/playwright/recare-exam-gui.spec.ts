@@ -656,12 +656,6 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
   );
 
   await page.getByLabel("Overbite (mm)", { exact: true }).fill("4");
-  const cariesRisk = page.getByRole("button", {
-    name: "Caries risk level",
-    exact: true,
-  });
-  await cariesRisk.click();
-  await page.getByRole("option", { name: "Moderate", exact: true }).click();
   const hasCpap = page.getByRole("button", {
     name: "Has a CPAP?",
     exact: true,
@@ -707,11 +701,11 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
   await expect(freeText).toHaveCount(0);
   await expect(normalFlow).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral: WNL\.\nOverbite: 4 mm\.\n\nCPAP: No\.\n\nCaries risk: Moderate caries risk$/,
+    /Intraoral: WNL\.\nOverbite: 4 mm\.\n\nCPAP: No\.$/,
   );
 });
 
-test("Recare Exam exposes only supported structured annotations and keeps saliva independent from caries risk", async ({
+test("Recare Exam exposes only supported structured annotations", async ({
   page,
 }) => {
   await page.goto(recareExamUrl);
@@ -795,34 +789,15 @@ test("Recare Exam exposes only supported structured annotations and keeps saliva
   await expect(
     normalFlowCard.getByLabel("Normal flow measurement (mm)", { exact: true }),
   ).toHaveCount(0);
-  await expect(
-    page.getByRole("list", {
-      name: "Caries risk factors selected values",
-    }),
-  ).toHaveCount(0);
-
-  const cariesRiskFactors = page.getByRole("combobox", {
-    name: "Caries risk factors",
-    exact: true,
-  });
-  await cariesRiskFactors.focus();
-  await page
-    .getByRole("option", { name: "Hyposalivation Starter", exact: true })
-    .click();
   await toggleIntraoralObservation(
     structuredIntraoral,
     "Saliva",
     "Normal flow",
   );
   await expect(normalFlowCard).toHaveCount(0);
-  await expect(
-    page
-      .getByRole("list", { name: "Caries risk factors selected values" })
-      .getByText("Hyposalivation", { exact: true }),
-  ).toBeVisible();
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: ulcer \(location: Right posterior; measurement: 4 mm; notes: Synthetic note\); linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured\.\n\nCaries risk: Factors include hyposalivation$/,
+    /Intraoral:\n  - Buccal mucosa: ulcer \(location: Right posterior; measurement: 4 mm; notes: Synthetic note\); linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured\.$/,
   );
   await expect(page.locator("#recare-summary")).not.toHaveValue(
     /abnormal|patholog/i,

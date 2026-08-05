@@ -322,6 +322,12 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   ).toHaveAttribute("data-value", "no");
   await expect(page.getByLabel("Masseter palpation")).toBeVisible();
   await expect(page.getByLabel("TMJ loading test")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Odontogram", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Caries risk level", exact: true }),
+  ).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Occlusal splint: Yes; uses\./,
   );
@@ -339,9 +345,8 @@ test("recare exam demo preserves paragraph spacing and form values do not persis
   expect(copiedNote).toContain(
     "Treatment Options:\n  1. Hygiene maintenance\n  2. Synthetic restorative consultation",
   );
-  expect(copiedNote).toContain(
-    "ODONTOGRAM UP TO DATE\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.",
-  );
+  expect(copiedNote).toContain("ODONTOGRAM UP TO DATE");
+  expect(copiedNote).not.toContain("Caries risk:");
   expect(copiedNote).not.toContain("\n\n\n");
 
   const reloadDialogPromise = page.waitForEvent("dialog");
