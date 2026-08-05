@@ -37,10 +37,12 @@ an explicit **Restore** action and a link to the central draft manager.
 
 A central **Saved drafts** page lists all current recovery drafts in the
 browser profile with template name, start time, save time, and scheduled
-deletion time. It does not render patient identifiers or form content. Opening
-a draft assigns its random identifier to the current tab before navigating to
-the matching interactive form; the identifier is not placed in the URL. The
-page also provides an explicit **Delete** action for each draft.
+deletion time. To distinguish drafts, it also renders the Patient ID and any
+non-empty Dentist, RDA, and RDH names already stored in the form. Other form
+content and generated clinical text are not rendered in the listing. Opening a
+draft assigns its random identifier to the current tab before navigating to the
+matching interactive form; the identifier is not placed in the URL. The page
+also provides an explicit **Delete** action for each draft.
 Deletion controls are centralized on this page. A visually separate danger
 section can delete every HygieneNote recovery draft in the browser profile,
 but only after a warning that the action is permanent and that forms open in
@@ -83,7 +85,9 @@ sole purpose is recovery of an unfinished interactive note after local failure.
 - Encryption: no application-level encryption; protection depends on the
   browser, operating system, device controls, and profile isolation.
 - Access: scripts and people with access to the same browser origin/profile may
-  be able to read the drafts.
+  be able to read the drafts. The central draft manager intentionally makes
+  Patient IDs and professional names visible to people using that profile so
+  drafts can be identified.
 - Retention and deletion: rolling seven-day retention, explicit per-draft
   deletion, and a separately warned delete-all action on the central draft
   manager. Form reset preserves a checkpoint rather than deleting it. Clearing
@@ -141,6 +145,7 @@ avoids silently placing one patient's content into a fresh note.
 - Sensitive encounter data now persists unencrypted at the application layer
   in the browser profile for up to seven days after its last save.
 - Other users of the same profile may see recoverable drafts.
+- Patient IDs and professional names are visible without first opening a draft.
 - Browser storage is capacity-limited and is not a durable backup.
 - A crash before the first save or within a save interval can still lose work.
 - Schema changes to either interactive form now require draft compatibility
@@ -174,6 +179,7 @@ protect against the principal same-profile and same-origin threats.
   seven-day pruning.
 - Browser tests cover the ten-second save, reload restoration, save-on-copy,
   isolation of two concurrent tabs, reset-without-deletion, and listing,
-  opening, deleting, and bulk deleting drafts from the central recovery page.
+  displaying identifying metadata, opening, deleting, and bulk deleting drafts
+  from the central recovery page.
 - Existing summary fixtures continue to verify that persistence does not alter
   generated clinical text.

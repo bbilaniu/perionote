@@ -79,7 +79,7 @@ test("Recare copy saves independent drafts for multiple open tabs", async ({
   );
 });
 
-test("saved drafts page opens and deletes a local draft without listing patient content", async ({
+test("saved drafts page identifies, opens, and deletes a local draft", async ({
   context,
   page,
 }) => {
@@ -88,6 +88,8 @@ test("saved drafts page opens and deletes a local draft without listing patient 
   await page
     .locator("#adult-hygiene-patient-id")
     .fill("Synthetic private draft patient");
+  await page.locator("#adult-hygiene-dentist").fill("Synthetic Draft Dentist");
+  await page.locator("#adult-hygiene-rda").fill("Synthetic Draft RDA");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic Draft RDH");
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
@@ -100,6 +102,8 @@ test("saved drafts page opens and deletes a local draft without listing patient 
   });
   await page.getByRole("button", { name: "Reset form" }).click();
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
+  await expect(page.locator("#adult-hygiene-dentist")).toHaveValue("");
+  await expect(page.locator("#adult-hygiene-rda")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-rdh")).toHaveValue("");
 
   await page.goto("/drafts");
@@ -109,14 +113,21 @@ test("saved drafts page opens and deletes a local draft without listing patient 
   await expect(
     page.getByRole("heading", { name: "2021 Adult Hygiene" }),
   ).toBeVisible();
-  await expect(page.getByText("Synthetic private draft patient")).toHaveCount(
-    0,
-  );
+  await expect(page.getByText("Synthetic private draft patient")).toBeVisible();
+  await expect(page.getByText("Synthetic Draft Dentist")).toBeVisible();
+  await expect(page.getByText("Synthetic Draft RDA")).toBeVisible();
+  await expect(page.getByText("Synthetic Draft RDH")).toBeVisible();
 
   await page.getByRole("button", { name: "Open draft" }).click();
   await expect(page).toHaveURL(new RegExp(`${adultHygieneUrl}/?$`));
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
     "Synthetic private draft patient",
+  );
+  await expect(page.locator("#adult-hygiene-dentist")).toHaveValue(
+    "Synthetic Draft Dentist",
+  );
+  await expect(page.locator("#adult-hygiene-rda")).toHaveValue(
+    "Synthetic Draft RDA",
   );
   await expect(page.locator("#adult-hygiene-rdh")).toHaveValue(
     "Synthetic Draft RDH",

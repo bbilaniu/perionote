@@ -128,6 +128,10 @@ export function LocalDraftManager() {
           are deleted seven days after their most recent save and are not the
           clinical record.
         </p>
+        <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
+          Patient IDs and professional names are shown so drafts can be
+          identified. Anyone with access to this browser profile may see them.
+        </p>
       </header>
 
       {storageError ? (
@@ -179,6 +183,37 @@ export function LocalDraftManager() {
                     <h2 className="mt-1 text-lg font-semibold">
                       {template?.label ?? "Unavailable interactive template"}
                     </h2>
+                    <dl className="mt-3 grid gap-3 rounded-lg bg-slate-50 p-3 text-sm sm:grid-cols-2 dark:bg-slate-950/60">
+                      <div>
+                        <dt className="font-medium text-slate-600 dark:text-slate-400">
+                          Patient ID
+                        </dt>
+                        <dd className="mt-0.5 font-semibold text-slate-900 dark:text-slate-100">
+                          {draft.patientId || "Not entered"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="font-medium text-slate-600 dark:text-slate-400">
+                          Professionals
+                        </dt>
+                        <dd className="mt-0.5 text-slate-900 dark:text-slate-100">
+                          {draft.professionals.length ? (
+                            <ul className="space-y-0.5">
+                              {draft.professionals.map((professional) => (
+                                <li key={professional.role}>
+                                  <span className="font-medium">
+                                    {professional.role}:
+                                  </span>{" "}
+                                  {professional.name}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            "Not entered"
+                          )}
+                        </dd>
+                      </div>
+                    </dl>
                     <dl className="mt-3 grid gap-x-6 gap-y-1 text-sm text-slate-700 sm:grid-cols-2 dark:text-slate-300">
                       <div>
                         <dt className="inline font-medium">Started: </dt>

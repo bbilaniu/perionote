@@ -13,10 +13,24 @@ export type InteractiveDraft<T> = {
   form: T;
 };
 
+export type InteractiveDraftProfessional = {
+  role: "Dentist" | "RDA" | "RDH";
+  name: string;
+};
+
 export type InteractiveDraftSummary = Omit<
   InteractiveDraft<unknown>,
   "form" | "kind" | "schemaVersion"
->;
+> & {
+  patientId: string;
+  professionals: InteractiveDraftProfessional[];
+};
+
+const interactiveDraftProfessionalFields = [
+  { role: "Dentist", field: "dentist" },
+  { role: "RDA", field: "rda" },
+  { role: "RDH", field: "rdh" },
+] as const;
 
 type StorageLike = Pick<
   Storage,
@@ -126,15 +140,27 @@ function parseDraftSummary(
       !value.draftId ||
       !isValidDate(value.savedAt) ||
       !isValidDate(value.startedAt) ||
-      !("form" in value)
+      !isRecord(value.form)
     ) {
       return undefined;
     }
+    const form = value.form;
+    const patientId =
+      typeof form.patientId === "string" ? form.patientId.trim() : "";
+    const professionals: InteractiveDraftProfessional[] =
+      interactiveDraftProfessionalFields.flatMap(({ role, field }) => {
+        const name = form[field];
+        return typeof name === "string" && name.trim()
+          ? [{ role, name: name.trim() }]
+          : [];
+      });
     return {
       templateId: value.templateId,
       draftId: value.draftId,
       savedAt: value.savedAt,
       startedAt: value.startedAt,
+      patientId,
+      professionals,
     };
   } catch {
     return undefined;

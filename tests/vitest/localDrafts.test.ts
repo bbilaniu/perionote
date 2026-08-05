@@ -81,19 +81,31 @@ describe("interactive local drafts", () => {
     ).toEqual(["newer-tab", "older-tab"]);
   });
 
-  it("lists metadata across templates without exposing form contents", () => {
+  it("lists identifying metadata without exposing other form contents", () => {
     const storage = new MemoryStorage();
     writeInteractiveDraft(storage, {
       templateId: "adult-hygiene-2021",
       draftId: "adult-tab",
-      form: { patientId: "Synthetic private patient", selected: ["4 BW"] },
+      form: {
+        patientId: " Synthetic private patient ",
+        dentist: "Synthetic Dentist",
+        rda: "",
+        rdh: "Synthetic RDH",
+        selected: ["4 BW"],
+      },
       startedAt: new Date("2026-08-05T15:00:00.000Z"),
       now: new Date("2026-08-05T15:01:00.000Z"),
     });
     writeInteractiveDraft(storage, {
       templateId: "recare-exam",
       draftId: "recare-tab",
-      form: { patientId: "Synthetic other patient", selected: ["2 PA"] },
+      form: {
+        patientId: "Synthetic other patient",
+        dentist: "",
+        rda: "Synthetic RDA",
+        rdh: "",
+        selected: ["2 PA"],
+      },
       startedAt: new Date("2026-08-05T16:00:00.000Z"),
       now: new Date("2026-08-05T16:01:00.000Z"),
     });
@@ -109,17 +121,23 @@ describe("interactive local drafts", () => {
         draftId: "recare-tab",
         savedAt: "2026-08-05T16:01:00.000Z",
         startedAt: "2026-08-05T16:00:00.000Z",
+        patientId: "Synthetic other patient",
+        professionals: [{ role: "RDA", name: "Synthetic RDA" }],
       },
       {
         templateId: "adult-hygiene-2021",
         draftId: "adult-tab",
         savedAt: "2026-08-05T15:01:00.000Z",
         startedAt: "2026-08-05T15:00:00.000Z",
+        patientId: "Synthetic private patient",
+        professionals: [
+          { role: "Dentist", name: "Synthetic Dentist" },
+          { role: "RDH", name: "Synthetic RDH" },
+        ],
       },
     ]);
-    expect(JSON.stringify(summaries)).not.toContain(
-      "Synthetic private patient",
-    );
+    expect(JSON.stringify(summaries)).not.toContain("4 BW");
+    expect(JSON.stringify(summaries)).not.toContain("2 PA");
   });
 
   it("deletes drafts older than seven days and malformed owned values", () => {
