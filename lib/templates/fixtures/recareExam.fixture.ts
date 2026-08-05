@@ -70,13 +70,6 @@ export const recareExamFixture: RecareExamForm = {
   improvementRequest: "Synthetic request to discuss whitening.",
   additionalComments: "Synthetic demonstration data only.",
   odontogramUpToDate: true,
-  cariesRiskLevel: "Moderate",
-  cariesRiskFactors: [
-    "High frequency of sugar intake",
-    "Insufficient exposure to fluoride",
-    "History of caries in the last 36 months",
-  ],
-  cariesRiskNotes: "Synthetic diet and home-care factors reviewed.",
   treatmentOptions: [
     {
       id: "fixture-treatment-option-1",

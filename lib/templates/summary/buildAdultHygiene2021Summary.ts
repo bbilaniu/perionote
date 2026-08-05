@@ -44,6 +44,51 @@ function withTerminalPunctuation(value: string): string {
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
 }
 
+function joinNaturalLanguageList(values: string[]): string {
+  if (values.length <= 1) return values[0] ?? "";
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+}
+
+function lowerFirst(value: string): string {
+  return value ? `${value[0].toLocaleLowerCase("en-CA")}${value.slice(1)}` : "";
+}
+
+function cariesRiskFactor(value: string): string {
+  const cleanValue = trimmed(value);
+  return cleanValue === "History of caries in the last 36 months"
+    ? "history of active decay in the last 36 months"
+    : lowerFirst(cleanValue);
+}
+
+function cariesRiskLine(
+  level: AdultHygiene2021Form["cariesRiskLevel"],
+  factors: string[],
+  notes: string
+): string {
+  const cleanFactors = factors.map(trimmed).filter(Boolean);
+  const cleanNotes = trimmed(notes);
+  if (!level && cleanFactors.length === 0 && !cleanNotes) return "";
+
+  let line = level
+    ? `${level} caries risk`
+    : cleanFactors.length
+    ? `Factors include ${joinNaturalLanguageList(
+        cleanFactors.map(cariesRiskFactor)
+      )}`
+    : "";
+
+  if (level && cleanFactors.length) {
+    line += ` due to ${joinNaturalLanguageList(
+      cleanFactors.map(cariesRiskFactor)
+    )}`;
+  }
+
+  if (!line) return `Caries risk: ${withTerminalPunctuation(cleanNotes)}`;
+  if (!cleanNotes) return `Caries risk: ${line}`;
+  return `Caries risk: ${line}. ${withTerminalPunctuation(cleanNotes)}`;
+}
+
 function oheTopicLine(values: string[]): string {
   const cleanValues = values.map(trimmed).filter(Boolean);
   const selected = new Set(cleanValues);
@@ -362,7 +407,7 @@ function formatPeriodontalAssessmentFindings(
   return findings.length
     ? [
         "Periodontal assessment findings:",
-        ...findings.map((line) => `- ${line}`),
+        ...findings.map((line) => `  - ${line}`),
       ].join("\n")
     : "";
 }
@@ -545,14 +590,25 @@ export function buildAdultHygiene2021Summary(
   const gingivalDescription = [
     formatGingivalDescription(form.gingivalDescription),
   ];
-  const periodontalEvidence = [
+  const periodontalAssessmentFindings = [
     formatPeriodontalAssessmentFindings(form.periodontalClassification),
+  ];
+  const patientSpecificStageEvidence = [
     formatPatientSpecificStageEvidence(form.periodontalClassification),
+  ];
+  const patientSpecificGradeEvidence = [
     formatPatientSpecificGradeEvidence(form.periodontalClassification),
   ];
   const periodontalDiagnosis = [
     healthGingivitisBlock,
     ...periodontalClassificationLines,
+  ];
+  const cariesRisk = [
+    cariesRiskLine(
+      form.cariesRiskLevel,
+      form.cariesRiskFactors,
+      form.cariesRiskNotes
+    ),
   ];
 
   const currentHabits = [
@@ -663,8 +719,11 @@ export function buildAdultHygiene2021Summary(
     hygieneFindings,
     periodontalScreening,
     gingivalDescription,
-    periodontalEvidence,
+    periodontalAssessmentFindings,
+    patientSpecificStageEvidence,
+    patientSpecificGradeEvidence,
     periodontalDiagnosis,
+    cariesRisk,
     oralHygieneAndEducation,
     treatment,
     appliancesAndHistory,

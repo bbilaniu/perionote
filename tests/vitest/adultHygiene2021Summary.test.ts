@@ -59,13 +59,14 @@ Gingival Description:
   - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 
 Periodontal assessment findings:
-- Periodontal support: Reduced support (with a history of treated periodontitis).
-- Bleeding on probing (BOP): 18%.
-- Maximum PPD: 3 mm.
-- Probing attachment loss: Present.
-- Radiographic bone loss (RBL): Present.
-- Sites with PPD >=4 mm and BOP: None.
-- Evidence of progressive periodontal destruction: No.
+  - Periodontal support: Reduced support (with a history of treated periodontitis).
+  - Bleeding on probing (BOP): 18%.
+  - Maximum PPD: 3 mm.
+  - Probing attachment loss: Present.
+  - Radiographic bone loss (RBL): Present.
+  - Sites with PPD >=4 mm and BOP: None.
+  - Evidence of progressive periodontal destruction: No.
+
 Patient-specific stage evidence:
   Severity evidence:
     - radiographic bone loss 20%.
@@ -73,6 +74,7 @@ Patient-specific stage evidence:
   Complexity evidence:
     - maximum PPD 3 mm.
     - mostly horizontal bone loss.
+
 Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.72.
@@ -91,6 +93,8 @@ Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
 Periodontal status: Periodontal disease remission/control.
 Periodontal status comment: Synthetic periodontal status comment.
+
+Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.
 
 Oral hygiene compliance: Good.
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -214,6 +218,26 @@ Date Booked: 2026-11-15`);
     - Smoking: smokes cigarettes; cigarettes/day not entered.`);
   });
 
+  it("charts ordered caries risk details without inferring missing values", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      cariesRiskFactors: [
+        "Imported dry-mouth factor",
+        "History of caries in the last 36 months",
+      ],
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Caries risk: Factors include imported dry-mouth factor and history of active decay in the last 36 months"
+    );
+    expect(
+      buildAdultHygiene2021Summary({
+        ...createEmptyAdultHygiene2021Form(),
+        cariesRiskNotes: "Synthetic rationale only",
+      })
+    ).toBe("Caries risk: Synthetic rationale only.");
+  });
+
   it("charts entered structured periodontal observations before classification", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
@@ -244,18 +268,20 @@ Date Booked: 2026-11-15`);
 
     expect(buildAdultHygiene2021Summary(form))
       .toBe(`Periodontal assessment findings:
-- Periodontal support: Intact periodontal support.
-- Bleeding on probing (BOP): 6%.
-- Maximum PPD: 3 mm.
-- Probing attachment loss: Absent.
-- Radiographic bone loss (RBL): Absent.
-- Sites with PPD >=4 mm and BOP: None.
-- Evidence of progressive periodontal destruction: No.
+  - Periodontal support: Intact periodontal support.
+  - Bleeding on probing (BOP): 6%.
+  - Maximum PPD: 3 mm.
+  - Probing attachment loss: Absent.
+  - Radiographic bone loss (RBL): Absent.
+  - Sites with PPD >=4 mm and BOP: None.
+  - Evidence of progressive periodontal destruction: No.
+
 Patient-specific stage evidence:
   Severity evidence:
     - interdental CAL 3 mm.
   Complexity evidence:
     - maximum PPD 3 mm.
+
 Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.72.`);
@@ -673,6 +699,7 @@ Recommended hygiene interval comments: Synthetic hygiene context.`);
       .toBe(`Patient-specific stage evidence:
   Severity evidence:
     - interdental CAL 3 mm.
+
 Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.5.

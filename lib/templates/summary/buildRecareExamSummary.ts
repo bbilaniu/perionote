@@ -123,45 +123,6 @@ function joinNaturalLanguageList(values: string[]): string {
   return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
 }
 
-function lowerFirst(value: string): string {
-  return value ? `${value[0].toLocaleLowerCase("en-CA")}${value.slice(1)}` : "";
-}
-
-function cariesRiskFactor(value: string): string {
-  const cleanValue = trimmed(value);
-  return cleanValue === "History of caries in the last 36 months"
-    ? "history of active decay in the last 36 months"
-    : lowerFirst(cleanValue);
-}
-
-function cariesRiskLine(
-  level: RecareExamForm["cariesRiskLevel"],
-  factors: string[],
-  notes: string
-): string {
-  const cleanFactors = factors.map(trimmed).filter(Boolean);
-  const cleanNotes = trimmed(notes);
-  if (!level && cleanFactors.length === 0 && !cleanNotes) return "";
-
-  let line = level
-    ? `${level} caries risk`
-    : cleanFactors.length
-    ? `Factors include ${joinNaturalLanguageList(
-        cleanFactors.map(cariesRiskFactor)
-      )}`
-    : "";
-
-  if (level && cleanFactors.length) {
-    line += ` due to ${joinNaturalLanguageList(
-      cleanFactors.map(cariesRiskFactor)
-    )}`;
-  }
-
-  if (!line) return `Caries risk: ${withTerminalPunctuation(cleanNotes)}`;
-  if (!cleanNotes) return `Caries risk: ${line}`;
-  return `Caries risk: ${line}. ${withTerminalPunctuation(cleanNotes)}`;
-}
-
 function yesNoLine(
   label: string,
   status: DocumentationStatus,
@@ -547,14 +508,9 @@ export function buildRecareExamSummary(
       : "",
   ];
 
-  const odontogramAndCariesRisk = [
+  const odontogram = [
     teethSummary(form),
     form.odontogramUpToDate ? "ODONTOGRAM UP TO DATE" : "",
-    cariesRiskLine(
-      form.cariesRiskLevel,
-      form.cariesRiskFactors,
-      form.cariesRiskNotes
-    ),
   ];
 
   const nextVisit = [
@@ -572,7 +528,7 @@ export function buildRecareExamSummary(
     intraoralAndOcclusion,
     appliancesAndHistory,
     patientRequests,
-    odontogramAndCariesRisk,
+    odontogram,
     treatmentBlock(
       "Treatment Options",
       form.treatmentOptions,

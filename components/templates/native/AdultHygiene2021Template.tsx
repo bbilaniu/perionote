@@ -26,6 +26,7 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
+  type CariesRiskLevel,
   brushingFrequencyChoices,
   createEmptyAdultHygiene2021Form,
   diseaseAndRiskOheTopicChoices,
@@ -104,6 +105,15 @@ const treatmentRowRemoveButtonClass =
 const evidenceSectionClass =
   "space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700";
 const evidenceSectionHeadingClass = "mb-2 text-center text-sm font-semibold";
+const cariesRiskLevelOptions: Array<{
+  value: CariesRiskLevel;
+  label: string;
+}> = [
+  { value: "", label: "None selected" },
+  { value: "Low", label: "Low" },
+  { value: "Moderate", label: "Moderate" },
+  { value: "High", label: "High" },
+];
 const gingivalCandidateFieldTargetIds: Record<
   GingivalHealthCandidateMissingFieldId,
   string
@@ -2851,6 +2861,7 @@ export function AdultHygiene2021Template({
       stainAreas: [...(fixture.stainAreas ?? [])],
       calculusAreas: [...(fixture.calculusAreas ?? [])],
       bleedingAreas: [...(fixture.bleedingAreas ?? [])],
+      cariesRiskFactors: [...fixture.cariesRiskFactors],
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
       oheTopicsReviewed: [...fixture.oheTopicsReviewed],
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
@@ -3268,6 +3279,37 @@ export function AdultHygiene2021Template({
                 updateField("periodontalClassification", value)
               }
             />
+          </Section>
+
+          <Section title="Caries Risk Assessment">
+            <div className="grid gap-4 md:grid-cols-2">
+              <FixedChoiceListbox
+                id="adult-hygiene-caries-risk-level"
+                label="Caries risk level"
+                value={form.cariesRiskLevel}
+                options={cariesRiskLevelOptions}
+                onChange={(value) => updateField("cariesRiskLevel", value)}
+              />
+              <div className="md:col-span-2">
+                <CatalogueMultiCombobox
+                  id="adult-hygiene-caries-risk-factors"
+                  label="Caries risk factors"
+                  catalogueKey="clinical-exam.caries-risk-factors"
+                  values={form.cariesRiskFactors}
+                  onChange={(value) => updateField("cariesRiskFactors", value)}
+                  roomySelectionActions
+                />
+              </div>
+              <div className="md:col-span-2">
+                <TextareaField
+                  id="adult-hygiene-caries-risk-notes"
+                  label="Caries risk notes"
+                  placeholder="Document rationale for the caries risk selection."
+                  value={form.cariesRiskNotes}
+                  onChange={(value) => updateField("cariesRiskNotes", value)}
+                />
+              </div>
+            </div>
           </Section>
 
           <Section title="Oral Hygiene and Education">

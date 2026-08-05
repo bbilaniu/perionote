@@ -324,6 +324,15 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Recommended Recall Interval: 6-month recall\./
   );
+  await expect(
+    page.getByRole("heading", { name: "Caries Risk Assessment", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Caries risk level", exact: true })
+  ).toHaveAttribute("data-value", "Moderate");
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Periodontal status comment: Synthetic periodontal status comment\.\n\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months\. Synthetic diet and home-care factors reviewed\.\n\nOral hygiene compliance: Good\./
+  );
 
   await reloadDiscardingForm(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
@@ -877,7 +886,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     /Health\/Gingivitis:/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal assessment findings:\n- Periodontal support: Intact periodontal support\.\n- Bleeding on probing \(BOP\): 6%\.\n- Maximum PPD: 3 mm\.\n- Probing attachment loss: Absent\.\n- Radiographic bone loss \(RBL\): Absent\./
+    /Periodontal assessment findings:\n  - Periodontal support: Intact periodontal support\.\n  - Bleeding on probing \(BOP\): 6%\.\n  - Maximum PPD: 3 mm\.\n  - Probing attachment loss: Absent\.\n  - Radiographic bone loss \(RBL\): Absent\./
   );
 
   await diagnosis.click();
