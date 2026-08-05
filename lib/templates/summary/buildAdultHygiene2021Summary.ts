@@ -285,47 +285,24 @@ function formatPeriodontalClassification(
       ? `Grade ${classification.grade}`
       : "",
   ].filter(Boolean);
-  const stageBasis =
-    stageCanBeCharted
-      ? periodontalStageEvidence(classification)
-          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
-          .filter(Boolean)
-      : [];
-  const gradeBasis =
-    gradeCanBeCharted
-      ? classification.gradeBasis
-          .map((evidence) => formatPeriodontalEvidence(evidence, "ascii"))
-          .filter(Boolean)
-      : [];
-  const modifiers =
-    classification.diagnosis === "periodontitis"
-      ? [
-          formatSmokingModifier(classification.smoking, "ascii"),
-          formatDiabetesModifier(classification.diabetes, "ascii"),
-        ].filter(Boolean)
-      : [];
-
   return [
     diagnosisParts.length
       ? `Periodontal diagnosis: ${withTerminalPunctuation(
           diagnosisParts.join(", ")
         )}`
       : "",
-    stageBasis.length ? `Stage basis: ${stageBasis.join("; ")}.` : "",
     stageCanBeCharted &&
     trimmed(classification.stageOverrideReason)
       ? `Stage override: ${withTerminalPunctuation(
           classification.stageOverrideReason
         )}`
       : "",
-    gradeBasis.length ? `Grade basis: ${gradeBasis.join("; ")}.` : "",
     gradeCanBeCharted &&
     trimmed(classification.gradeOverrideReason)
       ? `Grade override: ${withTerminalPunctuation(
           classification.gradeOverrideReason
         )}`
       : "",
-    modifiers.length ? `Grade modifiers: ${modifiers.join("; ")}.` : "",
     statusCanBeCharted
       ? `Periodontal status: ${withTerminalPunctuation(
           choiceLabel(periodontalStatusChoices, classification.status)
@@ -493,7 +470,7 @@ export function buildAdultHygiene2021Summary(
         .join(" ")
     : "";
 
-  const consentHistoryAndSterilization = [
+  const sterilization = [
     form.class5IndicatorStatus === "not-documented"
       ? ""
       : `Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: ${
@@ -502,6 +479,9 @@ export function buildAdultHygiene2021Summary(
     trimmed(form.mieleCodes)
       ? `Miele Sterilization Codes Scanned: ${trimmed(form.mieleCodes)}`
       : "",
+  ];
+
+  const consentAndHistory = [
     consentLine,
     labelledLine("Medical history reviewed", form.medicalHistoryReview),
     form.premedicationStatus === "not-required"
@@ -515,13 +495,16 @@ export function buildAdultHygiene2021Summary(
       : "",
   ];
 
-  const concernsAndFindings = [
+  const concerns = [
     formatPatientChiefConcerns(
       "Patient Chief Concern",
       form.patientChiefConcern,
       form.listChiefConcerns
     ),
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
+  ];
+
+  const hygieneFindings = [
     findingWithCommentLine(
       "Plaque",
       form.plaqueChoice,
@@ -554,15 +537,21 @@ export function buildAdultHygiene2021Summary(
   const periodontalClassificationLines = formatPeriodontalClassification(
     form.periodontalClassification
   );
-  const periodontalAssessment = [
+  const periodontalScreening = [
     psrPocketingLine(form.psrPocketing),
     labelledLine("Recession", form.recession),
     labelledLine("FMP Done", form.fmpDone),
+  ];
+  const gingivalDescription = [
+    formatGingivalDescription(form.gingivalDescription),
+  ];
+  const periodontalEvidence = [
     formatPeriodontalAssessmentFindings(form.periodontalClassification),
     formatPatientSpecificStageEvidence(form.periodontalClassification),
     formatPatientSpecificGradeEvidence(form.periodontalClassification),
+  ];
+  const periodontalDiagnosis = [
     healthGingivitisBlock,
-    formatGingivalDescription(form.gingivalDescription),
     ...periodontalClassificationLines,
   ];
 
@@ -668,9 +657,14 @@ export function buildAdultHygiene2021Summary(
 
   const groups = [
     patientAndTeam,
-    consentHistoryAndSterilization,
-    concernsAndFindings,
-    periodontalAssessment,
+    sterilization,
+    consentAndHistory,
+    concerns,
+    hygieneFindings,
+    periodontalScreening,
+    gingivalDescription,
+    periodontalEvidence,
+    periodontalDiagnosis,
     oralHygieneAndEducation,
     treatment,
     appliancesAndHistory,

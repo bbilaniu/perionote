@@ -1750,7 +1750,10 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   await expect(page.getByLabel("Confirm selected stage")).toHaveCount(0);
   await expect(page.getByLabel("Confirm selected grade")).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\.[\s\S]*Stage basis: interdental CAL 5 mm; maximum PPD 6 mm\.[\s\S]*Grade basis: bone-loss\/age ratio 0\.72\./
+    /Patient-specific stage evidence:[\s\S]*interdental CAL 5 mm\.[\s\S]*maximum PPD 6 mm\.[\s\S]*Patient-specific grade evidence:[\s\S]*bone-loss\/age ratio 0\.72\.[\s\S]*Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\./
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /^(Stage basis|Grade basis|Grade modifiers):/m
   );
 
   await page.locator("#adult-hygiene-periodontitis-stage").click();
@@ -1781,7 +1784,7 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   expect(Math.abs(statusCommentBox!.y - statusBox!.y)).toBeLessThan(2);
   expect(Math.abs(statusCommentBox!.width - statusBox!.width)).toBeLessThan(2);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Stage IV|Stage basis:/
+    /Stage IV/
   );
   await page
     .getByLabel("Stage override reason")
@@ -1791,7 +1794,7 @@ test("Adult Hygiene charts selected periodontal classifications and requires ove
   );
   await page.getByLabel("Stage override reason").fill("");
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Stage IV|Stage basis:/
+    /Stage IV/
   );
 });
 

@@ -37,12 +37,14 @@ Last Recall Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
 Miele Sterilization Codes Scanned: SYNTH-AH-001
+
 Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic history reviewed with no changes.
 Premedication Required: No.
 
 Patient Chief Concern: Sensitivity to hot and cold; Food catches between teeth.
 Hygiene Area of Concern: Synthetic lower anterior concern.
+
 Plaque: Localized moderate interproximal.
 Stain: Localized slight.
 Calculus: Localized moderate marginal.
@@ -51,6 +53,11 @@ Bleeding: Localized mild.
 PSR/Pocketing: 1 2 2 / 2 1 2
 Recession: Synthetic localized recession.
 FMP Done: Synthetic FMP documentation.
+
+Gingival Description:
+  - Color: coral pink (extent: generalized).
+  - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
+
 Periodontal assessment findings:
 - Periodontal support: Reduced support (with a history of treated periodontitis).
 - Bleeding on probing (BOP): 18%.
@@ -73,6 +80,7 @@ Patient-specific grade evidence:
   Grade modifiers:
     - Smoking: non-smoker.
     - Diabetes: no diagnosis of diabetes / normoglycemic.
+
 Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 - PROBING ATTACHMENT LOSS PRESENT
 - MAXIMUM PPD: 3 MM
@@ -80,13 +88,7 @@ Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
 - RADIOGRAPHIC BONE LOSS PRESENT
 - SITES WITH PPD >=4 MM AND BOP: NONE
 - NO EVIDENCE OF PROGRESSIVE PERIODONTAL DESTRUCTION
-Gingival Description:
-  - Color: coral pink (extent: generalized).
-  - Position / Size: gingival recession (extent: localized; location: facial 31–33; measurement: 2 mm; notes: synthetic finding).
 Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
-Stage basis: radiographic bone loss 20%; interdental CAL 3 mm; maximum PPD 3 mm; mostly horizontal bone loss.
-Grade basis: bone-loss/age ratio 0.72; destruction commensurate with biofilm.
-Grade modifiers: non-smoker; no diagnosis of diabetes / normoglycemic.
 Periodontal status: Periodontal disease remission/control.
 Periodontal status comment: Synthetic periodontal status comment.
 
@@ -116,6 +118,9 @@ Next visit: Synthetic hygiene follow-up.
 Date Booked: 2026-11-15`);
     expect(summary).not.toContain("\n\n\n");
     expect(summary).not.toContain("Not documented");
+    expect(summary).not.toMatch(
+      /^(Stage basis|Grade basis|Grade modifiers):/m
+    );
   });
 
   it("omits a current status that contradicts a confirmed treated context", () => {
@@ -398,6 +403,7 @@ Patient-specific grade evidence:
     expect(buildAdultHygiene2021Summary(form)).toBe(`Bleeding: Localized mild.
 
 Recession: Existing unrestricted recession.
+
 Gingival Description:
   - Color: coral pink; physiologic pigmentation (extent: generalized; notes: normal variation).
   - Position / Size: gingival recession (extent: localized; location: Q1, tooth 13 facial; measurement: 1.5 mm; notes: monitored).`);
@@ -503,11 +509,14 @@ Bleeding: Localized mild — areas: mandible.`);
         "Sensitivity to hot and cold",
       ],
       listChiefConcerns: true,
+      plaqueChoice: "Localized moderate interproximal",
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(`Patient Chief Concern:
   - Food catches between teeth
-  - Sensitivity to hot and cold`);
+  - Sensitivity to hot and cold
+
+Plaque: Localized moderate interproximal.`);
   });
 
   it("adds optional OHE topics and notes without replacing existing OHE lines", () => {
@@ -667,6 +676,7 @@ Recommended hygiene interval comments: Synthetic hygiene context.`);
 Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.5.
+
 Periodontal diagnosis: Periodontitis.`);
     expect(summary).not.toMatch(/Stage IV|Grade C|Stage basis:|Grade basis:/);
   });
