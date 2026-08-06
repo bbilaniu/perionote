@@ -1,3 +1,8 @@
+import {
+  interactiveDraftTemplates,
+  isInteractiveDraftTemplateId,
+} from "@/lib/templates/interactiveDraftTemplates";
+
 export const INTERACTIVE_DRAFT_STORAGE_PREFIX =
   "hygienenote.interactive-draft.v1.";
 export const INTERACTIVE_DRAFT_SCHEMA_VERSION = 1;
@@ -18,19 +23,17 @@ export type InteractiveDraftProfessional = {
   name: string;
 };
 
+export type InteractiveDraftProfessionalRole =
+  InteractiveDraftProfessional["role"];
+
 export type InteractiveDraftSummary = Omit<
   InteractiveDraft<unknown>,
   "form" | "kind" | "schemaVersion"
 > & {
   patientId: string;
   professionals: InteractiveDraftProfessional[];
+  availableProfessionalRoles: InteractiveDraftProfessionalRole[];
 };
-
-const interactiveDraftProfessionalFields = [
-  { role: "Dentist", field: "dentist" },
-  { role: "RDA", field: "rda" },
-  { role: "RDH", field: "rdh" },
-] as const;
 
 type StorageLike = Pick<
   Storage,
@@ -146,9 +149,12 @@ function parseDraftSummary(
     }
     const form = value.form;
     const patientId =
-      typeof form.patientId === "string" ? form.patientId.trim() : "";
+      typeof form.patientId === "string" ? form.patientId : "";
+    const professionalFields = isInteractiveDraftTemplateId(value.templateId)
+      ? interactiveDraftTemplates[value.templateId].professionalFields
+      : [];
     const professionals: InteractiveDraftProfessional[] =
-      interactiveDraftProfessionalFields.flatMap(({ role, field }) => {
+      professionalFields.flatMap(({ role, field }) => {
         const name = form[field];
         return typeof name === "string" && name.trim()
           ? [{ role, name: name.trim() }]
@@ -161,6 +167,7 @@ function parseDraftSummary(
       startedAt: value.startedAt,
       patientId,
       professionals,
+      availableProfessionalRoles: professionalFields.map(({ role }) => role),
     };
   } catch {
     return undefined;

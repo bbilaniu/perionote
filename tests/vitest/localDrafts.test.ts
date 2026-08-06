@@ -123,21 +123,85 @@ describe("interactive local drafts", () => {
         startedAt: "2026-08-05T16:00:00.000Z",
         patientId: "Synthetic other patient",
         professionals: [{ role: "RDA", name: "Synthetic RDA" }],
+        availableProfessionalRoles: ["Dentist", "RDH", "RDA"],
       },
       {
         templateId: "adult-hygiene-2021",
         draftId: "adult-tab",
         savedAt: "2026-08-05T15:01:00.000Z",
         startedAt: "2026-08-05T15:00:00.000Z",
-        patientId: "Synthetic private patient",
+        patientId: " Synthetic private patient ",
         professionals: [
           { role: "Dentist", name: "Synthetic Dentist" },
           { role: "RDH", name: "Synthetic RDH" },
         ],
+        availableProfessionalRoles: ["Dentist", "RDH", "RDA"],
       },
     ]);
     expect(JSON.stringify(summaries)).not.toContain("4 BW");
     expect(JSON.stringify(summaries)).not.toContain("2 PA");
+  });
+
+  it("does not infer professional roles for an unavailable legacy template", () => {
+    const storage = new MemoryStorage();
+    const key = interactiveDraftStorageKey("legacy-template", "legacy-tab");
+    const raw = JSON.stringify({
+      kind: "hygienenote.interactive-draft",
+      schemaVersion: 1,
+      templateId: "legacy-template",
+      draftId: "legacy-tab",
+      savedAt: "2026-08-05T16:01:00.000Z",
+      startedAt: "2026-08-05T16:00:00.000Z",
+      form: {
+        patientId: "LEGACY-001",
+        dentist: "Name must not be guessed",
+        assistant: "Generic assistant",
+        rda: "Role must not be guessed",
+      },
+    });
+    storage.setItem(key, raw);
+
+    expect(
+      listInteractiveDraftSummaries(
+        storage,
+        Date.parse("2026-08-05T17:00:00.000Z"),
+      ),
+    ).toEqual([
+      expect.objectContaining({
+        draftId: "legacy-tab",
+        patientId: "LEGACY-001",
+        professionals: [],
+        availableProfessionalRoles: [],
+      }),
+    ]);
+    expect(storage.getItem(key)).toBe(raw);
+  });
+
+  it("does not classify a generic assistant as an RDA", () => {
+    const storage = new MemoryStorage();
+    writeInteractiveDraft(storage, {
+      templateId: "recare-exam",
+      draftId: "assistant-tab",
+      form: {
+        patientId: "SYNTHETIC-ASSISTANT",
+        dentist: "",
+        rdh: "",
+        rda: "",
+        assistant: "Generic assistant",
+      },
+      startedAt: new Date("2026-08-05T16:00:00.000Z"),
+      now: new Date("2026-08-05T16:01:00.000Z"),
+    });
+
+    expect(
+      listInteractiveDraftSummaries(
+        storage,
+        Date.parse("2026-08-05T17:00:00.000Z"),
+      )[0],
+    ).toMatchObject({
+      professionals: [],
+      availableProfessionalRoles: ["Dentist", "RDH", "RDA"],
+    });
   });
 
   it("deletes drafts older than seven days and malformed owned values", () => {
