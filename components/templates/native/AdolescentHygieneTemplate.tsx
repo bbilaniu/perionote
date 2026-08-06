@@ -10,9 +10,17 @@ import {
 } from "react";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { FixedChoiceMultiCombobox } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
+import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
+import {
+  AdultHygieneCalculusControl,
+  AdultHygienePlaqueControl,
+  PeriodontalClassificationControl,
+  TreatmentCompletedList,
+} from "@/components/templates/native/AdultHygiene2021Template";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import type {
@@ -24,7 +32,15 @@ import {
   createEmptyAdolescentHygieneForm,
   hasRequiredAdolescentHygieneFields,
 } from "@/lib/templates/adolescentHygiene";
+import {
+  brushingFrequencyChoices,
+  flossingFrequencyChoices,
+  homeCareOheTopicChoices,
+  standardTreatmentCompletedPreset,
+  type AdultHygieneTreatmentCompletedEntry,
+} from "@/lib/templates/adultHygiene2021";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import { copyPeriodontalClassification } from "@/lib/templates/periodontalClassification";
 import {
   buildAdolescentHygieneSummary,
   formatAdolescentHygieneLocalTimestamp,
@@ -281,6 +297,7 @@ export function AdolescentHygieneTemplate({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const rdhRef = useRef<HTMLInputElement>(null);
   const providerDefaultsAppliedRef = useRef(false);
+  const treatmentEntrySequence = useRef(0);
   const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
@@ -405,7 +422,19 @@ export function AdolescentHygieneTemplate({
   }
 
   function loadDemo() {
-    setForm({ ...fixture });
+    setForm({
+      ...fixture,
+      periodontalClassification: copyPeriodontalClassification(
+        fixture.periodontalClassification,
+      ),
+      plaqueAreas: [...fixture.plaqueAreas],
+      calculusAreas: [...fixture.calculusAreas],
+      ohiTechniques: [...fixture.ohiTechniques],
+      treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
+        ...entry,
+        toothAreas: [...entry.toothAreas],
+      })),
+    });
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("Synthetic demo data loaded.");
@@ -420,6 +449,52 @@ export function AdolescentHygieneTemplate({
     setProviderError("");
     setCopyMessage("");
     patientIdRef.current?.focus();
+  }
+
+  function createTreatmentEntry(
+    source?: Omit<AdultHygieneTreatmentCompletedEntry, "id">,
+  ): AdultHygieneTreatmentCompletedEntry {
+    treatmentEntrySequence.current += 1;
+    return {
+      id: `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`,
+      treatmentType: source?.treatmentType ?? "",
+      toothAreas: [...(source?.toothAreas ?? [])],
+      ...(source?.applicationTime
+        ? { applicationTime: source.applicationTime }
+        : {}),
+    };
+  }
+
+  function applyStandardTreatment() {
+    const existing = new Set(
+      form.treatmentCompleted.map(
+        (entry) =>
+          `${entry.treatmentType.trim().toLocaleLowerCase("en-CA")}|${entry.toothAreas
+            .join("|")
+            .toLocaleLowerCase("en-CA")}`,
+      ),
+    );
+    const additions = standardTreatmentCompletedPreset.flatMap((entry) => {
+      const key = `${entry.treatmentType
+        .trim()
+        .toLocaleLowerCase("en-CA")}|${entry.toothAreas
+        .join("|")
+        .toLocaleLowerCase("en-CA")}`;
+      return existing.has(key)
+        ? []
+        : [
+            createTreatmentEntry({
+              treatmentType: entry.treatmentType,
+              toothAreas: [...entry.toothAreas],
+            }),
+          ];
+    });
+    if (additions.length) {
+      updateField("treatmentCompleted", [
+        ...form.treatmentCompleted,
+        ...additions,
+      ]);
+    }
   }
 
   return (
@@ -620,32 +695,46 @@ export function AdolescentHygieneTemplate({
           </Section>
 
           <Section title="Hygiene Findings">
-            <div className="grid gap-4 md:grid-cols-2">
-              <TextField
-                id="adolescent-gingival-health"
-                label="Gingival health"
-                value={form.gingivalHealth}
-                onChange={(value) => updateField("gingivalHealth", value)}
-              />
-              <TextField
-                id="adolescent-plaque-index"
-                label="Plaque index"
-                value={form.plaqueIndex}
-                onChange={(value) => updateField("plaqueIndex", value)}
-              />
-              <YesNoWithDetails
+            <AdultHygienePlaqueControl
+              id="adolescent-hygiene-plaque"
+              choice={form.plaqueChoice}
+              areas={form.plaqueAreas}
+              comment={form.plaqueComment}
+              onChoiceChange={(value) => updateField("plaqueChoice", value)}
+              onAreasChange={(value) => updateField("plaqueAreas", value)}
+              onCommentChange={(value) =>
+                updateField("plaqueComment", value)
+              }
+            />
+            <div className="space-y-4">
+              <FixedChoiceListbox
                 id="adolescent-calculus"
                 label="Calculus"
-                status={form.calculusStatus}
-                details={form.calculusDetails}
-                detailsLabel="Calculus location/details"
-                onStatusChange={(value) =>
+                value={form.calculusStatus}
+                options={documentationStatusOptions}
+                onChange={(value) =>
                   updateField("calculusStatus", value)
                 }
-                onDetailsChange={(value) =>
-                  updateField("calculusDetails", value)
-                }
               />
+              {form.calculusStatus === "yes" ? (
+                <AdultHygieneCalculusControl
+                  id="adolescent-hygiene-calculus-details"
+                  choice={form.calculusChoice}
+                  areas={form.calculusAreas}
+                  comment={form.calculusComment}
+                  onChoiceChange={(value) =>
+                    updateField("calculusChoice", value)
+                  }
+                  onAreasChange={(value) =>
+                    updateField("calculusAreas", value)
+                  }
+                  onCommentChange={(value) =>
+                    updateField("calculusComment", value)
+                  }
+                />
+              ) : null}
+            </div>
+            <div className="md:max-w-xl">
               <YesNoWithDetails
                 id="adolescent-intraoral-images"
                 label="Intraoral images"
@@ -662,21 +751,52 @@ export function AdolescentHygieneTemplate({
             </div>
           </Section>
 
+          <Section
+            title="Periodontal and Gingival Assessment"
+            description="Uses the same structured assessment, suggestions, staging, grading, and status workflow as the 2021 Adult Hygiene form."
+          >
+            <PeriodontalClassificationControl
+              value={form.periodontalClassification}
+              onChange={(value) =>
+                updateField("periodontalClassification", value)
+              }
+            />
+          </Section>
+
           <Section title="Oral Hygiene Instruction">
             <div className="grid gap-4 md:grid-cols-2">
-              <TextField
-                id="adolescent-flossing-technique"
-                label="Flossing technique"
-                value={form.flossingTechnique}
-                onChange={(value) => updateField("flossingTechnique", value)}
+              <StaticSuggestionCombobox
+                id="adolescent-flossing-frequency"
+                label="Flossing frequency"
+                value={form.flossingFrequency}
+                suggestions={flossingFrequencyChoices}
+                onChange={(value) => updateField("flossingFrequency", value)}
+                placeholder="Select or enter a flossing frequency"
               />
-              <TextField
-                id="adolescent-brushing-technique"
-                label="Brushing technique"
-                value={form.brushingTechnique}
-                onChange={(value) => updateField("brushingTechnique", value)}
+              <StaticSuggestionCombobox
+                id="adolescent-brushing-frequency"
+                label="Brushing frequency"
+                value={form.brushingFrequency}
+                suggestions={brushingFrequencyChoices}
+                onChange={(value) => updateField("brushingFrequency", value)}
+                placeholder="Select or enter a brushing frequency"
               />
             </div>
+            <FixedChoiceMultiCombobox
+              id="adolescent-ohi-techniques"
+              label="OHI techniques reviewed"
+              choices={homeCareOheTopicChoices}
+              values={form.ohiTechniques}
+              onChange={(value) => updateField("ohiTechniques", value)}
+              allowCustomValues={false}
+              customHelpText="Uses the reviewed Adult Hygiene home-care technique choices."
+            />
+            <TextareaField
+              id="adolescent-ohe-notes"
+              label="OHE notes"
+              value={form.oheNotes}
+              onChange={(value) => updateField("oheNotes", value)}
+            />
           </Section>
 
           <Section title="Appliances and Orthodontic History">
@@ -781,14 +901,16 @@ export function AdolescentHygieneTemplate({
                 }
               />
             </div>
-            <TextareaField
-              id="adolescent-treatment-completed"
-              label="Treatments done today"
-              value={form.treatmentCompletedToday}
-              onChange={(value) =>
-                updateField("treatmentCompletedToday", value)
+            <TreatmentCompletedList
+              entries={form.treatmentCompleted}
+              onApplyStandard={applyStandardTreatment}
+              onAdd={() =>
+                updateField("treatmentCompleted", [
+                  ...form.treatmentCompleted,
+                  createTreatmentEntry(),
+                ])
               }
-              placeholder="Optional August 6 request extension"
+              onChange={(value) => updateField("treatmentCompleted", value)}
             />
             <TextareaField
               id="adolescent-next-visit-goal"

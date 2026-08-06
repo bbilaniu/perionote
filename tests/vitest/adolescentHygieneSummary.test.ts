@@ -48,16 +48,23 @@ RDA:`);
     expect(summary).toContain(
       "Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments.",
     );
-    expect(summary).toContain(`Gingival Health: Synthetic generalized marginal inflammation.
-Plaque Index: Synthetic light generalized plaque.
-Calculus: Yes — Synthetic light mandibular anterior calculus.
+    expect(summary).toContain(`Plaque: Localized moderate interproximal — areas: posterior; Synthetic plaque observation.
+Calculus: Localized mild marginal — areas: mandibular anterior; Synthetic calculus observation.
 Intraoral Images: No.`);
+    expect(summary).toContain(`Periodontal assessment findings:
+  - Periodontal support: Intact periodontal support.
+  - Bleeding on probing (BOP): 18%.
+  - Maximum PPD: 3 mm.`);
+    expect(summary).toContain(
+      "Health/Gingivitis: GINGIVITIS - INTACT PERIODONTIUM",
+    );
     expect(summary).toContain(`OHI Reviewed
-Flossing Technique: C-shape flossing reviewed.
-Brushing Technique: Bass brushing twice daily reviewed.`);
+OHI techniques reviewed: Bass brushing; C-shape flossing technique.
+OHE notes: Synthetic technique review.
+Patient is currently: Flossing 1x/day; Brushing 2x/day.`);
     expect(summary).toContain(`Scaling: Yes — 0.5 units.
 Polish: Yes — Selective polish with synthetic demonstration product.
-Treatments done today: Synthetic hygiene visit with scaling, selective polish, OHE, and fluoride varnish.
+Treatment completed today: 2BW; Dentist Recall Exam; 0.5U scale with hand and power instrumentation — full mouth; Selective polish — full mouth; OHE; FluoriMax 2.5% NaF Varnish application — full mouth
 Fluoride: Yes — Synthetic fluoride varnish application — full mouth.`);
     expect(summary).toContain(
       "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES",
@@ -69,16 +76,23 @@ Fluoride: Yes — Synthetic fluoride varnish application — full mouth.`);
   it("omits unanswered controls while preserving entered unknown text", () => {
     const form = {
       ...createEmptyAdolescentHygieneForm(),
-      gingivalHealth: "Imported clinical wording",
+      plaqueChoice: "Imported clinical wording",
+      plaqueComment: "Imported plaque comment",
       calculusStatus: "yes" as const,
-      calculusDetails: "Unknown imported location",
-      treatmentCompletedToday: "Unknown imported treatment wording",
+      calculusChoice: "Unknown imported calculus wording",
+      treatmentCompleted: [
+        {
+          id: "imported-treatment",
+          treatmentType: "Unknown imported treatment wording",
+          toothAreas: [],
+        },
+      ],
     };
 
-    expect(buildAdolescentHygieneSummary(form)).toBe(`Gingival Health: Imported clinical wording.
-Calculus: Yes — Unknown imported location.
+    expect(buildAdolescentHygieneSummary(form)).toBe(`Plaque: Imported clinical wording; Imported plaque comment.
+Calculus: Unknown imported calculus wording.
 
-Treatments done today: Unknown imported treatment wording.`);
+Treatment completed today: Unknown imported treatment wording`);
   });
 
   it("does not emit the PPE statement unless it is explicitly checked", () => {

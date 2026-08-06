@@ -3,6 +3,15 @@ import type {
   AdolescentHygieneForm,
   AdolescentRetainerStatus,
 } from "@/lib/templates/adolescentHygiene";
+import { formatHealthGingivitisBlock } from "@/lib/templates/periodontalClassification";
+import {
+  formatAdultHygieneFindingLine,
+  formatAdultHygieneTreatmentCompleted,
+  formatPatientSpecificGradeEvidence,
+  formatPatientSpecificStageEvidence,
+  formatPeriodontalAssessmentFindings,
+  formatPeriodontalClassification,
+} from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 
 type BuildAdolescentHygieneSummaryOptions = {
   startedAt?: Date;
@@ -150,9 +159,22 @@ export function buildAdolescentHygieneSummary(
   ];
 
   const findings = [
-    lineWithDetails("Gingival Health", form.gingivalHealth),
-    lineWithDetails("Plaque Index", form.plaqueIndex),
-    yesNoLine("Calculus", form.calculusStatus, form.calculusDetails),
+    formatAdultHygieneFindingLine(
+      "Plaque",
+      form.plaqueChoice,
+      form.plaqueComment,
+      form.plaqueAreas,
+    ),
+    form.calculusStatus === "no"
+      ? "Calculus: No."
+      : form.calculusStatus === "yes"
+        ? formatAdultHygieneFindingLine(
+            "Calculus",
+            form.calculusChoice,
+            form.calculusComment,
+            form.calculusAreas,
+          ) || "Calculus: Yes."
+        : "",
     yesNoLine(
       "Intraoral Images",
       form.intraoralImagesStatus,
@@ -160,12 +182,41 @@ export function buildAdolescentHygieneSummary(
     ),
   ];
 
+  const periodontalAssessmentFindings = [
+    formatPeriodontalAssessmentFindings(form.periodontalClassification),
+  ];
+  const patientSpecificStageEvidence = [
+    formatPatientSpecificStageEvidence(form.periodontalClassification),
+  ];
+  const patientSpecificGradeEvidence = [
+    formatPatientSpecificGradeEvidence(form.periodontalClassification),
+  ];
+  const periodontalDiagnosis = [
+    formatHealthGingivitisBlock(form.periodontalClassification),
+    ...formatPeriodontalClassification(form.periodontalClassification),
+  ];
+
   const ohi = [
-    trimmed(form.flossingTechnique) || trimmed(form.brushingTechnique)
+    form.ohiTechniques.length ||
+    trimmed(form.oheNotes) ||
+    trimmed(form.flossingFrequency) ||
+    trimmed(form.brushingFrequency)
       ? "OHI Reviewed"
       : "",
-    lineWithDetails("Flossing Technique", form.flossingTechnique),
-    lineWithDetails("Brushing Technique", form.brushingTechnique),
+    form.ohiTechniques.length
+      ? `OHI techniques reviewed: ${form.ohiTechniques.join("; ")}.`
+      : "",
+    lineWithDetails("OHE notes", form.oheNotes),
+    [trimmed(form.flossingFrequency), trimmed(form.brushingFrequency)].filter(
+      Boolean,
+    ).length
+      ? `Patient is currently: ${[
+          trimmed(form.flossingFrequency),
+          trimmed(form.brushingFrequency),
+        ]
+          .filter(Boolean)
+          .join("; ")}.`
+      : "",
   ];
 
   const appliances = [
@@ -187,7 +238,7 @@ export function buildAdolescentHygieneSummary(
           ? `Scaling: Yes — ${trimmed(form.scalingUnits)} units.`
           : "Scaling: Yes.",
     yesNoLine("Polish", form.polishStatus, form.polishDetails),
-    lineWithDetails("Treatments done today", form.treatmentCompletedToday),
+    formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
     yesNoLine("Fluoride", form.fluorideStatus, form.fluorideDetails),
     yesNoLine(
       "Relayed info to parent or legal guardian",
@@ -212,6 +263,10 @@ export function buildAdolescentHygieneSummary(
     group(header),
     group(historyAndSterilization),
     group(findings),
+    group(periodontalAssessmentFindings),
+    group(patientSpecificStageEvidence),
+    group(patientSpecificGradeEvidence),
+    group(periodontalDiagnosis),
     group(ohi),
     group(appliances),
     group(treatment),

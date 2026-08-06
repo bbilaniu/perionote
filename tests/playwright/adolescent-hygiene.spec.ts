@@ -35,8 +35,14 @@ test("adolescent synthetic demo generates and copies the mapped note", async ({
     "data-value",
     "yes",
   );
+  await expect(
+    page.getByLabel("Periodontal diagnosis category", { exact: true }),
+  ).toHaveAttribute("data-value", "gingivitis");
+  await expect(
+    page.getByLabel("Health/Gingivitis classification", { exact: true }),
+  ).toHaveAttribute("data-value", "gingivitis-intact");
   await expect(page.locator("#adolescent-hygiene-summary")).toHaveValue(
-    /Treatments done today: Synthetic hygiene visit with scaling, selective polish, OHE, and fluoride varnish\./,
+    /Treatment completed today: 2BW; Dentist Recall Exam; 0\.5U scale with hand and power instrumentation — full mouth; Selective polish — full mouth; OHE; FluoriMax 2\.5% NaF Varnish application — full mouth/,
   );
   await expect(page.locator("#adolescent-hygiene-summary")).toHaveValue(
     /Recall Interval: 6 MONTH RECALL\.[\s\S]*Hygiene Interval: 6-month scale\.[\s\S]*Next Visit: 6 MONTH SCALE\./,

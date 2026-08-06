@@ -782,6 +782,78 @@ function FacetedChoiceWithComment({
   );
 }
 
+export function AdultHygienePlaqueControl({
+  id,
+  choice,
+  areas,
+  comment,
+  onChoiceChange,
+  onAreasChange,
+  onCommentChange,
+}: {
+  id: string;
+  choice: string;
+  areas: string[];
+  comment: string;
+  onChoiceChange: (choice: string) => void;
+  onAreasChange: (areas: string[]) => void;
+  onCommentChange: (comment: string) => void;
+}) {
+  return (
+    <FacetedChoiceWithComment
+      id={id}
+      label="Plaque"
+      choice={choice}
+      areas={areas}
+      comment={comment}
+      facetChoices={plaqueFacetChoices}
+      facetGroups={plaqueFacetGroups}
+      onChoiceChange={onChoiceChange}
+      onAreasChange={onAreasChange}
+      onCommentChange={onCommentChange}
+      formatChoice={(values) =>
+        formatChoiceWithJoinedLocations(values, plaqueLocationFacetChoices)
+      }
+    />
+  );
+}
+
+export function AdultHygieneCalculusControl({
+  id,
+  choice,
+  areas,
+  comment,
+  onChoiceChange,
+  onAreasChange,
+  onCommentChange,
+}: {
+  id: string;
+  choice: string;
+  areas: string[];
+  comment: string;
+  onChoiceChange: (choice: string) => void;
+  onAreasChange: (areas: string[]) => void;
+  onCommentChange: (comment: string) => void;
+}) {
+  return (
+    <FacetedChoiceWithComment
+      id={id}
+      label="Calculus"
+      choice={choice}
+      areas={areas}
+      comment={comment}
+      facetChoices={calculusFacetChoices}
+      facetGroups={calculusFacetGroups}
+      onChoiceChange={onChoiceChange}
+      onAreasChange={onAreasChange}
+      onCommentChange={onCommentChange}
+      formatChoice={(values) =>
+        formatChoiceWithJoinedLocations(values, calculusLocationFacetChoices)
+      }
+    />
+  );
+}
+
 function CheckboxField({
   id,
   label,
@@ -876,7 +948,7 @@ function documentedObservationSummary(count: number) {
     : "Not assessed";
 }
 
-function PeriodontalClassificationControl({
+export function PeriodontalClassificationControl({
   value,
   onChange,
 }: {
@@ -2497,7 +2569,7 @@ function GingivalDescriptionControl({
   );
 }
 
-function TreatmentCompletedList({
+export function TreatmentCompletedList({
   entries,
   onApplyStandard,
   onAdd,
@@ -3173,23 +3245,14 @@ export function AdultHygiene2021Template({
               value={form.hygieneAreaOfConcern}
               onChange={(value) => updateField("hygieneAreaOfConcern", value)}
             />
-            <FacetedChoiceWithComment
+            <AdultHygienePlaqueControl
               id="adult-hygiene-plaque"
-              label="Plaque"
               choice={form.plaqueChoice}
               areas={form.plaqueAreas}
               comment={form.plaqueComment}
-              facetChoices={plaqueFacetChoices}
-              facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
               onAreasChange={(value) => updateField("plaqueAreas", value)}
               onCommentChange={(value) => updateField("plaqueComment", value)}
-              formatChoice={(values) =>
-                formatChoiceWithJoinedLocations(
-                  values,
-                  plaqueLocationFacetChoices,
-                )
-              }
             />
             <FacetedChoiceWithComment
               id="adult-hygiene-stain"
@@ -3204,23 +3267,14 @@ export function AdultHygiene2021Template({
               onCommentChange={(value) => updateField("stainComment", value)}
               standaloneValue="None"
             />
-            <FacetedChoiceWithComment
+            <AdultHygieneCalculusControl
               id="adult-hygiene-calculus"
-              label="Calculus"
               choice={form.calculusChoice}
               areas={form.calculusAreas}
               comment={form.calculusComment}
-              facetChoices={calculusFacetChoices}
-              facetGroups={calculusFacetGroups}
               onChoiceChange={(value) => updateField("calculusChoice", value)}
               onAreasChange={(value) => updateField("calculusAreas", value)}
               onCommentChange={(value) => updateField("calculusComment", value)}
-              formatChoice={(values) =>
-                formatChoiceWithJoinedLocations(
-                  values,
-                  calculusLocationFacetChoices,
-                )
-              }
             />
             <FacetedChoiceWithComment
               id="adult-hygiene-bleeding"

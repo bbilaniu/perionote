@@ -26,14 +26,20 @@ export interface AdolescentHygieneForm {
   premedicationDetails: string;
   class5IndicatorsChecked: boolean;
   mieleCodes: string;
-  gingivalHealth: string;
-  plaqueIndex: string;
+  periodontalClassification: PeriodontalClassification;
+  plaqueChoice: string;
+  plaqueAreas: string[];
+  plaqueComment: string;
   calculusStatus: AdolescentDocumentationStatus;
-  calculusDetails: string;
+  calculusChoice: string;
+  calculusAreas: string[];
+  calculusComment: string;
   intraoralImagesStatus: AdolescentDocumentationStatus;
   intraoralImagesDetails: string;
-  flossingTechnique: string;
-  brushingTechnique: string;
+  ohiTechniques: string[];
+  oheNotes: string;
+  flossingFrequency: string;
+  brushingFrequency: string;
   nightGuardStatus: AdolescentDocumentationStatus;
   nightGuardDetails: string;
   orthodonticHistoryStatus: AdolescentDocumentationStatus;
@@ -44,7 +50,7 @@ export interface AdolescentHygieneForm {
   scalingUnits: string;
   polishStatus: AdolescentDocumentationStatus;
   polishDetails: string;
-  treatmentCompletedToday: string;
+  treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
   fluorideStatus: AdolescentDocumentationStatus;
   fluorideDetails: string;
   informationRelayedStatus: AdolescentDocumentationStatus;
@@ -73,14 +79,20 @@ export function createEmptyAdolescentHygieneForm(): AdolescentHygieneForm {
     premedicationDetails: "",
     class5IndicatorsChecked: false,
     mieleCodes: "",
-    gingivalHealth: "",
-    plaqueIndex: "",
+    periodontalClassification: createEmptyPeriodontalClassification(),
+    plaqueChoice: "",
+    plaqueAreas: [],
+    plaqueComment: "",
     calculusStatus: "not-documented",
-    calculusDetails: "",
+    calculusChoice: "",
+    calculusAreas: [],
+    calculusComment: "",
     intraoralImagesStatus: "not-documented",
     intraoralImagesDetails: "",
-    flossingTechnique: "",
-    brushingTechnique: "",
+    ohiTechniques: [],
+    oheNotes: "",
+    flossingFrequency: "",
+    brushingFrequency: "",
     nightGuardStatus: "not-documented",
     nightGuardDetails: "",
     orthodonticHistoryStatus: "not-documented",
@@ -91,7 +103,7 @@ export function createEmptyAdolescentHygieneForm(): AdolescentHygieneForm {
     scalingUnits: "",
     polishStatus: "not-documented",
     polishDetails: "",
-    treatmentCompletedToday: "",
+    treatmentCompleted: [],
     fluorideStatus: "not-documented",
     fluorideDetails: "",
     informationRelayedStatus: "not-documented",
@@ -114,3 +126,8 @@ export function hasRequiredAdolescentHygieneFields(
     [form.dentist, form.rdh, form.rda].some((value) => Boolean(value.trim()))
   );
 }
+import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygiene2021";
+import {
+  createEmptyPeriodontalClassification,
+  type PeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
