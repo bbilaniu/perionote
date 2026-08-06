@@ -31,7 +31,7 @@ test("adolescent synthetic demo generates and copies the mapped note", async ({
   await expect(page.locator("#adolescent-hygiene-patient-id")).toHaveValue(
     "TEST-ADOLESCENT-001",
   );
-  await expect(page.getByLabel("Calculus", { exact: true })).toHaveAttribute(
+  await expect(page.locator("#adolescent-calculus")).toHaveAttribute(
     "data-value",
     "yes",
   );
