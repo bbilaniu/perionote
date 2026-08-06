@@ -1,9 +1,12 @@
 import { AdultHygiene2021Template } from "@/components/templates/native/AdultHygiene2021Template";
+import { AdolescentHygieneTemplate } from "@/components/templates/native/AdolescentHygieneTemplate";
 import { RecareExamTemplate } from "@/components/templates/native/RecareExamTemplate";
+import { adolescentHygieneFixture } from "@/lib/templates/fixtures/adolescentHygiene.fixture";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
 import { recareExamFixture } from "@/lib/templates/fixtures/recareExam.fixture";
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import { buildAdolescentHygieneSummary } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
 import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
 import type {
   TemplateDefinition,
@@ -21,6 +24,23 @@ function defineClinicConversion<TFixture>(
 }
 
 const allClinicConversions = [
+  defineClinicConversion({
+    slug: "adolescent-hygiene",
+    title: "12–17 Years Old Hygiene Template",
+    description:
+      "Draft interactive conversion of the clinic adolescent hygiene note.",
+    kind: "native",
+    lifecycle: "draft",
+    provenance: {
+      sourceClinicTemplateSlug: "adolescent-hygiene",
+      sourceRevision: "7d3d21c",
+      clinicalReviewDate: "2026-08-06",
+    },
+    fixture: adolescentHygieneFixture,
+    summary: buildAdolescentHygieneSummary(adolescentHygieneFixture),
+    buildSummary: buildAdolescentHygieneSummary,
+    component: AdolescentHygieneTemplate,
+  }),
   defineClinicConversion({
     slug: "adult-hygiene-2021",
     title: "2021 Adult Hygiene",

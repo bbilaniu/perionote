@@ -1,0 +1,53 @@
+import { expect, test } from "@playwright/test";
+
+const sourceUrl = "/templates/clinic/adolescent-hygiene";
+const interactiveUrl = `${sourceUrl}/interactive`;
+
+test("adolescent source links to its draft interactive conversion", async ({
+  page,
+}) => {
+  await page.goto(sourceUrl);
+
+  const interactiveLink = page.getByRole("link", {
+    name: "Open interactive version · draft",
+  });
+  await expect(interactiveLink).toHaveAttribute("href", `${interactiveUrl}/`);
+  await interactiveLink.click();
+
+  await expect(page).toHaveURL(new RegExp(`${interactiveUrl}/?$`));
+  await expect(
+    page.getByText("Draft interactive conversion", { exact: true }),
+  ).toBeVisible();
+});
+
+test("adolescent synthetic demo generates and copies the mapped note", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto(interactiveUrl);
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+
+  await expect(page.locator("#adolescent-hygiene-patient-id")).toHaveValue(
+    "TEST-ADOLESCENT-001",
+  );
+  await expect(page.getByLabel("Calculus", { exact: true })).toHaveAttribute(
+    "data-value",
+    "yes",
+  );
+  await expect(page.locator("#adolescent-hygiene-summary")).toHaveValue(
+    /Treatments done today: Synthetic hygiene visit with scaling, selective polish, OHE, and fluoride varnish\./,
+  );
+  await expect(page.locator("#adolescent-hygiene-summary")).toHaveValue(
+    /Recall Interval: 6 MONTH RECALL\.[\s\S]*Hygiene Interval: 6-month scale\.[\s\S]*Next Visit: 6 MONTH SCALE\./,
+  );
+
+  const preview = await page
+    .locator("#adolescent-hygiene-summary")
+    .inputValue();
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.toBe(
+    preview,
+  );
+});

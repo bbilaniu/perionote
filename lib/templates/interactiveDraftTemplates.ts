@@ -1,4 +1,13 @@
 export const interactiveDraftTemplates = {
+  "adolescent-hygiene": {
+    label: "12–17 Years Old Hygiene Template",
+    href: "/templates/clinic/adolescent-hygiene/interactive",
+    professionalFields: [
+      { role: "Dentist", field: "dentist" },
+      { role: "RDH", field: "rdh" },
+      { role: "RDA", field: "rda" },
+    ],
+  },
   "adult-hygiene-2021": {
     label: "2021 Adult Hygiene",
     href: "/templates/clinic/adult-hygiene-2021/interactive",
