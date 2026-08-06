@@ -30,7 +30,6 @@ export interface AdolescentHygieneForm {
   plaqueChoice: string;
   plaqueAreas: string[];
   plaqueComment: string;
-  calculusStatus: AdolescentDocumentationStatus;
   calculusChoice: string;
   calculusAreas: string[];
   calculusComment: string;
@@ -83,7 +82,6 @@ export function createEmptyAdolescentHygieneForm(): AdolescentHygieneForm {
     plaqueChoice: "",
     plaqueAreas: [],
     plaqueComment: "",
-    calculusStatus: "not-documented",
     calculusChoice: "",
     calculusAreas: [],
     calculusComment: "",

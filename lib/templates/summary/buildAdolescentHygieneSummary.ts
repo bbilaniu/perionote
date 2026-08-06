@@ -165,16 +165,12 @@ export function buildAdolescentHygieneSummary(
       form.plaqueComment,
       form.plaqueAreas,
     ),
-    form.calculusStatus === "no"
-      ? "Calculus: No."
-      : form.calculusStatus === "yes"
-        ? formatAdultHygieneFindingLine(
-            "Calculus",
-            form.calculusChoice,
-            form.calculusComment,
-            form.calculusAreas,
-          ) || "Calculus: Yes."
-        : "",
+    formatAdultHygieneFindingLine(
+      "Calculus",
+      form.calculusChoice,
+      form.calculusComment,
+      form.calculusAreas,
+    ),
     yesNoLine(
       "Intraoral Images",
       form.intraoralImagesStatus,

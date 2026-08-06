@@ -35,6 +35,7 @@ export const stainChoices = [
 ] as const;
 
 export const calculusChoices = [
+  "None",
   "Localized mild interproximal",
   "Localized moderate interproximal",
   "Localized heavy interproximal",

@@ -42,7 +42,6 @@ export const adolescentHygieneFixture: AdolescentHygieneForm = {
   plaqueChoice: "Localized moderate interproximal",
   plaqueAreas: ["posterior"],
   plaqueComment: "Synthetic plaque observation",
-  calculusStatus: "yes",
   calculusChoice: "Localized mild marginal",
   calculusAreas: ["mandibular anterior"],
   calculusComment: "Synthetic calculus observation",

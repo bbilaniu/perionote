@@ -706,34 +706,17 @@ export function AdolescentHygieneTemplate({
                 updateField("plaqueComment", value)
               }
             />
-            <div className="space-y-4">
-              <FixedChoiceListbox
-                id="adolescent-calculus"
-                label="Calculus"
-                value={form.calculusStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("calculusStatus", value)
-                }
-              />
-              {form.calculusStatus === "yes" ? (
-                <AdultHygieneCalculusControl
-                  id="adolescent-hygiene-calculus-details"
-                  choice={form.calculusChoice}
-                  areas={form.calculusAreas}
-                  comment={form.calculusComment}
-                  onChoiceChange={(value) =>
-                    updateField("calculusChoice", value)
-                  }
-                  onAreasChange={(value) =>
-                    updateField("calculusAreas", value)
-                  }
-                  onCommentChange={(value) =>
-                    updateField("calculusComment", value)
-                  }
-                />
-              ) : null}
-            </div>
+            <AdultHygieneCalculusControl
+              id="adolescent-hygiene-calculus"
+              choice={form.calculusChoice}
+              areas={form.calculusAreas}
+              comment={form.calculusComment}
+              onChoiceChange={(value) => updateField("calculusChoice", value)}
+              onAreasChange={(value) => updateField("calculusAreas", value)}
+              onCommentChange={(value) =>
+                updateField("calculusComment", value)
+              }
+            />
             <div className="md:max-w-xl">
               <YesNoWithDetails
                 id="adolescent-intraoral-images"

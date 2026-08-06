@@ -78,7 +78,6 @@ Fluoride: Yes — Synthetic fluoride varnish application — full mouth.`);
       ...createEmptyAdolescentHygieneForm(),
       plaqueChoice: "Imported clinical wording",
       plaqueComment: "Imported plaque comment",
-      calculusStatus: "yes" as const,
       calculusChoice: "Unknown imported calculus wording",
       treatmentCompleted: [
         {

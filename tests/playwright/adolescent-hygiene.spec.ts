@@ -35,10 +35,20 @@ test("adolescent synthetic demo generates and copies the mapped note", async ({
   await expect(page.locator("#adolescent-hygiene-patient-id")).toHaveValue(
     "TEST-ADOLESCENT-001",
   );
-  await expect(page.locator("#adolescent-calculus")).toHaveAttribute(
-    "data-value",
-    "yes",
-  );
+  await page.locator("#adolescent-hygiene-calculus-choice").click();
+  const calculusOptions = page.getByRole("dialog", {
+    name: "Calculus options",
+    exact: true,
+  });
+  await expect(
+    calculusOptions
+      .getByRole("group", {
+        name: "Finding Calculus choices",
+        exact: true,
+      })
+      .getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeVisible();
+  await calculusOptions.getByRole("button", { name: "Done" }).click();
   await expect(
     page.getByLabel("Periodontal diagnosis category", { exact: true }),
   ).toHaveAttribute("data-value", "gingivitis");

@@ -344,16 +344,18 @@ valid.
 | A12 | `Hygiene Area of Concern:`                           | Textarea: **Hygiene area of concern**                                                                                                                                      | `patient-specific`                                                                         | `Hygiene Area of Concern: {text}`                                                                      |
 | A13 | `Plaque: [SELECT/INSERT: PLAQUE]`                    | Grouped **Extent** and **Intensity** facets plus multi-value **Location**, conditional localized **Areas**, and independent **Plaque comment**                              | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Plaque: {extent intensity location(s)} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized |
 | A14 | `Stain: [SELECT/INSERT: STAIN]`                      | **None**, or grouped **Extent** and **Intensity** facets, conditional localized **Areas**, with independent **Stain comment**                                               | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Stain: {extent intensity} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized               |
-| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | Grouped **Extent**, **Intensity**, and multi-value **Location** facets, conditional localized **Areas**, with independent **Calculus comment**                              | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Calculus: {extent intensity location(s)} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized |
+| A15 | `Calculus: [SELECT/INSERT: CALCULUS]`                | **None**, or grouped **Extent**, **Intensity**, and multi-value **Location** facets, conditional localized **Areas**, with independent **Calculus comment**                  | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Calculus: None.` or `Calculus: {extent intensity location(s)} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized |
 | A16 | `Bleeding: [SELECT/INSERT: BLEEDING]`                | Grouped **Extent** and **Severity** facets, conditional localized **Areas**, with independent **Bleeding comment**                                                          | Facets and area vocabulary: `appCore`; custom area and comment: `patient-specific`         | `Bleeding: {extent severity} — areas: {localized areas}; {comment}.`; areas are omitted unless Localized             |
 
 The extraction contains complete visible lists for Stain and Bleeding. The
 revised extraction also supplies nine individually complete, non-identifying
-Plaque choices and nine Calculus choices. The application may track these as
+Plaque choices and nine positive Calculus choices. The application also offers
+**None** for Calculus, matching the existing Stain finding control. These are
 reviewed generic choices rather than private clinic catalogue values:
 
 | Plaque choices                     | Calculus choices                            |
 | ---------------------------------- | ------------------------------------------- |
+|                                    | None                                        |
 | Localized mild interproximal       | Localized mild interproximal                |
 | Localized moderate interproximal   | Localized moderate interproximal            |
 | Localized heavy interproximal      | Localized heavy interproximal               |
@@ -377,8 +379,8 @@ intensity, and severity sections permit one selection each. Plaque and
 Calculus location permit both **marginal** and **interproximal**, emitted as
 `marginal/interproximal`. This initial
 implementation intentionally permits every cross-section combination instead
-of encoding clinical compatibility rules. Selecting **None** for Stain clears
-its other facets, and selecting another Stain facet clears **None**. Existing
+of encoding clinical compatibility rules. Selecting **None** for Stain or
+Calculus clears its other facets, and selecting another facet clears **None**. Existing
 complete strings are parsed into the same facets when demo or imported values
 are loaded.
 

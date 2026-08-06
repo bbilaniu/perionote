@@ -501,11 +501,18 @@ const stainFacetGroups = [
 
 const calculusLocationFacetChoices = ["marginal", "interproximal"] as const;
 const calculusFacetChoices = [
+  "None",
   ...extentFacetChoices,
   ...mildIntensityFacetChoices,
   ...calculusLocationFacetChoices,
 ] as const;
 const calculusFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
   {
     label: "Extent",
     choices: extentFacetChoices,
@@ -850,6 +857,7 @@ export function AdultHygieneCalculusControl({
       formatChoice={(values) =>
         formatChoiceWithJoinedLocations(values, calculusLocationFacetChoices)
       }
+      standaloneValue="None"
     />
   );
 }

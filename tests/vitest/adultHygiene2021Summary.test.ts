@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculusChoices,
   createEmptyAdultHygiene2021Form,
   dyclonineRinseTreatment,
   hasRequiredAdultHygiene2021Fields,
@@ -17,6 +18,10 @@ import {
 } from "@/lib/templates/gingivalDescriptionCatalog";
 
 describe("buildAdultHygiene2021Summary", () => {
+  it("offers None as a reviewed Calculus finding", () => {
+    expect(calculusChoices[0]).toBe("None");
+  });
+
   it("starts empty without inferring clinical documentation", () => {
     const form = createEmptyAdultHygiene2021Form();
     expect(buildAdultHygiene2021Summary(form)).toBe("");

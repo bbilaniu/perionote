@@ -1244,10 +1244,21 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     name: "Calculus options",
     exact: true,
   });
+  const calculusFinding = calculusOptions.getByRole("group", {
+    name: "Finding Calculus choices",
+    exact: true,
+  });
+  await calculusFinding.getByText("None", { exact: true }).click();
+  await expect(
+    calculusFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeChecked();
   await calculusOptions
     .getByRole("group", { name: "Extent Calculus choices", exact: true })
     .getByText("Generalized", { exact: true })
     .click();
+  await expect(
+    calculusFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
   await calculusOptions
     .getByRole("group", { name: "Intensity Calculus choices", exact: true })
     .getByText("moderate", { exact: true })
