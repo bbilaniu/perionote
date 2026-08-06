@@ -2,4 +2,4 @@
 "hygienenote": minor
 ---
 
-Let users mark saved Dentist, RDH, and RDA catalogue entries as browser-local defaults for new Adult Hygiene and Recare Exam notes while preserving provider values in restored drafts.
+Let users mark Dentist, RDH, and RDA values as browser-local defaults from either the catalogue manager or contextual form actions, prefill new Adult Hygiene and Recare Exam notes, and preserve provider values in restored drafts.

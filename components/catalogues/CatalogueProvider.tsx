@@ -69,6 +69,10 @@ type CatalogueContextValue = {
     catalogueKey: CatalogueKey,
     label: string,
   ) => "added" | "existing" | "reactivated";
+  rememberAndSetProviderDefault: (
+    catalogueKey: ProviderCatalogueKey,
+    label: string,
+  ) => "added" | "existing" | "reactivated";
   updateItem: (itemId: string, label: string) => void;
   setHidden: (
     itemId: string,
@@ -284,6 +288,25 @@ export function CatalogueProvider({
     [commit, state],
   );
 
+  const rememberAndSetProviderDefault = useCallback(
+    (catalogueKey: ProviderCatalogueKey, label: string) => {
+      const result = rememberCatalogueValue(state, catalogueKey, label);
+      if (result.status !== "existing") {
+        commit(result.state);
+      }
+      commitProviderDefaults(
+        setStoredProviderDefault(
+          providerDefaults,
+          result.state,
+          catalogueKey,
+          result.item.id,
+        ),
+      );
+      return result.status;
+    },
+    [commit, commitProviderDefaults, providerDefaults, state],
+  );
+
   const updateItem = useCallback(
     (itemId: string, label: string) => {
       commit(updateUserCatalogueItem(state, itemId, label));
@@ -423,6 +446,7 @@ export function CatalogueProvider({
       getItems,
       findEquivalent,
       rememberValue,
+      rememberAndSetProviderDefault,
       updateItem,
       setHidden,
       setFavorite,
@@ -445,6 +469,7 @@ export function CatalogueProvider({
       getProviderDefault,
       moveItem,
       previewImport,
+      rememberAndSetProviderDefault,
       rememberValue,
       resetCatalogues,
       setFavorite,

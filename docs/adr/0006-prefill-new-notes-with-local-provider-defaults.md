@@ -27,6 +27,23 @@ RDA catalogue item to be marked as the default for new notes. A fresh Adult
 Hygiene or Recare Exam form resolves the stored item identifier against the
 current catalogue and snapshots its current label into the form.
 
+Eligible provider fields also expose contextual default actions without
+turning each suggestion row into a settings surface:
+
+- a new typed value offers separate **Remember this value** and **Remember and
+  set as default** actions;
+- a hidden saved value offers **Unhide this value** and **Unhide and set as
+  default**;
+- a visible saved value that is not the current default offers **Set as
+  default**; and
+- the current field value and matching suggestion use a non-interactive
+  **Default** label instead of another per-suggestion action button.
+
+These actions apply only to the value currently entered or selected in the
+field. Their accessible names identify the value, provider role, and effect on
+new notes. The catalogue manager remains the central place to clear defaults
+or manage several provider entries.
+
 Provider defaults apply only when a new note is initialized or the user
 explicitly resets the current form. Restoring a recovery draft preserves the
 provider values saved in that draft, including an intentionally blank role.
@@ -83,6 +100,7 @@ from ADR 0005 applies.
 - Unit tests cover storage round trips, malformed data, stable item lookup,
   and removal of hidden or missing defaults.
 - Browser tests cover setting a default, prefilling both supported forms,
-  applying defaults after reset, and preserving an intentionally blank
-  provider in a restored draft.
+  applying defaults after reset, preserving an intentionally blank provider in
+  a restored draft, contextual remember/default actions, and informational
+  default labels in suggestions.
 - Existing summary fixtures continue to verify generated note wording.

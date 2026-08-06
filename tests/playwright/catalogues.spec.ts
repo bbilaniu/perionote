@@ -79,6 +79,52 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   ).toBeVisible();
 });
 
+test("provider fields offer contextual save and default actions", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+  const dentist = page.getByRole("combobox", { name: "Dentist" });
+
+  await dentist.fill("Inline Synthetic Dentist");
+  await expect(
+    page.getByRole("button", { name: "Remember this value" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Remember Inline Synthetic Dentist and set it as the default Dentist for new notes",
+    })
+    .click();
+  await expect(page.getByText("Default for new notes")).toBeVisible();
+
+  await dentist.fill("");
+  await expect(
+    page.getByRole("option", {
+      name: /Inline Synthetic Dentist Default Local/,
+    }),
+  ).toBeVisible();
+
+  await dentist.fill("Alternate Synthetic Dentist");
+  await page.getByRole("button", { name: "Remember this value" }).click();
+  await page
+    .getByRole("button", {
+      name: "Set Alternate Synthetic Dentist as the default Dentist for new notes",
+    })
+    .click();
+  await expect(page.getByText("Default for new notes")).toBeVisible();
+
+  await dentist.fill("");
+  await expect(
+    page.getByRole("option", {
+      name: /Alternate Synthetic Dentist Default Local/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: /Inline Synthetic Dentist Default Local/,
+    }),
+  ).toHaveCount(0);
+});
+
 test("saved providers can prefill new notes without changing restored drafts", async ({
   page,
 }) => {
