@@ -447,11 +447,18 @@ const extentFacetChoices = ["Localized", "Generalized"] as const;
 const mildIntensityFacetChoices = ["mild", "moderate", "heavy"] as const;
 const plaqueLocationFacetChoices = ["marginal", "interproximal"] as const;
 const plaqueFacetChoices = [
+  "None",
   ...extentFacetChoices,
   ...mildIntensityFacetChoices,
   ...plaqueLocationFacetChoices,
 ] as const;
 const plaqueFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
   {
     label: "Extent",
     choices: extentFacetChoices,
@@ -535,10 +542,17 @@ const calculusFacetGroups = [
 
 const bleedingSeverityFacetChoices = ["mild", "moderate", "severe"] as const;
 const bleedingFacetChoices = [
+  "None",
   ...extentFacetChoices,
   ...bleedingSeverityFacetChoices,
 ] as const;
 const bleedingFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
   {
     label: "Extent",
     choices: extentFacetChoices,
@@ -821,6 +835,7 @@ export function AdultHygienePlaqueControl({
       formatChoice={(values) =>
         formatChoiceWithJoinedLocations(values, plaqueLocationFacetChoices)
       }
+      standaloneValue="None"
     />
   );
 }
@@ -3295,6 +3310,7 @@ export function AdultHygiene2021Template({
               onChoiceChange={(value) => updateField("bleedingChoice", value)}
               onAreasChange={(value) => updateField("bleedingAreas", value)}
               onCommentChange={(value) => updateField("bleedingComment", value)}
+              standaloneValue="None"
             />
           </Section>
 

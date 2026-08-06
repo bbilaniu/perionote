@@ -14,6 +14,15 @@ describe("buildAdolescentHygieneSummary", () => {
     expect(hasRequiredAdolescentHygieneFields(emptyForm)).toBe(false);
   });
 
+  it("documents an explicit None plaque finding", () => {
+    const form = {
+      ...createEmptyAdolescentHygieneForm(),
+      plaqueChoice: "None",
+    };
+
+    expect(buildAdolescentHygieneSummary(form)).toBe("Plaque: None.");
+  });
+
   it("requires Patient ID and at least one documented provider", () => {
     const form = {
       ...createEmptyAdolescentHygieneForm(),

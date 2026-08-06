@@ -35,6 +35,20 @@ test("adolescent synthetic demo generates and copies the mapped note", async ({
   await expect(page.locator("#adolescent-hygiene-patient-id")).toHaveValue(
     "TEST-ADOLESCENT-001",
   );
+  await page.locator("#adolescent-hygiene-plaque-choice").click();
+  const plaqueOptions = page.getByRole("dialog", {
+    name: "Plaque options",
+    exact: true,
+  });
+  await expect(
+    plaqueOptions
+      .getByRole("group", {
+        name: "Finding Plaque choices",
+        exact: true,
+      })
+      .getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeVisible();
+  await plaqueOptions.getByRole("button", { name: "Done" }).click();
   await page.locator("#adolescent-hygiene-calculus-choice").click();
   const calculusOptions = page.getByRole("dialog", {
     name: "Calculus options",

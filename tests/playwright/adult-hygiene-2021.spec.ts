@@ -1190,10 +1190,21 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     name: "Plaque options",
     exact: true,
   });
+  const plaqueFinding = plaqueOptions.getByRole("group", {
+    name: "Finding Plaque choices",
+    exact: true,
+  });
+  await plaqueFinding.getByText("None", { exact: true }).click();
+  await expect(
+    plaqueFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeChecked();
   await plaqueOptions
     .getByRole("group", { name: "Extent Plaque choices", exact: true })
     .getByText("Localized", { exact: true })
     .click();
+  await expect(
+    plaqueFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
   await plaqueOptions
     .getByRole("group", { name: "Intensity Plaque choices", exact: true })
     .getByText("moderate", { exact: true })
@@ -1290,10 +1301,21 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     name: "Bleeding options",
     exact: true,
   });
+  const bleedingFinding = bleedingOptions.getByRole("group", {
+    name: "Finding Bleeding choices",
+    exact: true,
+  });
+  await bleedingFinding.getByText("None", { exact: true }).click();
+  await expect(
+    bleedingFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeChecked();
   await bleedingOptions
     .getByRole("group", { name: "Extent Bleeding choices", exact: true })
     .getByText("Generalized", { exact: true })
     .click();
+  await expect(
+    bleedingFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
   await bleedingOptions
     .getByRole("group", { name: "Severity Bleeding choices", exact: true })
     .getByText("severe", { exact: true })
