@@ -15,9 +15,13 @@ test("adolescent source links to its draft interactive conversion", async ({
   await interactiveLink.click();
 
   await expect(page).toHaveURL(new RegExp(`${interactiveUrl}/?$`));
-  await expect(
-    page.getByText("Draft interactive conversion", { exact: true }),
-  ).toBeVisible();
+  const draftLabel = page.getByText("Draft interactive conversion", {
+    exact: true,
+  });
+  await expect(draftLabel).toHaveClass(/text-violet-800/);
+  const draftBanner = draftLabel.locator("xpath=ancestor::header[1]");
+  await expect(draftBanner).toHaveClass(/border-violet-300/);
+  await expect(draftBanner).toHaveClass(/bg-violet-50/);
 });
 
 test("adolescent synthetic demo generates and copies the mapped note", async ({
