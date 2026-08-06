@@ -10,6 +10,7 @@ import {
 } from "react";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
+import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import {
   DropdownChevron,
@@ -163,6 +164,13 @@ const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
+
+function isEmptyAdultHygieneDraft(form: AdultHygiene2021Form): boolean {
+  return (
+    JSON.stringify({ ...form, dentist: "", rdh: "", rda: "" }) ===
+    emptyAdultHygieneDraft
+  );
+}
 
 function isAdultHygieneDraftForm(
   value: unknown,
@@ -2672,12 +2680,17 @@ export function AdultHygiene2021Template({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
+  const providerDefaultsAppliedRef = useRef(false);
+  const {
+    providerDefaultsStorageStatus,
+    getProviderDefault,
+  } = useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId: "adult-hygiene-2021",
     form,
     startedAt,
-    isEmpty: (value) => JSON.stringify(value) === emptyAdultHygieneDraft,
+    isEmpty: isEmptyAdultHygieneDraft,
     isValidForm: isAdultHygieneDraftForm,
     onRestore: (draft) => {
       const emptyForm = createEmptyAdultHygiene2021Form();
@@ -2694,6 +2707,44 @@ export function AdultHygiene2021Template({
       setCopyMessage("");
     },
   });
+
+  function createNewFormWithProviderDefaults(): AdultHygiene2021Form {
+    return {
+      ...createEmptyAdultHygiene2021Form(),
+      dentist:
+        getProviderDefault("visit-team.dentist")?.label ?? "",
+      rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
+      rda: getProviderDefault("visit-team.rda")?.label ?? "",
+    };
+  }
+
+  useEffect(() => {
+    if (
+      !localDraft.hydrated ||
+      providerDefaultsStorageStatus !== "ready" ||
+      providerDefaultsAppliedRef.current
+    ) {
+      return;
+    }
+    providerDefaultsAppliedRef.current = true;
+    if (localDraft.restoredAt) return;
+    setForm((current) => ({
+      ...current,
+      dentist:
+        current.dentist ||
+        getProviderDefault("visit-team.dentist")?.label ||
+        "",
+      rdh:
+        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+      rda:
+        current.rda || getProviderDefault("visit-team.rda")?.label || "",
+    }));
+  }, [
+    getProviderDefault,
+    localDraft.hydrated,
+    localDraft.restoredAt,
+    providerDefaultsStorageStatus,
+  ]);
 
   useEffect(() => setStartedAt((current) => current ?? new Date()), []);
 
@@ -2833,7 +2884,7 @@ export function AdultHygiene2021Template({
   function resetForm() {
     if (!window.confirm(adultHygieneDiscardWarning)) return;
     localDraft.beginNewDraft();
-    setForm(createEmptyAdultHygiene2021Form());
+    setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");

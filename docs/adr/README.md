@@ -16,3 +16,4 @@ rewritten.
 - [ADR 0003: Define Interactive Template Conversion and Provenance](0003-define-interactive-template-conversion-and-provenance.md)
 - [ADR 0004: Colocate Clinical Conversions with Source Templates](0004-colocate-clinical-conversions-with-source-templates.md)
 - [ADR 0005: Retain Temporary Local Interactive Drafts](0005-retain-temporary-local-interactive-drafts.md)
+- [ADR 0006: Prefill New Notes with Local Provider Defaults](0006-prefill-new-notes-with-local-provider-defaults.md)

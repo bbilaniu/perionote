@@ -74,6 +74,7 @@ export function useLocalInteractiveDraft<T>({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [restoredAt, setRestoredAt] = useState<Date | null>(null);
   const [storageError, setStorageError] = useState("");
+  const [hydrated, setHydrated] = useState(false);
 
   formRef.current = form;
   startedAtRef.current = startedAt;
@@ -199,9 +200,11 @@ export function useLocalInteractiveDraft<T>({
         }
       }
       hydratedRef.current = true;
+      setHydrated(true);
       refreshRecoverableDrafts();
     } catch {
       hydratedRef.current = true;
+      setHydrated(true);
       setStorageError(
         "Local draft storage is unavailable in this browser. Copy the note before leaving this page.",
       );
@@ -230,6 +233,7 @@ export function useLocalInteractiveDraft<T>({
     recoverableDrafts,
     lastSavedAt,
     restoredAt,
+    hydrated,
     storageError,
     saveNow,
     beginNewDraft,

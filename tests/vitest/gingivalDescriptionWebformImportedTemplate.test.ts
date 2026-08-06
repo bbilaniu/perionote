@@ -27,6 +27,16 @@ function buildBaseDisposition() {
   ];
 }
 
+type LocalAnesthesiaTestEntry = {
+  route: string;
+  injectionType: string;
+  applicationType: string;
+  quadrant: string;
+  anestheticProduct: string;
+  amountMl: string;
+  timeAdministered: string;
+};
+
 function buildBaseForm() {
   return {
     date: "2026-03-18",
@@ -99,7 +109,7 @@ function buildBaseForm() {
     localAnesthesiaNoContraindication: false,
     localAnesthesiaNoAdverseReactions: false,
     localAnesthesiaAdequateAchieved: false,
-    localAnesthesiaEntries: [],
+    localAnesthesiaEntries: [] as LocalAnesthesiaTestEntry[],
     localAnesthesiaNotes: "",
     oheTopics: [],
     oheNotes: "",

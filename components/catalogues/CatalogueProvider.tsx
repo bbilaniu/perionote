@@ -33,12 +33,28 @@ import {
   updateUserCatalogueItem,
   writeCatalogueState,
 } from "@/lib/catalogues/catalogue";
+import {
+  PROVIDER_DEFAULTS_STORAGE_KEY,
+  ProviderCatalogueKey,
+  ProviderDefaultsValidationError,
+  StoredProviderDefaultsV1,
+  clearProviderDefault as clearStoredProviderDefault,
+  createEmptyProviderDefaults,
+  getProviderDefaultItem,
+  parseStoredProviderDefaultsJson,
+  readProviderDefaults,
+  reconcileProviderDefaults,
+  setProviderDefault as setStoredProviderDefault,
+  writeProviderDefaults,
+} from "@/lib/catalogues/providerDefaults";
 
 type StorageStatus = "loading" | "ready" | "unavailable" | "invalid";
 
 type CatalogueContextValue = {
   state: StoredCatalogueStateV1;
   storageStatus: StorageStatus;
+  providerDefaults: StoredProviderDefaultsV1;
+  providerDefaultsStorageStatus: StorageStatus;
   error: string | null;
   clearError: () => void;
   getItems: (
@@ -70,6 +86,14 @@ type CatalogueContextValue = {
     itemId: string,
     direction: "up" | "down",
   ) => void;
+  getProviderDefault: (
+    catalogueKey: ProviderCatalogueKey,
+  ) => CatalogueItem | undefined;
+  setProviderDefault: (
+    catalogueKey: ProviderCatalogueKey,
+    itemId: string,
+  ) => void;
+  clearProviderDefault: (catalogueKey: ProviderCatalogueKey) => void;
   resetCatalogues: () => void;
   previewImport: (
     importedState: StoredCatalogueStateV1,
@@ -99,6 +123,10 @@ export function CatalogueProvider({
   );
   const [storageStatus, setStorageStatus] =
     useState<StorageStatus>("loading");
+  const [providerDefaults, setProviderDefaults] =
+    useState<StoredProviderDefaultsV1>(createEmptyProviderDefaults);
+  const [providerDefaultsStorageStatus, setProviderDefaultsStorageStatus] =
+    useState<StorageStatus>("loading");
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -114,21 +142,46 @@ export function CatalogueProvider({
       setError(describeError(loadError));
     }
 
+    try {
+      setProviderDefaults(readProviderDefaults(window.localStorage));
+      setProviderDefaultsStorageStatus("ready");
+    } catch (loadError) {
+      setProviderDefaultsStorageStatus(
+        loadError instanceof ProviderDefaultsValidationError
+          ? "invalid"
+          : "unavailable",
+      );
+      setError(describeError(loadError));
+    }
+
     function handleStorage(event: StorageEvent) {
-      if (event.key !== CATALOGUE_STORAGE_KEY) {
-        return;
+      if (event.key === CATALOGUE_STORAGE_KEY) {
+        try {
+          setState(
+            event.newValue
+              ? parseStoredCatalogueJson(event.newValue)
+              : createEmptyCatalogueState(),
+          );
+          setStorageStatus("ready");
+          setError(null);
+        } catch (storageError) {
+          setStorageStatus("invalid");
+          setError(describeError(storageError));
+        }
       }
-      try {
-        setState(
-          event.newValue
-            ? parseStoredCatalogueJson(event.newValue)
-            : createEmptyCatalogueState(),
-        );
-        setStorageStatus("ready");
-        setError(null);
-      } catch (storageError) {
-        setStorageStatus("invalid");
-        setError(describeError(storageError));
+      if (event.key === PROVIDER_DEFAULTS_STORAGE_KEY) {
+        try {
+          setProviderDefaults(
+            event.newValue
+              ? parseStoredProviderDefaultsJson(event.newValue)
+              : createEmptyProviderDefaults(),
+          );
+          setProviderDefaultsStorageStatus("ready");
+          setError(null);
+        } catch (storageError) {
+          setProviderDefaultsStorageStatus("invalid");
+          setError(describeError(storageError));
+        }
       }
     }
 
@@ -171,6 +224,41 @@ export function CatalogueProvider({
     [storageStatus],
   );
 
+  const commitProviderDefaults = useCallback(
+    (
+      nextState: StoredProviderDefaultsV1,
+      options: { permitRecovery?: boolean } = {},
+    ) => {
+      if (
+        providerDefaultsStorageStatus !== "ready" &&
+        !options.permitRecovery
+      ) {
+        const message =
+          providerDefaultsStorageStatus === "invalid"
+            ? "The stored provider defaults are invalid. Reset the local catalogues before saving defaults."
+            : "Browser-local provider-default storage is unavailable.";
+        setError(message);
+        throw new ProviderDefaultsValidationError(message);
+      }
+      try {
+        const validatedState = parseStoredProviderDefaultsJson(
+          JSON.stringify(nextState),
+        );
+        writeProviderDefaults(window.localStorage, validatedState);
+        setProviderDefaults(validatedState);
+        setProviderDefaultsStorageStatus("ready");
+        setError(null);
+      } catch (saveError) {
+        setError(describeError(saveError));
+        if (!(saveError instanceof ProviderDefaultsValidationError)) {
+          setProviderDefaultsStorageStatus("unavailable");
+        }
+        throw saveError;
+      }
+    },
+    [providerDefaultsStorageStatus],
+  );
+
   const getItems = useCallback(
     (
       catalogueKey: CatalogueKey,
@@ -206,8 +294,21 @@ export function CatalogueProvider({
   const setHidden = useCallback(
     (itemId: string, owner: CatalogueOwner, hidden: boolean) => {
       commit(setCatalogueItemHidden(state, itemId, owner, hidden));
+      if (hidden) {
+        const matchingDefault = Object.entries(
+          providerDefaults.defaults,
+        ).find(([, defaultItemId]) => defaultItemId === itemId);
+        if (matchingDefault) {
+          commitProviderDefaults(
+            clearStoredProviderDefault(
+              providerDefaults,
+              matchingDefault[0] as ProviderCatalogueKey,
+            ),
+          );
+        }
+      }
     },
-    [commit, state],
+    [commit, commitProviderDefaults, providerDefaults, state],
   );
 
   const setFavorite = useCallback(
@@ -224,8 +325,19 @@ export function CatalogueProvider({
   const deleteItem = useCallback(
     (itemId: string) => {
       commit(deleteUserCatalogueItem(state, itemId));
+      const matchingDefault = Object.entries(providerDefaults.defaults).find(
+        ([, defaultItemId]) => defaultItemId === itemId,
+      );
+      if (matchingDefault) {
+        commitProviderDefaults(
+          clearStoredProviderDefault(
+            providerDefaults,
+            matchingDefault[0] as ProviderCatalogueKey,
+          ),
+        );
+      }
     },
-    [commit, state],
+    [commit, commitProviderDefaults, providerDefaults, state],
   );
 
   const moveItem = useCallback(
@@ -241,7 +353,39 @@ export function CatalogueProvider({
 
   const resetCatalogues = useCallback(() => {
     commit(createEmptyCatalogueState(), { permitRecovery: true });
-  }, [commit]);
+    commitProviderDefaults(createEmptyProviderDefaults(), {
+      permitRecovery: true,
+    });
+  }, [commit, commitProviderDefaults]);
+
+  const getProviderDefault = useCallback(
+    (catalogueKey: ProviderCatalogueKey) =>
+      getProviderDefaultItem(providerDefaults, state, catalogueKey),
+    [providerDefaults, state],
+  );
+
+  const setProviderDefault = useCallback(
+    (catalogueKey: ProviderCatalogueKey, itemId: string) => {
+      commitProviderDefaults(
+        setStoredProviderDefault(
+          providerDefaults,
+          state,
+          catalogueKey,
+          itemId,
+        ),
+      );
+    },
+    [commitProviderDefaults, providerDefaults, state],
+  );
+
+  const clearProviderDefault = useCallback(
+    (catalogueKey: ProviderCatalogueKey) => {
+      commitProviderDefaults(
+        clearStoredProviderDefault(providerDefaults, catalogueKey),
+      );
+    },
+    [commitProviderDefaults, providerDefaults],
+  );
 
   const previewImport = useCallback(
     (importedState: StoredCatalogueStateV1) =>
@@ -255,20 +399,25 @@ export function CatalogueProvider({
       mode: "merge" | "replace",
     ) => {
       const validatedImport = parseCatalogueState(importedState);
-      commit(
+      const nextState =
         mode === "merge"
           ? mergeCatalogueStates(state, validatedImport)
-          : validatedImport,
+          : validatedImport;
+      commit(nextState, { permitRecovery: true });
+      commitProviderDefaults(
+        reconcileProviderDefaults(providerDefaults, nextState),
         { permitRecovery: true },
       );
     },
-    [commit, state],
+    [commit, commitProviderDefaults, providerDefaults, state],
   );
 
   const value = useMemo<CatalogueContextValue>(
     () => ({
       state,
       storageStatus,
+      providerDefaults,
+      providerDefaultsStorageStatus,
       error,
       clearError,
       getItems,
@@ -279,6 +428,9 @@ export function CatalogueProvider({
       setFavorite,
       deleteItem,
       moveItem,
+      getProviderDefault,
+      setProviderDefault,
+      clearProviderDefault,
       resetCatalogues,
       previewImport,
       applyImport,
@@ -290,15 +442,20 @@ export function CatalogueProvider({
       error,
       findEquivalent,
       getItems,
+      getProviderDefault,
       moveItem,
       previewImport,
       rememberValue,
       resetCatalogues,
       setFavorite,
       setHidden,
+      setProviderDefault,
       state,
       storageStatus,
+      providerDefaults,
+      providerDefaultsStorageStatus,
       updateItem,
+      clearProviderDefault,
     ],
   );
 

@@ -32,6 +32,7 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
+import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import {
   DropdownChevron,
   formControlClass,
@@ -67,6 +68,13 @@ const recareNoteDiscardWarning =
   "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
+
+function isEmptyRecareDraft(form: RecareExamForm): boolean {
+  return (
+    JSON.stringify({ ...form, dentist: "", rdh: "", rda: "" }) ===
+    emptyRecareDraft
+  );
+}
 
 function isRecareDraftForm(value: unknown): value is RecareExamForm {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
@@ -1165,12 +1173,17 @@ export function RecareExamTemplate({
   const treatmentEntrySequence = useRef(0);
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
+  const providerDefaultsAppliedRef = useRef(false);
+  const {
+    providerDefaultsStorageStatus,
+    getProviderDefault,
+  } = useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId: "recare-exam",
     form,
     startedAt,
-    isEmpty: (value) => JSON.stringify(value) === emptyRecareDraft,
+    isEmpty: isEmptyRecareDraft,
     isValidForm: isRecareDraftForm,
     onRestore: (draft) => {
       setForm({ ...createEmptyRecareExamForm(), ...draft.form });
@@ -1180,6 +1193,44 @@ export function RecareExamTemplate({
       setCopyMessage("");
     },
   });
+
+  function createNewFormWithProviderDefaults(): RecareExamForm {
+    return {
+      ...createEmptyRecareExamForm(),
+      dentist:
+        getProviderDefault("visit-team.dentist")?.label ?? "",
+      rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
+      rda: getProviderDefault("visit-team.rda")?.label ?? "",
+    };
+  }
+
+  useEffect(() => {
+    if (
+      !localDraft.hydrated ||
+      providerDefaultsStorageStatus !== "ready" ||
+      providerDefaultsAppliedRef.current
+    ) {
+      return;
+    }
+    providerDefaultsAppliedRef.current = true;
+    if (localDraft.restoredAt) return;
+    setForm((current) => ({
+      ...current,
+      dentist:
+        current.dentist ||
+        getProviderDefault("visit-team.dentist")?.label ||
+        "",
+      rdh:
+        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+      rda:
+        current.rda || getProviderDefault("visit-team.rda")?.label || "",
+    }));
+  }, [
+    getProviderDefault,
+    localDraft.hydrated,
+    localDraft.restoredAt,
+    providerDefaultsStorageStatus,
+  ]);
 
   useEffect(() => {
     setStartedAt((current) => current ?? new Date());
@@ -1361,7 +1412,7 @@ export function RecareExamTemplate({
     }
 
     localDraft.beginNewDraft();
-    setForm(createEmptyRecareExamForm());
+    setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
