@@ -13,6 +13,10 @@ import {
   recareIntraoralOptionById,
   recareIntraoralStructures,
 } from "@/lib/templates/recareIntraoralCatalog";
+import {
+  recareExtraoralOptionById,
+  recareExtraoralOptions,
+} from "@/lib/templates/extraoralObservationsCatalog";
 
 type BuildRecareExamSummaryOptions = {
   startedAt?: Date;
@@ -151,6 +155,72 @@ function examLine(label: string, status: ExamStatus, findings: string): string {
     return `${label}: ${withTerminalPunctuation(findings)}`;
   }
   return "";
+}
+
+function extraoralLines(form: RecareExamForm): string[] {
+  if (form.extraoralStatus !== "findings") {
+    const line = examLine(
+      "Extraoral",
+      form.extraoralStatus,
+      form.extraoralFindings,
+    );
+    return line ? [line] : [];
+  }
+
+  const selectedByOptionId = new Map(
+    (form.structuredExtraoralFindings ?? []).flatMap((finding) =>
+      recareExtraoralOptionById.has(finding.optionId)
+        ? ([[finding.optionId, finding]] as const)
+        : [],
+    ),
+  );
+  const structuredLines = recareExtraoralOptions.flatMap((option) => {
+    const finding = selectedByOptionId.get(option.id);
+    if (!finding) return [];
+    const annotations: string[] = [];
+    if (trimmed(finding.laterality ?? "")) {
+      annotations.push(`laterality: ${trimmed(finding.laterality ?? "")}`);
+    }
+    const statuses = option.statusOptions.length
+      ? (finding.statuses ?? []).map(trimmed).filter(Boolean)
+      : [];
+    if (statuses.length) annotations.push(`status: ${statuses.join(", ")}`);
+    const phases = option.phaseOptions.length
+      ? (finding.phases ?? []).map(trimmed).filter(Boolean)
+      : [];
+    if (phases.length) annotations.push(`phase: ${phases.join(", ")}`);
+    const locations = option.locationOptions.length
+      ? (finding.locations ?? []).map(trimmed).filter(Boolean)
+      : [];
+    if (locations.length)
+      annotations.push(`location: ${locations.join(", ")}`);
+    const swelling = option.swellingOptions.length
+      ? (finding.swelling ?? []).map(trimmed).filter(Boolean)
+      : [];
+    if (swelling.length)
+      annotations.push(`swelling: ${swelling.join(", ")}`);
+    const text = annotations.length
+      ? `${option.noteFragment} (${annotations.join("; ")})`
+      : option.noteFragment;
+    return [`  - ${withTerminalPunctuation(text)}`];
+  });
+
+  if (!structuredLines.length) {
+    const line = examLine(
+      "Extraoral",
+      form.extraoralStatus,
+      form.extraoralFindings,
+    );
+    return line ? [line] : [];
+  }
+
+  return [
+    "Extraoral:",
+    ...structuredLines,
+    ...(trimmed(form.extraoralFindings)
+      ? [`  Observations: ${withTerminalPunctuation(form.extraoralFindings)}`]
+      : []),
+  ];
 }
 
 function intraoralLines(form: RecareExamForm): string[] {
@@ -412,12 +482,10 @@ export function buildRecareExamSummary(
   );
   const chiefConcernSection = chiefConcern ? [`a) ${chiefConcern}`] : [];
 
-  const extraoral = examLine(
-    "Extraoral",
-    form.extraoralStatus,
-    form.extraoralFindings,
-  );
-  const extraoralSection = extraoral ? [`b) ${extraoral}`] : [];
+  const extraoral = extraoralLines(form);
+  const extraoralSection = extraoral.length
+    ? [`b) ${extraoral[0]}`, ...extraoral.slice(1)]
+    : [];
 
   const tmjLines = [
     examLine("TMJ", form.tmjStatus, form.tmjFindings),

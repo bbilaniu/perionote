@@ -508,6 +508,101 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
   await expect(surface).toHaveCount(0);
 });
 
+test("Recare Exam groups the extraoral clinical exam in structured observations", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  const disclosure = structuredExtraoral.getByRole("button", {
+    name: /Structured extraoral observations/,
+  });
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByRole("button", { name: "Extraoral", exact: true }),
+  ).toBeVisible();
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "Extraoral",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  await disclosure.click();
+  for (const name of [
+    "TMJ",
+    "Masseter palpation",
+    "TMJ loading test",
+  ]) {
+    await expect(
+      structuredExtraoral.getByRole("button", { name, exact: true }),
+    ).toBeVisible();
+  }
+
+  await structuredExtraoral
+    .getByRole("button", {
+      name: "Apply normal extraoral exam",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /b\) Extraoral: WNL\.\n\nc\) TMJ: WNL\.\nMasseter palpation: WNL\.\nTMJ loading test: WNL\./,
+  );
+  await expect(disclosure).toContainText("WNL");
+
+  const tmjClickingButton = structuredExtraoral.getByRole("button", {
+    name: "TMJ clicking",
+    exact: true,
+  });
+  await expect(tmjClickingButton).toBeVisible();
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "Palpable Lymph Nodes",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await tmjClickingButton.click();
+
+  const clicking = structuredExtraoral.getByRole("group", {
+    name: "TMJ clicking",
+    exact: true,
+  });
+  const right = clicking.getByRole("button", { name: "Right", exact: true });
+  const left = clicking.getByRole("button", { name: "Left", exact: true });
+  await expect(right).toHaveAttribute("aria-pressed", "false");
+  await right.click();
+  await expect(right).toHaveAttribute("aria-pressed", "true");
+  await left.click();
+  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await expect(right).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /TMJ clicking \(laterality: Bilateral;/,
+  );
+  const symptomatic = clicking.getByRole("button", {
+    name: "Symptomatic",
+    exact: true,
+  });
+  const asymptomatic = clicking.getByRole("button", {
+    name: "Asymptomatic",
+    exact: true,
+  });
+  await symptomatic.click();
+  await expect(symptomatic).toHaveAttribute("aria-pressed", "true");
+  await expect(asymptomatic).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /status: Symptomatic/,
+  );
+  await expect(
+    clicking.getByRole("button", {
+      name: "On open",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+});
+
 test("Recare Exam applies reviewed normal intraoral observations with compact output", async ({
   page,
 }) => {
@@ -621,6 +716,87 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   await expect(freeText).toHaveCount(0);
   await expect(normalFlow).toHaveCount(0);
   await expect(page.locator("#recare-summary")).not.toHaveValue(/Intraoral:/);
+});
+
+test("Recare Exam IOE quick findings apply the corresponding structured presets", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredIntraoral = page.getByRole("group", {
+    name: "Structured intraoral observations",
+    exact: true,
+  });
+  await structuredIntraoral
+    .getByRole("button", { name: /Structured intraoral observations/ })
+    .click();
+
+  for (const label of [
+    "Coated tongue",
+    "Fissured tongue",
+    "Scalloped tongue",
+    "Bilateral linea alba",
+    "Palatine torus at midline",
+    "Bilateral mandibular tori",
+  ]) {
+    const preset = structuredIntraoral.getByRole("button", {
+      name: label,
+      exact: true,
+    });
+    await preset.click();
+    await expect(preset).toHaveAttribute("aria-pressed", "true");
+  }
+
+  await expect(
+    intraoralObservationCard(structuredIntraoral, "Tongue", "Coated"),
+  ).toBeVisible();
+  await expect(
+    intraoralObservationCard(structuredIntraoral, "Tongue", "Fissured"),
+  ).toBeVisible();
+  await expect(
+    intraoralObservationCard(
+      structuredIntraoral,
+      "Tongue",
+      "Scalloped edges",
+    ),
+  ).toBeVisible();
+
+  const lineaAlba = intraoralObservationCard(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Linea alba",
+  );
+  await expect(
+    lineaAlba.getByRole("button", {
+      name: "Linea alba laterality",
+      exact: true,
+    }),
+  ).toContainText("Bilateral");
+
+  const mandibularTori = intraoralObservationCard(
+    structuredIntraoral,
+    "Floor of mouth",
+    "Mandibular tori",
+  );
+  await expect(
+    mandibularTori.getByRole("button", {
+      name: "Mandibular tori laterality",
+      exact: true,
+    }),
+  ).toContainText("Bilateral");
+
+  const palatineTorus = intraoralObservationCard(
+    structuredIntraoral,
+    "Palate (hard/soft)",
+    "Torus palatinus",
+  );
+  await expect(
+    palatineTorus.getByLabel("Torus palatinus location", { exact: true }),
+  ).toHaveValue("Midline");
+
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Intraoral:\n  - Buccal mucosa: linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured; scalloped lateral borders\.\n  - Floor of mouth: mandibular tori \(location: Bilateral\)\.\n  - Palate \(hard\/soft\): torus palatinus \(location: Midline\)\./,
+  );
 });
 
 test("Recare Exam preserves intraoral findings when destructive actions are cancelled and isolates accepted WNL", async ({

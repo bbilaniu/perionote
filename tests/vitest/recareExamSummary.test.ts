@@ -7,7 +7,9 @@ import {
 } from "@/lib/templates/recareExam";
 import {
   createRecareNormalStructuredIntraoralFindings,
+  recareIntraoralOptionById,
   recareIntraoralOptionConflicts,
+  recareIntraoralQuickPresets,
   recareNormalStructuredObservationIds,
 } from "@/lib/templates/recareIntraoralCatalog";
 import {
@@ -16,8 +18,23 @@ import {
   formatRecareExamLocalTimestamp,
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
+import {
+  extraoralLateralityToSides,
+  extraoralSidesToLaterality,
+  recareExtraoralOptions,
+} from "@/lib/templates/extraoralObservationsCatalog";
 
 describe("buildRecareExamSummary", () => {
+  it("maps independent side selections to and from bilateral laterality", () => {
+    expect(extraoralSidesToLaterality(["Left"])).toBe("Left");
+    expect(extraoralSidesToLaterality(["Right"])).toBe("Right");
+    expect(extraoralSidesToLaterality(["Left", "Right"])).toBe("Bilateral");
+    expect(extraoralLateralityToSides("Bilateral")).toEqual([
+      "Left",
+      "Right",
+    ]);
+  });
+
   it("allows separate entries for every repeatable tooth observation", () => {
     const repeatableOptionIds = [
       "ioe.teeth.caries",
@@ -52,6 +69,31 @@ describe("buildRecareExamSummary", () => {
         .get("ioe.saliva.reduced_flow")
         ?.has("ioe.saliva.normal_flow")
     ).toBe(true);
+    expect(
+      recareIntraoralOptionConflicts
+        .get("ioe.palate.torus_palatinus")
+        ?.has("ioe.palate.no_abnormal_growths"),
+    ).toBe(true);
+  });
+
+  it("defines the reviewed IOE quick presets and supplemental mandibular tori observation", () => {
+    expect(recareIntraoralQuickPresets.map(({ label }) => label)).toEqual([
+      "Coated tongue",
+      "Fissured tongue",
+      "Scalloped tongue",
+      "Bilateral linea alba",
+      "Palatine torus at midline",
+      "Bilateral mandibular tori",
+    ]);
+    expect(
+      recareIntraoralOptionById.get("ioe.floor_of_mouth.mandibular_tori"),
+    ).toMatchObject({
+      structure: { id: "ioe.floor_of_mouth" },
+      option: {
+        label: "Mandibular tori",
+        supportsLaterality: true,
+      },
+    });
   });
 
   it("starts empty without inferring findings or treatment", () => {
@@ -243,6 +285,37 @@ Masseter palpation: WNL.`);
         intraoralPhotosDetails: "Anterior; right buccal; left buccal",
       }),
     ).toBe("Intraoral photos: Anterior; right buccal; left buccal.");
+  });
+
+  it("formats structured EOE findings in catalogue order", () => {
+    expect(recareExtraoralOptions.map(({ label }) => label)).toEqual([
+      "TMJ clicking",
+      "Palpable Lymph Nodes",
+    ]);
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        extraoralStatus: "findings",
+        extraoralFindings: "Monitor at recare",
+        structuredExtraoralFindings: [
+          {
+            optionId: "eoe.palpable_lymph_nodes",
+            laterality: "Left",
+            locations: ["Submandibular"],
+            swelling: ["Slightly enlarged"],
+          },
+          {
+            optionId: "eoe.tmj_clicking",
+            laterality: "Bilateral",
+            statuses: ["Asymptomatic"],
+            phases: ["On open"],
+          },
+        ],
+      }),
+    ).toBe(`b) Extraoral:
+  - TMJ clicking (laterality: Bilateral; status: Asymptomatic; phase: On open).
+  - palpable lymph nodes (laterality: Left; location: Submandibular; swelling: Slightly enlarged).
+  Observations: Monitor at recare.`);
   });
 
   it("renders patient-requested improvements and clinical comments conditionally", () => {
@@ -658,6 +731,48 @@ ODONTOGRAM UP TO DATE`);
   - Buccal mucosa: pink; ulcer (location: Right; notes: monitor).
   - Tongue: fissured.
   - Saliva: normal flow.`);
+  });
+
+  it("formats all IOE quick presets through their structured sections", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        intraoralStatus: "findings",
+        structuredIntraoralFindings: [
+          {
+            optionId: "ioe.tongue.coated",
+            structureId: "ioe.tongue",
+          },
+          {
+            optionId: "ioe.tongue.fissured",
+            structureId: "ioe.tongue",
+          },
+          {
+            optionId: "ioe.tongue.scalloped_edges",
+            structureId: "ioe.tongue",
+          },
+          {
+            optionId: "ioe.buccal_mucosa.linea_alba",
+            structureId: "ioe.buccal_mucosa",
+            laterality: "Bilateral",
+          },
+          {
+            optionId: "ioe.palate.torus_palatinus",
+            structureId: "ioe.palate",
+            locations: ["Midline"],
+          },
+          {
+            optionId: "ioe.floor_of_mouth.mandibular_tori",
+            structureId: "ioe.floor_of_mouth",
+            laterality: "Bilateral",
+          },
+        ],
+      }),
+    ).toBe(`d) Intraoral:
+  - Buccal mucosa: linea alba (location: Bilateral).
+  - Tongue: coated; fissured; scalloped lateral borders.
+  - Floor of mouth: mandibular tori (location: Bilateral).
+  - Palate (hard/soft): torus palatinus (location: Midline).`);
   });
 
   it("supports percent, millimetre, and dual overbite output", () => {

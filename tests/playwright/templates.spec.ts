@@ -457,6 +457,52 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   await expect(page.getByText("IOE observations")).toBeVisible();
 });
 
+test("Very short template combines side buttons as bilateral and keeps symptom status single-choice", async ({
+  page,
+}) => {
+  await page.goto("/templates/very-short-template");
+
+  const eoeIoeSection = page.locator("#template-section-eoeIoe");
+  await eoeIoeSection
+    .getByRole("button", { name: "Expand", exact: true })
+    .click();
+  await eoeIoeSection
+    .getByRole("button", { name: "TMJ clicking", exact: true })
+    .click();
+
+  const laterality = eoeIoeSection.getByRole("group", {
+    name: "Laterality",
+    exact: true,
+  }).first();
+  const left = laterality.getByRole("button", { name: "Left", exact: true });
+  const right = laterality.getByRole("button", { name: "Right", exact: true });
+  await left.click();
+  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await right.click();
+  await expect(right).toHaveAttribute("aria-pressed", "true");
+  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("textarea[readonly]")).toHaveValue(
+    /EOE: bilateral tmj clicking/,
+  );
+
+  const status = eoeIoeSection.getByRole("group", {
+    name: "Status",
+    exact: true,
+  });
+  const symptomatic = status.getByRole("button", {
+    name: "Symptomatic",
+    exact: true,
+  });
+  const asymptomatic = status.getByRole("button", {
+    name: "Asymptomatic",
+    exact: true,
+  });
+  await symptomatic.click();
+  await asymptomatic.click();
+  await expect(symptomatic).toHaveAttribute("aria-pressed", "false");
+  await expect(asymptomatic).toHaveAttribute("aria-pressed", "true");
+});
+
 test("OHE section can select all topics with one click", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
