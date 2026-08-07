@@ -1,5 +1,13 @@
 # hygienenote
 
+## 0.8.0
+
+### Minor Changes
+
+- 35af015: Let users mark Dentist, RDH, and RDA values as browser-local defaults from either the catalogue manager or contextual form actions, prefill new Adult Hygiene and Recare Exam notes, and preserve provider values in restored drafts.
+- ddfa551: Autosave Adult Hygiene and Recare Exam drafts locally every ten seconds and on copy, preserve saved drafts when a form is reset, restore concurrent tabs independently, identify them by Patient ID and professional names on a Saved drafts page, manage or bulk-delete them there, and delete drafts after seven days.
+- 2614e76: Add a development-only draft interactive conversion of the 12–17 Years Old Hygiene ClearDent template, including generated-note preview, copying, provider defaults, and browser-local draft recovery.
+
 ## 0.7.0
 
 ### Minor Changes
