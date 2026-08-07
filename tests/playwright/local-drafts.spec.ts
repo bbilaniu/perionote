@@ -80,6 +80,53 @@ test("Adult Hygiene autosaves after ten seconds and restores its tab after reloa
   await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 });
 
+test("client-side navigation checkpoints edits before the draft hook unmounts", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .locator("#adult-hygiene-patient-id")
+    .fill("Synthetic navigation checkpoint");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH");
+
+  await page.getByRole("link", { name: "View all saved drafts" }).click();
+
+  const savedDraftRow = page
+    .getByRole("table", { name: "Saved local drafts" })
+    .getByRole("row")
+    .filter({ hasText: "Synthetic navigation checkpoint" });
+  await expect(savedDraftRow).toBeVisible();
+  await savedDraftRow.getByRole("button", { name: /Open draft:/ }).click();
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
+    "Synthetic navigation checkpoint",
+  );
+});
+
+test("restoring another draft first checkpoints the current form", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+  await page.locator("#recare-patient-id").fill("Synthetic draft A");
+  await page.locator("#recare-rdh").fill("Synthetic RDH A");
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.locator("#recare-patient-id").fill("Synthetic draft B unsaved");
+  await page.locator("#recare-rdh").fill("Synthetic RDH B");
+
+  await page.getByRole("button", { name: "Restore" }).click();
+  await expect(page.locator("#recare-patient-id")).toHaveValue(
+    "Synthetic draft A",
+  );
+
+  await page.getByRole("button", { name: "Restore" }).click();
+  await expect(page.locator("#recare-patient-id")).toHaveValue(
+    "Synthetic draft B unsaved",
+  );
+  await expect(page.locator("#recare-rdh")).toHaveValue("Synthetic RDH B");
+});
+
 test("Recare copy saves independent drafts for multiple open tabs", async ({
   context,
 }) => {

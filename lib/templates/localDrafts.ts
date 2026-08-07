@@ -63,19 +63,44 @@ function hasUnsupportedDraftSchema(raw: string | null): boolean {
   }
 }
 
-export function matchesDraftShape(value: unknown, exemplar: unknown): boolean {
-  if (Array.isArray(exemplar)) {
-    if (!Array.isArray(value)) return false;
-    if (!exemplar.length) return true;
-    return value.every((entry) => matchesDraftShape(entry, exemplar[0]));
+export type DraftArrayItemShapes = Readonly<Record<string, unknown>>;
+
+export function matchesDraftShape(
+  value: unknown,
+  exemplar: unknown,
+  arrayItemShapes: DraftArrayItemShapes = {},
+): boolean {
+  function matchesAtPath(
+    candidate: unknown,
+    shape: unknown,
+    path: string,
+  ): boolean {
+    if (Array.isArray(shape)) {
+      if (!Array.isArray(candidate)) return false;
+      const hasDeclaredItemShape = Object.prototype.hasOwnProperty.call(
+        arrayItemShapes,
+        path,
+      );
+      if (!shape.length && !hasDeclaredItemShape) return candidate.length === 0;
+      const itemShape = shape.length ? shape[0] : arrayItemShapes[path];
+      return candidate.every((entry) =>
+        matchesAtPath(entry, itemShape, `${path}[]`),
+      );
+    }
+    if (isRecord(shape)) {
+      if (!isRecord(candidate)) return false;
+      return Object.entries(shape).every(([key, entry]) =>
+        matchesAtPath(
+          candidate[key],
+          entry,
+          path ? `${path}.${key}` : key,
+        ),
+      );
+    }
+    return typeof candidate === typeof shape;
   }
-  if (isRecord(exemplar)) {
-    if (!isRecord(value)) return false;
-    return Object.entries(exemplar).every(([key, entry]) =>
-      matchesDraftShape(value[key], entry),
-    );
-  }
-  return typeof value === typeof exemplar;
+
+  return matchesAtPath(value, exemplar, "");
 }
 
 export function interactiveDraftStorageKey(

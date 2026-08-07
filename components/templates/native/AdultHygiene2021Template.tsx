@@ -164,6 +164,28 @@ const adultHygieneDiscardWarning =
   "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
+const adultHygieneDraftArrayItemShapes = {
+  patientChiefConcern: "",
+  plaqueAreas: "",
+  stainAreas: "",
+  calculusAreas: "",
+  bleedingAreas: "",
+  "gingivalDescription.findings": {
+    optionId: "",
+    extent: "",
+    locations: [],
+    measurement: "",
+    comment: "",
+  },
+  "gingivalDescription.findings[].locations": "",
+  "periodontalClassification.stageBasis": { criterionId: "" },
+  "periodontalClassification.gradeBasis": { criterionId: "" },
+  cariesRiskFactors: "",
+  ohiAidsReviewed: "",
+  oheTopicsReviewed: "",
+  treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
+  "treatmentCompleted[].toothAreas": "",
+} as const;
 
 function isEmptyAdultHygieneDraft(form: AdultHygiene2021Form): boolean {
   return (
@@ -193,6 +215,7 @@ function isAdultHygieneDraftForm(
           : adultHygieneDraftExemplar.gingivalDescription,
     },
     adultHygieneDraftExemplar,
+    adultHygieneDraftArrayItemShapes,
   );
 }
 const gingivalDescriptionStatusOptions: Array<{

@@ -53,6 +53,15 @@ const adolescentDiscardWarning =
   "Clear all entered Adolescent Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const adolescentDraftExemplar = createEmptyAdolescentHygieneForm();
 const emptyAdolescentDraft = JSON.stringify(adolescentDraftExemplar);
+const adolescentDraftArrayItemShapes = {
+  "periodontalClassification.stageBasis": { criterionId: "" },
+  "periodontalClassification.gradeBasis": { criterionId: "" },
+  plaqueAreas: "",
+  calculusAreas: "",
+  ohiTechniques: "",
+  treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
+  "treatmentCompleted[].toothAreas": "",
+} as const;
 
 const documentationStatusOptions: ReadonlyArray<{
   value: AdolescentDocumentationStatus;
@@ -86,6 +95,7 @@ function isAdolescentDraftForm(value: unknown): value is AdolescentHygieneForm {
   return matchesDraftShape(
     { ...adolescentDraftExemplar, ...value },
     adolescentDraftExemplar,
+    adolescentDraftArrayItemShapes,
   );
 }
 

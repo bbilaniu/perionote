@@ -43,7 +43,7 @@ class MemoryStorage implements Storage {
 type ExampleForm = { patientId: string; selected: string[] };
 const emptyForm: ExampleForm = { patientId: "", selected: [] };
 const isExampleForm = (value: unknown): value is ExampleForm =>
-  matchesDraftShape(value, emptyForm);
+  matchesDraftShape(value, emptyForm, { selected: "" });
 
 describe("interactive local drafts", () => {
   it("round-trips versioned form state and sorts recoverable drafts", () => {
@@ -293,6 +293,44 @@ describe("interactive local drafts", () => {
         isExampleForm,
       ),
     ).toBeUndefined();
+  });
+
+  it("requires explicit item shapes for arrays with empty defaults", () => {
+    expect(matchesDraftShape({ selected: [] }, { selected: [] })).toBe(true);
+    expect(matchesDraftShape({ selected: ["4 BW"] }, { selected: [] })).toBe(
+      false,
+    );
+    expect(
+      matchesDraftShape(
+        { treatmentOptions: [{ id: "one", treatmentType: "Exam" }] },
+        { treatmentOptions: [] },
+        {
+          treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+        },
+      ),
+    ).toBe(false);
+    expect(
+      matchesDraftShape(
+        {
+          treatmentOptions: [
+            { id: "one", treatmentType: "Exam", toothArea: "full mouth" },
+          ],
+        },
+        { treatmentOptions: [] },
+        {
+          treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+        },
+      ),
+    ).toBe(true);
+    expect(
+      matchesDraftShape(
+        { treatmentOptions: [null] },
+        { treatmentOptions: [] },
+        {
+          treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+        },
+      ),
+    ).toBe(false);
   });
 
   it("does not delete a recent unsupported future schema", () => {

@@ -147,6 +147,16 @@ export function useLocalInteractiveDraft<T>({
 
   const restoreDraft = useCallback(
     (draftId: string) => {
+      const saveResult = saveNow();
+      if (
+        saveResult === "failed" ||
+        (saveResult === "skipped" && !isEmptyRef.current(formRef.current))
+      ) {
+        setStorageError(
+          "The current draft could not be saved, so the selected draft was not restored. Copy this note before trying again.",
+        );
+        return;
+      }
       try {
         const draft = readInteractiveDraft(
           window.localStorage,
@@ -169,7 +179,7 @@ export function useLocalInteractiveDraft<T>({
         setStorageError("The selected local draft could not be restored.");
       }
     },
-    [refreshRecoverableDrafts, templateId],
+    [refreshRecoverableDrafts, saveNow, templateId],
   );
 
   useEffect(() => {
@@ -223,6 +233,7 @@ export function useLocalInteractiveDraft<T>({
     window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("storage", handleStorage);
     return () => {
+      saveNow();
       window.clearInterval(interval);
       window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("storage", handleStorage);

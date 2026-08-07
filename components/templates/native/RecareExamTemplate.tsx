@@ -68,6 +68,17 @@ const recareNoteDiscardWarning =
   "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
+const recareDraftArrayItemShapes = {
+  radiographs: "",
+  chiefConcern: "",
+  structuredIntraoralFindings: { optionId: "", structureId: "" },
+  additionalOcclusalFindings: { id: "", finding: "", locations: [] },
+  "additionalOcclusalFindings[].locations": "",
+  toothFindings: { id: "", optionId: "", toothAreas: [] },
+  "toothFindings[].toothAreas": "",
+  treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+  treatmentPlan: { id: "", treatmentType: "", toothArea: "" },
+} as const;
 
 function isEmptyRecareDraft(form: RecareExamForm): boolean {
   return (
@@ -81,6 +92,7 @@ function isRecareDraftForm(value: unknown): value is RecareExamForm {
   return matchesDraftShape(
     { ...recareDraftExemplar, ...value },
     recareDraftExemplar,
+    recareDraftArrayItemShapes,
   );
 }
 
