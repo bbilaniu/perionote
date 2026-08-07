@@ -508,11 +508,12 @@ preset IDs. If retained findings exist, confirmation is required before only
 the new assessment is replaced. WNL hides detailed controls and emits exactly:
 
 ```text
-Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted.
+Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted.
 ```
 
 **Apply normal structured observations** establishes that same reviewed WNL
-preset and reveals its ten detailed selections for inspection. While they
+state and sets every selected normal observation's extent to **Generalized**.
+The preset reveals its ten detailed selections for inspection. While they
 remain untouched, the status and generated note remain WNL and use the
 canonical sentence above. Editing any option or annotation changes the status
 to Findings and switches to compact structured output. Existing non-WNL

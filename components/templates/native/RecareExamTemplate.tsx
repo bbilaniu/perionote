@@ -2238,7 +2238,9 @@ export function RecareExamTemplate({
                 if (values.length) updateField("intraoralStatus", "findings");
               }}
             />
+          </Section>
 
+          <Section title="Occlusion & Habits">
             <TextField
               id="recare-oral-habits"
               label="Oral habits"

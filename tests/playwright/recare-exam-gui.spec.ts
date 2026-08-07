@@ -603,6 +603,36 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
   ).toHaveAttribute("aria-pressed", "true");
 });
 
+test("Recare Exam separates Occlusion & Habits from Clinical Exam", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const clinicalExam = page
+    .getByRole("heading", { name: "Clinical Exam", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  const occlusionAndHabits = page
+    .getByRole("heading", { name: "Occlusion & Habits", exact: true })
+    .locator("xpath=ancestor::section[1]");
+
+  await expect(
+    clinicalExam.getByRole("button", { name: "Extraoral", exact: true }),
+  ).toBeVisible();
+  await expect(
+    clinicalExam.getByRole("button", { name: "Intraoral", exact: true }),
+  ).toBeVisible();
+  await expect(clinicalExam.getByLabel("Oral habits", { exact: true })).toHaveCount(0);
+  await expect(
+    occlusionAndHabits.getByLabel("Oral habits", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    occlusionAndHabits.getByRole("combobox", {
+      name: "Right molar occlusion",
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
 test("Recare Exam applies reviewed normal intraoral observations with compact output", async ({
   page,
 }) => {

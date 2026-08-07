@@ -42,7 +42,7 @@ function createGingivalDescriptionPresetAssessment(
     findings: gingivalDescriptionCatalog.wnlPreset.selectedOptionIds.map(
       (optionId) => ({
         optionId,
-        extent: "",
+        extent: "generalized",
         locations: [],
         measurement: "",
         comment: "",

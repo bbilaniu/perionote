@@ -736,7 +736,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await expect(gingivalStatus).toContainText("WNL");
   await expect(positionObservations).not.toContainText("Gingival recession");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+    /Gingival Description: Generalized Gingiva coral pink,[\s\S]*Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted\./
   );
 
   page.once("dialog", async (dialog) => {
@@ -763,8 +763,27 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   });
   await expect(colorObservations).toContainText("Coral pink");
   await expect(positionObservations).toContainText("No overgrowth");
+  for (const option of [
+    "Coral pink",
+    "Knife-edged margins",
+    "Flat against the teeth",
+    "Papillae fill embrasures",
+    "Firm",
+    "Resilient",
+    "Stippled attached gingiva",
+    "Smooth marginal gingiva",
+    "No recession",
+    "No overgrowth",
+  ]) {
+    await expect(
+      structuredGingival.getByRole("button", {
+        name: `${option} extent`,
+        exact: true,
+      }),
+    ).toContainText("Generalized");
+  }
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+    /Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted\./
   );
 
   await positionObservations.click();

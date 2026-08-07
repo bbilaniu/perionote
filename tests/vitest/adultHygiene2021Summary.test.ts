@@ -307,8 +307,13 @@ Patient-specific grade evidence:
     expect(
       form.gingivalDescription.findings.map(({ optionId }) => optionId)
     ).toHaveLength(10);
+    expect(
+      form.gingivalDescription.findings.every(
+        ({ extent }) => extent === "generalized",
+      ),
+    ).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted."
+      "Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted."
     );
   });
 

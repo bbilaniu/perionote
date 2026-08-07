@@ -183,13 +183,22 @@ bullet style.
 | R15 | `Palpation of the Masseter Test: WNL` | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `Masseter palpation: WNL.` or the entered findings                               |
 | R16 | `Load TMJ joint Test: WNL`            | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `TMJ loading test: WNL.` or the entered findings                                 |
 | R17 | `d) Intraoral- WNL`                   | Status: **Not assessed / WNL / Findings**; findings textarea                                                           | Status: `appCore`; findings: `patient-specific`  | `d) Intraoral: WNL.` or `d) Intraoral: {findings}`                               |
+
+### Occlusion & Habits
+
+The interface places R18–R22 and Additional occlusal findings in a separate
+**Occlusion & Habits** card immediately after Clinical Exam. This visual
+separation does not change generated-note order or wording.
+
+| ID  | Source                                | Control                                                                                                                | Classification                                   | Generated output                                                                 |
+| --- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------- |
 | R18 | `Oral Habits-`                        | Editable text: **Oral habits**                                                                                         | `patient-specific`                               | `Oral habits: {text}`                                                            |
 | R19 | `Molar Occlusion-`                    | Separate catalogue-backed editable **Right** and **Left molar occlusion** fields, each with an explicit **N/A** action | Text: `catalogue`; N/A: `appCore`                | `Molar occlusion—right: {text or N/A}` and `Molar occlusion—left: {text or N/A}` |
 | R20 | `Skeletal Occlusion- N/A`             | Catalogue-backed editable text: **Skeletal occlusion** with an explicit **N/A** action                                 | Text: `catalogue`; N/A: `appCore`                | `Skeletal occlusion: N/A.` or `Skeletal occlusion: {text}`                       |
 | R21 | `Overjet- mm`                         | Optional numeric input: **Overjet (mm)**                                                                               | Measurement: `patient-specific`; unit: `appCore` | `Overjet: {number} mm.`                                                          |
 | R22 | `Overbite- %`                         | Optional numeric input: **Overbite (%)**                                                                               | Measurement: `patient-specific`; unit: `appCore` | `Overbite: {number}%.`                                                           |
 
-#### Slice 2 additive Intraoral and occlusal detail
+### Slice 2 additive Intraoral and occlusal detail
 
 The accepted R17 Intraoral owner now also contains optional structured
 observations for Buccal mucosa, Tongue, Floor of mouth, Palate, Oropharynx,
