@@ -79,6 +79,137 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   ).toBeVisible();
 });
 
+test("provider fields offer contextual save and default actions", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+  const dentist = page.getByRole("combobox", { name: "Dentist" });
+
+  await dentist.fill("Inline Synthetic Dentist");
+  await expect(
+    page.getByRole("button", { name: "Remember this value" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", {
+      name: "Remember Inline Synthetic Dentist and set it as the default Dentist for new notes",
+    })
+    .click();
+  await expect(page.getByText("Default for new notes")).toBeVisible();
+
+  await dentist.fill("");
+  await expect(
+    page.getByRole("option", {
+      name: /Inline Synthetic Dentist Default Local/,
+    }),
+  ).toBeVisible();
+
+  await dentist.fill("Alternate Synthetic Dentist");
+  await page.getByRole("button", { name: "Remember this value" }).click();
+  await page
+    .getByRole("button", {
+      name: "Set Alternate Synthetic Dentist as the default Dentist for new notes",
+    })
+    .click();
+  await expect(page.getByText("Default for new notes")).toBeVisible();
+
+  await dentist.fill("");
+  await expect(
+    page.getByRole("option", {
+      name: /Alternate Synthetic Dentist Default Local/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: /Inline Synthetic Dentist Default Local/,
+    }),
+  ).toHaveCount(0);
+});
+
+test("saved providers can prefill new notes without changing restored drafts", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  await page.goto("/catalogues");
+  const dentistCatalogue = page.locator(
+    '[data-catalogue-key="visit-team.dentist"]',
+  );
+  await dentistCatalogue
+    .getByLabel("Add Dentist value")
+    .fill("Default Synthetic Dentist");
+  await dentistCatalogue
+    .getByRole("button", { name: "Add local value" })
+    .click();
+  const dentistRow = dentistCatalogue
+    .locator("li")
+    .filter({ hasText: "Default Synthetic Dentist" });
+  await dentistCatalogue
+    .getByRole("button", { name: "Set default" })
+    .click();
+  await expect(dentistRow).toContainText("Default for new notes");
+
+  const providerGroup = page.getByRole("region", {
+    name: "Provider roles catalogues",
+  });
+  await providerGroup.getByRole("tab", { name: /RDA/ }).click();
+  const rdaCatalogue = page.locator(
+    '[data-catalogue-key="visit-team.rda"]',
+  );
+  await rdaCatalogue.getByLabel("Add RDA value").fill("Default Synthetic RDA");
+  await rdaCatalogue
+    .getByRole("button", { name: "Add local value" })
+    .click();
+  await rdaCatalogue.getByRole("button", { name: "Set default" }).click();
+
+  await providerGroup.getByRole("tab", { name: /RDH/ }).click();
+  const rdhCatalogue = page.locator(
+    '[data-catalogue-key="visit-team.rdh"]',
+  );
+  await rdhCatalogue.getByLabel("Add RDH value").fill("Default Synthetic RDH");
+  await rdhCatalogue
+    .getByRole("button", { name: "Add local value" })
+    .click();
+  await rdhCatalogue.getByRole("button", { name: "Set default" }).click();
+
+  await page.goto(recareExamUrl);
+  const recareDentist = page.getByRole("combobox", { name: "Dentist" });
+  const recareRda = page.getByRole("combobox", { name: "RDA" });
+  const recareRdh = page.getByRole("combobox", { name: "RDH" });
+  await expect(recareDentist).toHaveValue("Default Synthetic Dentist");
+  await expect(recareRda).toHaveValue("Default Synthetic RDA");
+  await expect(recareRdh).toHaveValue("Default Synthetic RDH");
+
+  await page.getByLabel("Patient ID").fill("SYNTHETIC-DEFAULT-RESTORE");
+  await recareDentist.fill("");
+  await recareRda.fill("");
+  await recareRdh.fill("");
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await expect(
+    page.getByText("Enter at least one of Dentist, RDA, or RDH."),
+  ).toBeVisible();
+  await reloadDiscardingForm(page);
+  await expect(recareDentist).toHaveValue("");
+  await expect(recareRda).toHaveValue("");
+  await expect(recareRdh).toHaveValue("");
+
+  page.once("dialog", async (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await expect(recareDentist).toHaveValue("Default Synthetic Dentist");
+  await expect(recareRda).toHaveValue("Default Synthetic RDA");
+  await expect(recareRdh).toHaveValue("Default Synthetic RDH");
+
+  page.once("dialog", async (dialog) => dialog.accept());
+  await page.goto(adultHygieneUrl);
+  await expect(page.locator("#adult-hygiene-dentist")).toHaveValue(
+    "Default Synthetic Dentist",
+  );
+  await expect(page.locator("#adult-hygiene-rda")).toHaveValue(
+    "Default Synthetic RDA",
+  );
+  await expect(page.locator("#adult-hygiene-rdh")).toHaveValue(
+    "Default Synthetic RDH",
+  );
+});
+
 test("Recare Exam offers public occlusion seeds and remembers providers explicitly", async ({
   page,
 }) => {
@@ -166,6 +297,14 @@ test("Adult Hygiene documents catalogue-backed caries risk factors", async ({
   );
 
   await reloadDiscardingForm(page);
+  await expect(
+    page.getByRole("list", { name: "Caries risk factors selected values" }),
+  ).toContainText("Synthetic local dry-mouth factor");
+  await page
+    .getByRole("button", {
+      name: "Remove Synthetic local dry-mouth factor",
+    })
+    .click();
   await factors.focus();
   await expect(
     page.getByRole("option", {

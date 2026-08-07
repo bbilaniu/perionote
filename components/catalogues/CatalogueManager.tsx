@@ -24,6 +24,7 @@ import {
   parseCatalogueExport,
   serializeCatalogueExport,
 } from "@/lib/catalogues/catalogue";
+import { isProviderCatalogueKey } from "@/lib/catalogues/providerDefaults";
 
 const primaryButtonClass =
   "inline-flex items-center justify-center rounded-xl bg-sky-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-900 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-sky-600 dark:hover:bg-sky-500";
@@ -102,14 +103,25 @@ function CatalogueItemRow({
 }) {
   const {
     storageStatus,
+    providerDefaultsStorageStatus,
     updateItem,
     setHidden,
     setFavorite,
     deleteItem,
     moveItem,
+    getProviderDefault,
+    setProviderDefault,
+    clearProviderDefault,
   } = useCatalogues();
   const [draftLabel, setDraftLabel] = useState(item.label);
   const [message, setMessage] = useState("");
+  const providerCatalogueKey = isProviderCatalogueKey(definition.key)
+    ? definition.key
+    : null;
+  const defaultProvider = providerCatalogueKey
+    ? getProviderDefault(providerCatalogueKey)
+    : undefined;
+  const isDefaultProvider = defaultProvider?.id === item.id;
 
   useEffect(() => {
     setDraftLabel(item.label);
@@ -175,11 +187,37 @@ function CatalogueItemRow({
                 : "Saved in this browser"}
             </span>
             {item.favorite ? <span>Favorite</span> : null}
+            {isDefaultProvider ? <span>Default for new notes</span> : null}
             {item.hidden ? <span>Hidden</span> : null}
           </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {providerCatalogueKey ? (
+            <CatalogueActionButton
+              tooltip={
+                isDefaultProvider
+                  ? `Stop prefilling ${definition.title} with this value in new notes.`
+                  : `Prefill ${definition.title} with this value in new notes.`
+              }
+              disabled={
+                item.hidden || providerDefaultsStorageStatus !== "ready"
+              }
+              onClick={() =>
+                run(
+                  () =>
+                    isDefaultProvider
+                      ? clearProviderDefault(providerCatalogueKey)
+                      : setProviderDefault(providerCatalogueKey, item.id),
+                  isDefaultProvider
+                    ? `${item.label} is no longer the default ${definition.title}.`
+                    : `${item.label} set as the default ${definition.title} for new notes.`,
+                )
+              }
+            >
+              {isDefaultProvider ? "Clear default" : "Set default"}
+            </CatalogueActionButton>
+          ) : null}
           <CatalogueActionButton
             tooltip={
               item.hidden
@@ -360,6 +398,13 @@ function CatalogueCard({
       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
         Adding here stores the value only in this browser profile.
       </p>
+      {isProviderCatalogueKey(definition.key) ? (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+          Set one saved value as the default to prefill this provider role in
+          new Adult Hygiene and Recare Exam notes. Restored drafts keep their
+          saved provider values.
+        </p>
+      ) : null}
       <p className="sr-only" aria-live="polite">
         {message}
       </p>
@@ -764,7 +809,8 @@ export function CatalogueManager() {
           An export is readable JSON and may contain private staff names or
           clinic-specific shortcuts. Store and transfer it securely, then delete
           extra copies when they are no longer needed. HygieneNote does not
-          upload the file.
+          upload the file. Provider defaults remain local to this browser and
+          are not included in the catalogue export.
         </p>
         <div className="mt-4 flex flex-wrap items-end gap-4">
           <button

@@ -32,6 +32,7 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
+import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import {
   DropdownChevron,
   formControlClass,
@@ -43,6 +44,8 @@ import {
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
   recareIntraoralLocationChoices,
@@ -50,6 +53,7 @@ import {
   recareIntraoralStructures,
   type RecareIntraoralStructure,
 } from "@/lib/templates/recareIntraoralCatalog";
+import { matchesDraftShape } from "@/lib/templates/localDrafts";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
@@ -61,7 +65,36 @@ const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
 const recareNoteDiscardWarning =
-  "Clear all entered Recare Exam values and start a new note? This cannot be undone.";
+  "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const recareDraftExemplar = createEmptyRecareExamForm();
+const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
+const recareDraftArrayItemShapes = {
+  radiographs: "",
+  chiefConcern: "",
+  structuredIntraoralFindings: { optionId: "", structureId: "" },
+  additionalOcclusalFindings: { id: "", finding: "", locations: [] },
+  "additionalOcclusalFindings[].locations": "",
+  toothFindings: { id: "", optionId: "", toothAreas: [] },
+  "toothFindings[].toothAreas": "",
+  treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+  treatmentPlan: { id: "", treatmentType: "", toothArea: "" },
+} as const;
+
+function isEmptyRecareDraft(form: RecareExamForm): boolean {
+  return (
+    JSON.stringify({ ...form, dentist: "", rdh: "", rda: "" }) ===
+    emptyRecareDraft
+  );
+}
+
+function isRecareDraftForm(value: unknown): value is RecareExamForm {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return matchesDraftShape(
+    { ...recareDraftExemplar, ...value },
+    recareDraftExemplar,
+    recareDraftArrayItemShapes,
+  );
+}
 
 const statusOptions: Array<{ value: DocumentationStatus; label: string }> = [
   { value: "not-documented", label: "Not documented" },
@@ -1152,9 +1185,67 @@ export function RecareExamTemplate({
   const treatmentEntrySequence = useRef(0);
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
+  const providerDefaultsAppliedRef = useRef(false);
+  const {
+    providerDefaultsStorageStatus,
+    getProviderDefault,
+  } = useCatalogues();
+
+  const localDraft = useLocalInteractiveDraft({
+    templateId: "recare-exam",
+    form,
+    startedAt,
+    isEmpty: isEmptyRecareDraft,
+    isValidForm: isRecareDraftForm,
+    onRestore: (draft) => {
+      setForm({ ...createEmptyRecareExamForm(), ...draft.form });
+      setStartedAt(new Date(draft.startedAt));
+      setPatientIdError("");
+      setProviderError("");
+      setCopyMessage("");
+    },
+  });
+
+  function createNewFormWithProviderDefaults(): RecareExamForm {
+    return {
+      ...createEmptyRecareExamForm(),
+      dentist:
+        getProviderDefault("visit-team.dentist")?.label ?? "",
+      rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
+      rda: getProviderDefault("visit-team.rda")?.label ?? "",
+    };
+  }
 
   useEffect(() => {
-    setStartedAt(new Date());
+    if (
+      !localDraft.hydrated ||
+      providerDefaultsStorageStatus !== "ready" ||
+      providerDefaultsAppliedRef.current
+    ) {
+      return;
+    }
+    providerDefaultsAppliedRef.current = true;
+    if (localDraft.restoredAt) return;
+    setForm((current) => ({
+      ...current,
+      dentist:
+        current.dentist ||
+        getProviderDefault("visit-team.dentist")?.label ||
+        "",
+      rdh:
+        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+      rda:
+        current.rda || getProviderDefault("visit-team.rda")?.label || "",
+    }));
+  }, [
+    getProviderDefault,
+    localDraft.hydrated,
+    localDraft.restoredAt,
+    providerDefaultsStorageStatus,
+  ]);
+
+  useEffect(() => {
+    setStartedAt((current) => current ?? new Date());
   }, []);
 
   useEffect(() => {
@@ -1197,6 +1288,7 @@ export function RecareExamTemplate({
   }
 
   async function copyNote() {
+    const draftSaveResult = localDraft.saveNow();
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rda, form.rdh].some((value) =>
       Boolean(value.trim())
@@ -1222,7 +1314,9 @@ export function RecareExamTemplate({
     const copied = await writeClipboard(summary);
     setCopyMessage(
       copied
-        ? "Note copied."
+        ? draftSaveResult === "failed"
+          ? "Note copied, but the local draft could not be saved."
+          : "Note copied."
         : "The note could not be copied. Select the preview and copy it manually."
     );
   }
@@ -1329,7 +1423,8 @@ export function RecareExamTemplate({
       return;
     }
 
-    setForm(createEmptyRecareExamForm());
+    localDraft.beginNewDraft();
+    setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
@@ -1369,10 +1464,17 @@ export function RecareExamTemplate({
             </h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
               Complete the form and copy a structured Recare Exam note. Entered
-              values remain only in this page&apos;s memory and are discarded
-              when the page reloads or closes.
+              values are kept in a temporary local recovery draft.
             </p>
           </header>
+
+          <LocalDraftRecovery
+            drafts={localDraft.recoverableDrafts}
+            lastSavedAt={localDraft.lastSavedAt}
+            restoredAt={localDraft.restoredAt}
+            storageError={localDraft.storageError}
+            onRestore={localDraft.restoreDraft}
+          />
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">

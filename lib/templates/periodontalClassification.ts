@@ -477,6 +477,37 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
   };
 }
 
+export function copyPeriodontalClassification(
+  classification: PeriodontalClassification,
+): PeriodontalClassification {
+  return {
+    ...classification,
+    stageBasis: classification.stageBasis.map((evidence) => ({
+      ...evidence,
+      ...(evidence.measurement
+        ? { measurement: { ...evidence.measurement } }
+        : {}),
+    })),
+    gradeBasis: classification.gradeBasis.map((evidence) => ({
+      ...evidence,
+      ...(evidence.measurement
+        ? { measurement: { ...evidence.measurement } }
+        : {}),
+    })),
+    smoking: { ...classification.smoking },
+    diabetes: { ...classification.diabetes },
+    gingivalHealth: {
+      ...classification.gingivalHealth,
+      ...(classification.gingivalHealth.bopPercent
+        ? { bopPercent: { ...classification.gingivalHealth.bopPercent } }
+        : {}),
+      ...(classification.gingivalHealth.maximumPpd
+        ? { maximumPpd: { ...classification.gingivalHealth.maximumPpd } }
+        : {}),
+    },
+  };
+}
+
 export interface GingivalHealthCandidate {
   context: HealthGingivitisContext;
   missingFields: GingivalHealthCandidateMissingField[];

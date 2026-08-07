@@ -305,7 +305,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   ).resolves.toBe(preview);
 });
 
-test("Adult Hygiene demo output resets and does not survive reload", async ({
+test("Adult Hygiene demo output survives reload and reset preserves its draft", async ({
   page,
 }) => {
   await page.clock.install({ time: new Date(2026, 6, 25, 9, 10) });
@@ -335,12 +335,14 @@ test("Adult Hygiene demo output resets and does not survive reload", async ({
   );
 
   await reloadDiscardingForm(page);
-  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
-  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /^----- July 25, 2026 9:10:\d{2} AM -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
+    "TEST-AH-1001",
   );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla/
+  );
+  await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 
-  await page.getByRole("button", { name: "Load synthetic demo" }).click();
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
@@ -1188,10 +1190,21 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     name: "Plaque options",
     exact: true,
   });
+  const plaqueFinding = plaqueOptions.getByRole("group", {
+    name: "Finding Plaque choices",
+    exact: true,
+  });
+  await plaqueFinding.getByText("None", { exact: true }).click();
+  await expect(
+    plaqueFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeChecked();
   await plaqueOptions
     .getByRole("group", { name: "Extent Plaque choices", exact: true })
     .getByText("Localized", { exact: true })
     .click();
+  await expect(
+    plaqueFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
   await plaqueOptions
     .getByRole("group", { name: "Intensity Plaque choices", exact: true })
     .getByText("moderate", { exact: true })
@@ -1242,10 +1255,21 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     name: "Calculus options",
     exact: true,
   });
+  const calculusFinding = calculusOptions.getByRole("group", {
+    name: "Finding Calculus choices",
+    exact: true,
+  });
+  await calculusFinding.getByText("None", { exact: true }).click();
+  await expect(
+    calculusFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeChecked();
   await calculusOptions
     .getByRole("group", { name: "Extent Calculus choices", exact: true })
     .getByText("Generalized", { exact: true })
     .click();
+  await expect(
+    calculusFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
   await calculusOptions
     .getByRole("group", { name: "Intensity Calculus choices", exact: true })
     .getByText("moderate", { exact: true })
@@ -1277,10 +1301,21 @@ test("Adult Hygiene composes hygiene findings from grouped facets", async ({
     name: "Bleeding options",
     exact: true,
   });
+  const bleedingFinding = bleedingOptions.getByRole("group", {
+    name: "Finding Bleeding choices",
+    exact: true,
+  });
+  await bleedingFinding.getByText("None", { exact: true }).click();
+  await expect(
+    bleedingFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).toBeChecked();
   await bleedingOptions
     .getByRole("group", { name: "Extent Bleeding choices", exact: true })
     .getByText("Generalized", { exact: true })
     .click();
+  await expect(
+    bleedingFinding.getByRole("checkbox", { name: "None", exact: true }),
+  ).not.toBeChecked();
   await bleedingOptions
     .getByRole("group", { name: "Severity Bleeding choices", exact: true })
     .getByText("severe", { exact: true })
@@ -1420,7 +1455,7 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
   );
 });
 
-test("Adult Hygiene catalogue values persist while encounter selections do not", async ({
+test("Adult Hygiene catalogue values and encounter recovery draft persist independently", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
@@ -1636,7 +1671,9 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   ).toBeVisible();
 
   await reloadDiscardingForm(page);
-  await expect(medicalHistory).toHaveValue("");
+  await expect(medicalHistory).toHaveValue(
+    "Synthetic reusable history phrase",
+  );
   await medicalHistory.focus();
   await expect(
     page.getByRole("option", {
@@ -1652,18 +1689,26 @@ test("Adult Hygiene catalogue values persist while encounter selections do not",
   ).toBeVisible();
 
   await expect(
-    page.getByText("Synthetic reusable OHI aid", { exact: true })
-  ).toHaveCount(0);
+    page.getByText("Synthetic reusable OHI aid", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("list", {
+      name: "OH aids reviewed/recommended selected values",
+    })
+    .getByRole("button", {
+      name: "Remove Synthetic reusable OHI aid",
+    })
+    .click();
   await ohiAids.focus();
   await expect(
     page.getByRole("option", {
       name: /Synthetic reusable OHI aid Local/,
     })
   ).toBeVisible();
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Synthetic reusable/
   );
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /teeth 14–16/
   );
 });

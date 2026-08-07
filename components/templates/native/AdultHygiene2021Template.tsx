@@ -10,6 +10,7 @@ import {
 } from "react";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
+import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import {
   DropdownChevron,
@@ -23,6 +24,8 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
@@ -41,6 +44,7 @@ import {
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
+import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import type {
   DocumentationStatus,
   PremedicationStatus,
@@ -157,7 +161,63 @@ const stageEvidenceGroups = [
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
 const adultHygieneDiscardWarning =
-  "Clear all entered 2021 Adult Hygiene values and start a new note? This cannot be undone.";
+  "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
+const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
+const adultHygieneDraftArrayItemShapes = {
+  patientChiefConcern: "",
+  plaqueAreas: "",
+  stainAreas: "",
+  calculusAreas: "",
+  bleedingAreas: "",
+  "gingivalDescription.findings": {
+    optionId: "",
+    extent: "",
+    locations: [],
+    measurement: "",
+    comment: "",
+  },
+  "gingivalDescription.findings[].locations": "",
+  "periodontalClassification.stageBasis": { criterionId: "" },
+  "periodontalClassification.gradeBasis": { criterionId: "" },
+  cariesRiskFactors: "",
+  ohiAidsReviewed: "",
+  oheTopicsReviewed: "",
+  treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
+  "treatmentCompleted[].toothAreas": "",
+} as const;
+
+function isEmptyAdultHygieneDraft(form: AdultHygiene2021Form): boolean {
+  return (
+    JSON.stringify({ ...form, dentist: "", rdh: "", rda: "" }) ===
+    emptyAdultHygieneDraft
+  );
+}
+
+function isAdultHygieneDraftForm(
+  value: unknown,
+): value is AdultHygiene2021Form {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Record<string, unknown>;
+  const gingivalDescription = candidate.gingivalDescription;
+  return matchesDraftShape(
+    {
+      ...adultHygieneDraftExemplar,
+      ...candidate,
+      gingivalDescription:
+        gingivalDescription &&
+        typeof gingivalDescription === "object" &&
+        !Array.isArray(gingivalDescription)
+          ? {
+              ...adultHygieneDraftExemplar.gingivalDescription,
+              ...gingivalDescription,
+            }
+          : adultHygieneDraftExemplar.gingivalDescription,
+    },
+    adultHygieneDraftExemplar,
+    adultHygieneDraftArrayItemShapes,
+  );
+}
 const gingivalDescriptionStatusOptions: Array<{
   value: GingivalDescriptionStatus;
   label: string;
@@ -410,11 +470,18 @@ const extentFacetChoices = ["Localized", "Generalized"] as const;
 const mildIntensityFacetChoices = ["mild", "moderate", "heavy"] as const;
 const plaqueLocationFacetChoices = ["marginal", "interproximal"] as const;
 const plaqueFacetChoices = [
+  "None",
   ...extentFacetChoices,
   ...mildIntensityFacetChoices,
   ...plaqueLocationFacetChoices,
 ] as const;
 const plaqueFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
   {
     label: "Extent",
     choices: extentFacetChoices,
@@ -464,11 +531,18 @@ const stainFacetGroups = [
 
 const calculusLocationFacetChoices = ["marginal", "interproximal"] as const;
 const calculusFacetChoices = [
+  "None",
   ...extentFacetChoices,
   ...mildIntensityFacetChoices,
   ...calculusLocationFacetChoices,
 ] as const;
 const calculusFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
   {
     label: "Extent",
     choices: extentFacetChoices,
@@ -491,10 +565,17 @@ const calculusFacetGroups = [
 
 const bleedingSeverityFacetChoices = ["mild", "moderate", "severe"] as const;
 const bleedingFacetChoices = [
+  "None",
   ...extentFacetChoices,
   ...bleedingSeverityFacetChoices,
 ] as const;
 const bleedingFacetGroups = [
+  {
+    label: "Finding",
+    choices: ["None"],
+    columns: 1,
+    selectionMode: "single",
+  },
   {
     label: "Extent",
     choices: extentFacetChoices,
@@ -745,6 +826,80 @@ function FacetedChoiceWithComment({
   );
 }
 
+export function AdultHygienePlaqueControl({
+  id,
+  choice,
+  areas,
+  comment,
+  onChoiceChange,
+  onAreasChange,
+  onCommentChange,
+}: {
+  id: string;
+  choice: string;
+  areas: string[];
+  comment: string;
+  onChoiceChange: (choice: string) => void;
+  onAreasChange: (areas: string[]) => void;
+  onCommentChange: (comment: string) => void;
+}) {
+  return (
+    <FacetedChoiceWithComment
+      id={id}
+      label="Plaque"
+      choice={choice}
+      areas={areas}
+      comment={comment}
+      facetChoices={plaqueFacetChoices}
+      facetGroups={plaqueFacetGroups}
+      onChoiceChange={onChoiceChange}
+      onAreasChange={onAreasChange}
+      onCommentChange={onCommentChange}
+      formatChoice={(values) =>
+        formatChoiceWithJoinedLocations(values, plaqueLocationFacetChoices)
+      }
+      standaloneValue="None"
+    />
+  );
+}
+
+export function AdultHygieneCalculusControl({
+  id,
+  choice,
+  areas,
+  comment,
+  onChoiceChange,
+  onAreasChange,
+  onCommentChange,
+}: {
+  id: string;
+  choice: string;
+  areas: string[];
+  comment: string;
+  onChoiceChange: (choice: string) => void;
+  onAreasChange: (areas: string[]) => void;
+  onCommentChange: (comment: string) => void;
+}) {
+  return (
+    <FacetedChoiceWithComment
+      id={id}
+      label="Calculus"
+      choice={choice}
+      areas={areas}
+      comment={comment}
+      facetChoices={calculusFacetChoices}
+      facetGroups={calculusFacetGroups}
+      onChoiceChange={onChoiceChange}
+      onAreasChange={onAreasChange}
+      onCommentChange={onCommentChange}
+      formatChoice={(values) =>
+        formatChoiceWithJoinedLocations(values, calculusLocationFacetChoices)
+      }
+      standaloneValue="None"
+    />
+  );
+}
+
 function CheckboxField({
   id,
   label,
@@ -839,7 +994,7 @@ function documentedObservationSummary(count: number) {
     : "Not assessed";
 }
 
-function PeriodontalClassificationControl({
+export function PeriodontalClassificationControl({
   value,
   onChange,
 }: {
@@ -2460,7 +2615,7 @@ function GingivalDescriptionControl({
   );
 }
 
-function TreatmentCompletedList({
+export function TreatmentCompletedList({
   entries,
   onApplyStandard,
   onAdd,
@@ -2643,8 +2798,73 @@ export function AdultHygiene2021Template({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
+  const providerDefaultsAppliedRef = useRef(false);
+  const {
+    providerDefaultsStorageStatus,
+    getProviderDefault,
+  } = useCatalogues();
 
-  useEffect(() => setStartedAt(new Date()), []);
+  const localDraft = useLocalInteractiveDraft({
+    templateId: "adult-hygiene-2021",
+    form,
+    startedAt,
+    isEmpty: isEmptyAdultHygieneDraft,
+    isValidForm: isAdultHygieneDraftForm,
+    onRestore: (draft) => {
+      const emptyForm = createEmptyAdultHygiene2021Form();
+      setForm({
+        ...emptyForm,
+        ...draft.form,
+        gingivalDescription: copyGingivalDescriptionAssessment(
+          draft.form.gingivalDescription,
+        ),
+      });
+      setStartedAt(new Date(draft.startedAt));
+      setPatientIdError("");
+      setProviderError("");
+      setCopyMessage("");
+    },
+  });
+
+  function createNewFormWithProviderDefaults(): AdultHygiene2021Form {
+    return {
+      ...createEmptyAdultHygiene2021Form(),
+      dentist:
+        getProviderDefault("visit-team.dentist")?.label ?? "",
+      rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
+      rda: getProviderDefault("visit-team.rda")?.label ?? "",
+    };
+  }
+
+  useEffect(() => {
+    if (
+      !localDraft.hydrated ||
+      providerDefaultsStorageStatus !== "ready" ||
+      providerDefaultsAppliedRef.current
+    ) {
+      return;
+    }
+    providerDefaultsAppliedRef.current = true;
+    if (localDraft.restoredAt) return;
+    setForm((current) => ({
+      ...current,
+      dentist:
+        current.dentist ||
+        getProviderDefault("visit-team.dentist")?.label ||
+        "",
+      rdh:
+        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+      rda:
+        current.rda || getProviderDefault("visit-team.rda")?.label || "",
+    }));
+  }, [
+    getProviderDefault,
+    localDraft.hydrated,
+    localDraft.restoredAt,
+    providerDefaultsStorageStatus,
+  ]);
+
+  useEffect(() => setStartedAt((current) => current ?? new Date()), []);
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -2681,6 +2901,7 @@ export function AdultHygiene2021Template({
   }
 
   async function copyNote() {
+    const draftSaveResult = localDraft.saveNow();
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rdh, form.rda].some((value) =>
       Boolean(value.trim()),
@@ -2706,7 +2927,9 @@ export function AdultHygiene2021Template({
     const copied = await writeClipboard(summary);
     setCopyMessage(
       copied
-        ? "Note copied."
+        ? draftSaveResult === "failed"
+          ? "Note copied, but the local draft could not be saved."
+          : "Note copied."
         : "The note could not be copied. Select the preview and copy it manually.",
     );
   }
@@ -2778,7 +3001,8 @@ export function AdultHygiene2021Template({
 
   function resetForm() {
     if (!window.confirm(adultHygieneDiscardWarning)) return;
-    setForm(createEmptyAdultHygiene2021Form());
+    localDraft.beginNewDraft();
+    setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
@@ -2848,11 +3072,19 @@ export function AdultHygiene2021Template({
             </h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
               Complete the form and copy a structured Adult Hygiene note.
-              Encounter values remain only in this page&apos;s memory.
-              Deliberately remembered catalogue suggestions stay only in this
-              browser profile.
+              Encounter values are kept in a temporary local recovery draft.
+              Deliberately remembered catalogue suggestions also stay only in
+              this browser profile.
             </p>
           </header>
+
+          <LocalDraftRecovery
+            drafts={localDraft.recoverableDrafts}
+            lastSavedAt={localDraft.lastSavedAt}
+            restoredAt={localDraft.restoredAt}
+            storageError={localDraft.storageError}
+            onRestore={localDraft.restoreDraft}
+          />
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -3059,23 +3291,14 @@ export function AdultHygiene2021Template({
               value={form.hygieneAreaOfConcern}
               onChange={(value) => updateField("hygieneAreaOfConcern", value)}
             />
-            <FacetedChoiceWithComment
+            <AdultHygienePlaqueControl
               id="adult-hygiene-plaque"
-              label="Plaque"
               choice={form.plaqueChoice}
               areas={form.plaqueAreas}
               comment={form.plaqueComment}
-              facetChoices={plaqueFacetChoices}
-              facetGroups={plaqueFacetGroups}
               onChoiceChange={(value) => updateField("plaqueChoice", value)}
               onAreasChange={(value) => updateField("plaqueAreas", value)}
               onCommentChange={(value) => updateField("plaqueComment", value)}
-              formatChoice={(values) =>
-                formatChoiceWithJoinedLocations(
-                  values,
-                  plaqueLocationFacetChoices,
-                )
-              }
             />
             <FacetedChoiceWithComment
               id="adult-hygiene-stain"
@@ -3090,23 +3313,14 @@ export function AdultHygiene2021Template({
               onCommentChange={(value) => updateField("stainComment", value)}
               standaloneValue="None"
             />
-            <FacetedChoiceWithComment
+            <AdultHygieneCalculusControl
               id="adult-hygiene-calculus"
-              label="Calculus"
               choice={form.calculusChoice}
               areas={form.calculusAreas}
               comment={form.calculusComment}
-              facetChoices={calculusFacetChoices}
-              facetGroups={calculusFacetGroups}
               onChoiceChange={(value) => updateField("calculusChoice", value)}
               onAreasChange={(value) => updateField("calculusAreas", value)}
               onCommentChange={(value) => updateField("calculusComment", value)}
-              formatChoice={(values) =>
-                formatChoiceWithJoinedLocations(
-                  values,
-                  calculusLocationFacetChoices,
-                )
-              }
             />
             <FacetedChoiceWithComment
               id="adult-hygiene-bleeding"
@@ -3119,6 +3333,7 @@ export function AdultHygiene2021Template({
               onChoiceChange={(value) => updateField("bleedingChoice", value)}
               onAreasChange={(value) => updateField("bleedingAreas", value)}
               onCommentChange={(value) => updateField("bleedingComment", value)}
+              standaloneValue="None"
             />
           </Section>
 

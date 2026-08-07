@@ -128,7 +128,7 @@ function labelledLine(label: string, value: string): string {
   return cleanValue ? `${label}: ${withTerminalPunctuation(cleanValue)}` : "";
 }
 
-function findingWithCommentLine(
+export function formatAdultHygieneFindingLine(
   label: string,
   finding: string,
   comment: string,
@@ -262,6 +262,30 @@ function treatmentRecommendedBlock(
     : [];
 }
 
+export function formatAdultHygieneTreatmentCompleted(
+  entries: AdultHygiene2021Form["treatmentCompleted"],
+): string {
+  const completed = entries
+    .map((entry) => {
+      const treatmentType = trimmed(entry.treatmentType);
+      if (!treatmentType) return "";
+      const toothAreas = orderTreatmentToothAreas(entry.toothAreas);
+      const treatmentWithAreas = toothAreas.length
+        ? `${treatmentType} — ${toothAreas.join(", ")}`
+        : treatmentType;
+      const applicationTime = trimmed(entry.applicationTime ?? "");
+      return isDyclonineRinseTreatment(treatmentType) && applicationTime
+        ? `${treatmentWithAreas}${
+            toothAreas.length ? ";" : " —"
+          } time of application/use: ${applicationTime}`
+        : treatmentWithAreas;
+    })
+    .filter(Boolean);
+  return completed.length
+    ? `Treatment completed today: ${completed.join("; ")}`
+    : "";
+}
+
 function psrPocketingLine(
   values: AdultHygiene2021Form["psrPocketing"]
 ): string {
@@ -272,7 +296,7 @@ function psrPocketingLine(
     .join(" ")}`;
 }
 
-function formatPeriodontalClassification(
+export function formatPeriodontalClassification(
   classification: PeriodontalClassification
 ): string[] {
   const diagnosisLabels = {
@@ -353,7 +377,7 @@ function formatPeriodontalClassification(
   ].filter(Boolean);
 }
 
-function formatPeriodontalAssessmentFindings(
+export function formatPeriodontalAssessmentFindings(
   classification: PeriodontalClassification
 ): string {
   const assessment = classification.gingivalHealth;
@@ -413,7 +437,7 @@ function formatEvidenceSubsection(label: string, items: string[]): string[] {
     : [];
 }
 
-function formatPatientSpecificStageEvidence(
+export function formatPatientSpecificStageEvidence(
   classification: PeriodontalClassification
 ): string {
   const evidence = periodontalStageEvidence(classification);
@@ -443,7 +467,7 @@ function formatPatientSpecificStageEvidence(
     : "";
 }
 
-function formatPatientSpecificGradeEvidence(
+export function formatPatientSpecificGradeEvidence(
   classification: PeriodontalClassification
 ): string {
   const progressionEvidence = classification.gradeBasis
@@ -542,25 +566,25 @@ export function buildAdultHygiene2021Summary(
   ];
 
   const hygieneFindings = [
-    findingWithCommentLine(
+    formatAdultHygieneFindingLine(
       "Plaque",
       form.plaqueChoice,
       form.plaqueComment,
       form.plaqueAreas ?? [],
     ),
-    findingWithCommentLine(
+    formatAdultHygieneFindingLine(
       "Stain",
       form.stainChoice,
       form.stainComment,
       form.stainAreas ?? [],
     ),
-    findingWithCommentLine(
+    formatAdultHygieneFindingLine(
       "Calculus",
       form.calculusChoice,
       form.calculusComment,
       form.calculusAreas ?? [],
     ),
-    findingWithCommentLine(
+    formatAdultHygieneFindingLine(
       "Bleeding",
       form.bleedingChoice,
       form.bleedingComment,
@@ -639,27 +663,7 @@ export function buildAdultHygiene2021Summary(
       form.treatmentRecommendedHygieneMaintenance,
       form.otherTreatmentRecommended
     ),
-    (() => {
-      const completed = form.treatmentCompleted
-        .map((entry) => {
-          const treatmentType = trimmed(entry.treatmentType);
-          if (!treatmentType) return "";
-          const toothAreas = orderTreatmentToothAreas(entry.toothAreas);
-          const treatmentWithAreas = toothAreas.length
-            ? `${treatmentType} — ${toothAreas.join(", ")}`
-            : treatmentType;
-          const applicationTime = trimmed(entry.applicationTime ?? "");
-          return isDyclonineRinseTreatment(treatmentType) && applicationTime
-            ? `${treatmentWithAreas}${
-                toothAreas.length ? ";" : " —"
-              } time of application/use: ${applicationTime}`
-            : treatmentWithAreas;
-        })
-        .filter(Boolean);
-      return completed.length
-        ? `Treatment completed today: ${completed.join("; ")}`
-        : "";
-    })(),
+    formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
     labelledLine("Anesthetic", form.anesthetic),
     labelledLine("Desensitizer", form.desensitizer),
   ];

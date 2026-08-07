@@ -13,6 +13,7 @@ import {
 } from "@/lib/templates/periodontalClassification";
 
 export const plaqueChoices = [
+  "None",
   "Localized mild interproximal",
   "Localized moderate interproximal",
   "Localized heavy interproximal",
@@ -35,6 +36,7 @@ export const stainChoices = [
 ] as const;
 
 export const calculusChoices = [
+  "None",
   "Localized mild interproximal",
   "Localized moderate interproximal",
   "Localized heavy interproximal",
@@ -47,6 +49,7 @@ export const calculusChoices = [
 ] as const;
 
 export const bleedingChoices = [
+  "None",
   "Localized mild",
   "Localized moderate",
   "Localized severe",

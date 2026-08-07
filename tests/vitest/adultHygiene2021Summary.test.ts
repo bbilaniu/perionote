@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  bleedingChoices,
+  calculusChoices,
   createEmptyAdultHygiene2021Form,
   dyclonineRinseTreatment,
   hasRequiredAdultHygiene2021Fields,
   isDyclonineRinseTreatment,
+  plaqueChoices,
   standardOheStatement,
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
@@ -17,6 +20,23 @@ import {
 } from "@/lib/templates/gingivalDescriptionCatalog";
 
 describe("buildAdultHygiene2021Summary", () => {
+  it("offers None as a reviewed hygiene finding", () => {
+    expect(plaqueChoices[0]).toBe("None");
+    expect(calculusChoices[0]).toBe("None");
+    expect(bleedingChoices[0]).toBe("None");
+  });
+
+  it("documents explicit None hygiene findings", () => {
+    const form = {
+      ...createEmptyAdultHygiene2021Form(),
+      plaqueChoice: "None",
+      bleedingChoice: "None",
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Plaque: None.
+Bleeding: None.`);
+  });
+
   it("starts empty without inferring clinical documentation", () => {
     const form = createEmptyAdultHygiene2021Form();
     expect(buildAdultHygiene2021Summary(form)).toBe("");
