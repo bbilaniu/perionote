@@ -185,6 +185,9 @@ test("clinical template catalogue can show only interactive versions", async ({
     page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
   ).toBeVisible();
   await expect(
+    page.getByRole("article").filter({ hasText: "2026 Adult Hygiene" }),
+  ).toBeVisible();
+  await expect(
     page.getByRole("article").filter({ hasText: "Recare Exam" }),
   ).toBeVisible();
   await expect(
@@ -192,7 +195,7 @@ test("clinical template catalogue can show only interactive versions", async ({
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "View original template" }),
-  ).toHaveCount(2);
+  ).toHaveCount(4);
 
   await showTemplates
     .getByRole("button", { name: "All", exact: true })
@@ -200,6 +203,121 @@ test("clinical template catalogue can show only interactive versions", async ({
   await expect(
     page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
   ).toBeVisible();
+});
+
+test("2026 Adult Hygiene uses its own route and draft storage", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(
+    page.getByRole("heading", { name: "2026 Adult Hygiene", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Original 2026 Adult Hygiene template",
+    }),
+  ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2026/");
+
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-2026");
+  await page.locator("#adult-hygiene-rdh").fill("Independent RDH");
+  await page.getByRole("button", { name: "Copy complete note" }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Object.keys(window.localStorage).some((key) =>
+          key.startsWith(
+            "hygienenote.interactive-draft.v1.adult-hygiene-2026.",
+          ),
+        ),
+      ),
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(() =>
+      Object.keys(window.localStorage).some((key) =>
+        key.startsWith(
+          "hygienenote.interactive-draft.v1.adult-hygiene-2021.",
+        ),
+      ),
+    ),
+  ).toBe(false);
+});
+
+test("2026 Adult Hygiene documents EOE and IOE findings", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(page.getByRole("heading", { name: "EOE" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+  await page
+    .getByRole("button", { name: "Apply normal extraoral exam" })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "EOE: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "TMJ: WNL.",
+  );
+
+  await expect(page.getByRole("heading", { name: "IOE" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /Structured intraoral observations/ })
+    .click();
+  await page.getByRole("button", { name: "Coated tongue" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "IOE:\n  - Tongue: coated.",
+  );
+
+  await expect(page.getByRole("heading", { name: "Records" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Occlusion and Habits" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Teeth and Odontogram" }),
+  ).toBeVisible();
+
+  const output = page.getByRole("group", { name: "Note output" });
+  await output.getByRole("button", { name: "Hygiene" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "EOE:",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "IOE:",
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy hygiene note" }),
+  ).toBeVisible();
+
+  await output.getByRole("button", { name: "Recare" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "EOE: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "IOE:\n  - Tongue: coated.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy recare note" }),
+  ).toBeVisible();
+
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-OUTPUTS");
+  await page.locator("#adult-hygiene-rdh").fill("Output RDH");
+  await page.getByRole("button", { name: "Copy recare note" }).click();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.toContain(
+    "EOE: WNL.",
+  );
+
+  await output.getByRole("button", { name: "Hygiene" }).click();
+  await page.getByRole("button", { name: "Copy hygiene note" }).click();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.not.toContain(
+    "EOE:",
+  );
 });
 
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
@@ -455,6 +573,52 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   ).toBeVisible();
   await expect(page.getByText("EOE observations")).toBeVisible();
   await expect(page.getByText("IOE observations")).toBeVisible();
+});
+
+test("Very short template combines side buttons as bilateral and keeps symptom status single-choice", async ({
+  page,
+}) => {
+  await page.goto("/templates/very-short-template");
+
+  const eoeIoeSection = page.locator("#template-section-eoeIoe");
+  await eoeIoeSection
+    .getByRole("button", { name: "Expand", exact: true })
+    .click();
+  await eoeIoeSection
+    .getByRole("button", { name: "TMJ clicking", exact: true })
+    .click();
+
+  const laterality = eoeIoeSection.getByRole("group", {
+    name: "Laterality",
+    exact: true,
+  }).first();
+  const left = laterality.getByRole("button", { name: "Left", exact: true });
+  const right = laterality.getByRole("button", { name: "Right", exact: true });
+  await left.click();
+  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await right.click();
+  await expect(right).toHaveAttribute("aria-pressed", "true");
+  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("textarea[readonly]")).toHaveValue(
+    /EOE: bilateral tmj clicking/,
+  );
+
+  const status = eoeIoeSection.getByRole("group", {
+    name: "Status",
+    exact: true,
+  });
+  const symptomatic = status.getByRole("button", {
+    name: "Symptomatic",
+    exact: true,
+  });
+  const asymptomatic = status.getByRole("button", {
+    name: "Asymptomatic",
+    exact: true,
+  });
+  await symptomatic.click();
+  await asymptomatic.click();
+  await expect(symptomatic).toHaveAttribute("aria-pressed", "false");
+  await expect(asymptomatic).toHaveAttribute("aria-pressed", "true");
 });
 
 test("OHE section can select all topics with one click", async ({ page }) => {

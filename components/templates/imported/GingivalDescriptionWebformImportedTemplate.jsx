@@ -1,6 +1,15 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
+import {
+  extraoralLateralityToSides,
+  extraoralLymphNodeLocationOptions,
+  extraoralLymphNodeSwellingOptions,
+  extraoralSideOptions,
+  extraoralSidesToLaterality,
+  extraoralTmjClickingPhaseOptions,
+  extraoralTmjClickingStatusOptions,
+} from "@/lib/templates/extraoralObservationsCatalog";
 
 function cx(...parts) {
   return parts.filter(Boolean).join(" ");
@@ -398,10 +407,10 @@ const VISIT_CARE_SELECT_CORE_OPTIONS = [
   OHE_REINFORCED_OPTION,
   REVIEWED_HOMECARE_OPTION,
 ];
-const TMJ_CLICKING_STATUS_OPTIONS = ["Symptomatic", "Asymptomatic"];
-const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = ["On open", "On close"];
-const LYMPH_NODE_LOCATION_OPTIONS = ["Submandibular", "Sublingual"];
-const LYMPH_NODE_SWELLING_OPTIONS = ["Slightly enlarged", "Very swollen"];
+const TMJ_CLICKING_STATUS_OPTIONS = extraoralTmjClickingStatusOptions;
+const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = extraoralTmjClickingPhaseOptions;
+const LYMPH_NODE_LOCATION_OPTIONS = extraoralLymphNodeLocationOptions;
+const LYMPH_NODE_SWELLING_OPTIONS = extraoralLymphNodeSwellingOptions;
 const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
   "I/O",
   "M/I",
@@ -466,7 +475,7 @@ const CARIES_RISK_FACTOR_OPTIONS = [
   "History of caries in the last 36 months",
   "Symptomatically driven dental visits",
 ];
-const CLICK_LATERALITY_OPTIONS = ["Bilateral", "Left", "Right"];
+const CLICK_LATERALITY_OPTIONS = extraoralSideOptions;
 const PALATINE_TORUS_OPTIONS = ["Slight", "Prominent"];
 const IOE_FINDING_OPTIONS = [
   "Coated tongue",
@@ -1774,7 +1783,7 @@ function MultiToggle({
   const allSelected = options.length > 0 && selected.length === options.length;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="group" aria-label={label}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Label className="text-sm font-medium">{label}</Label>
         {showSelectAll ? (
@@ -1823,6 +1832,7 @@ function MultiToggle({
                 <Button
                   key={option}
                   type="button"
+                  aria-pressed={isActive}
                   variant={isActive ? "default" : "outline"}
                   className="rounded-2xl"
                   onClick={() => {
@@ -2926,28 +2936,20 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                       {form.asymptomaticClickOnOpeningClosing ? (
                         <div className="space-y-2">
-                          <Label>Laterality</Label>
-                          <Select
-                            value={form.asymptomaticClickLaterality}
-                            onValueChange={(asymptomaticClickLaterality) =>
+                          <MultiToggle
+                            label="Laterality"
+                            options={CLICK_LATERALITY_OPTIONS}
+                            selected={extraoralLateralityToSides(
+                              form.asymptomaticClickLaterality,
+                            )}
+                            onChange={(sides) =>
                               setForm((current) => ({
                                 ...current,
-                                asymptomaticClickLaterality,
+                                asymptomaticClickLaterality:
+                                  extraoralSidesToLaterality(sides),
                               }))
                             }
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select laterality" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">None selected</SelectItem>
-                              {CLICK_LATERALITY_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          />
                           <MultiToggle
                             label="Status"
                             options={TMJ_CLICKING_STATUS_OPTIONS}
@@ -2958,6 +2960,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                                 tmjClickingStatus,
                               }))
                             }
+                            singleSelect
                           />
                           <MultiToggle
                             label="On open / close"
@@ -3004,30 +3007,20 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                       {form.asymptomaticLymphNodes ? (
                         <div className="space-y-2">
-                          <Label>Laterality</Label>
-                          <Select
-                            value={form.palpableLymphNodeLaterality}
-                            onValueChange={(
-                              palpableLymphNodeLaterality,
-                            ) =>
+                          <MultiToggle
+                            label="Laterality"
+                            options={CLICK_LATERALITY_OPTIONS}
+                            selected={extraoralLateralityToSides(
+                              form.palpableLymphNodeLaterality,
+                            )}
+                            onChange={(sides) =>
                               setForm((current) => ({
                                 ...current,
-                                palpableLymphNodeLaterality,
+                                palpableLymphNodeLaterality:
+                                  extraoralSidesToLaterality(sides),
                               }))
                             }
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select laterality" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">None selected</SelectItem>
-                              {CLICK_LATERALITY_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          />
                           <MultiToggle
                             label="Location"
                             options={LYMPH_NODE_LOCATION_OPTIONS}

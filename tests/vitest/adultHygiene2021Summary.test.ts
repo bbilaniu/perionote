@@ -53,7 +53,7 @@ PATIENT ID: TEST-AH-1001
 DENTIST: Dr. Example
 RDA:
 RDH: Example RDH
-Last Recall Date: 2026-01-15
+Last Recare Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
 Miele Sterilization Codes Scanned: SYNTH-AH-001
@@ -130,7 +130,7 @@ Retainers: Fixed.
 Additional Notes: Synthetic demonstration data only.
 
 -ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
-Recommended Recall Interval: 6-month recall.
+Recommended Recare Interval: 6-month recall.
 Recommended Hygiene Interval: 4-month scale.
 Next visit: Synthetic hygiene follow-up.
 Date Booked: 2026-11-15`);
@@ -307,8 +307,13 @@ Patient-specific grade evidence:
     expect(
       form.gingivalDescription.findings.map(({ optionId }) => optionId)
     ).toHaveLength(10);
+    expect(
+      form.gingivalDescription.findings.every(
+        ({ extent }) => extent === "generalized",
+      ),
+    ).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted."
+      "Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted."
     );
   });
 
@@ -681,8 +686,8 @@ Grade override: Synthetic grade context.
 Oral hygiene compliance: Good.
 Oral hygiene compliance comment: Synthetic compliance context.
 
-Recommended Recall Interval: 6-month recall.
-Recommended recall interval comments: Synthetic recall context.
+Recommended Recare Interval: 6-month recall.
+Recommended recare interval comments: Synthetic recall context.
 Recommended Hygiene Interval: 4-month scale.
 Recommended hygiene interval comments: Synthetic hygiene context.`);
   });

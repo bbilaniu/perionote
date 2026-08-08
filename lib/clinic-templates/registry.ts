@@ -185,7 +185,7 @@ Date Booked: `,
     sourceTitle: "2021 Adult Hygiene NEW",
     category: "adult-hygiene",
     description: "Comprehensive adult hygiene assessment and treatment note.",
-    content: `Last Recall Date: [AUTO: Last Recall Date]
+    content: `Last Recare Date: [AUTO: Last Recall Date]
 
 DENTIST: [SELECT/INSERT: Dentists]
 RDH: [SELECT/INSERT: Hygienist]
@@ -247,11 +247,110 @@ Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
 Additional Notes:
 -ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
-Recommended Recall Interval:[SELECT/INSERT: REC RECALL INTERVAL]
+Recommended Recare Interval:[SELECT/INSERT: REC RECALL INTERVAL]
 Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]
 
 Next visit: [SELECT/INSERT: NEXT VISIT]
 Date Booked: `,
+  },
+  {
+    slug: "adult-hygiene-2026",
+    title: "2026 Adult Hygiene",
+    sourceTitle: "2026 Adult Hygiene",
+    category: "adult-hygiene",
+    description:
+      "Unified adult encounter for Complete, Hygiene, and Recare documentation.",
+    content: `Last Recare Date: [AUTO: Last Recall Date]
+
+DENTIST: [SELECT/INSERT: Dentists]
+RDH: [SELECT/INSERT: Hygienist]
+RDA: [SELECT/INSERT: RDA]
+
+Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: [SELECT/INSERT: Cl5 Indicator Strip Checked]
+
+Miele Sterilization Codes Scanned:
+
+Informed verbal consent given by [AUTO: Patient First Name] [AUTO: Patient Last Name] [SELECT/INSERT: CONSENT FOR TX] for treatment today.
+Medical history reviewed: [SELECT/INSERT: MedHx/DentalHx]
+Premedication Required: [SELECT/INSERT: PREMED]
+
+
+Patient Chief Concern: [SELECT/INSERT: PATIENT CC]
+
+Radiographs:
+Intraoral Photos:
+
+Hygiene Area of Concern:
+
+EOE:
+Extraoral: [SELECT/INSERT: EOE]
+TMJ:
+Masseter palpation:
+TMJ loading test:
+
+IOE:
+Intraoral: [SELECT/INSERT: IOE]
+
+Teeth / Odontogram:
+Occlusion and Oral Habits:
+
+Plaque:  [SELECT/INSERT: PLAQUE]
+Stain:  [SELECT/INSERT: STAIN]
+Calculus: [SELECT/INSERT: CALCULUS]
+Bleeding: [SELECT/INSERT: BLEEDING]
+
+PSR/Pocketing:  _ _ _ / _ _ _
+Recession:
+FMP Done: [SELECT/INSERT: FMP DONE]
+
+Health/Gingivitis: [SELECT/INSERT: HEALTH]
+
+Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
+Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
+
+Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
+Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
+OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]
+
+REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+
+Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x/day]
+
+
+Hygiene goal:
+
+
+Treatment options discussed:
+
+Coordinated treatment recommendations:
+1) PREVENTIVE — HYGIENE MAINTENANCE
+2) RESTORATIVE —
+
+
+Treatment completed today: [SELECT/INSERT: RDH: Treatment]
+
+Anesthetic:  [SELECT/INSERT: HYGIENE ANESTHETIC]
+
+Desensitizer: [SELECT/INSERT: DESENSITIZER]
+
+Does patient have a NightGuard?
+Do they use NightGuard?
+Does patient have a CPAP? Do they use it?
+Does patient have an occlusal splint? Do they use it?
+
+Have they had orthodontics?
+Do they wear Retainers? Fixed or removable?
+Partial/complete removable dentures:
+Patient-requested smile or dental improvements:
+Additional Notes:
+-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
+Recommended Recare Interval:[SELECT/INSERT: REC RECALL INTERVAL]
+Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]
+
+Next Dental Visit:
+Dental Date Booked:
+Next Hygiene Visit: [SELECT/INSERT: NEXT VISIT]
+Hygiene Date Booked: `,
   },
   {
     slug: "local-anesthetic",

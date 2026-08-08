@@ -28,6 +28,13 @@ export type RecareIntraoralStructure = {
   options: RecareIntraoralOption[];
 };
 
+export type RecareIntraoralQuickPreset = {
+  label: string;
+  optionId: string;
+  laterality?: string;
+  locations?: string[];
+};
+
 const includedStructureIds = new Set([
   "ioe.buccal_mucosa",
   "ioe.tongue",
@@ -49,6 +56,23 @@ type RawOption = {
   measurementUnits?: string[];
 };
 
+const supplementalOptionsByStructureId: Readonly<
+  Record<string, RecareIntraoralOption[]>
+> = {
+  "ioe.floor_of_mouth": [
+    {
+      id: "ioe.floor_of_mouth.mandibular_tori",
+      label: "Mandibular tori",
+      noteFragment: "mandibular tori",
+      classification: "normal_variation",
+      supportsLocation: false,
+      supportsLaterality: true,
+      supportsMeasurement: false,
+      measurementUnits: [],
+    },
+  ],
+};
+
 export const recareIntraoralStructures: RecareIntraoralStructure[] =
   catalogue.normalizedSections.ioe.structures
     .filter((structure) => includedStructureIds.has(structure.id))
@@ -56,18 +80,21 @@ export const recareIntraoralStructures: RecareIntraoralStructure[] =
       id: structure.id,
       label: structure.label,
       supportsComment: Boolean(structure.supportsComment),
-      options: (structure.options as RawOption[]).map((option) => ({
-        id: option.id,
-        label: option.label,
-        noteFragment: option.noteFragment,
-        classification: option.classification ?? "abnormal",
-        supportsLocation: Boolean(option.supportsLocation),
-        supportsLaterality: Boolean(option.supportsLaterality),
-        supportsMeasurement: Boolean(option.supportsMeasurement),
-        measurementUnits:
-          option.measurementUnits ??
-          (option.measurementUnit ? [option.measurementUnit] : []),
-      })),
+      options: [
+        ...(structure.options as RawOption[]).map((option) => ({
+          id: option.id,
+          label: option.label,
+          noteFragment: option.noteFragment,
+          classification: option.classification ?? "abnormal",
+          supportsLocation: Boolean(option.supportsLocation),
+          supportsLaterality: Boolean(option.supportsLaterality),
+          supportsMeasurement: Boolean(option.supportsMeasurement),
+          measurementUnits:
+            option.measurementUnits ??
+            (option.measurementUnit ? [option.measurementUnit] : []),
+        })),
+        ...(supplementalOptionsByStructureId[structure.id] ?? []),
+      ],
     }));
 
 export const recareIntraoralOptionById = new Map(
@@ -90,6 +117,7 @@ const recareIntraoralConflictPairs = [
   ["ioe.palate.no_lesions", "ioe.palate.ulcer"],
   ["ioe.palate.no_lesions", "ioe.palate.red_patch"],
   ["ioe.palate.no_lesions", "ioe.palate.white_patch"],
+  ["ioe.palate.no_abnormal_growths", "ioe.palate.torus_palatinus"],
   ["ioe.oropharynx.uvula_midline", "ioe.oropharynx.asymmetry"],
   ["ioe.oropharynx.no_redness", "ioe.oropharynx.redness"],
   ["ioe.oropharynx.no_swelling", "ioe.oropharynx.swelling"],
@@ -147,3 +175,24 @@ export const recareIntraoralLocationChoices = [
   "Maxilla",
   "Mandible",
 ] as const;
+
+export const recareIntraoralQuickPresets: RecareIntraoralQuickPreset[] = [
+  { label: "Coated tongue", optionId: "ioe.tongue.coated" },
+  { label: "Fissured tongue", optionId: "ioe.tongue.fissured" },
+  { label: "Scalloped tongue", optionId: "ioe.tongue.scalloped_edges" },
+  {
+    label: "Bilateral linea alba",
+    optionId: "ioe.buccal_mucosa.linea_alba",
+    laterality: "Bilateral",
+  },
+  {
+    label: "Palatine torus at midline",
+    optionId: "ioe.palate.torus_palatinus",
+    locations: ["Midline"],
+  },
+  {
+    label: "Bilateral mandibular tori",
+    optionId: "ioe.floor_of_mouth.mandibular_tori",
+    laterality: "Bilateral",
+  },
+];

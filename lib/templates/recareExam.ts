@@ -18,6 +18,7 @@ export type RecareTreatmentEntry = {
   id: string;
   treatmentType: string;
   toothArea: string;
+  careType?: "preventive" | "restorative" | "other";
 };
 
 export type RecareOcclusalFinding = {
@@ -38,6 +39,8 @@ export type RecareToothFinding = {
 
 export type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCatalog";
 import type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCatalog";
+export type { RecareExtraoralFinding } from "@/lib/templates/extraoralObservationsCatalog";
+import type { RecareExtraoralFinding } from "@/lib/templates/extraoralObservationsCatalog";
 
 export interface RecareExamForm {
   patientId: string;
@@ -60,6 +63,7 @@ export interface RecareExamForm {
   listChiefConcerns: boolean;
   extraoralStatus: ExamStatus;
   extraoralFindings: string;
+  structuredExtraoralFindings?: RecareExtraoralFinding[];
   tmjStatus: ExamStatus;
   tmjFindings: string;
   masseterStatus: ExamStatus;
@@ -123,6 +127,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     listChiefConcerns: false,
     extraoralStatus: "not-assessed",
     extraoralFindings: "",
+    structuredExtraoralFindings: [],
     tmjStatus: "not-assessed",
     tmjFindings: "",
     masseterStatus: "not-assessed",
