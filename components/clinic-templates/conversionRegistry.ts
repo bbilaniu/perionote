@@ -65,13 +65,13 @@ const allClinicConversions = [
     slug: "adult-hygiene-2026",
     title: "2026 Adult Hygiene",
     description:
-      "Comprehensive adult hygiene note for independent 2026 updates.",
+      "Unified adult encounter with Complete, Hygiene, and Recare outputs.",
     kind: "native",
     lifecycle: "pilot",
     provenance: {
       sourceClinicTemplateSlug: "adult-hygiene-2026",
-      sourceRevision: "9427c9b",
-      clinicalReviewDate: "2026-08-07",
+      sourceRevision: "0f5a80a",
+      clinicalReviewDate: "2026-08-08",
     },
     fixture: adultHygiene2026Fixture,
     summary: buildAdultHygiene2026Summary(adultHygiene2026Fixture),

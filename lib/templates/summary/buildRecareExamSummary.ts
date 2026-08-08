@@ -83,7 +83,12 @@ function toothFindingHeading(option: RecareToothOption, count: number): string {
   return option.label;
 }
 
-function teethSummary(form: RecareExamForm): string {
+export function formatRecareTeethSummary(
+  form: Pick<
+    RecareExamForm,
+    "teethStatus" | "toothFindings" | "additionalToothFindings"
+  >,
+): string {
   if (form.teethStatus === "wnl")
     return "Teeth intact, with no caries or mobility noted.";
   if (form.teethStatus !== "findings") return "";
@@ -591,7 +596,7 @@ export function buildRecareExamSummary(
   ];
 
   const odontogram = [
-    teethSummary(form),
+    formatRecareTeethSummary(form),
     form.odontogramUpToDate ? "ODONTOGRAM UP TO DATE" : "",
   ];
 

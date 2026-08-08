@@ -2,4 +2,4 @@
 "hygienenote": minor
 ---
 
-Add an independent 2026 Adult Hygiene model with structured EOE and IOE examination sections shared with the Recare workflow.
+Add a unified 2026 Adult Hygiene encounter with the complete Recare assessment, coordinated preventive/restorative recommendations, separate dental and hygiene follow-up, and Complete, Hygiene, and Recare note outputs. Update the 2021 and 2026 templates to use Recare terminology.

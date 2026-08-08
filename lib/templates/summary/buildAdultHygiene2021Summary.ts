@@ -509,7 +509,7 @@ export function buildAdultHygiene2021Summary(
     showPatientAndTeam ? `RDA: ${trimmed(form.rda)}`.trimEnd() : "",
     showPatientAndTeam ? `RDH: ${trimmed(form.rdh)}`.trimEnd() : "",
     trimmed(form.noteLastRecallDate)
-      ? `Last Recall Date: ${trimmed(form.noteLastRecallDate)}`
+      ? `Last Recare Date: ${trimmed(form.noteLastRecallDate)}`
       : "",
   ];
 
@@ -693,9 +693,9 @@ export function buildAdultHygiene2021Summary(
     form.ppeStatementApplies
       ? "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
       : "",
-    labelledLine("Recommended Recall Interval", form.recallInterval),
+    labelledLine("Recommended Recare Interval", form.recallInterval),
     labelledLine(
-      "Recommended recall interval comments",
+      "Recommended recare interval comments",
       form.recallIntervalComments
     ),
     labelledLine("Recommended Hygiene Interval", form.hygieneInterval),

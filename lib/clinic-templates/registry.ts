@@ -185,7 +185,7 @@ Date Booked: `,
     sourceTitle: "2021 Adult Hygiene NEW",
     category: "adult-hygiene",
     description: "Comprehensive adult hygiene assessment and treatment note.",
-    content: `Last Recall Date: [AUTO: Last Recall Date]
+    content: `Last Recare Date: [AUTO: Last Recall Date]
 
 DENTIST: [SELECT/INSERT: Dentists]
 RDH: [SELECT/INSERT: Hygienist]
@@ -247,7 +247,7 @@ Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
 Additional Notes:
 -ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
-Recommended Recall Interval:[SELECT/INSERT: REC RECALL INTERVAL]
+Recommended Recare Interval:[SELECT/INSERT: REC RECALL INTERVAL]
 Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]
 
 Next visit: [SELECT/INSERT: NEXT VISIT]
@@ -259,8 +259,8 @@ Date Booked: `,
     sourceTitle: "2026 Adult Hygiene",
     category: "adult-hygiene",
     description:
-      "Comprehensive adult hygiene assessment and treatment note for independent 2026 updates.",
-    content: `Last Recall Date: [AUTO: Last Recall Date]
+      "Unified adult encounter for Complete, Hygiene, and Recare documentation.",
+    content: `Last Recare Date: [AUTO: Last Recall Date]
 
 DENTIST: [SELECT/INSERT: Dentists]
 RDH: [SELECT/INSERT: Hygienist]
@@ -276,6 +276,9 @@ Premedication Required: [SELECT/INSERT: PREMED]
 
 
 Patient Chief Concern: [SELECT/INSERT: PATIENT CC]
+
+Radiographs:
+Intraoral Photos:
 
 Hygiene Area of Concern:
 
@@ -288,6 +291,9 @@ TMJ loading test:
 IOE:
 Intraoral: [SELECT/INSERT: IOE]
 
+Teeth / Odontogram:
+Occlusion and Oral Habits:
+
 Plaque:  [SELECT/INSERT: PLAQUE]
 Stain:  [SELECT/INSERT: STAIN]
 Calculus: [SELECT/INSERT: CALCULUS]
@@ -314,8 +320,11 @@ Patient is currently: [SELECT/INSERT: FLOSSING x/day] [SELECT/INSERT: BRUSHING x
 Hygiene goal:
 
 
-Treatment recommended:
-1) HYGIENE MAINTENANCE
+Treatment options discussed:
+
+Coordinated treatment recommendations:
+1) PREVENTIVE — HYGIENE MAINTENANCE
+2) RESTORATIVE —
 
 
 Treatment completed today: [SELECT/INSERT: RDH: Treatment]
@@ -326,16 +335,22 @@ Desensitizer: [SELECT/INSERT: DESENSITIZER]
 
 Does patient have a NightGuard?
 Do they use NightGuard?
+Does patient have a CPAP? Do they use it?
+Does patient have an occlusal splint? Do they use it?
 
 Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
+Partial/complete removable dentures:
+Patient-requested smile or dental improvements:
 Additional Notes:
 -ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
-Recommended Recall Interval:[SELECT/INSERT: REC RECALL INTERVAL]
+Recommended Recare Interval:[SELECT/INSERT: REC RECALL INTERVAL]
 Recommended Hygiene Interval: [SELECT/INSERT: REC HYGIENE INTERVAL]
 
-Next visit: [SELECT/INSERT: NEXT VISIT]
-Date Booked: `,
+Next Dental Visit:
+Dental Date Booked:
+Next Hygiene Visit: [SELECT/INSERT: NEXT VISIT]
+Hygiene Date Booked: `,
   },
   {
     slug: "local-anesthetic",

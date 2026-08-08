@@ -297,12 +297,19 @@ function CheckboxField({
   );
 }
 
-function TeethAssessment({
+type TeethAssessmentForm = Pick<
+  RecareExamForm,
+  "teethStatus" | "toothFindings" | "additionalToothFindings"
+>;
+
+export function TeethAssessment({
+  idPrefix = "recare",
   form,
   onChange,
 }: {
-  form: RecareExamForm;
-  onChange: (patch: Partial<RecareExamForm>) => void;
+  idPrefix?: string;
+  form: TeethAssessmentForm;
+  onChange: (patch: Partial<TeethAssessmentForm>) => void;
 }) {
   const findings = form.toothFindings ?? [];
   const status = form.teethStatus ?? "not-assessed";
@@ -415,7 +422,7 @@ function TeethAssessment({
   return (
     <div className="space-y-4">
       <FixedChoiceListbox
-        id="recare-teeth-status"
+        id={`${idPrefix}-teeth-status`}
         label="Teeth"
         value={status}
         options={examStatusOptions}
@@ -426,11 +433,11 @@ function TeethAssessment({
         aria-label="Structured dental observations"
       >
         <button
-          id="recare-structured-dental-observations"
+          id={`${idPrefix}-structured-dental-observations`}
           type="button"
           className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
           aria-expanded={structuredObservationsOpen}
-          aria-controls="recare-structured-dental-observations-content"
+          aria-controls={`${idPrefix}-structured-dental-observations-content`}
           onClick={() => setStructuredObservationsOpen((open) => !open)}
         >
           <span className="min-w-0">Structured dental observations</span>
@@ -446,7 +453,7 @@ function TeethAssessment({
         </button>
         {structuredObservationsOpen ? (
           <div
-            id="recare-structured-dental-observations-content"
+            id={`${idPrefix}-structured-dental-observations-content`}
             className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700"
           >
             <>
@@ -534,7 +541,7 @@ function TeethAssessment({
                               <div className={clinicalGridClass}>
                                 {option.supportsTooth ? (
                                   <TextField
-                                    id={`tooth-area-${finding.id}`}
+                                    id={`${idPrefix}-tooth-area-${finding.id}`}
                                     label="Tooth/area"
                                     value={finding.toothAreas.join(", ")}
                                     onChange={(value) =>
@@ -549,7 +556,7 @@ function TeethAssessment({
                                 ) : null}
                                 {option.supportsSurface ? (
                                   <TextField
-                                    id={`tooth-surface-${finding.id}`}
+                                    id={`${idPrefix}-tooth-surface-${finding.id}`}
                                     label="Surface(s)"
                                     value={finding.surface ?? ""}
                                     onChange={(surface) =>
@@ -559,7 +566,7 @@ function TeethAssessment({
                                 ) : null}
                                 {option.supportsActivity ? (
                                   <FixedChoiceListbox
-                                    id={`tooth-activity-${finding.id}`}
+                                    id={`${idPrefix}-tooth-activity-${finding.id}`}
                                     label="Activity"
                                     value={finding.activity ?? ""}
                                     options={[
@@ -576,7 +583,7 @@ function TeethAssessment({
                                 ) : null}
                                 {option.supportsGrade && !option.fixedGrade ? (
                                   <FixedChoiceListbox
-                                    id={`tooth-grade-${finding.id}`}
+                                    id={`${idPrefix}-tooth-grade-${finding.id}`}
                                     label="Mobility — Miller Index"
                                     value={finding.millerGrade ?? ""}
                                     options={[
@@ -596,7 +603,7 @@ function TeethAssessment({
                             ) : null}
                             <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-end gap-3 [&>*]:min-w-0">
                               <TextField
-                                id={`tooth-notes-${finding.id}`}
+                                id={`${idPrefix}-tooth-notes-${finding.id}`}
                                 label="Notes"
                                 value={finding.comment ?? ""}
                                 onChange={(comment) =>
@@ -633,7 +640,7 @@ function TeethAssessment({
                   ];
                 })}
                 <TextareaField
-                  id="recare-additional-tooth-findings"
+                  id={`${idPrefix}-additional-tooth-findings`}
                   label="Additional tooth findings"
                   value={form.additionalToothFindings ?? ""}
                   onChange={(additionalToothFindings) =>
@@ -651,13 +658,14 @@ function TeethAssessment({
   );
 }
 
-function TreatmentEntryList({
+export function TreatmentEntryList({
   id,
   label,
   addLabel,
   entries,
   onAdd,
   onChange,
+  showCareType = false,
 }: {
   id: string;
   label: string;
@@ -665,6 +673,7 @@ function TreatmentEntryList({
   entries: RecareTreatmentEntry[];
   onAdd: () => void;
   onChange: (entries: RecareTreatmentEntry[]) => void;
+  showCareType?: boolean;
 }) {
   function updateEntry(
     entryId: string,
@@ -703,7 +712,28 @@ function TreatmentEntryList({
               key={entry.id}
               className="rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
             >
-              <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
+              <div
+                className={`grid gap-3 ${
+                  showCareType
+                    ? "md:grid-cols-[minmax(8rem,0.55fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+                    : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+                }`}
+              >
+                {showCareType ? (
+                  <FixedChoiceListbox
+                    id={`${id}-${entry.id}-care-type`}
+                    label="Care type"
+                    value={entry.careType ?? "other"}
+                    options={[
+                      { value: "preventive", label: "Preventive" },
+                      { value: "restorative", label: "Restorative" },
+                      { value: "other", label: "Other" },
+                    ]}
+                    onChange={(careType) =>
+                      updateEntry(entry.id, { careType })
+                    }
+                  />
+                ) : null}
                 <CatalogueCombobox
                   id={`${id}-${entry.id}-type`}
                   label="Treatment type"
@@ -1457,10 +1487,12 @@ export function StructuredIntraoralFindings({
   );
 }
 
-function OcclusalFindingLocations({
+export function OcclusalFindingLocations({
+  idPrefix = "recare",
   entry,
   onChange,
 }: {
+  idPrefix?: string;
   entry: RecareOcclusalFinding;
   onChange: (entry: RecareOcclusalFinding) => void;
 }) {
@@ -1492,7 +1524,7 @@ function OcclusalFindingLocations({
         ))}
       </div>
       <TextField
-        id={`recare-occlusal-${entry.id}-region`}
+        id={`${idPrefix}-occlusal-${entry.id}-region`}
         label="Tooth/area or region"
         value={custom.join(", ")}
         onChange={(value) =>

@@ -98,7 +98,7 @@ values listed below. Anesthetic remains unseeded pending redesign:
 | `hygiene-treatment.completed`    | Treatment                  | Treatment completed today: treatment type | `hygiene-treatment`                    | 16 reviewed starters | Structured rows; reusable treatment type plus multi-value Tooth/area |
 | `hygiene-treatment.anesthetic`   | Treatment                  | Anesthetic                                | `hygiene-anaesthetic`                  | None—rework required | Single value                                                         |
 | `hygiene-treatment.desensitizer` | Treatment                  | Desensitizer                              | `desensitizer`                         | 4 complete options   | Single value                                                         |
-| `scheduling.recall-interval`     | Intervals and Next Visit   | Recommended recall interval               | `recommended-recall-interval`          | 3 complete options   | Single value                                                         |
+| `scheduling.recall-interval`     | Intervals and Next Visit   | Recommended recare interval               | `recommended-recall-interval`          | 3 complete options   | Single value                                                         |
 | `scheduling.hygiene-interval`    | Intervals and Next Visit   | Recommended hygiene interval              | `recommended-hygiene-interval`         | 4 complete options   | Single value                                                         |
 | `scheduling.next-visit`          | Intervals and Next Visit   | Next visit                                | `next-visit`                           | 7 complete options   | Single value                                                         |
 
@@ -112,7 +112,7 @@ The exact public starter labels are:
 - **OH aids reviewed/recommended:** `BASS-BRUSHING TECHNIQUE`; `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TOOTHBRUSHING TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ELECTRIC TOOTHBRUSH`.
 - **Treatment completed today:** the eight accepted source values plus the eight reviewed issue 68 starters documented in the Treatment section below.
 - **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
-- **Recommended recall interval:** `12-month recall`; `6-month recall`; `9-month recall`.
+- **Recommended recare interval:** `12-month recall`; `6-month recall`; `9-month recall`.
 - **Recommended hygiene interval:** `3-month scale`; `4-month scale`; `6-month scale`; `N/A`.
 - **Next visit:** `6 MONTH SCALE`; `12 MONTH RECALL`; `3 MONTH SCALE`; `4 MONTH SCALE`; `6 MONTH RECALL`; `9 MONTH RECALL`; `FOLLOW-UP HYGIENE`.
 
@@ -249,7 +249,7 @@ none is selected by default.
 | Additional OHE topics reviewed        | Bass brushing; C-shape flossing technique; Sulcabrush and interdental brush technique; Caries theory; Caries risk factors; Periodontitis theory; Periodontitis risk factors; Review benefits of Prevident or Opti-Rinse; Importance of maintaining the recommended hygiene interval |
 | Flossing frequency                    | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing                                                                                                                                                            |
 | Brushing frequency                    | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing                                                                                                                                                                                                                   |
-| Recommended recall interval           | 12-month recall; 6-month recall; 9-month recall                                                                                                                                                                                                                                     |
+| Recommended recare interval           | 12-month recall; 6-month recall; 9-month recall                                                                                                                                                                                                                                     |
 | Recommended hygiene interval          | 3-month scale; 4-month scale; 6-month scale; N/A                                                                                                                                                                                                                                    |
 
 Fields that retain an explicit **Other** control accept free text so imported,

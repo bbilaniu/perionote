@@ -221,7 +221,7 @@ test("2026 Adult Hygiene uses its own route and draft storage", async ({
 
   await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-2026");
   await page.locator("#adult-hygiene-rdh").fill("Independent RDH");
-  await page.getByRole("button", { name: "Copy note" }).click();
+  await page.getByRole("button", { name: "Copy complete note" }).click();
 
   await expect
     .poll(() =>
@@ -245,7 +245,11 @@ test("2026 Adult Hygiene uses its own route and draft storage", async ({
   ).toBe(false);
 });
 
-test("2026 Adult Hygiene documents EOE and IOE findings", async ({ page }) => {
+test("2026 Adult Hygiene documents EOE and IOE findings", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
 
   await expect(page.getByRole("heading", { name: "EOE" })).toBeVisible();
@@ -269,6 +273,50 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({ page }) => {
   await page.getByRole("button", { name: "Coated tongue" }).click();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "IOE:\n  - Tongue: coated.",
+  );
+
+  await expect(page.getByRole("heading", { name: "Records" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Occlusion and Habits" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Teeth and Odontogram" }),
+  ).toBeVisible();
+
+  const output = page.getByRole("group", { name: "Note output" });
+  await output.getByRole("button", { name: "Hygiene" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "EOE:",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "IOE:",
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy hygiene note" }),
+  ).toBeVisible();
+
+  await output.getByRole("button", { name: "Recare" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "EOE: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "IOE:\n  - Tongue: coated.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy recare note" }),
+  ).toBeVisible();
+
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-OUTPUTS");
+  await page.locator("#adult-hygiene-rdh").fill("Output RDH");
+  await page.getByRole("button", { name: "Copy recare note" }).click();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.toContain(
+    "EOE: WNL.",
+  );
+
+  await output.getByRole("button", { name: "Hygiene" }).click();
+  await page.getByRole("button", { name: "Copy hygiene note" }).click();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.not.toContain(
+    "EOE:",
   );
 });
 

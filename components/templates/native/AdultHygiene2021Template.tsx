@@ -3108,7 +3108,7 @@ export function AdultHygiene2021Template({
               />
               <TextField
                 id="adult-hygiene-last-recall-date"
-                label="Last recall date"
+                label="Last recare date"
                 value={form.noteLastRecallDate}
                 onChange={(value) => updateField("noteLastRecallDate", value)}
                 type="date"
@@ -3657,14 +3657,14 @@ export function AdultHygiene2021Template({
             <div className="grid gap-3 md:grid-cols-2">
               <CatalogueCombobox
                 id="adult-hygiene-recall-interval"
-                label="Recommended recall interval"
+                label="Recommended recare interval"
                 catalogueKey="scheduling.recall-interval"
                 value={form.recallInterval}
                 onChange={(value) => updateField("recallInterval", value)}
               />
               <TextField
                 id="adult-hygiene-recall-interval-comments"
-                label="Recommended recall interval comments"
+                label="Recommended recare interval comments"
                 value={form.recallIntervalComments}
                 onChange={(value) =>
                   updateField("recallIntervalComments", value)

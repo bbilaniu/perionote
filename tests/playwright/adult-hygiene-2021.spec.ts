@@ -322,7 +322,7 @@ test("Adult Hygiene demo output survives reload and reset preserves its draft", 
     /Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Recommended Recall Interval: 6-month recall\./
+    /Recommended Recare Interval: 6-month recall\./
   );
   await expect(
     page.getByRole("heading", { name: "Caries Risk Assessment", exact: true })
@@ -2177,10 +2177,10 @@ test("Adult Hygiene keeps compliance and interval comments independent", async (
     .getByLabel("Oral hygiene compliance", { exact: true })
     .fill("Good");
   await page
-    .getByLabel("Recommended recall interval comments", { exact: true })
+    .getByLabel("Recommended recare interval comments", { exact: true })
     .fill("Synthetic recall context");
   await page
-    .getByLabel("Recommended recall interval", { exact: true })
+    .getByLabel("Recommended recare interval", { exact: true })
     .fill("6-month recall");
   await page
     .getByLabel("Recommended hygiene interval comments", { exact: true })
@@ -2190,6 +2190,6 @@ test("Adult Hygiene keeps compliance and interval comments independent", async (
     .fill("4-month scale");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
+    /Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recare Interval: 6-month recall\.[\s\S]*Recommended recare interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
   );
 });

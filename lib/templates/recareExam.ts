@@ -18,6 +18,7 @@ export type RecareTreatmentEntry = {
   id: string;
   treatmentType: string;
   toothArea: string;
+  careType?: "preventive" | "restorative" | "other";
 };
 
 export type RecareOcclusalFinding = {
