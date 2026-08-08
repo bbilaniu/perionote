@@ -185,6 +185,9 @@ test("clinical template catalogue can show only interactive versions", async ({
     page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
   ).toBeVisible();
   await expect(
+    page.getByRole("article").filter({ hasText: "2026 Adult Hygiene" }),
+  ).toBeVisible();
+  await expect(
     page.getByRole("article").filter({ hasText: "Recare Exam" }),
   ).toBeVisible();
   await expect(
@@ -192,7 +195,7 @@ test("clinical template catalogue can show only interactive versions", async ({
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "View original template" }),
-  ).toHaveCount(2);
+  ).toHaveCount(3);
 
   await showTemplates
     .getByRole("button", { name: "All", exact: true })

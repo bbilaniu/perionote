@@ -1,11 +1,14 @@
 import { AdultHygiene2021Template } from "@/components/templates/native/AdultHygiene2021Template";
+import { AdultHygiene2026Template } from "@/components/templates/native/AdultHygiene2026Template";
 import { AdolescentHygieneTemplate } from "@/components/templates/native/AdolescentHygieneTemplate";
 import { RecareExamTemplate } from "@/components/templates/native/RecareExamTemplate";
 import { adolescentHygieneFixture } from "@/lib/templates/fixtures/adolescentHygiene.fixture";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
+import { adultHygiene2026Fixture } from "@/lib/templates/fixtures/adultHygiene2026.fixture";
 import { recareExamFixture } from "@/lib/templates/fixtures/recareExam.fixture";
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { buildAdolescentHygieneSummary } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
 import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
 import type {
@@ -57,6 +60,23 @@ const allClinicConversions = [
     summary: buildAdultHygiene2021Summary(adultHygiene2021Fixture),
     buildSummary: buildAdultHygiene2021Summary,
     component: AdultHygiene2021Template,
+  }),
+  defineClinicConversion({
+    slug: "adult-hygiene-2026",
+    title: "2026 Adult Hygiene",
+    description:
+      "Comprehensive adult hygiene note for independent 2026 updates.",
+    kind: "native",
+    lifecycle: "pilot",
+    provenance: {
+      sourceClinicTemplateSlug: "adult-hygiene-2026",
+      sourceRevision: "9427c9b",
+      clinicalReviewDate: "2026-08-07",
+    },
+    fixture: adultHygiene2026Fixture,
+    summary: buildAdultHygiene2026Summary(adultHygiene2026Fixture),
+    buildSummary: buildAdultHygiene2026Summary,
+    component: AdultHygiene2026Template,
   }),
   defineClinicConversion({
     slug: "recare-exam",
