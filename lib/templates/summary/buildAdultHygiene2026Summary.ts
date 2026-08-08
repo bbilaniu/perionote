@@ -20,10 +20,15 @@ import {
 } from "@/lib/templates/periodontalClassification";
 import type {
   DocumentationStatus,
+  ExamStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 import { formatPatientChiefConcerns } from "@/lib/templates/patientChiefConcern";
-import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import {
+  formatNoteHeaderLocalTimestamp,
+  formatRecareExtraoralLines,
+  formatRecareIntraoralLines,
+} from "@/lib/templates/summary/buildRecareExamSummary";
 import {
   gingivalDescriptionCatalog,
   type GingivalDescriptionAssessment,
@@ -41,6 +46,14 @@ function withTerminalPunctuation(value: string): string {
   const cleanValue = trimmed(value);
   if (!cleanValue) return "";
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
+}
+
+function examLine(label: string, status: ExamStatus, findings: string): string {
+  if (status === "wnl") return `${label}: WNL.`;
+  if (status === "findings" && trimmed(findings)) {
+    return `${label}: ${withTerminalPunctuation(findings)}`;
+  }
+  return "";
 }
 
 function joinNaturalLanguageList(values: string[]): string {
@@ -565,6 +578,19 @@ export function buildAdultHygiene2026Summary(
     labelledLine("Hygiene Area of Concern", form.hygieneAreaOfConcern),
   ];
 
+  const extraoral = formatRecareExtraoralLines(form);
+  const exam = [
+    ...extraoral.map((line, index) =>
+      index === 0 ? line.replace(/^Extraoral/, "EOE") : line,
+    ),
+    examLine("TMJ", form.tmjStatus, form.tmjFindings),
+    examLine("Masseter palpation", form.masseterStatus, form.masseterFindings),
+    examLine("TMJ loading test", form.tmjLoadStatus, form.tmjLoadFindings),
+    ...formatRecareIntraoralLines(form).map((line, index) =>
+      index === 0 ? line.replace(/^Intraoral/, "IOE") : line,
+    ),
+  ];
+
   const hygieneFindings = [
     formatAdultHygieneFindingLine(
       "Plaque",
@@ -712,6 +738,7 @@ export function buildAdultHygiene2026Summary(
     sterilization,
     consentAndHistory,
     concerns,
+    exam,
     hygieneFindings,
     periodontalScreening,
     gingivalDescription,

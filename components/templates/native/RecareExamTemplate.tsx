@@ -809,7 +809,7 @@ function YesNoWithDetails({
   );
 }
 
-function ExamFinding({
+export function ExamFinding({
   id,
   label,
   status,
@@ -912,7 +912,8 @@ function recareIntraoralChoiceGroups(
   });
 }
 
-function StructuredExtraoralObservations({
+export function StructuredExtraoralObservations({
+  idPrefix = "recare",
   status,
   additionalStatuses,
   values,
@@ -922,6 +923,7 @@ function StructuredExtraoralObservations({
   onChange,
   children,
 }: {
+  idPrefix?: string;
   status: ExamStatus;
   additionalStatuses: ExamStatus[];
   values: RecareExtraoralFinding[];
@@ -991,11 +993,11 @@ function StructuredExtraoralObservations({
       aria-label="Structured extraoral observations"
     >
       <button
-        id="recare-structured-extraoral-observations"
+        id={`${idPrefix}-structured-extraoral-observations`}
         type="button"
         className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
         aria-expanded={open}
-        aria-controls="recare-structured-extraoral-observations-content"
+        aria-controls={`${idPrefix}-structured-extraoral-observations-content`}
         onClick={() => setOpen((current) => !current)}
       >
         <span className="min-w-0">Structured extraoral observations</span>
@@ -1011,7 +1013,7 @@ function StructuredExtraoralObservations({
       </button>
       {open ? (
         <div
-          id="recare-structured-extraoral-observations-content"
+          id={`${idPrefix}-structured-extraoral-observations-content`}
           className="space-y-4 pt-2"
         >
           <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -1135,7 +1137,8 @@ function StructuredExtraoralObservations({
   );
 }
 
-function StructuredIntraoralFindings({
+export function StructuredIntraoralFindings({
+  idPrefix = "recare",
   status,
   values,
   onApplyNormal,
@@ -1143,6 +1146,7 @@ function StructuredIntraoralFindings({
   clearDisabled,
   onChange,
 }: {
+  idPrefix?: string;
   status: ExamStatus;
   values: RecareIntraoralFinding[];
   onApplyNormal: () => void;
@@ -1263,11 +1267,11 @@ function StructuredIntraoralFindings({
       aria-label="Structured intraoral observations"
     >
       <button
-        id="recare-structured-intraoral-observations"
+        id={`${idPrefix}-structured-intraoral-observations`}
         type="button"
         className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
         aria-expanded={structuredObservationsOpen}
-        aria-controls="recare-structured-intraoral-observations-content"
+        aria-controls={`${idPrefix}-structured-intraoral-observations-content`}
         onClick={() => setStructuredObservationsOpen((open) => !open)}
       >
         <span className="min-w-0">Structured intraoral observations</span>
@@ -1283,7 +1287,7 @@ function StructuredIntraoralFindings({
       </button>
       {structuredObservationsOpen ? (
         <div
-          id="recare-structured-intraoral-observations-content"
+          id={`${idPrefix}-structured-intraoral-observations-content`}
           className="space-y-4 pt-2"
         >
           <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -1341,7 +1345,7 @@ function StructuredIntraoralFindings({
               >
                 <legend className="font-medium">{structure.label}</legend>
                 <FixedChoiceMultiCombobox
-                  id={`recare-${structure.id.replaceAll(".", "-")}-observations`}
+                  id={`${idPrefix}-${structure.id.replaceAll(".", "-")}-observations`}
                   label={`${structure.label} observations`}
                   choices={structure.options.map((option) => option.label)}
                   choiceGroups={recareIntraoralChoiceGroups(structure)}
@@ -1375,7 +1379,7 @@ function StructuredIntraoralFindings({
                           <div className="mt-3 grid gap-3">
                             {option.supportsLocation ? (
                               <TextField
-                                id={`recare-${option.id}-location`}
+                                id={`${idPrefix}-${option.id}-location`}
                                 label={`${option.label} location`}
                                 value={(selected.locations ?? []).join(", ")}
                                 onChange={(value) =>
@@ -1391,7 +1395,7 @@ function StructuredIntraoralFindings({
                             ) : null}
                             {option.supportsLaterality ? (
                               <FixedChoiceListbox
-                                id={`recare-${option.id}-laterality`}
+                                id={`${idPrefix}-${option.id}-laterality`}
                                 label={`${option.label} laterality`}
                                 value={selected.laterality ?? ""}
                                 options={[
@@ -1410,7 +1414,7 @@ function StructuredIntraoralFindings({
                             ) : null}
                             {option.supportsMeasurement ? (
                               <TextField
-                                id={`recare-${option.id}-measurement`}
+                                id={`${idPrefix}-${option.id}-measurement`}
                                 label={`${option.label} measurement${
                                   option.measurementUnits.length === 1
                                     ? ` (${option.measurementUnits[0]})`
@@ -1429,7 +1433,7 @@ function StructuredIntraoralFindings({
                             ) : null}
                             {structure.supportsComment ? (
                               <TextField
-                                id={`recare-${option.id}-comment`}
+                                id={`${idPrefix}-${option.id}-comment`}
                                 label={`${option.label} notes`}
                                 value={selected.comment ?? ""}
                                 onChange={(value) =>

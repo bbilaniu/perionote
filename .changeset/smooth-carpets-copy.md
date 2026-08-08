@@ -2,4 +2,4 @@
 "hygienenote": minor
 ---
 
-Add an independent 2026 Adult Hygiene model copied from the 2021 workflow.
+Add an independent 2026 Adult Hygiene model with structured EOE and IOE examination sections shared with the Recare workflow.

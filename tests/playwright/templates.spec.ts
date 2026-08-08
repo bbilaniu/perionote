@@ -195,7 +195,7 @@ test("clinical template catalogue can show only interactive versions", async ({
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "View original template" }),
-  ).toHaveCount(3);
+  ).toHaveCount(4);
 
   await showTemplates
     .getByRole("button", { name: "All", exact: true })
@@ -203,6 +203,73 @@ test("clinical template catalogue can show only interactive versions", async ({
   await expect(
     page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
   ).toBeVisible();
+});
+
+test("2026 Adult Hygiene uses its own route and draft storage", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(
+    page.getByRole("heading", { name: "2026 Adult Hygiene", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Original 2026 Adult Hygiene template",
+    }),
+  ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2026/");
+
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-2026");
+  await page.locator("#adult-hygiene-rdh").fill("Independent RDH");
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Object.keys(window.localStorage).some((key) =>
+          key.startsWith(
+            "hygienenote.interactive-draft.v1.adult-hygiene-2026.",
+          ),
+        ),
+      ),
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(() =>
+      Object.keys(window.localStorage).some((key) =>
+        key.startsWith(
+          "hygienenote.interactive-draft.v1.adult-hygiene-2021.",
+        ),
+      ),
+    ),
+  ).toBe(false);
+});
+
+test("2026 Adult Hygiene documents EOE and IOE findings", async ({ page }) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(page.getByRole("heading", { name: "EOE" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+  await page
+    .getByRole("button", { name: "Apply normal extraoral exam" })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "EOE: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "TMJ: WNL.",
+  );
+
+  await expect(page.getByRole("heading", { name: "IOE" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /Structured intraoral observations/ })
+    .click();
+  await page.getByRole("button", { name: "Coated tongue" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "IOE:\n  - Tongue: coated.",
+  );
 });
 
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({

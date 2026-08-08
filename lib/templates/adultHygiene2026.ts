@@ -1,6 +1,9 @@
 import type {
   DocumentationStatus,
+  ExamStatus,
   PremedicationStatus,
+  RecareExtraoralFinding,
+  RecareIntraoralFinding,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 import {
@@ -210,6 +213,18 @@ export interface AdultHygiene2026Form {
   patientChiefConcern: string[];
   listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
+  extraoralStatus: ExamStatus;
+  extraoralFindings: string;
+  structuredExtraoralFindings?: RecareExtraoralFinding[];
+  tmjStatus: ExamStatus;
+  tmjFindings: string;
+  masseterStatus: ExamStatus;
+  masseterFindings: string;
+  tmjLoadStatus: ExamStatus;
+  tmjLoadFindings: string;
+  intraoralStatus: ExamStatus;
+  intraoralFindings: string;
+  structuredIntraoralFindings?: RecareIntraoralFinding[];
   plaqueChoice: string;
   plaqueAreas: string[];
   plaqueComment: string;
@@ -279,6 +294,18 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     patientChiefConcern: [],
     listChiefConcerns: false,
     hygieneAreaOfConcern: "",
+    extraoralStatus: "not-assessed",
+    extraoralFindings: "",
+    structuredExtraoralFindings: [],
+    tmjStatus: "not-assessed",
+    tmjFindings: "",
+    masseterStatus: "not-assessed",
+    masseterFindings: "",
+    tmjLoadStatus: "not-assessed",
+    tmjLoadFindings: "",
+    intraoralStatus: "not-assessed",
+    intraoralFindings: "",
+    structuredIntraoralFindings: [],
     plaqueChoice: "",
     plaqueAreas: [],
     plaqueComment: "",

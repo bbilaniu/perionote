@@ -27,6 +27,11 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
+  ExamFinding,
+  StructuredExtraoralObservations,
+  StructuredIntraoralFindings,
+} from "@/components/templates/native/RecareExamTemplate";
+import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2026Form,
   type CariesRiskLevel,
@@ -47,9 +52,11 @@ import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientC
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import type {
   DocumentationStatus,
+  ExamStatus,
   PremedicationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
+import { createRecareNormalStructuredIntraoralFindings } from "@/lib/templates/recareIntraoralCatalog";
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import {
@@ -166,6 +173,19 @@ const adultHygieneDraftExemplar = createEmptyAdultHygiene2026Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
   patientChiefConcern: "",
+  structuredExtraoralFindings: {
+    optionId: "",
+    laterality: "",
+    statuses: [],
+    phases: [],
+    locations: [],
+    swelling: [],
+  },
+  "structuredExtraoralFindings[].statuses": "",
+  "structuredExtraoralFindings[].phases": "",
+  "structuredExtraoralFindings[].locations": "",
+  "structuredExtraoralFindings[].swelling": "",
+  structuredIntraoralFindings: { optionId: "", structureId: "" },
   plaqueAreas: "",
   stainAreas: "",
   calculusAreas: "",
@@ -2982,6 +3002,21 @@ export function AdultHygiene2026Template({
       },
       psrPocketing: [...fixture.psrPocketing],
       patientChiefConcern: [...fixture.patientChiefConcern],
+      structuredExtraoralFindings: (
+        fixture.structuredExtraoralFindings ?? []
+      ).map((finding) => ({
+        ...finding,
+        statuses: [...(finding.statuses ?? [])],
+        phases: [...(finding.phases ?? [])],
+        locations: [...(finding.locations ?? [])],
+        swelling: [...(finding.swelling ?? [])],
+      })),
+      structuredIntraoralFindings: (
+        fixture.structuredIntraoralFindings ?? []
+      ).map((finding) => ({
+        ...finding,
+        locations: [...(finding.locations ?? [])],
+      })),
       plaqueAreas: [...(fixture.plaqueAreas ?? [])],
       stainAreas: [...(fixture.stainAreas ?? [])],
       calculusAreas: [...(fixture.calculusAreas ?? [])],
@@ -2997,6 +3032,155 @@ export function AdultHygiene2026Template({
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("Synthetic demo data loaded.");
+  }
+
+  function hasExtraoralDocumentation() {
+    return (
+      [
+        form.extraoralStatus,
+        form.tmjStatus,
+        form.masseterStatus,
+        form.tmjLoadStatus,
+      ].some((status) => status !== "not-assessed") ||
+      [
+        form.extraoralFindings,
+        form.tmjFindings,
+        form.masseterFindings,
+        form.tmjLoadFindings,
+      ].some((value) => Boolean(value.trim())) ||
+      Boolean(form.structuredExtraoralFindings?.length)
+    );
+  }
+
+  function changeExtraoralStatus(value: ExamStatus) {
+    const hasFindings =
+      Boolean(form.extraoralFindings.trim()) ||
+      Boolean(form.structuredExtraoralFindings?.length);
+    if (value === "wnl" && hasFindings) {
+      if (
+        !window.confirm(
+          "Mark Extraoral WNL and clear all entered extraoral findings?",
+        )
+      )
+        return;
+      setForm((current) => ({
+        ...current,
+        extraoralStatus: "wnl",
+        extraoralFindings: "",
+        structuredExtraoralFindings: [],
+      }));
+      setCopyMessage("");
+      return;
+    }
+    updateField("extraoralStatus", value);
+  }
+
+  function applyNormalStructuredExtraoral() {
+    if (
+      hasExtraoralDocumentation() &&
+      !window.confirm("Replace all entered extraoral exam findings with WNL?")
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      extraoralStatus: "wnl",
+      extraoralFindings: "",
+      structuredExtraoralFindings: [],
+      tmjStatus: "wnl",
+      tmjFindings: "",
+      masseterStatus: "wnl",
+      masseterFindings: "",
+      tmjLoadStatus: "wnl",
+      tmjLoadFindings: "",
+    }));
+    setCopyMessage("");
+  }
+
+  function clearExtraoralObservations() {
+    if (
+      hasExtraoralDocumentation() &&
+      !window.confirm(
+        "Clear all entered extraoral observations and return the extraoral clinical exam to Not assessed?",
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      extraoralStatus: "not-assessed",
+      extraoralFindings: "",
+      structuredExtraoralFindings: [],
+      tmjStatus: "not-assessed",
+      tmjFindings: "",
+      masseterStatus: "not-assessed",
+      masseterFindings: "",
+      tmjLoadStatus: "not-assessed",
+      tmjLoadFindings: "",
+    }));
+    setCopyMessage("");
+  }
+
+  function changeIntraoralStatus(value: ExamStatus) {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (value === "wnl" && hasFindings) {
+      if (
+        !window.confirm(
+          "Mark Intraoral WNL and clear all entered intraoral findings?",
+        )
+      )
+        return;
+      setForm((current) => ({
+        ...current,
+        intraoralStatus: "wnl",
+        intraoralFindings: "",
+        structuredIntraoralFindings: [],
+      }));
+      setCopyMessage("");
+      return;
+    }
+    updateField("intraoralStatus", value);
+  }
+
+  function applyNormalStructuredIntraoral() {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (
+      hasFindings &&
+      !window.confirm(
+        "Replace all entered intraoral findings with the reviewed normal structured observations?",
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      intraoralStatus: "findings",
+      intraoralFindings: "",
+      structuredIntraoralFindings:
+        createRecareNormalStructuredIntraoralFindings(),
+    }));
+    setCopyMessage("");
+  }
+
+  function clearIntraoralObservations() {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (
+      hasFindings &&
+      !window.confirm(
+        "Clear all entered intraoral observations and return Intraoral to Not assessed?",
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      intraoralStatus: "not-assessed",
+      intraoralFindings: "",
+      structuredIntraoralFindings: [],
+    }));
+    setCopyMessage("");
   }
 
   function resetForm() {
@@ -3334,6 +3518,98 @@ export function AdultHygiene2026Template({
               onAreasChange={(value) => updateField("bleedingAreas", value)}
               onCommentChange={(value) => updateField("bleedingComment", value)}
               standaloneValue="None"
+            />
+          </Section>
+
+          <Section title="EOE">
+            <ExamFinding
+              id="adult-hygiene-extraoral"
+              label="Extraoral"
+              status={form.extraoralStatus}
+              findings={form.extraoralFindings}
+              onStatusChange={changeExtraoralStatus}
+              onFindingsChange={(value) => {
+                updateField("extraoralFindings", value);
+                if (value.trim()) updateField("extraoralStatus", "findings");
+              }}
+            />
+            <StructuredExtraoralObservations
+              idPrefix="adult-hygiene"
+              status={form.extraoralStatus}
+              additionalStatuses={[
+                form.tmjStatus,
+                form.masseterStatus,
+                form.tmjLoadStatus,
+              ]}
+              values={form.structuredExtraoralFindings ?? []}
+              onApplyNormal={applyNormalStructuredExtraoral}
+              onClear={clearExtraoralObservations}
+              clearDisabled={!hasExtraoralDocumentation()}
+              onChange={(values) => {
+                updateField("structuredExtraoralFindings", values);
+                if (values.length) updateField("extraoralStatus", "findings");
+              }}
+            >
+              <ExamFinding
+                id="adult-hygiene-tmj"
+                label="TMJ"
+                status={form.tmjStatus}
+                findings={form.tmjFindings}
+                onStatusChange={(value) => updateField("tmjStatus", value)}
+                onFindingsChange={(value) => updateField("tmjFindings", value)}
+              />
+              <ExamFinding
+                id="adult-hygiene-masseter"
+                label="Masseter palpation"
+                status={form.masseterStatus}
+                findings={form.masseterFindings}
+                onStatusChange={(value) =>
+                  updateField("masseterStatus", value)
+                }
+                onFindingsChange={(value) =>
+                  updateField("masseterFindings", value)
+                }
+              />
+              <ExamFinding
+                id="adult-hygiene-tmj-load"
+                label="TMJ loading test"
+                status={form.tmjLoadStatus}
+                findings={form.tmjLoadFindings}
+                onStatusChange={(value) => updateField("tmjLoadStatus", value)}
+                onFindingsChange={(value) =>
+                  updateField("tmjLoadFindings", value)
+                }
+              />
+            </StructuredExtraoralObservations>
+          </Section>
+
+          <Section title="IOE">
+            <ExamFinding
+              id="adult-hygiene-intraoral"
+              label="Intraoral"
+              status={form.intraoralStatus}
+              findings={form.intraoralFindings}
+              onStatusChange={changeIntraoralStatus}
+              onFindingsChange={(value) => {
+                updateField("intraoralFindings", value);
+                if (value.trim()) updateField("intraoralStatus", "findings");
+              }}
+            />
+            <StructuredIntraoralFindings
+              idPrefix="adult-hygiene"
+              status={form.intraoralStatus}
+              values={form.structuredIntraoralFindings ?? []}
+              onApplyNormal={applyNormalStructuredIntraoral}
+              onClear={clearIntraoralObservations}
+              clearDisabled={
+                form.intraoralStatus === "not-assessed" &&
+                !form.intraoralFindings.trim() &&
+                !form.structuredIntraoralFindings?.length
+              }
+              onChange={(values) => {
+                updateField("structuredIntraoralFindings", values);
+                if (values.length) updateField("intraoralStatus", "findings");
+              }}
             />
           </Section>
 

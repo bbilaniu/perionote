@@ -279,6 +279,15 @@ Patient Chief Concern: [SELECT/INSERT: PATIENT CC]
 
 Hygiene Area of Concern:
 
+EOE:
+Extraoral: [SELECT/INSERT: EOE]
+TMJ:
+Masseter palpation:
+TMJ loading test:
+
+IOE:
+Intraoral: [SELECT/INSERT: IOE]
+
 Plaque:  [SELECT/INSERT: PLAQUE]
 Stain:  [SELECT/INSERT: STAIN]
 Calculus: [SELECT/INSERT: CALCULUS]

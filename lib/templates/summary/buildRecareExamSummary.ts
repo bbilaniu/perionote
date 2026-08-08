@@ -157,7 +157,19 @@ function examLine(label: string, status: ExamStatus, findings: string): string {
   return "";
 }
 
-function extraoralLines(form: RecareExamForm): string[] {
+type ExtraoralSummaryFields = Pick<
+  RecareExamForm,
+  "extraoralStatus" | "extraoralFindings" | "structuredExtraoralFindings"
+>;
+
+type IntraoralSummaryFields = Pick<
+  RecareExamForm,
+  "intraoralStatus" | "intraoralFindings" | "structuredIntraoralFindings"
+>;
+
+export function formatRecareExtraoralLines(
+  form: ExtraoralSummaryFields,
+): string[] {
   if (form.extraoralStatus !== "findings") {
     const line = examLine(
       "Extraoral",
@@ -223,7 +235,9 @@ function extraoralLines(form: RecareExamForm): string[] {
   ];
 }
 
-function intraoralLines(form: RecareExamForm): string[] {
+export function formatRecareIntraoralLines(
+  form: IntraoralSummaryFields,
+): string[] {
   if (form.intraoralStatus !== "findings") {
     const statusLine = examLine(
       "Intraoral",
@@ -482,7 +496,7 @@ export function buildRecareExamSummary(
   );
   const chiefConcernSection = chiefConcern ? [`a) ${chiefConcern}`] : [];
 
-  const extraoral = extraoralLines(form);
+  const extraoral = formatRecareExtraoralLines(form);
   const extraoralSection = extraoral.length
     ? [`b) ${extraoral[0]}`, ...extraoral.slice(1)]
     : [];
@@ -506,7 +520,7 @@ export function buildRecareExamSummary(
       : ["c) TMJ examination:", ...tmjLines]
     : [];
 
-  const intraoral = intraoralLines(form);
+  const intraoral = formatRecareIntraoralLines(form);
   const letteredIntraoral = intraoral.length
     ? [`d) ${intraoral[0]}`, ...intraoral.slice(1)]
     : [];
