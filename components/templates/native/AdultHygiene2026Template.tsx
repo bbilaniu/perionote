@@ -26,6 +26,8 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
+import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
+import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   ExamFinding,
@@ -49,7 +51,6 @@ import {
   homeCareOheTopicChoices,
   isDyclonineRinseTreatment,
   oheTopicChoices,
-  orderTreatmentToothAreas,
   preventionAndMaintenanceOheTopicChoices,
   standardOheStatement,
   standardTreatmentCompletedPreset,
@@ -57,6 +58,13 @@ import {
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  buildOheTreatmentRecap,
+  recareExamTreatmentPreset,
+  syncDerivedOheTreatmentDetails,
+  syncRadiographTreatmentEntries,
+  treatmentCompletedEntryIdentity,
+} from "@/lib/templates/adultHygieneTreatment";
 import type {
   DocumentationStatus,
   ExamStatus,
@@ -3355,25 +3363,22 @@ export function AdultHygiene2026Template({
   }
 
   function applyStandardTreatment() {
-    const entryKey = (entry: {
-      treatmentType: string;
-      toothAreas: readonly string[];
-    }) =>
-      `${entry.treatmentType
-        .normalize("NFKC")
-        .trim()
-        .toLocaleLowerCase("en-CA")}|${orderTreatmentToothAreas([
-        ...entry.toothAreas,
-      ])
-        .map((area) => area.toLocaleLowerCase("en-CA"))
-        .join("|")}`;
-    const existingKeys = new Set(form.treatmentCompleted.map(entryKey));
+    const existingKeys = new Set(
+      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
+    );
+    const oheRecap = buildOheTreatmentRecap(form);
     const additions = standardTreatmentCompletedPreset
-      .filter((entry) => !existingKeys.has(entryKey(entry)))
+      .filter(
+        (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+      )
       .map((entry) => ({
         ...createTreatmentCompletedEntry(),
-        treatmentType: entry.treatmentType,
+        ...entry,
         toothAreas: [...entry.toothAreas],
+        ...(entry.instrumentation
+          ? { instrumentation: [...entry.instrumentation] }
+          : {}),
+        ...(entry.procedureKind === "ohe" ? { details: oheRecap } : {}),
       }));
     if (additions.length) {
       updateField("treatmentCompleted", [
@@ -3381,6 +3386,29 @@ export function AdultHygiene2026Template({
         ...additions,
       ]);
     }
+  }
+
+  function applyRecareExam() {
+    if (
+      form.treatmentCompleted.some(
+        (entry) => treatmentCompletedEntryIdentity(entry) === "procedure:recare-exam",
+      )
+    ) {
+      return;
+    }
+    const entry = {
+      ...createTreatmentCompletedEntry(),
+      ...recareExamTreatmentPreset,
+      toothAreas: [...recareExamTreatmentPreset.toothAreas],
+    };
+    const radiographCount = form.treatmentCompleted.filter(
+      (candidate) => candidate.procedureSource === "radiographs",
+    ).length;
+    updateField("treatmentCompleted", [
+      ...form.treatmentCompleted.slice(0, radiographCount),
+      entry,
+      ...form.treatmentCompleted.slice(radiographCount),
+    ]);
   }
 
   return (
@@ -3594,14 +3622,19 @@ export function AdultHygiene2026Template({
           </Section>
 
           <Section title="Records">
-            <CatalogueMultiCombobox
-              id="adult-hygiene-radiographs"
-              label="Radiographs"
-              catalogueKey="imaging.radiographs"
+            <RadiographsTakenControl
               values={form.radiographs}
-              onChange={(value) => updateField("radiographs", value)}
-              allowDuplicateValues
-              roomySelectionActions
+              onChange={(radiographs) => {
+                setForm((current) => ({
+                  ...current,
+                  radiographs,
+                  treatmentCompleted: syncRadiographTreatmentEntries(
+                    current.treatmentCompleted,
+                    radiographs,
+                  ),
+                }));
+                setCopyMessage("");
+              }}
             />
             <div className="grid gap-3 sm:grid-cols-2">
               <FixedChoiceListbox
@@ -4262,7 +4295,19 @@ export function AdultHygiene2026Template({
               standardStatement={standardOheStatement}
               topicChoices={oheTopicChoices}
               topicChoiceGroups={oheTopicChoiceGroups}
-              onChange={(key, value) => updateField(key, value)}
+              onChange={(key, value) => {
+                setForm((current) => {
+                  const next = { ...current, [key]: value };
+                  return {
+                    ...next,
+                    treatmentCompleted: syncDerivedOheTreatmentDetails(
+                      next.treatmentCompleted,
+                      buildOheTreatmentRecap(next),
+                    ),
+                  };
+                });
+                setCopyMessage("");
+              }}
             />
           </Section>
 
@@ -4349,9 +4394,11 @@ export function AdultHygiene2026Template({
                 showCareType
               />
             </div>
-            <TreatmentCompletedList
+            <StructuredTreatmentCompletedList
               entries={form.treatmentCompleted}
+              oheRecap={buildOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
+              onApplyRecare={applyRecareExam}
               onAdd={() =>
                 updateField("treatmentCompleted", [
                   ...form.treatmentCompleted,

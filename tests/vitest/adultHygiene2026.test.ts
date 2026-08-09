@@ -153,6 +153,21 @@ describe("2026 Adult Hygiene independence", () => {
     expect(isAdultHygieneDraftForm(legacyDraft)).toBe(true);
     expect(
       isAdultHygieneDraftForm({
+        ...createEmptyAdultHygiene2026Form(),
+        treatmentCompleted: [
+          {
+            id: "structured-scaling",
+            treatmentType: "Scaling",
+            toothAreas: ["full mouth"],
+            procedureKind: "scaling",
+            quantity: "2.5",
+            instrumentation: ["hand"],
+          },
+        ],
+      }),
+    ).toBe(true);
+    expect(
+      isAdultHygieneDraftForm({
         ...legacyDraft,
         treatmentPlan: [{ id: 42, treatmentType: "Invalid", toothArea: "" }],
       }),

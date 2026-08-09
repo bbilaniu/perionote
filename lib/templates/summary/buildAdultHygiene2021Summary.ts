@@ -4,6 +4,7 @@ import {
   orderTreatmentToothAreas,
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2021";
+import { formatAdultHygieneTreatmentCompletedEntries } from "@/lib/templates/adultHygieneTreatment";
 import {
   choiceLabel,
   formatClinicalMeasurement,
@@ -265,25 +266,11 @@ function treatmentRecommendedBlock(
 export function formatAdultHygieneTreatmentCompleted(
   entries: AdultHygiene2021Form["treatmentCompleted"],
 ): string {
-  const completed = entries
-    .map((entry) => {
-      const treatmentType = trimmed(entry.treatmentType);
-      if (!treatmentType) return "";
-      const toothAreas = orderTreatmentToothAreas(entry.toothAreas);
-      const treatmentWithAreas = toothAreas.length
-        ? `${treatmentType} — ${toothAreas.join(", ")}`
-        : treatmentType;
-      const applicationTime = trimmed(entry.applicationTime ?? "");
-      return isDyclonineRinseTreatment(treatmentType) && applicationTime
-        ? `${treatmentWithAreas}${
-            toothAreas.length ? ";" : " —"
-          } time of application/use: ${applicationTime}`
-        : treatmentWithAreas;
-    })
-    .filter(Boolean);
-  return completed.length
-    ? `Treatment completed today: ${completed.join("; ")}`
-    : "";
+  return formatAdultHygieneTreatmentCompletedEntries(
+    entries,
+    orderTreatmentToothAreas,
+    isDyclonineRinseTreatment,
+  );
 }
 
 function psrPocketingLine(

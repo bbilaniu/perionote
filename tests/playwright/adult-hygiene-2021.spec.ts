@@ -1470,7 +1470,7 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
     .click();
   await expect(completedRows).toHaveCount(6);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; 3U scale \(Cavitron and hand instrumentation\) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2\.5% NaF Varnish application — full mouth; OHE/,
+    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with EnamelPro Strawberry with Fluoride \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); FluoriMax 2\.5% NaF Varnish application — full mouth/,
   );
 });
 
@@ -1589,7 +1589,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   }
 
   await page
-    .getByRole("button", { name: "Add treatment completed", exact: true })
+    .getByRole("button", { name: "Add other treatment", exact: true })
     .click();
   const completedValues = page.getByRole("list", {
     name: "Treatment completed today entries",
@@ -1602,7 +1602,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   await treatmentCompleted.focus();
   await page
     .getByRole("option", {
-      name: "1U scale (cavitron and hand instrumentation) Starter",
+      name: "Advantage Arrest® Silver Diamine Fluoride 38% application Starter",
       exact: true,
     })
     .click();
@@ -1695,7 +1695,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
     })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 1U scale \(cavitron and hand instrumentation\) — Q2, Q3, teeth 14–16/
+    /Treatment completed today: Advantage Arrest® Silver Diamine Fluoride 38% application — Q2, Q3, teeth 14–16/
   );
   await completedRow.getByRole("button", { name: "Done", exact: true }).click();
   await expect(toothAreaOptions).toBeHidden();

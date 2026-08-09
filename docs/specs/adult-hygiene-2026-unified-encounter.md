@@ -69,6 +69,43 @@ This consolidation changes presentation and conflict handling only. It does
 not add a draft migration, rename persisted properties, or change the summary
 renderers.
 
+## Completed-care composition
+
+The 2026 Records section treats its radiograph values as radiographs taken
+today. Bitewings, periapicals, and panoramic images use compact quantity
+controls with defaults of 4 BW, 3 PA, and 1 PAN. Other radiograph text remains
+available. Changing these values maintains source-linked entries at the start
+of Treatment completed today; linked entries can only be removed by changing
+the Records source.
+
+An explicit **Apply recare exam** action adds one idempotent **Dentist Recare
+Exam** entry after linked radiographs. It records the completed service but does
+not infer normal EOE/IOE findings. The Recare-only output continues to omit the
+Treatment completed today block; Complete and Hygiene outputs include it.
+
+Common adult hygiene procedures use structured cards in both the 2021 and 2026
+forms:
+
+- Scaling has an editable quantity in 0.5U steps, default 3U, independent Hand
+  and Power instrumentation toggles, and a conditional editable power device
+  with Cavitron as the standard default.
+- Selective polish has an editable quantity, default 1U, and defaults to
+  EnamelPro Strawberry with Fluoride.
+- OHE previews a concise recap derived from documented education. The recap
+  stays synchronized until the clinician customizes it; **Reset from
+  education** restores derived behavior.
+
+**Apply standard treatment** retains Dyclonine 1% rinse and FMP, then adds the
+structured scaling, polish, OHE, and FluoriMax varnish procedures in clinical
+sequence. Common procedures can also be added individually. The free-text
+catalogue remains available for other treatment, but quantity-specific scaling
+and polish starters are removed because their quantities now belong to the
+procedure cards.
+
+Structured properties are optional additions to the accepted treatment row.
+Legacy rows and drafts without them retain their exact existing output and are
+not silently converted.
+
 ## Decision support
 
 Decision support is derived from the current encounter without changing a

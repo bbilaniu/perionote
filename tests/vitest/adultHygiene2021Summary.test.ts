@@ -652,9 +652,12 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     const form = createEmptyAdultHygiene2021Form();
     form.treatmentCompleted = [
       ...standardTreatmentCompletedPreset.map((entry, index) => ({
+        ...entry,
         id: `standard-${index}`,
-        treatmentType: entry.treatmentType,
         toothAreas: [...entry.toothAreas],
+        instrumentation: entry.instrumentation
+          ? [...entry.instrumentation]
+          : undefined,
         ...(isDyclonineRinseTreatment(entry.treatmentType)
           ? { applicationTime: "60 seconds" }
           : {}),
@@ -664,7 +667,7 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     expect(dyclonineRinseTreatment).toBe("Dyclonine 1% rinse 5 ml");
     expect(isDyclonineRinseTreatment("Dyclonine rinse 5 ml")).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application/use: 60 seconds; FMP — full mouth; 3U scale (Cavitron and hand instrumentation) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2.5% NaF Varnish application — full mouth; OHE",
+      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application/use: 60 seconds; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with EnamelPro Strawberry with Fluoride (1U Polish); OHE; FluoriMax 2.5% NaF Varnish application — full mouth",
     );
   });
 

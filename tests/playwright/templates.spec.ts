@@ -408,6 +408,156 @@ test("2026 Adult Hygiene coordinates standard and additional OHE controls", asyn
   ).toBeVisible();
 });
 
+test("2026 Adult Hygiene links radiograph quantities and a recare exam to completed care", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const radiographs = page.getByRole("group", {
+    name: "Radiographs taken today",
+    exact: true,
+  });
+  await radiographs
+    .getByRole("button", { name: "Bitewings (BW)", exact: true })
+    .click();
+  const bwQuantity = radiographs.getByRole("spinbutton", {
+    name: "Number of images",
+    exact: true,
+  }).first();
+  await expect(bwQuantity).toHaveValue("4");
+  await radiographs
+    .getByRole("button", { name: "Increase BW images", exact: true })
+    .click();
+  await radiographs
+    .getByRole("button", { name: "Periapicals (PA)", exact: true })
+    .click();
+  await radiographs
+    .getByRole("button", { name: "Panoramic (PAN)", exact: true })
+    .click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Radiographs: 5 BW; 3 PA; PAN",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: 5 BW; 3 PA; PAN",
+  );
+
+  await page
+    .getByRole("button", { name: "Apply recare exam", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Apply recare exam", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: 5 BW; 3 PA; PAN; Dentist Recare Exam",
+  );
+  await expect(
+    page
+      .getByRole("list", { name: "Treatment completed today entries" })
+      .locator(":scope > li"),
+  ).toHaveCount(4);
+
+  await radiographs
+    .getByRole("button", { name: "Bitewings (BW)", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "5 BW",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: 3 PA; PAN; Dentist Recare Exam",
+  );
+});
+
+test("2026 Adult Hygiene standard treatment uses structured procedure controls", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const education = page.getByRole("group", {
+    name: "Education provided today",
+    exact: true,
+  });
+  await education
+    .getByRole("checkbox", {
+      name: "Reviewed brushing and flossing frequency recommendations",
+      exact: true,
+    })
+    .check();
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+
+  const completed = page.getByRole("list", {
+    name: "Treatment completed today entries",
+  });
+  await expect(completed.locator(":scope > li")).toHaveCount(6);
+  const scaling = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", { name: "Scaling", exact: true }),
+  });
+  await expect(
+    scaling.getByRole("spinbutton", { name: "Scaling units", exact: true }),
+  ).toHaveValue("3");
+  await expect(
+    scaling.getByRole("button", {
+      name: "Hand instrumentation",
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const power = scaling.getByRole("button", {
+    name: "Power instrumentation",
+    exact: true,
+  });
+  await expect(power).toHaveAttribute("aria-pressed", "true");
+  await expect(
+    scaling.getByRole("combobox", { name: "Power device", exact: true }),
+  ).toHaveValue("Cavitron");
+
+  await scaling
+    .getByRole("spinbutton", { name: "Scaling units", exact: true })
+    .fill("2");
+  await power.click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Full mouth scaling with hand instrumentation (2U Scale)",
+  );
+
+  const polish = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", { name: "Selective polish", exact: true }),
+  });
+  await expect(
+    polish.getByRole("spinbutton", { name: "Polish units", exact: true }),
+  ).toHaveValue("1");
+  await expect(
+    polish.getByRole("textbox", { name: "Polish product", exact: true }),
+  ).toHaveValue("EnamelPro Strawberry with Fluoride");
+
+  const ohe = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", {
+      name: "Oral hygiene education",
+      exact: true,
+    }),
+  });
+  const recap = ohe.getByRole("textbox", {
+    name: "Treatment-line recap",
+    exact: true,
+  });
+  await expect(recap).toHaveValue(
+    "Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride",
+  );
+  await expect(recap).toHaveAttribute("readonly", "");
+  await ohe
+    .getByRole("button", { name: "Customize recap", exact: true })
+    .click();
+  await recap.fill("Customized OHE recap");
+  await education.locator("#adult-hygiene-ohe-notes").fill("New education note");
+  await expect(recap).toHaveValue("Customized OHE recap");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "OHE on proper home care (Customized OHE recap)",
+  );
+});
+
 test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({
   page,
 }) => {
