@@ -344,6 +344,90 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   );
 });
 
+test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const currentCondition = page.getByRole("region", {
+    name: "Current clinical condition",
+  });
+  await expect(
+    currentCondition.getByRole("heading", {
+      name: "Possible diagnosis categories",
+    }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Periodontal health", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Gingivitis", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Periodontitis / history of periodontitis", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(currentCondition).toContainText(
+    "No diagnosis is selected or changed by these suggestions.",
+  );
+
+  await page
+    .getByRole("button", { name: /Structured periodontal observations/ })
+    .click();
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", { name: "Intact periodontal support", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-bop-percent").fill("5");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("3");
+  await page.locator("#adult-hygiene-attachment-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+  await page.locator("#adult-hygiene-radiographic-bone-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+
+  await expect(
+    currentCondition.getByText("Periodontal health", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Gingivitis", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    currentCondition.getByText("Periodontitis / history of periodontitis", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(currentCondition).toContainText(
+    "BOP 5% is below the 10% case threshold.",
+  );
+
+  const cariesRiskLevel = page.getByRole("button", {
+    name: "Caries risk level",
+    exact: true,
+  });
+  const factors = page.getByRole("combobox", {
+    name: "Caries risk factors",
+    exact: true,
+  });
+  await factors.focus();
+  await page
+    .getByRole("option", { name: /High frequency of sugar intake Starter/ })
+    .click();
+
+  await expect(
+    page.getByRole("heading", { name: "Suggested caries risk level" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Suggested caries risk level" })
+      .locator("xpath=.."),
+  ).toContainText("High");
+  await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
+  await page
+    .getByRole("button", { name: "Apply caries risk suggestion" })
+    .click();
+  await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
+});
+
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
   page,
   context,

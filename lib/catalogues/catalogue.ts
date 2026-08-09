@@ -1,5 +1,6 @@
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { patientChiefConcernSeedValues } from "@/lib/templates/patientChiefConcern";
+import { cariesRiskFactorSeedValues } from "@/lib/templates/cariesRisk";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
@@ -173,15 +174,7 @@ const patientChiefConcernSeeds = catalogueSeeds(
 
 const cariesRiskFactorSeeds = catalogueSeeds(
   "clinical-exam.caries-risk-factors",
-  [
-    ["high-sugar-frequency", "High frequency of sugar intake"],
-    ["inadequate-oral-hygiene", "Inadequate oral hygiene"],
-    ["insufficient-fluoride", "Insufficient exposure to fluoride"],
-    ["heavily-restored-dentition", "Heavily restored dentition"],
-    ["hyposalivation", "Hyposalivation"],
-    ["caries-history-36-months", "History of caries in the last 36 months"],
-    ["symptom-driven-visits", "Symptomatically driven dental visits"],
-  ],
+  cariesRiskFactorSeedValues,
 );
 
 const fmpDoneSeeds = catalogueSeeds("periodontal.fmp-done", [

@@ -53,6 +53,7 @@ import {
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
+import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import type {
   DocumentationStatus,
@@ -81,6 +82,7 @@ import {
   choiceLabel,
   classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
+  classifyPeriodontalDiagnosisCandidates,
   deepPocketBopChoices,
   formatDiabetesModifier,
   formatPeriodontalEvidence,
@@ -1037,6 +1039,7 @@ export function PeriodontalClassificationControl({
 }) {
   const candidate = classifyPeriodontalCandidate(value);
   const gingivalHealthCandidate = classifyGingivalHealthCandidate(value);
+  const diagnosisCandidates = classifyPeriodontalDiagnosisCandidates(value);
   const stageEvidence = periodontalStageEvidence(value);
   const stageReasons = stageEvidence
     .filter((evidence) =>
@@ -2051,6 +2054,75 @@ export function PeriodontalClassificationControl({
         </div>
       </section>
 
+      {!hasAssessedDiagnosis ? (
+        <section
+          className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700"
+          aria-labelledby="periodontal-current-condition-heading"
+        >
+          <h3
+            id="periodontal-current-condition-heading"
+            className="font-semibold"
+          >
+            Current clinical condition
+          </h3>
+          <div className="border-l-4 border-amber-500 pl-4">
+            <h4 className="font-semibold">Possible diagnosis categories</h4>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Based only on findings documented so far. No diagnosis is
+              selected or changed by these suggestions.
+            </p>
+            {diagnosisCandidates.possibilities.length ? (
+              <ul className="mt-3 space-y-3">
+                {diagnosisCandidates.possibilities.map((possibility) => (
+                  <li key={possibility.diagnosis}>
+                    <p className="font-medium">
+                      {choiceLabel(
+                        periodontalDiagnosisChoices,
+                        possibility.diagnosis,
+                      )}
+                    </p>
+                    <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                      {possibility.reasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm">No category suggestion available.</p>
+            )}
+            {diagnosisCandidates.missingFields.length ? (
+              <details className="mt-3 text-sm text-slate-700 dark:text-slate-300">
+                <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
+                  Information that may narrow the possibilities
+                </summary>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {diagnosisCandidates.missingFields.map((field) => (
+                    <li key={field.id}>
+                      <button
+                        type="button"
+                        className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                        onClick={() => navigateToMissingField(field.id)}
+                      >
+                        {field.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+            {diagnosisCandidates.warnings.length ? (
+              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                {diagnosisCandidates.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       {hasAssessedDiagnosis ? (
         <fieldset className="space-y-6 border-t border-slate-200 pt-4 dark:border-slate-700">
           {showGingivalContextWorkflow ? (
@@ -2931,6 +3003,7 @@ export function AdultHygiene2026Template({
     [form, startedAt],
   );
   const summary = summaries[outputMode];
+  const cariesRiskSuggestion = suggestAdultCariesRisk(form.cariesRiskFactors);
 
   function updateField<TKey extends keyof AdultHygiene2026Form>(
     key: TKey,
@@ -4080,6 +4153,47 @@ export function AdultHygiene2026Template({
                   onChange={(value) => updateField("cariesRiskFactors", value)}
                   roomySelectionActions
                 />
+              </div>
+              <div className="border-l-4 border-sky-600 pl-4 md:col-span-2">
+                <h3 className="font-semibold">Suggested caries risk level</h3>
+                <p className="mt-1 text-sm">
+                  {cariesRiskSuggestion.level || "Not available"}
+                </p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Based only on the risk factors documented above. The selected
+                  risk level is not changed automatically.
+                </p>
+                {cariesRiskSuggestion.reasons.length ? (
+                  <details className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                    <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
+                      Why this was suggested
+                    </summary>
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      {cariesRiskSuggestion.reasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+                {cariesRiskSuggestion.warnings.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                    {cariesRiskSuggestion.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {cariesRiskSuggestion.level &&
+                form.cariesRiskLevel !== cariesRiskSuggestion.level ? (
+                  <button
+                    type="button"
+                    className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
+                    onClick={() =>
+                      updateField("cariesRiskLevel", cariesRiskSuggestion.level)
+                    }
+                  >
+                    Apply caries risk suggestion
+                  </button>
+                ) : null}
               </div>
               <div className="md:col-span-2">
                 <TextareaField

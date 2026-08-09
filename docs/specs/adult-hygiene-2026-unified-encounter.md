@@ -44,3 +44,26 @@ catalogue data continue to restore.
 Older 2026 drafts are merged with the current empty encounter shape. Legacy
 hygiene recommendation fields continue to format when no coordinated plan has
 been entered.
+
+## Decision support
+
+Decision support is derived from the current encounter without changing a
+clinical selection automatically.
+
+- With the periodontal diagnosis unassessed, the form shows every supported
+  diagnosis category that remains compatible with the documented evidence,
+  the evidence supporting each possibility, and missing information that may
+  narrow the list. The clinician still selects the diagnosis.
+- Caries risk is not inferred as Low from an empty factor list. Documented
+  frequent sugar exposure or hyposalivation can produce a High suggestion;
+  other recognized contributing conditions produce a Moderate working
+  suggestion. A general history of caries in the last 36 months remains
+  Moderate until lesion/restoration count distinguishes the adult ADA 1–2 and
+  3-or-more thresholds. Custom factors are disclosed as unmapped.
+- Applying a caries suggestion requires an explicit action. Suggestion
+  calculation and preview do not mutate the encounter.
+
+The caries rules follow the ADA Caries Risk Assessment Form for patients over
+age 6. Periodontal health and gingivitis candidates use the 2018 World Workshop
+BOP and probing-depth case thresholds already used by the periodontal
+classification engine.
