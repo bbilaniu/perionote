@@ -21,6 +21,7 @@ import {
   CatalogueItem,
   CatalogueKey,
   isCompletedCareCatalogueMetadata,
+  isPolishingProductCatalogueMetadata,
   isRadiographCatalogueMetadata,
   type CatalogueItemMetadata,
   type CompletedCareCategory,
@@ -350,6 +351,12 @@ function CatalogueItemRow({
             {isCompletedCareCatalogueMetadata(item.metadata) ? (
               <span>
                 {COMPLETED_CARE_CATEGORY_LABELS[item.metadata.category]}
+              </span>
+            ) : null}
+            {isPolishingProductCatalogueMetadata(item.metadata) ? (
+              <span>
+                {item.metadata.productName}; {item.metadata.flavour}
+                {item.metadata.containsFluoride ? "; with fluoride" : ""}
               </span>
             ) : null}
           </div>

@@ -43,6 +43,19 @@ describe("structured adult hygiene treatment", () => {
       instrumentation: ["hand", "power"],
       powerDevice: "Cavitron",
     });
+    const polish = createTreatmentEntryFromCatalogueItem(
+      catalogue.find((item) => item.label === "Selective polish")!,
+      "polish",
+    );
+    expect(polish).toMatchObject({
+      procedureKind: "polish",
+      careCategory: "instrumentation",
+      quantity: "1",
+      product: "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+      productName: "Enamel Pro® Prophy Paste",
+      productFlavour: "Strawberry",
+      productContainsFluoride: true,
+    });
 
     const fluoride = createTreatmentEntryFromCatalogueItem(
       catalogue.find((item) => item.label.startsWith("FluoriMax"))!,
@@ -91,7 +104,7 @@ describe("structured adult hygiene treatment", () => {
     }));
 
     expect(format(entries)).toBe(
-      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with EnamelPro Strawberry with Fluoride (1U Polish); OHE on proper home care (Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride); FluoriMax 2.5% NaF Varnish application — full mouth",
+      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE on proper home care (Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride); FluoriMax 2.5% NaF Varnish application — full mouth",
     );
   });
 

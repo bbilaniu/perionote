@@ -711,9 +711,22 @@ test("2026 Adult Hygiene standard treatment uses structured procedure controls",
   await expect(
     polish.getByRole("spinbutton", { name: "Polish units", exact: true }),
   ).toHaveValue("1");
-  await expect(
-    polish.getByRole("textbox", { name: "Polish product", exact: true }),
-  ).toHaveValue("EnamelPro Strawberry with Fluoride");
+  const polishProduct = polish.getByRole("combobox", {
+    name: "Polish product",
+    exact: true,
+  });
+  await expect(polishProduct).toHaveValue(
+    "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+  );
+  await polishProduct.focus();
+  await page
+    .getByRole("option", {
+      name: /Enamel Pro® Prophy Paste with Fluoride \(Raspberry\) Starter/,
+    })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Selective polish with Enamel Pro® Prophy Paste with Fluoride (Raspberry) (1U Polish)",
+  );
 
   const ohe = completed.locator(":scope > li").filter({
     has: page.getByRole("heading", {

@@ -234,6 +234,28 @@ describe("local catalogues", () => {
       "OHE",
     ]);
     expect(
+      listCatalogueItems(
+        emptyState,
+        "hygiene-treatment.polishing-products",
+      ).map((item) => item.label),
+    ).toEqual([
+      "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+      "Enamel Pro® Prophy Paste with Fluoride (Mint)",
+      "Enamel Pro® Prophy Paste with Fluoride (Raspberry)",
+      "Enamel Pro® Prophy Paste with Fluoride (Vanilla Mint)",
+    ]);
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "hygiene-treatment.polishing-products",
+      ).find((item) => item.label.includes("(Raspberry)"))?.metadata,
+    ).toEqual({
+      kind: "polishing-product",
+      productName: "Enamel Pro® Prophy Paste",
+      flavour: "Raspberry",
+      containsFluoride: true,
+    });
+    expect(
       listCatalogueItems(emptyState, "recare-treatment.items").map(
         (item) => item.label,
       ),

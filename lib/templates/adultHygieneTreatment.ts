@@ -19,6 +19,13 @@ export type HygieneProcedureSource =
   | "ohe";
 export type RadiographType = "BW" | "PA" | "PAN";
 
+export const defaultPolishingProduct = {
+  label: "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+  productName: "Enamel Pro® Prophy Paste",
+  flavour: "Strawberry",
+  containsFluoride: true,
+} as const;
+
 export type AdultHygieneTreatmentCompletedEntry = {
   id: string;
   treatmentType: string;
@@ -30,6 +37,9 @@ export type AdultHygieneTreatmentCompletedEntry = {
   instrumentation?: HygieneInstrumentationMethod[];
   powerDevice?: string;
   product?: string;
+  productName?: string;
+  productFlavour?: string;
+  productContainsFluoride?: boolean;
   details?: string;
   detailsCustomized?: boolean;
   radiographType?: RadiographType;
@@ -71,7 +81,10 @@ export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPre
     procedureKind: "polish",
     procedureSource: "standard-treatment",
     quantity: "1",
-    product: "EnamelPro Strawberry with Fluoride",
+    product: defaultPolishingProduct.label,
+    productName: defaultPolishingProduct.productName,
+    productFlavour: defaultPolishingProduct.flavour,
+    productContainsFluoride: defaultPolishingProduct.containsFluoride,
     careCategory: "instrumentation",
   },
   {
@@ -131,8 +144,10 @@ export function createTreatmentEntryFromCatalogueItem(
         ...base,
         procedureKind: "polish",
         quantity: String(metadata.defaultQuantity ?? 1),
-        product:
-          metadata.defaultProduct ?? "EnamelPro Strawberry with Fluoride",
+        product: metadata.defaultProduct ?? defaultPolishingProduct.label,
+        productName: defaultPolishingProduct.productName,
+        productFlavour: defaultPolishingProduct.flavour,
+        productContainsFluoride: defaultPolishingProduct.containsFluoride,
       };
     case "recare-exam":
       return { ...base, procedureKind: "recare-exam" };

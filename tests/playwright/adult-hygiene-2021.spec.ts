@@ -1470,7 +1470,7 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
     .click();
   await expect(completedRows).toHaveCount(6);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with EnamelPro Strawberry with Fluoride \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); FluoriMax 2\.5% NaF Varnish application — full mouth/,
+    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with Enamel Pro® Prophy Paste with Fluoride \(Strawberry\) \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); FluoriMax 2\.5% NaF Varnish application — full mouth/,
   );
 });
 

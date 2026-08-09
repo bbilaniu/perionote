@@ -13,6 +13,7 @@ import {
   COMPLETED_CARE_CATEGORIES,
   COMPLETED_CARE_CATEGORY_LABELS,
   isCompletedCareCatalogueMetadata,
+  isPolishingProductCatalogueMetadata,
   type CatalogueItem,
   type CompletedCareCategory,
   type CompletedCareProcedure,
@@ -159,7 +160,8 @@ export function TreatmentCompletedList({
   radiographsHref?: string;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
 }) {
-  const { getItems, rememberValue, storageStatus } = useCatalogues();
+  const { findEquivalent, getItems, rememberValue, storageStatus } =
+    useCatalogues();
   const [showAddCare, setShowAddCare] = useState(false);
   const [customCareLabel, setCustomCareLabel] = useState("");
   const [customCareCategory, setCustomCareCategory] =
@@ -241,6 +243,24 @@ export function TreatmentCompletedList({
         entry.id === entryId ? { ...entry, ...patch } : entry,
       ),
     );
+  }
+
+  function updatePolishingProduct(entryId: string, product: string) {
+    const catalogueItem = findEquivalent(
+      "hygiene-treatment.polishing-products",
+      product,
+    );
+    const metadata = isPolishingProductCatalogueMetadata(
+      catalogueItem?.metadata,
+    )
+      ? catalogueItem.metadata
+      : undefined;
+    updateEntry(entryId, {
+      product,
+      productName: metadata?.productName,
+      productFlavour: metadata?.flavour,
+      productContainsFluoride: metadata?.containsFluoride,
+    });
   }
 
   function moveEntry(index: number, direction: "earlier" | "later") {
@@ -561,11 +581,18 @@ export function TreatmentCompletedList({
                       defaultValue="1"
                       onChange={(quantity) => updateEntry(entry.id, { quantity })}
                     />
-                    <TextInput
+                    <CatalogueCombobox
                       id={`adult-hygiene-${entry.id}-product`}
                       label="Polish product"
+                      catalogueKey="hygiene-treatment.polishing-products"
                       value={entry.product ?? ""}
-                      onChange={(product) => updateEntry(entry.id, { product })}
+                      onChange={(product) =>
+                        updatePolishingProduct(entry.id, product)
+                      }
+                      rememberActionLabel="Remember polishing product"
+                      unhideActionLabel="Unhide polishing product"
+                      roomyActions
+                      showAllSuggestionsWhenSelected
                     />
                     <div className="md:col-span-2">
                       <ClinicalLocationMultiCombobox

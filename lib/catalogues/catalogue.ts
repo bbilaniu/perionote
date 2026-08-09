@@ -25,6 +25,7 @@ export const CATALOGUE_KEYS = [
   "oral-hygiene.compliance",
   "oral-hygiene.aids-reviewed",
   "hygiene-treatment.completed",
+  "hygiene-treatment.polishing-products",
   "recare-treatment.items",
   "hygiene-treatment.anesthetic",
   "hygiene-treatment.desensitizer",
@@ -86,9 +87,17 @@ export type CompletedCareCatalogueMetadata = {
   defaultToothAreas?: string[];
 };
 
+export type PolishingProductCatalogueMetadata = {
+  kind: "polishing-product";
+  productName: string;
+  flavour: string;
+  containsFluoride: boolean;
+};
+
 export type CatalogueItemMetadata =
   | RadiographCatalogueMetadata
-  | CompletedCareCatalogueMetadata;
+  | CompletedCareCatalogueMetadata
+  | PolishingProductCatalogueMetadata;
 
 export const CATALOGUE_SECTIONS = [
   "Visit Team",
@@ -312,7 +321,8 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
     category: "instrumentation",
     procedure: "polish",
     defaultQuantity: 1,
-    defaultProduct: "EnamelPro Strawberry with Fluoride",
+    defaultProduct:
+      "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
   }),
   completedCareSeed("dyclonine-rinse", "Dyclonine 1% rinse 5 ml", {
     category: "product-application",
@@ -353,6 +363,26 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
     procedure: "ohe",
   }),
 ];
+
+const enamelProProductName = "Enamel Pro® Prophy Paste";
+
+const polishingProductSeeds: CatalogueSeed[] = [
+  "Strawberry",
+  "Mint",
+  "Raspberry",
+  "Vanilla Mint",
+].map((flavour) => ({
+  id: `seed.hygiene-treatment.polishing-products.${flavour
+    .toLocaleLowerCase("en-CA")
+    .replaceAll(" ", "-")}`,
+  label: `${enamelProProductName} with Fluoride (${flavour})`,
+  metadata: {
+    kind: "polishing-product",
+    productName: enamelProProductName,
+    flavour,
+    containsFluoride: true,
+  },
+}));
 
 const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
   ["hygiene-maintenance", "Hygiene maintenance"],
@@ -515,6 +545,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Completed care",
     fieldLabels: ["Treatment completed today"],
     seeds: treatmentCompletedSeeds,
+    lifecycle: "pilot",
+  },
+  {
+    key: "hygiene-treatment.polishing-products",
+    section: "Treatment",
+    title: "Polishing products",
+    fieldLabels: ["Polish product"],
+    seeds: polishingProductSeeds,
     lifecycle: "pilot",
   },
   {
@@ -789,6 +827,14 @@ function parseCatalogueItemMetadata(
       ...(defaultToothAreas === undefined ? {} : { defaultToothAreas }),
     };
   }
+  if (value.kind === "polishing-product") {
+    return {
+      kind: "polishing-product",
+      productName: readString(value, "productName", 200).trim(),
+      flavour: readString(value, "flavour", 100).trim(),
+      containsFluoride: readBoolean(value, "containsFluoride"),
+    };
+  }
   throw new CatalogueValidationError("Invalid catalogue metadata kind.");
 }
 
@@ -802,6 +848,12 @@ export function isCompletedCareCatalogueMetadata(
   metadata: CatalogueItemMetadata | undefined,
 ): metadata is CompletedCareCatalogueMetadata {
   return metadata?.kind === "completed-care";
+}
+
+export function isPolishingProductCatalogueMetadata(
+  metadata: CatalogueItemMetadata | undefined,
+): metadata is PolishingProductCatalogueMetadata {
+  return metadata?.kind === "polishing-product";
 }
 
 function parseUserItem(value: unknown): UserCatalogueItem {
