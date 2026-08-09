@@ -59,7 +59,7 @@ RDH: Example RDH
 Last Recare Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
-Miele Sterilization Codes Scanned: SYNTH-AH-001
+Sterilization Codes Scanned: SYNTH-AH-001
 
 Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic history reviewed with no changes.

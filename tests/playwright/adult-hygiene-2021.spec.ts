@@ -167,6 +167,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
       .evaluateAll((controls) => controls.map((control) => control.id))
   ).resolves.toEqual([
     "adult-hygiene-class5",
+    "adult-hygiene-ppe",
     "adult-hygiene-miele-codes",
     "adult-hygiene-consent-patient",
     "adult-hygiene-consent-parent",
@@ -174,6 +175,24 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     "adult-hygiene-medical-history",
     "adult-hygiene-premedication",
   ]);
+  await expect(
+    consentHistorySection.getByRole("checkbox", {
+      name: "Class 5 indicators checked",
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    consentHistorySection.getByRole("checkbox", {
+      name: "Standard PPE statement applies",
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    consentHistorySection.getByRole("textbox", {
+      name: "Sterilization codes",
+      exact: true,
+    })
+  ).toBeVisible();
 
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();

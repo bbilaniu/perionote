@@ -624,7 +624,7 @@ export function buildAdultHygiene2026Summary(
           form.class5IndicatorStatus === "yes" ? "Yes" : "No"
         }.`,
     trimmed(form.mieleCodes)
-      ? `Miele Sterilization Codes Scanned: ${trimmed(form.mieleCodes)}`
+      ? `Sterilization Codes Scanned: ${trimmed(form.mieleCodes)}`
       : "",
   ];
 

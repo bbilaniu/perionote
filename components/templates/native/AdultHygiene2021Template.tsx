@@ -196,7 +196,14 @@ const adultHygieneDraftArrayItemShapes = {
 
 function isEmptyAdultHygieneDraft(form: AdultHygiene2021Form): boolean {
   return (
-    JSON.stringify({ ...form, dentist: "", rdh: "", rda: "" }) ===
+    JSON.stringify({
+      ...form,
+      dentist: "",
+      rdh: "",
+      rda: "",
+      class5IndicatorStatus: "not-documented",
+      ppeStatementApplies: false,
+    }) ===
     emptyAdultHygieneDraft
   );
 }
@@ -2795,9 +2802,11 @@ export function AdultHygiene2021Template({
   fixture: AdultHygiene2021Form;
   summary: string;
 }) {
-  const [form, setForm] = useState<AdultHygiene2021Form>(
-    createEmptyAdultHygiene2021Form,
-  );
+  const [form, setForm] = useState<AdultHygiene2021Form>(() => ({
+    ...createEmptyAdultHygiene2021Form(),
+    class5IndicatorStatus: "yes",
+    ppeStatementApplies: true,
+  }));
   const [startedAt, setStartedAt] = useState<Date | null>(null);
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
@@ -2836,6 +2845,8 @@ export function AdultHygiene2021Template({
   function createNewFormWithProviderDefaults(): AdultHygiene2021Form {
     return {
       ...createEmptyAdultHygiene2021Form(),
+      class5IndicatorStatus: "yes",
+      ppeStatementApplies: true,
       dentist:
         getProviderDefault("visit-team.dentist")?.label ?? "",
       rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
@@ -2872,6 +2883,30 @@ export function AdultHygiene2021Template({
   ]);
 
   useEffect(() => setStartedAt((current) => current ?? new Date()), []);
+
+  useEffect(() => {
+    if (
+      !form.mieleCodes.trim() ||
+      (form.class5IndicatorStatus === "yes" && form.ppeStatementApplies)
+    ) {
+      return;
+    }
+    setForm((current) =>
+      !current.mieleCodes.trim() ||
+      (current.class5IndicatorStatus === "yes" &&
+        current.ppeStatementApplies)
+        ? current
+        : {
+            ...current,
+            class5IndicatorStatus: "yes",
+            ppeStatementApplies: true,
+          },
+    );
+  }, [
+    form.class5IndicatorStatus,
+    form.mieleCodes,
+    form.ppeStatementApplies,
+  ]);
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -3163,8 +3198,8 @@ export function AdultHygiene2021Template({
           </Section>
 
           <Section title="Consent, Medical History, and Sterilization">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center md:pt-6">
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <CheckboxField
                   id="adult-hygiene-class5"
                   label="Class 5 indicators checked"
@@ -3176,10 +3211,18 @@ export function AdultHygiene2021Template({
                     )
                   }
                 />
+                <CheckboxField
+                  id="adult-hygiene-ppe"
+                  label="Standard PPE statement applies"
+                  checked={form.ppeStatementApplies}
+                  onChange={(value) =>
+                    updateField("ppeStatementApplies", value)
+                  }
+                />
               </div>
               <TextField
                 id="adult-hygiene-miele-codes"
-                label="Miele sterilization codes"
+                label="Sterilization codes"
                 value={form.mieleCodes}
                 onChange={(value) => updateField("mieleCodes", value)}
               />
@@ -3585,12 +3628,6 @@ export function AdultHygiene2021Template({
           </Section>
 
           <Section title="Intervals and Next Visit">
-            <CheckboxField
-              id="adult-hygiene-ppe"
-              label="Standard PPE statement applies"
-              checked={form.ppeStatementApplies}
-              onChange={(value) => updateField("ppeStatementApplies", value)}
-            />
             <div className="grid gap-3 md:grid-cols-2">
               <CatalogueCombobox
                 id="adult-hygiene-recall-interval"

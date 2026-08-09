@@ -607,6 +607,43 @@ test("2026 Adult Hygiene coordinates standard and additional OHE controls", asyn
   await expect(hygieneGoal).toHaveValue("Customized hygiene goal.");
 });
 
+test("2026 Adult Hygiene coordinates sterilization documentation", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const section = page
+    .getByRole("heading", {
+      name: "Consent, Medical History, and Sterilization",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  const class5 = section.getByRole("checkbox", {
+    name: "Class 5 indicators checked",
+    exact: true,
+  });
+  const ppe = section.getByRole("checkbox", {
+    name: "Standard PPE statement applies",
+    exact: true,
+  });
+  const codes = section.getByRole("textbox", {
+    name: "Sterilization codes",
+    exact: true,
+  });
+
+  await expect(class5).toBeChecked();
+  await expect(ppe).toBeChecked();
+  await expect(codes).toBeVisible();
+  await codes.fill("STERI-001");
+  await class5.click();
+  await expect(class5).toBeChecked();
+  await ppe.click();
+  await expect(ppe).toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Sterilization Codes Scanned: STERI-001",
+  );
+});
+
 test("2026 Adult Hygiene links radiograph quantities and a recare exam to completed care", async ({
   page,
 }) => {
