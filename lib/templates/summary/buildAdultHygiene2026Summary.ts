@@ -1,12 +1,12 @@
 import {
   type AdultHygiene2026Output,
   type AdultHygiene2026Form,
-  isDyclonineRinseTreatment,
   orderTreatmentToothAreas,
   resolveOcclusalSplintState,
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2026";
 import { formatAdultHygieneTreatmentCompletedEntries } from "@/lib/templates/adultHygieneTreatment";
+import { formatLocalAnesthesiaSummary } from "@/lib/templates/localAnesthesia";
 import {
   choiceLabel,
   formatClinicalMeasurement,
@@ -365,7 +365,6 @@ export function formatAdultHygieneTreatmentCompleted(
   return formatAdultHygieneTreatmentCompletedEntries(
     entries,
     orderTreatmentToothAreas,
-    isDyclonineRinseTreatment,
   );
 }
 
@@ -820,7 +819,7 @@ export function buildAdultHygiene2026Summary(
 
   const treatmentCompleted = [
     formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
-    labelledLine("Anesthetic", form.anesthetic),
+    formatLocalAnesthesiaSummary(form),
     labelledLine("Desensitizer", form.desensitizer),
   ];
 

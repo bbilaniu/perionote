@@ -90,6 +90,12 @@ describe("2026 Adult Hygiene independence", () => {
       "Patient-requested smile or dental improvements: Synthetic request to discuss whitening.",
     );
     expect(complete).toContain("Treatment completed today:");
+    expect(complete).toContain(
+      "Local anesthetic administered: No C/I to LA",
+    );
+    expect(complete).toContain(
+      "Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds",
+    );
     expect(complete).toContain("Recommended Recare Interval: 6-month recall.");
     expect(complete).toContain("Next Dental Visit: Synthetic restorative treatment.");
     expect(complete).toContain("Next Hygiene Visit: Synthetic hygiene follow-up.");
@@ -124,6 +130,7 @@ describe("2026 Adult Hygiene independence", () => {
     expect(hygiene).not.toContain("Radiographs:");
     expect(hygiene).not.toContain("Molar occlusion—right:");
     expect(hygiene).toContain("Treatment completed today:");
+    expect(hygiene).toContain("Local anesthetic administered:");
     expect(hygiene).toContain("Next Hygiene Visit: Synthetic hygiene follow-up.");
     expect(hygiene).not.toContain("Recommended Recare Interval:");
     expect(hygiene).not.toContain("Next Dental Visit:");
@@ -136,6 +143,7 @@ describe("2026 Adult Hygiene independence", () => {
     expect(recare).toContain("Molar occlusion—right: Class I.");
     expect(recare).toContain("CPAP: No.");
     expect(recare).not.toContain("Treatment completed today:");
+    expect(recare).not.toContain("Local anesthetic administered:");
     expect(recare).toContain("Recommended Recare Interval: 6-month recall.");
     expect(recare).toContain("Next Dental Visit: Synthetic restorative treatment.");
     expect(recare).not.toContain("Next Hygiene Visit:");

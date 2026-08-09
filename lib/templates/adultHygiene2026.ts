@@ -18,6 +18,10 @@ import {
   type PeriodontalClassification,
 } from "@/lib/templates/periodontalClassification";
 import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
+import {
+  createEmptyLocalAnesthesiaValue,
+  type LocalAnesthesiaEntry,
+} from "@/lib/templates/localAnesthesia";
 
 export {
   standardTreatmentCompletedPreset,
@@ -199,16 +203,6 @@ export const standardOheStatement =
 export const standardHygieneGoal =
   "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
-export const dyclonineRinseTreatment = "Dyclonine 1% rinse 5 ml";
-
-export function isDyclonineRinseTreatment(value: string): boolean {
-  const normalized = value
-    .normalize("NFKC")
-    .trim()
-    .toLocaleLowerCase("en-CA");
-  return normalized.includes("dyclonine") && normalized.includes("rinse");
-}
-
 export interface AdultHygiene2026Form {
   patientId: string;
   noteLastRecallDate: string;
@@ -296,7 +290,11 @@ export interface AdultHygiene2026Form {
   treatmentOptions: RecareTreatmentEntry[];
   treatmentPlan: RecareTreatmentEntry[];
   treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
-  anesthetic: string;
+  localAnesthesiaNoContraindication: boolean;
+  localAnesthesiaEntries: LocalAnesthesiaEntry[];
+  localAnesthesiaNoAdverseReactions: boolean;
+  localAnesthesiaAdequateAchieved: boolean;
+  localAnesthesiaNotes: string;
   desensitizer: string;
   nightGuardStatus: DocumentationStatus;
   nightGuardUseStatus: DocumentationStatus;
@@ -410,7 +408,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     treatmentOptions: [],
     treatmentPlan: [],
     treatmentCompleted: [],
-    anesthetic: "",
+    ...createEmptyLocalAnesthesiaValue(),
     desensitizer: "",
     nightGuardStatus: "not-documented",
     nightGuardUseStatus: "not-documented",

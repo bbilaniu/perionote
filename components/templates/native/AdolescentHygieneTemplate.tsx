@@ -469,9 +469,6 @@ export function AdolescentHygieneTemplate({
       id: `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`,
       treatmentType: source?.treatmentType ?? "",
       toothAreas: [...(source?.toothAreas ?? [])],
-      ...(source?.applicationTime
-        ? { applicationTime: source.applicationTime }
-        : {}),
     };
   }
 

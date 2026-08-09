@@ -226,7 +226,6 @@ describe("local catalogues", () => {
       "Dentist Recare Exam",
       "Scaling",
       "Selective polish",
-      "Dyclonine 1% rinse 5 ml",
       "FluoriMax 2.5% NaF Varnish application",
       "Advantage Arrest® Silver Diamine Fluoride 38% application",
       "Crystal X-PUR",
@@ -261,8 +260,27 @@ describe("local catalogues", () => {
       ),
     ).toEqual(["Hygiene maintenance"]);
     expect(
-      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic"),
-    ).toEqual([]);
+      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "Articaine 4% with 1:200K epinephrine",
+      "Lidocaine 2% with 1:100K epinephrine",
+      "Mepivacaine 3% without epinephrine",
+      "Benzocaine 20% paste",
+      "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+      "Dyclonine 1% rinse",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic").find(
+        (item) => item.label === "Dyclonine 1% rinse",
+      )?.metadata,
+    ).toEqual({
+      kind: "local-anesthetic",
+      route: "rinse",
+      defaultAmountMl: 5,
+      defaultDurationSeconds: 60,
+    });
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.desensitizer").map(
         (item) => item.label,
@@ -288,20 +306,20 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
-      "6 MONTH SCALE",
+      "FOLLOW-UP HYGIENE",
       "3 MONTH SCALE",
       "4 MONTH SCALE",
-      "FOLLOW-UP HYGIENE",
+      "6 MONTH SCALE",
     ]);
     expect(
       listCatalogueItems(emptyState, "scheduling.dentist-next-visit").map(
         (item) => item.label,
       ),
     ).toEqual([
+      "FOLLOW-UP DENTIST CARE",
       "12 MONTH RECALL",
       "6 MONTH RECALL",
       "9 MONTH RECALL",
-      "FOLLOW-UP DENTIST CARE",
     ]);
 
     const molarDefinition = CATALOGUE_DEFINITIONS.find(

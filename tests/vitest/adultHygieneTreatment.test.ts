@@ -13,16 +13,12 @@ import {
   createEmptyCatalogueState,
   listCatalogueItems,
 } from "@/lib/catalogues/catalogue";
-import {
-  isDyclonineRinseTreatment,
-  orderTreatmentToothAreas,
-} from "@/lib/templates/adultHygiene2021";
+import { orderTreatmentToothAreas } from "@/lib/templates/adultHygiene2021";
 
 function format(entries: AdultHygieneTreatmentCompletedEntry[]) {
   return formatAdultHygieneTreatmentCompletedEntries(
     entries,
     orderTreatmentToothAreas,
-    isDyclonineRinseTreatment,
   );
 }
 
@@ -79,8 +75,8 @@ describe("structured adult hygiene treatment", () => {
       createEmptyCatalogueState(),
       "hygiene-treatment.completed",
     ).map((item) =>
-      item.id === "seed.hygiene-treatment.completed.dyclonine-rinse"
-        ? { ...item, label: "Current catalogue rinse label" }
+      item.id === "seed.hygiene-treatment.completed.fmp"
+        ? { ...item, label: "Current catalogue FMP label" }
         : item,
     );
     let sequence = 0;
@@ -90,11 +86,10 @@ describe("structured adult hygiene treatment", () => {
       "Current OHE recap",
     );
 
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(5);
     expect(entries[0]).toMatchObject({
-      treatmentType: "Current catalogue rinse label",
-      catalogueItemId:
-        "seed.hygiene-treatment.completed.dyclonine-rinse",
+      treatmentType: "Current catalogue FMP label",
+      catalogueItemId: "seed.hygiene-treatment.completed.fmp",
       procedureSource: "standard-treatment",
     });
     expect(entries.find((entry) => entry.procedureKind === "scaling"))
@@ -134,7 +129,7 @@ describe("structured adult hygiene treatment", () => {
     }));
 
     expect(format(entries)).toBe(
-      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE on proper home care (Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride); FluoriMax 2.5% NaF Varnish application — full mouth",
+      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE on proper home care (Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride); FluoriMax 2.5% NaF Varnish application — full mouth",
     );
   });
 

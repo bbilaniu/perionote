@@ -165,16 +165,6 @@ export const standardOheStatement =
 export const standardHygieneGoal =
   "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
-export const dyclonineRinseTreatment = "Dyclonine 1% rinse 5 ml";
-
-export function isDyclonineRinseTreatment(value: string): boolean {
-  const normalized = value
-    .normalize("NFKC")
-    .trim()
-    .toLocaleLowerCase("en-CA");
-  return normalized.includes("dyclonine") && normalized.includes("rinse");
-}
-
 export interface AdultHygiene2021Form {
   patientId: string;
   noteLastRecallDate: string;

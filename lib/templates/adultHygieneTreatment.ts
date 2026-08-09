@@ -30,7 +30,6 @@ export type AdultHygieneTreatmentCompletedEntry = {
   id: string;
   treatmentType: string;
   toothAreas: string[];
-  applicationTime?: string;
   procedureKind?: HygieneProcedureKind;
   procedureSource?: HygieneProcedureSource;
   quantity?: string;
@@ -53,7 +52,6 @@ export type AdultHygieneTreatmentPresetEntry = Omit<
 >;
 
 export const standardTreatmentCatalogueItemIds = [
-  "seed.hygiene-treatment.completed.dyclonine-rinse",
   "seed.hygiene-treatment.completed.fmp",
   "seed.hygiene-treatment.completed.scaling",
   "seed.hygiene-treatment.completed.selective-polish",
@@ -62,12 +60,6 @@ export const standardTreatmentCatalogueItemIds = [
 ] as const;
 
 export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPresetEntry[] = [
-  {
-    treatmentType: "Dyclonine 1% rinse 5 ml",
-    toothAreas: ["full mouth"],
-    procedureSource: "standard-treatment",
-    careCategory: "product-application",
-  },
   {
     treatmentType: "FMP",
     toothAreas: ["full mouth"],
@@ -317,7 +309,6 @@ function formatStructuredRadiograph(
 export function formatAdultHygieneTreatmentEntry(
   entry: AdultHygieneTreatmentCompletedEntry,
   orderAreas: (areas: string[]) => string[],
-  isDyclonine: (value: string) => boolean,
 ): string {
   if (entry.procedureKind === "scaling") {
     return formatStructuredScaling({
@@ -348,23 +339,15 @@ export function formatAdultHygieneTreatmentEntry(
   const treatmentWithAreas = toothAreas.length
     ? `${treatmentType} — ${toothAreas.join(", ")}`
     : treatmentType;
-  const applicationTime = entry.applicationTime?.trim() ?? "";
-  return isDyclonine(treatmentType) && applicationTime
-    ? `${treatmentWithAreas}${
-        toothAreas.length ? ";" : " —"
-      } time of application/use: ${applicationTime}`
-    : treatmentWithAreas;
+  return treatmentWithAreas;
 }
 
 export function formatAdultHygieneTreatmentCompletedEntries(
   entries: AdultHygieneTreatmentCompletedEntry[],
   orderAreas: (areas: string[]) => string[],
-  isDyclonine: (value: string) => boolean,
 ): string {
   const completed = entries
-    .map((entry) =>
-      formatAdultHygieneTreatmentEntry(entry, orderAreas, isDyclonine),
-    )
+    .map((entry) => formatAdultHygieneTreatmentEntry(entry, orderAreas))
     .filter(Boolean);
   return completed.length
     ? `Treatment completed today: ${completed.join("; ")}`

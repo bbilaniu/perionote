@@ -27,7 +27,6 @@ import {
   type HygieneInstrumentationMethod,
 } from "@/lib/templates/adultHygieneTreatment";
 import {
-  isDyclonineRinseTreatment,
   orderTreatmentToothAreas,
 } from "@/lib/templates/adultHygiene2021";
 
@@ -464,7 +463,6 @@ export function TreatmentCompletedList({
             const preview = formatAdultHygieneTreatmentEntry(
               entry,
               orderTreatmentToothAreas,
-              isDyclonineRinseTreatment,
             );
             const methods = new Set(entry.instrumentation ?? []);
             const canMoveEarlier =
@@ -677,18 +675,6 @@ export function TreatmentCompletedList({
                         updateEntry(entry.id, { toothAreas })
                       }
                     />
-                    {isDyclonineRinseTreatment(entry.treatmentType) ? (
-                      <div className="md:col-span-2">
-                        <TextInput
-                          id={`adult-hygiene-treatment-completed-${entry.id}-application-time`}
-                          label="Time of application/use"
-                          value={entry.applicationTime ?? ""}
-                          onChange={(applicationTime) =>
-                            updateEntry(entry.id, { applicationTime })
-                          }
-                        />
-                      </div>
-                    ) : null}
                   </div>
                 )}
 

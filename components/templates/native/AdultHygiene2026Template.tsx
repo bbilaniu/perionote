@@ -26,6 +26,7 @@ import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
@@ -51,7 +52,6 @@ import {
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2026Fields,
   homeCareOheTopicChoices,
-  isDyclonineRinseTreatment,
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
   resolveOcclusalSplintState,
@@ -230,6 +230,16 @@ const adultHygieneDraftArrayItemShapes = {
   oheTopicsReviewed: "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
   "treatmentCompleted[].toothAreas": "",
+  localAnesthesiaEntries: {
+    id: "",
+    route: "injection",
+    administrationType: "",
+    area: "",
+    product: "",
+    amountMl: "",
+    durationSeconds: "",
+    timeAdministered: "",
+  },
   treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
   treatmentPlan: { id: "", treatmentType: "", toothArea: "" },
 } as const;
@@ -2829,19 +2839,6 @@ export function TreatmentCompletedList({
                     updateEntry(entry.id, { toothAreas: values })
                   }
                 />
-                {isDyclonineRinseTreatment(entry.treatmentType) ? (
-                  <div className="md:col-span-2">
-                    <TextField
-                      id={`adult-hygiene-treatment-completed-${entry.id}-application-time`}
-                      label="Time of application/use"
-                      value={entry.applicationTime ?? ""}
-                      onChange={(applicationTime) =>
-                        updateEntry(entry.id, { applicationTime })
-                      }
-                      placeholder="Enter a clock time or duration"
-                    />
-                  </div>
-                ) : null}
                 <div className="flex flex-wrap items-start gap-2 md:col-span-2">
                   <TooltipActionButton
                     tooltip="Move this treatment line earlier in the note."
@@ -3197,6 +3194,9 @@ export function AdultHygiene2026Template({
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
         ...entry,
         toothAreas: [...entry.toothAreas],
+      })),
+      localAnesthesiaEntries: fixture.localAnesthesiaEntries.map((entry) => ({
+        ...entry,
       })),
       treatmentOptions: fixture.treatmentOptions.map((entry) => ({ ...entry })),
       treatmentPlan: fixture.treatmentPlan.map((entry) => ({ ...entry })),
@@ -4490,12 +4490,20 @@ export function AdultHygiene2026Template({
               radiographsHref="#adult-hygiene-radiographs"
               onChange={(value) => updateField("treatmentCompleted", value)}
             />
-            <CatalogueCombobox
-              id="adult-hygiene-anesthetic"
-              label="Anesthetic"
-              catalogueKey="hygiene-treatment.anesthetic"
-              value={form.anesthetic}
-              onChange={(value) => updateField("anesthetic", value)}
+            <LocalAnesthesiaControl
+              value={{
+                localAnesthesiaNoContraindication:
+                  form.localAnesthesiaNoContraindication,
+                localAnesthesiaEntries: form.localAnesthesiaEntries,
+                localAnesthesiaNoAdverseReactions:
+                  form.localAnesthesiaNoAdverseReactions,
+                localAnesthesiaAdequateAchieved:
+                  form.localAnesthesiaAdequateAchieved,
+                localAnesthesiaNotes: form.localAnesthesiaNotes,
+              }}
+              onChange={(localAnesthesia) =>
+                setForm((current) => ({ ...current, ...localAnesthesia }))
+              }
             />
             <CatalogueCombobox
               id="adult-hygiene-desensitizer"

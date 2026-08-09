@@ -1,6 +1,5 @@
 import {
   type AdultHygiene2021Form,
-  isDyclonineRinseTreatment,
   orderTreatmentToothAreas,
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2021";
@@ -269,7 +268,6 @@ export function formatAdultHygieneTreatmentCompleted(
   return formatAdultHygieneTreatmentCompletedEntries(
     entries,
     orderTreatmentToothAreas,
-    isDyclonineRinseTreatment,
   );
 }
 

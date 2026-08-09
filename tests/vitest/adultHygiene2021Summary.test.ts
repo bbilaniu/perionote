@@ -3,9 +3,7 @@ import {
   bleedingChoices,
   calculusChoices,
   createEmptyAdultHygiene2021Form,
-  dyclonineRinseTreatment,
   hasRequiredAdultHygiene2021Fields,
-  isDyclonineRinseTreatment,
   plaqueChoices,
   standardOheStatement,
   standardTreatmentCompletedPreset,
@@ -648,7 +646,7 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     );
   });
 
-  it("formats the standard treatment preset and optional Dyclonine application time", () => {
+  it("formats the standard treatment preset without local anesthesia", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.treatmentCompleted = [
       ...standardTreatmentCompletedPreset.map((entry, index) => ({
@@ -658,16 +656,11 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
         instrumentation: entry.instrumentation
           ? [...entry.instrumentation]
           : undefined,
-        ...(isDyclonineRinseTreatment(entry.treatmentType)
-          ? { applicationTime: "60 seconds" }
-          : {}),
       })),
     ];
 
-    expect(dyclonineRinseTreatment).toBe("Dyclonine 1% rinse 5 ml");
-    expect(isDyclonineRinseTreatment("Dyclonine rinse 5 ml")).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application/use: 60 seconds; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; FluoriMax 2.5% NaF Varnish application — full mouth",
+      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; FluoriMax 2.5% NaF Varnish application — full mouth",
     );
   });
 

@@ -785,7 +785,7 @@ test("2026 Adult Hygiene standard treatment uses structured procedure controls",
   const completed = page.getByRole("list", {
     name: "Treatment completed today entries",
   });
-  await expect(completed.locator(":scope > li")).toHaveCount(6);
+  await expect(completed.locator(":scope > li")).toHaveCount(5);
   const scaling = completed.locator(":scope > li").filter({
     has: page.getByRole("heading", { name: "Scaling", exact: true }),
   });
@@ -860,6 +860,83 @@ test("2026 Adult Hygiene standard treatment uses structured procedure controls",
   await expect(recap).toHaveValue("Customized OHE recap");
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "OHE on proper home care (Customized OHE recap)",
+  );
+});
+
+test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  const noContraindications = localAnesthesia.getByRole("checkbox", {
+    name: "No C/I to LA",
+    exact: true,
+  });
+  await expect(noContraindications).not.toBeChecked();
+
+  await localAnesthesia
+    .getByRole("button", { name: "Apply Dyclonine rinse", exact: true })
+    .click();
+  const entry = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+  await expect(entry).toHaveCount(1);
+  await expect(
+    entry.getByRole("combobox", { name: "Route", exact: true }),
+  ).toHaveValue("rinse");
+  await expect(
+    entry.getByRole("combobox", { name: "Anesthetic product", exact: true }),
+  ).toHaveValue("seed.hygiene-treatment.anesthetic.dyclonine-rinse");
+  await expect(
+    entry.getByRole("spinbutton", { name: "Amount (mL)", exact: true }),
+  ).toHaveValue("5");
+  await expect(
+    entry.getByRole("spinbutton", {
+      name: "Duration (seconds)",
+      exact: true,
+    }),
+  ).toHaveValue("60");
+  await expect(
+    localAnesthesia.getByText(
+      "Confirm No C/I to LA and complete the post-anesthetic assessment before finishing the note.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds",
+  );
+
+  await noContraindications.check();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "No adverse reactions noted", exact: true })
+    .check();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "Adequate anesthesia achieved", exact: true })
+    .check();
+  await expect(
+    page.locator("#adult-hygiene-summary"),
+  ).toContainText("Local anesthetic administered: No C/I to LA");
+
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: FMP — full mouth",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Dyclonine 1% rinse 5 ml — full mouth",
+  );
+
+  await page
+    .getByRole("group", { name: "Note output", exact: true })
+    .getByRole("radio", { name: "Recare", exact: true })
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Local anesthetic administered:",
   );
 });
 

@@ -1446,7 +1446,7 @@ test("Adult Hygiene applies the reviewed gingivitis observation preset", async (
   );
 });
 
-test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine timing", async ({
+test("Adult Hygiene applies standard OHE and treatment presets without local anesthesia", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
@@ -1476,20 +1476,13 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
   const completedRows = page
     .getByRole("list", { name: "Treatment completed today entries" })
     .locator(":scope > li");
-  await expect(completedRows).toHaveCount(6);
-  const dyclonineRow = completedRows.first();
-  const applicationTime = dyclonineRow.getByRole("textbox", {
-    name: "Time of application/use",
-    exact: true,
-  });
-  await expect(applicationTime).toBeVisible();
-  await applicationTime.fill("60 seconds");
+  await expect(completedRows).toHaveCount(5);
   await page
     .getByRole("button", { name: "Apply standard treatment", exact: true })
     .click();
-  await expect(completedRows).toHaveCount(6);
+  await expect(completedRows).toHaveCount(5);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with Enamel Pro® Prophy Paste with Fluoride \(Strawberry\) \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); FluoriMax 2\.5% NaF Varnish application — full mouth/,
+    /Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with Enamel Pro® Prophy Paste with Fluoride \(Strawberry\) \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); FluoriMax 2\.5% NaF Varnish application — full mouth/,
   );
 });
 

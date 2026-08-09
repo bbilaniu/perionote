@@ -38,7 +38,6 @@ import {
   flossingFrequencyChoices,
   hasRequiredAdultHygiene2021Fields,
   homeCareOheTopicChoices,
-  isDyclonineRinseTreatment,
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
   standardHygieneGoal,
@@ -2708,19 +2707,6 @@ export function TreatmentCompletedList({
                     updateEntry(entry.id, { toothAreas: values })
                   }
                 />
-                {isDyclonineRinseTreatment(entry.treatmentType) ? (
-                  <div className="md:col-span-2">
-                    <TextField
-                      id={`adult-hygiene-treatment-completed-${entry.id}-application-time`}
-                      label="Time of application/use"
-                      value={entry.applicationTime ?? ""}
-                      onChange={(applicationTime) =>
-                        updateEntry(entry.id, { applicationTime })
-                      }
-                      placeholder="Enter a clock time or duration"
-                    />
-                  </div>
-                ) : null}
                 <div className="flex flex-wrap items-start gap-2 md:col-span-2">
                   <TooltipActionButton
                     tooltip="Move this treatment line earlier in the note."

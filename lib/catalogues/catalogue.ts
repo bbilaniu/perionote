@@ -2,6 +2,7 @@ import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { patientChiefConcernSeedValues } from "@/lib/templates/patientChiefConcern";
 import { cariesRiskFactorSeedValues } from "@/lib/templates/cariesRisk";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
+import type { LocalAnesthesiaRoute } from "@/lib/templates/localAnesthesia";
 
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
 export const CATALOGUE_EXPORT_FORMAT = "hygienenote-catalogue";
@@ -98,10 +99,18 @@ export type PolishingProductCatalogueMetadata = {
   containsFluoride: boolean;
 };
 
+export type LocalAnestheticCatalogueMetadata = {
+  kind: "local-anesthetic";
+  route: LocalAnesthesiaRoute;
+  defaultAmountMl: number;
+  defaultDurationSeconds?: number;
+};
+
 export type CatalogueItemMetadata =
   | RadiographCatalogueMetadata
   | CompletedCareCatalogueMetadata
-  | PolishingProductCatalogueMetadata;
+  | PolishingProductCatalogueMetadata
+  | LocalAnestheticCatalogueMetadata;
 
 export const CATALOGUE_SECTIONS = [
   "Visit Team",
@@ -327,11 +336,6 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
     defaultQuantity: 1,
     defaultProduct: "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
   }),
-  completedCareSeed("dyclonine-rinse", "Dyclonine 1% rinse 5 ml", {
-    category: "product-application",
-    procedure: "product-application",
-    defaultToothAreas: ["full mouth"],
-  }),
   completedCareSeed(
     "fluorimax-varnish",
     "FluoriMax 2.5% NaF Varnish application",
@@ -397,6 +401,64 @@ const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
   ["voco-fl", "VOCO FL"],
   ["crystal-x-pur", "crystal x-pur"],
 ]);
+
+const anestheticSeeds: CatalogueSeed[] = [
+  {
+    id: "seed.hygiene-treatment.anesthetic.articaine-4-epinephrine-1-200k",
+    label: "Articaine 4% with 1:200K epinephrine",
+    metadata: {
+      kind: "local-anesthetic",
+      route: "injection",
+      defaultAmountMl: 1.8,
+    },
+  },
+  {
+    id: "seed.hygiene-treatment.anesthetic.lidocaine-2-epinephrine-1-100k",
+    label: "Lidocaine 2% with 1:100K epinephrine",
+    metadata: {
+      kind: "local-anesthetic",
+      route: "injection",
+      defaultAmountMl: 1.8,
+    },
+  },
+  {
+    id: "seed.hygiene-treatment.anesthetic.mepivacaine-3",
+    label: "Mepivacaine 3% without epinephrine",
+    metadata: {
+      kind: "local-anesthetic",
+      route: "injection",
+      defaultAmountMl: 1.8,
+    },
+  },
+  {
+    id: "seed.hygiene-treatment.anesthetic.benzocaine-20",
+    label: "Benzocaine 20% paste",
+    metadata: {
+      kind: "local-anesthetic",
+      route: "topical",
+      defaultAmountMl: 0.5,
+    },
+  },
+  {
+    id: "seed.hygiene-treatment.anesthetic.oraqix",
+    label: "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+    metadata: {
+      kind: "local-anesthetic",
+      route: "topical",
+      defaultAmountMl: 1.7,
+    },
+  },
+  {
+    id: "seed.hygiene-treatment.anesthetic.dyclonine-rinse",
+    label: "Dyclonine 1% rinse",
+    metadata: {
+      kind: "local-anesthetic",
+      route: "rinse",
+      defaultAmountMl: 5,
+      defaultDurationSeconds: 60,
+    },
+  },
+];
 
 const recallIntervalSeeds = catalogueSeeds("scheduling.recall-interval", [
   ["12-month", "12-month recall"],
@@ -565,9 +627,9 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
     key: "hygiene-treatment.anesthetic",
     section: "Treatment",
-    title: "Anesthetic",
-    fieldLabels: ["Anesthetic"],
-    seeds: [],
+    title: "Local anesthetic products",
+    fieldLabels: ["Anesthetic product"],
+    seeds: anestheticSeeds,
     lifecycle: "pilot",
   },
   {
@@ -880,6 +942,37 @@ function parseCatalogueItemMetadata(
       containsFluoride: readBoolean(value, "containsFluoride"),
     };
   }
+  if (value.kind === "local-anesthetic") {
+    const route = value.route;
+    if (
+      route !== "injection" &&
+      route !== "topical" &&
+      route !== "rinse"
+    ) {
+      throw new CatalogueValidationError("Invalid local-anesthetic route.");
+    }
+    const defaultAmountMl = readOptionalPositiveNumber(
+      value,
+      "defaultAmountMl",
+    );
+    if (!defaultAmountMl) {
+      throw new CatalogueValidationError(
+        "Local-anesthetic defaultAmountMl is required.",
+      );
+    }
+    const defaultDurationSeconds = readOptionalPositiveNumber(
+      value,
+      "defaultDurationSeconds",
+    );
+    return {
+      kind: "local-anesthetic",
+      route,
+      defaultAmountMl,
+      ...(defaultDurationSeconds === undefined
+        ? {}
+        : { defaultDurationSeconds }),
+    };
+  }
   throw new CatalogueValidationError("Invalid catalogue metadata kind.");
 }
 
@@ -899,6 +992,12 @@ export function isPolishingProductCatalogueMetadata(
   metadata: CatalogueItemMetadata | undefined,
 ): metadata is PolishingProductCatalogueMetadata {
   return metadata?.kind === "polishing-product";
+}
+
+export function isLocalAnestheticCatalogueMetadata(
+  metadata: CatalogueItemMetadata | undefined,
+): metadata is LocalAnestheticCatalogueMetadata {
+  return metadata?.kind === "local-anesthetic";
 }
 
 function parseUserItem(value: unknown): ParsedUserCatalogueItem {
