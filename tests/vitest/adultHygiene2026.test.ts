@@ -93,6 +93,10 @@ describe("2026 Adult Hygiene independence", () => {
     expect(complete).toContain("Recommended Recare Interval: 6-month recall.");
     expect(complete).toContain("Next Dental Visit: Synthetic restorative treatment.");
     expect(complete).toContain("Next Hygiene Visit: Synthetic hygiene follow-up.");
+    expect(complete.match(/Next Dental Visit:/g)).toHaveLength(1);
+    expect(complete.match(/Dental Date Booked:/g)).toHaveLength(1);
+    expect(complete.match(/Next Hygiene Visit:/g)).toHaveLength(1);
+    expect(complete.match(/Hygiene Date Booked:/g)).toHaveLength(1);
     const orderedCompleteSections = [
       "Patient Chief Concern:",
       "EOE:",

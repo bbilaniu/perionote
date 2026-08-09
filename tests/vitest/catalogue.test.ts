@@ -284,17 +284,24 @@ describe("local catalogues", () => {
       "N/A",
     ]);
     expect(
-      listCatalogueItems(emptyState, "scheduling.next-visit").map(
+      listCatalogueItems(emptyState, "scheduling.hygiene-next-visit").map(
         (item) => item.label,
       ),
     ).toEqual([
       "6 MONTH SCALE",
-      "12 MONTH RECALL",
       "3 MONTH SCALE",
       "4 MONTH SCALE",
+      "FOLLOW-UP HYGIENE",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "scheduling.dentist-next-visit").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "12 MONTH RECALL",
       "6 MONTH RECALL",
       "9 MONTH RECALL",
-      "FOLLOW-UP HYGIENE",
+      "FOLLOW-UP DENTIST CARE",
     ]);
 
     const molarDefinition = CATALOGUE_DEFINITIONS.find(
@@ -401,6 +408,69 @@ describe("local catalogues", () => {
         hidden: true,
         favorite: false,
         sortOrder: 0,
+      },
+    ]);
+  });
+
+  it("splits legacy next-visit catalogue values without losing custom items", () => {
+    const migrated = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [
+        {
+          id: "legacy-hygiene-visit",
+          catalogueKey: "scheduling.next-visit",
+          label: "4 MONTH SCALE",
+          hidden: false,
+          favorite: true,
+          sortOrder: 1,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+        {
+          id: "legacy-custom-visit",
+          catalogueKey: "scheduling.next-visit",
+          label: "CUSTOM FOLLOW-UP",
+          hidden: false,
+          favorite: false,
+          sortOrder: 7,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+      ],
+      seedPreferences: [
+        {
+          seedId: "seed.scheduling.next-visit.6-mrc",
+          hidden: true,
+          favorite: false,
+          sortOrder: 4,
+        },
+      ],
+    });
+
+    expect(migrated.seedPreferences).toEqual([
+      {
+        seedId: "seed.scheduling.dentist-next-visit.6-mrc",
+        hidden: true,
+        favorite: false,
+        sortOrder: 4,
+      },
+      {
+        seedId: "seed.scheduling.hygiene-next-visit.4-mos-scale",
+        hidden: false,
+        favorite: true,
+        sortOrder: 1,
+      },
+    ]);
+    expect(migrated.userItems).toMatchObject([
+      {
+        id: "legacy-custom-visit",
+        catalogueKey: "scheduling.hygiene-next-visit",
+        label: "CUSTOM FOLLOW-UP",
+      },
+      {
+        id: "legacy-custom-visit.dentist-next-visit",
+        catalogueKey: "scheduling.dentist-next-visit",
+        label: "CUSTOM FOLLOW-UP",
       },
     ]);
   });

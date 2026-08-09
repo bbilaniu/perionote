@@ -944,7 +944,7 @@ export function AdolescentHygieneTemplate({
               <CatalogueCombobox
                 id="adolescent-next-visit"
                 label="Next visit"
-                catalogueKey="scheduling.next-visit"
+                catalogueKey="scheduling.hygiene-next-visit"
                 value={form.nextVisit}
                 onChange={(value) => updateField("nextVisit", value)}
               />

@@ -96,7 +96,7 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
     page.getByRole("heading", { name: "Continuity of care", exact: true }),
   ).toBeVisible();
   const continuityGroup = page.getByRole("region", {
-    name: "Intervals and next visit catalogues",
+    name: "Intervals and next visits catalogues",
   });
   const recareTab = continuityGroup.getByRole("tab", {
     name: /Recommended recare interval/,
@@ -104,15 +104,26 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   const hygieneTab = continuityGroup.getByRole("tab", {
     name: /Recommended hygiene interval/,
   });
-  const nextVisitTab = continuityGroup.getByRole("tab", {
-    name: /Next visit/,
+  const hygieneNextVisitTab = continuityGroup.getByRole("tab", {
+    name: /Next hygiene visit/,
+  });
+  const dentistNextVisitTab = continuityGroup.getByRole("tab", {
+    name: /Next dentist visit/,
   });
   await expect(recareTab).toHaveAttribute("aria-selected", "true");
   await hygieneTab.click();
   await expect(hygieneTab).toHaveAttribute("aria-selected", "true");
-  await nextVisitTab.click();
+  await hygieneNextVisitTab.click();
   await expect(
-    continuityGroup.locator('[data-catalogue-key="scheduling.next-visit"]'),
+    continuityGroup.locator(
+      '[data-catalogue-key="scheduling.hygiene-next-visit"]',
+    ),
+  ).toBeVisible();
+  await dentistNextVisitTab.click();
+  await expect(
+    continuityGroup.locator(
+      '[data-catalogue-key="scheduling.dentist-next-visit"]',
+    ),
   ).toBeVisible();
 });
 

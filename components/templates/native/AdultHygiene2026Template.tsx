@@ -57,13 +57,13 @@ import {
   resolveOcclusalSplintState,
   standardHygieneGoal,
   standardOheStatement,
-  standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
   buildOheTreatmentRecap,
+  createStandardTreatmentEntriesFromCatalogue,
   recareExamTreatmentPreset,
   syncDerivedOheTreatmentDetails,
   syncRadiographTreatmentEntries,
@@ -2938,7 +2938,8 @@ export function AdultHygiene2026Template({
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
   const providerDefaultsAppliedRef = useRef(false);
-  const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
+  const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
+    useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId: "adult-hygiene-2026",
@@ -3413,19 +3414,13 @@ export function AdultHygiene2026Template({
       form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
     );
     const oheRecap = buildOheTreatmentRecap(form);
-    const additions = standardTreatmentCompletedPreset
-      .filter(
-        (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
-      )
-      .map((entry) => ({
-        ...createTreatmentCompletedEntry(),
-        ...entry,
-        toothAreas: [...entry.toothAreas],
-        ...(entry.instrumentation
-          ? { instrumentation: [...entry.instrumentation] }
-          : {}),
-        ...(entry.procedureKind === "ohe" ? { details: oheRecap } : {}),
-      }));
+    const additions = createStandardTreatmentEntriesFromCatalogue(
+      getItems("hygiene-treatment.completed"),
+      () => createTreatmentCompletedEntry().id,
+      oheRecap,
+    ).filter(
+      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+    );
     if (additions.length) {
       updateField("treatmentCompleted", [
         ...form.treatmentCompleted,
@@ -4552,7 +4547,7 @@ export function AdultHygiene2026Template({
               <CatalogueCombobox
                 id="adult-hygiene-next-visit"
                 label="Next hygiene visit"
-                catalogueKey="scheduling.next-visit"
+                catalogueKey="scheduling.hygiene-next-visit"
                 value={form.nextVisit}
                 onChange={(value) => updateField("nextVisit", value)}
               />
@@ -4568,7 +4563,7 @@ export function AdultHygiene2026Template({
               <CatalogueCombobox
                 id="adult-hygiene-dental-next-visit"
                 label="Next dental visit"
-                catalogueKey="scheduling.next-visit"
+                catalogueKey="scheduling.dentist-next-visit"
                 value={form.dentalNextVisit}
                 onChange={(value) => updateField("dentalNextVisit", value)}
               />

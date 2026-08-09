@@ -64,11 +64,12 @@ const catalogueTabGroups: Array<{
   },
   {
     section: "Continuity of care",
-    title: "Intervals and next visit",
+    title: "Intervals and next visits",
     keys: [
       "scheduling.recall-interval",
       "scheduling.hygiene-interval",
-      "scheduling.next-visit",
+      "scheduling.hygiene-next-visit",
+      "scheduling.dentist-next-visit",
     ],
   },
 ];

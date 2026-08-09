@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildOheTreatmentRecap,
+  createStandardTreatmentEntriesFromCatalogue,
   createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentCompletedEntries,
   standardTreatmentCompletedPreset,
@@ -71,6 +72,35 @@ describe("structured adult hygiene treatment", () => {
         "radiographs",
       ),
     ).toBeNull();
+  });
+
+  it("builds Standard Treatment from current catalogue items", () => {
+    const catalogue = listCatalogueItems(
+      createEmptyCatalogueState(),
+      "hygiene-treatment.completed",
+    ).map((item) =>
+      item.id === "seed.hygiene-treatment.completed.dyclonine-rinse"
+        ? { ...item, label: "Current catalogue rinse label" }
+        : item,
+    );
+    let sequence = 0;
+    const entries = createStandardTreatmentEntriesFromCatalogue(
+      catalogue,
+      () => `standard-${sequence++}`,
+      "Current OHE recap",
+    );
+
+    expect(entries).toHaveLength(6);
+    expect(entries[0]).toMatchObject({
+      treatmentType: "Current catalogue rinse label",
+      catalogueItemId:
+        "seed.hygiene-treatment.completed.dyclonine-rinse",
+      procedureSource: "standard-treatment",
+    });
+    expect(entries.find((entry) => entry.procedureKind === "scaling"))
+      .toMatchObject({ quantity: "3", instrumentation: ["hand", "power"] });
+    expect(entries.find((entry) => entry.procedureKind === "ohe"))
+      .toMatchObject({ details: "Current OHE recap", procedureSource: "ohe" });
   });
 
   it("keeps legacy free-text treatment rows unchanged", () => {

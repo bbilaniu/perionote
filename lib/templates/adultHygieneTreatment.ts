@@ -52,6 +52,15 @@ export type AdultHygieneTreatmentPresetEntry = Omit<
   "id"
 >;
 
+export const standardTreatmentCatalogueItemIds = [
+  "seed.hygiene-treatment.completed.dyclonine-rinse",
+  "seed.hygiene-treatment.completed.fmp",
+  "seed.hygiene-treatment.completed.scaling",
+  "seed.hygiene-treatment.completed.selective-polish",
+  "seed.hygiene-treatment.completed.ohe",
+  "seed.hygiene-treatment.completed.fluorimax-varnish",
+] as const;
+
 export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPresetEntry[] = [
   {
     treatmentType: "Dyclonine 1% rinse 5 ml",
@@ -162,6 +171,31 @@ export function createTreatmentEntryFromCatalogueItem(
     default:
       return base;
   }
+}
+
+export function createStandardTreatmentEntriesFromCatalogue(
+  items: readonly CatalogueItem[],
+  createId: () => string,
+  oheRecap = "",
+): AdultHygieneTreatmentCompletedEntry[] {
+  const itemsById = new Map(items.map((item) => [item.id, item]));
+  return standardTreatmentCatalogueItemIds.flatMap((itemId) => {
+    const item = itemsById.get(itemId);
+    if (!item) return [];
+    const entry = createTreatmentEntryFromCatalogueItem(
+      item,
+      createId(),
+      oheRecap,
+    );
+    if (!entry) return [];
+    return [
+      {
+        ...entry,
+        procedureSource:
+          entry.procedureKind === "ohe" ? "ohe" : "standard-treatment",
+      },
+    ];
+  });
 }
 
 function normalized(value: string): string {

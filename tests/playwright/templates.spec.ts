@@ -644,6 +644,49 @@ test("2026 Adult Hygiene coordinates sterilization documentation", async ({
   );
 });
 
+test("2026 Adult Hygiene separates hygiene and dentist next-visit catalogues", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const hygieneVisit = page.getByRole("combobox", {
+    name: "Next hygiene visit",
+    exact: true,
+  });
+  await hygieneVisit.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP HYGIENE Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP DENTIST CARE Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await hygieneVisit.press("Escape");
+
+  const dentalVisit = page.getByRole("combobox", {
+    name: "Next dental visit",
+    exact: true,
+  });
+  await dentalVisit.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP DENTIST CARE Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP HYGIENE Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+});
+
 test("2026 Adult Hygiene links radiograph quantities and a recare exam to completed care", async ({
   page,
 }) => {

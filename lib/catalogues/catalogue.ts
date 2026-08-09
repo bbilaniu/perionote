@@ -31,10 +31,15 @@ export const CATALOGUE_KEYS = [
   "hygiene-treatment.desensitizer",
   "scheduling.recall-interval",
   "scheduling.hygiene-interval",
-  "scheduling.next-visit",
+  "scheduling.hygiene-next-visit",
+  "scheduling.dentist-next-visit",
 ] as const;
 
 export type CatalogueKey = (typeof CATALOGUE_KEYS)[number];
+const LEGACY_NEXT_VISIT_CATALOGUE_KEY = "scheduling.next-visit";
+type ParsedUserCatalogueItem = Omit<UserCatalogueItem, "catalogueKey"> & {
+  catalogueKey: CatalogueKey | typeof LEGACY_NEXT_VISIT_CATALOGUE_KEY;
+};
 export type CatalogueOwner = "seed" | "user";
 
 export const COMPLETED_CARE_CATEGORIES = [
@@ -46,8 +51,7 @@ export const COMPLETED_CARE_CATEGORIES = [
   "other",
 ] as const;
 
-export type CompletedCareCategory =
-  (typeof COMPLETED_CARE_CATEGORIES)[number];
+export type CompletedCareCategory = (typeof COMPLETED_CARE_CATEGORIES)[number];
 
 export const COMPLETED_CARE_CATEGORY_LABELS: Record<
   CompletedCareCategory,
@@ -321,8 +325,7 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
     category: "instrumentation",
     procedure: "polish",
     defaultQuantity: 1,
-    defaultProduct:
-      "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+    defaultProduct: "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
   }),
   completedCareSeed("dyclonine-rinse", "Dyclonine 1% rinse 5 ml", {
     category: "product-application",
@@ -408,14 +411,18 @@ const hygieneIntervalSeeds = catalogueSeeds("scheduling.hygiene-interval", [
   ["not-applicable", "N/A"],
 ]);
 
-const nextVisitSeeds = catalogueSeeds("scheduling.next-visit", [
-  ["6-mos-scale", "6 MONTH SCALE"],
-  ["12-mrc", "12 MONTH RECALL"],
+const nextHygieneVisitSeeds = catalogueSeeds("scheduling.hygiene-next-visit", [
+  ["follow-up-hygiene", "FOLLOW-UP HYGIENE"],
   ["3-mos-scale", "3 MONTH SCALE"],
   ["4-mos-scale", "4 MONTH SCALE"],
+  ["6-mos-scale", "6 MONTH SCALE"],
+]);
+
+const nextDentistVisitSeeds = catalogueSeeds("scheduling.dentist-next-visit", [
+  ["follow-up-dentist", "FOLLOW-UP DENTIST CARE"],
+  ["12-mrc", "12 MONTH RECALL"],
   ["6-mrc", "6 MONTH RECALL"],
   ["9-mrc", "9 MONTH RECALL"],
-  ["follow-up-hygiene", "FOLLOW-UP HYGIENE"],
 ]);
 
 export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
@@ -588,11 +595,19 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     lifecycle: "pilot",
   },
   {
-    key: "scheduling.next-visit",
+    key: "scheduling.hygiene-next-visit",
     section: "Continuity of care",
-    title: "Next visit",
-    fieldLabels: ["Next visit"],
-    seeds: nextVisitSeeds,
+    title: "Next hygiene visit",
+    fieldLabels: ["Next hygiene visit"],
+    seeds: nextHygieneVisitSeeds,
+    lifecycle: "pilot",
+  },
+  {
+    key: "scheduling.dentist-next-visit",
+    section: "Continuity of care",
+    title: "Next dentist visit",
+    fieldLabels: ["Next dental visit"],
+    seeds: nextDentistVisitSeeds,
     lifecycle: "pilot",
   },
 ];
@@ -618,7 +633,7 @@ const seedsById = new Map(
   ),
 );
 
-const legacyRadiographSeedAliases = new Map<string, string>([
+const legacySeedAliases = new Map<string, string>([
   ["seed.imaging.radiographs.pan", "seed.imaging.radiographs.panoramic"],
   ["seed.imaging.radiographs.1-bw", "seed.imaging.radiographs.bitewings"],
   ["seed.imaging.radiographs.2-bw", "seed.imaging.radiographs.bitewings"],
@@ -628,6 +643,34 @@ const legacyRadiographSeedAliases = new Map<string, string>([
   ["seed.imaging.radiographs.6-bw", "seed.imaging.radiographs.bitewings"],
   ["seed.imaging.radiographs.1-pa", "seed.imaging.radiographs.periapicals"],
   ["seed.imaging.radiographs.2-pa", "seed.imaging.radiographs.periapicals"],
+  [
+    "seed.scheduling.next-visit.6-mos-scale",
+    "seed.scheduling.hygiene-next-visit.6-mos-scale",
+  ],
+  [
+    "seed.scheduling.next-visit.3-mos-scale",
+    "seed.scheduling.hygiene-next-visit.3-mos-scale",
+  ],
+  [
+    "seed.scheduling.next-visit.4-mos-scale",
+    "seed.scheduling.hygiene-next-visit.4-mos-scale",
+  ],
+  [
+    "seed.scheduling.next-visit.follow-up-hygiene",
+    "seed.scheduling.hygiene-next-visit.follow-up-hygiene",
+  ],
+  [
+    "seed.scheduling.next-visit.12-mrc",
+    "seed.scheduling.dentist-next-visit.12-mrc",
+  ],
+  [
+    "seed.scheduling.next-visit.6-mrc",
+    "seed.scheduling.dentist-next-visit.6-mrc",
+  ],
+  [
+    "seed.scheduling.next-visit.9-mrc",
+    "seed.scheduling.dentist-next-visit.9-mrc",
+  ],
 ]);
 
 export class CatalogueValidationError extends Error {
@@ -751,8 +794,7 @@ function readOptionalStringArray(
     !Array.isArray(value) ||
     value.length > 20 ||
     value.some(
-      (item) =>
-        typeof item !== "string" || !item.trim() || item.length > 200,
+      (item) => typeof item !== "string" || !item.trim() || item.length > 200,
     )
   ) {
     throw new CatalogueValidationError(`Invalid ${key} value.`);
@@ -803,7 +845,10 @@ function parseCatalogueItemMetadata(
       "preventive-procedure",
       "other",
     ];
-    if (typeof procedure !== "string" || !procedures.includes(procedure as CompletedCareProcedure)) {
+    if (
+      typeof procedure !== "string" ||
+      !procedures.includes(procedure as CompletedCareProcedure)
+    ) {
       throw new CatalogueValidationError("Invalid completed-care procedure.");
     }
     const defaultQuantity = readOptionalPositiveNumber(
@@ -856,12 +901,15 @@ export function isPolishingProductCatalogueMetadata(
   return metadata?.kind === "polishing-product";
 }
 
-function parseUserItem(value: unknown): UserCatalogueItem {
+function parseUserItem(value: unknown): ParsedUserCatalogueItem {
   if (!isRecord(value)) {
     throw new CatalogueValidationError("Invalid user catalogue item.");
   }
   const catalogueKey = value.catalogueKey;
-  if (!isCatalogueKey(catalogueKey)) {
+  if (
+    !isCatalogueKey(catalogueKey) &&
+    catalogueKey !== LEGACY_NEXT_VISIT_CATALOGUE_KEY
+  ) {
     throw new CatalogueValidationError("Invalid catalogueKey value.");
   }
   return {
@@ -884,7 +932,7 @@ function parseSeedPreference(value: unknown): SeedPreference {
     throw new CatalogueValidationError("Invalid seed preference.");
   }
   const storedSeedId = readIdentifier(value, "seedId");
-  const seedId = legacyRadiographSeedAliases.get(storedSeedId) ?? storedSeedId;
+  const seedId = legacySeedAliases.get(storedSeedId) ?? storedSeedId;
   if (!seedsById.has(seedId)) {
     throw new CatalogueValidationError(`Unknown seed: ${seedId}`);
   }
@@ -999,6 +1047,37 @@ function migrateUserItemsMatchingSeeds(
   };
 }
 
+function migrateLegacyNextVisitUserItems(
+  userItems: ParsedUserCatalogueItem[],
+): UserCatalogueItem[] {
+  const hygieneLabels = new Set(
+    nextHygieneVisitSeeds.map((seed) => normalizeCatalogueLabel(seed.label)),
+  );
+  const dentistLabels = new Set(
+    nextDentistVisitSeeds.map((seed) => normalizeCatalogueLabel(seed.label)),
+  );
+
+  return userItems.flatMap((item) => {
+    if (item.catalogueKey !== LEGACY_NEXT_VISIT_CATALOGUE_KEY) {
+      return [item as UserCatalogueItem];
+    }
+    const label = normalizeCatalogueLabel(item.label);
+    const isHygiene = hygieneLabels.has(label);
+    const isDentist = dentistLabels.has(label);
+    const targets: CatalogueKey[] =
+      isHygiene && !isDentist
+        ? ["scheduling.hygiene-next-visit"]
+        : isDentist && !isHygiene
+        ? ["scheduling.dentist-next-visit"]
+        : ["scheduling.hygiene-next-visit", "scheduling.dentist-next-visit"];
+    return targets.map((catalogueKey, index) => ({
+      ...item,
+      id: index === 0 ? item.id : `${item.id.slice(0, 170)}.dentist-next-visit`,
+      catalogueKey,
+    }));
+  });
+}
+
 export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   if (!isRecord(value) || value.schemaVersion !== 1) {
     throw new CatalogueValidationError(
@@ -1012,7 +1091,9 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
     throw new CatalogueValidationError("Invalid seedPreferences collection.");
   }
 
-  const userItems = value.userItems.map(parseUserItem);
+  const userItems = migrateLegacyNextVisitUserItems(
+    value.userItems.map(parseUserItem),
+  );
   const seedPreferences = [
     ...new Map(
       value.seedPreferences
@@ -1208,12 +1289,7 @@ export function rememberCatalogueValue(
   const label = validateCatalogueLabel(value);
   const metadata = parseCatalogueItemMetadata(options.metadata);
   const existing = findEquivalentCatalogueItem(state, catalogueKey, label);
-  assertCatalogueMetadataUnique(
-    state,
-    catalogueKey,
-    metadata,
-    existing?.id,
-  );
+  assertCatalogueMetadataUnique(state, catalogueKey, metadata, existing?.id);
   if (existing) {
     let nextState = state;
     let nextItem = existing;

@@ -932,8 +932,11 @@ export function buildAdultHygiene2026Summary(
     coordinatedRecommendations,
     ...(includesHygiene ? [treatmentCompleted] : []),
     ...(output === "hygiene" ? [hygieneAppliancesAndHistory] : []),
-    ...(includesRecare ? [recareFollowUp] : []),
-    ...(includesHygiene ? [hygieneFollowUp] : []),
+    ...(output === "complete"
+      ? [recareFollowUp, hygieneFollowUp]
+      : output === "recare"
+        ? [recareFollowUp]
+        : [hygieneFollowUp]),
   ]
     .map((group) => group.filter(Boolean))
     .filter((group) => group.length > 0)
