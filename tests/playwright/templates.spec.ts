@@ -265,6 +265,13 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "TMJ: WNL.",
   );
+  await page
+    .getByRole("group", { name: "Structured extraoral observations" })
+    .getByRole("button", { name: "Collapse observations" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /Structured extraoral observations/ }),
+  ).toHaveAttribute("aria-expanded", "false");
 
   await expect(page.getByRole("heading", { name: "IOE" })).toBeVisible();
   await page
@@ -274,6 +281,16 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "IOE:\n  - Tongue: coated.",
   );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    /TMJ loading test: WNL\.\n\nIOE:/,
+  );
+  await page
+    .getByRole("group", { name: "Structured intraoral observations" })
+    .getByRole("button", { name: "Collapse observations" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /Structured intraoral observations/ }),
+  ).toHaveAttribute("aria-expanded", "false");
 
   await expect(page.getByRole("heading", { name: "Records" })).toBeVisible();
   await expect(
@@ -282,6 +299,13 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   await expect(
     page.getByRole("heading", { name: "Teeth and Odontogram" }),
   ).toBeVisible();
+  const sectionTitles = await page.locator("main h2").allTextContents();
+  const occlusionIndex = sectionTitles.indexOf("Occlusion and Habits");
+  expect(sectionTitles.slice(occlusionIndex, occlusionIndex + 3)).toEqual([
+    "Occlusion and Habits",
+    "Teeth and Odontogram",
+    "Appliances and Relevant History",
+  ]);
 
   const output = page.getByRole("group", { name: "Note output" });
   await output.getByRole("button", { name: "Hygiene" }).click();

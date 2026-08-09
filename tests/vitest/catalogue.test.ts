@@ -96,6 +96,7 @@ describe("local catalogues", () => {
       ),
     ).toEqual([
       "Nothing",
+      "Patient presents for periodic examination/recare",
       "Sore gums upon brushing/flossing",
       "Dissatisfaction with the appearance of teeth due to yellowing/stain",
       "Food catches between teeth",

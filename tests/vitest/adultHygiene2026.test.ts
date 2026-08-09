@@ -67,6 +67,7 @@ describe("2026 Adult Hygiene independence", () => {
 
     expect(complete).toContain("EOE:");
     expect(complete).toContain("IOE:");
+    expect(complete.slice(0, complete.indexOf("IOE:"))).toMatch(/\n\n$/);
     expect(complete).toContain("Radiographs: 2BW; 4PA");
     expect(complete).toContain("Teeth:");
     expect(complete).toContain("Molar occlusion—right: Class I.");
@@ -113,6 +114,7 @@ describe("2026 Adult Hygiene independence", () => {
 
     expect(recare).toContain("EOE:");
     expect(recare).toContain("IOE:");
+    expect(recare.slice(0, recare.indexOf("IOE:"))).toMatch(/\n\n$/);
     expect(recare).toContain("Teeth:");
     expect(recare).toContain("Radiographs: 2BW; 4PA");
     expect(recare).toContain("Molar occlusion—right: Class I.");

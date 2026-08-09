@@ -11,7 +11,10 @@ import {
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
-import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
+import {
+  applyPatientChiefConcernSelectionRules,
+  patientChiefConcernSeedValues,
+} from "@/lib/templates/patientChiefConcern";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import {
   applyGingivitisObservationPreset,
@@ -544,6 +547,13 @@ Bleeding: Localized mild — areas: mandible.`);
         ["Nothing", "Sore gums upon brushing/flossing"]
       )
     ).toEqual(["Sore gums upon brushing/flossing"]);
+  });
+
+  it("offers periodic examination or recare as a chief concern", () => {
+    expect(patientChiefConcernSeedValues).toContainEqual([
+      "periodic-examination-recare",
+      "Patient presents for periodic examination/recare",
+    ]);
   });
 
   it("can list chief concerns on separate note lines", () => {

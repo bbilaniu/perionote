@@ -669,13 +669,15 @@ export function buildAdultHygiene2026Summary(
   ];
 
   const extraoral = formatRecareExtraoralLines(form);
-  const exam = [
+  const extraoralExam = [
     ...extraoral.map((line, index) =>
       index === 0 ? line.replace(/^Extraoral/, "EOE") : line,
     ),
     examLine("TMJ", form.tmjStatus, form.tmjFindings),
     examLine("Masseter palpation", form.masseterStatus, form.masseterFindings),
     examLine("TMJ loading test", form.tmjLoadStatus, form.tmjLoadFindings),
+  ];
+  const intraoralExam = [
     ...formatRecareIntraoralLines(form).map((line, index) =>
       index === 0 ? line.replace(/^Intraoral/, "IOE") : line,
     ),
@@ -910,7 +912,13 @@ export function buildAdultHygiene2026Summary(
     consentAndHistory,
     concerns,
     ...(includesRecare
-      ? [records, exam, teethAndOdontogram, occlusionAndHabits]
+      ? [
+          records,
+          extraoralExam,
+          intraoralExam,
+          teethAndOdontogram,
+          occlusionAndHabits,
+        ]
       : []),
     ...(includesRecare
       ? [

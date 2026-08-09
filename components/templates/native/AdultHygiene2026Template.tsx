@@ -1998,6 +1998,14 @@ export function PeriodontalClassificationControl({
                 </div>
               </div>
             </ObservationDisclosure>
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              onClick={() => setStructuredObservationsOpen(false)}
+            >
+              Collapse observations
+              <DropdownChevron open />
+            </button>
           </div>
         ) : null}
       </fieldset>
@@ -2076,21 +2084,17 @@ export function PeriodontalClassificationControl({
                         More information is needed to calculate a suggestion:
                       </p>
                       <ul className="mt-1 list-disc space-y-1 pl-5">
-                        {gingivalHealthCandidate.missingFields.map(
-                          (field) => (
-                            <li key={field.id}>
-                              <button
-                                type="button"
-                                className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
-                                onClick={() =>
-                                  navigateToMissingField(field.id)
-                                }
-                              >
-                                {field.label}
-                              </button>
-                            </li>
-                          ),
-                        )}
+                        {gingivalHealthCandidate.missingFields.map((field) => (
+                          <li key={field.id}>
+                            <button
+                              type="button"
+                              className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                              onClick={() => navigateToMissingField(field.id)}
+                            >
+                              {field.label}
+                            </button>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   ) : null}
@@ -2191,12 +2195,8 @@ export function PeriodontalClassificationControl({
                       update({
                         ...(candidate.stage ? { stage: candidate.stage } : {}),
                         ...(candidate.grade ? { grade: candidate.grade } : {}),
-                        ...(candidate.stage
-                          ? { stageOverrideReason: "" }
-                          : {}),
-                        ...(candidate.grade
-                          ? { gradeOverrideReason: "" }
-                          : {}),
+                        ...(candidate.stage ? { stageOverrideReason: "" } : {}),
+                        ...(candidate.grade ? { gradeOverrideReason: "" } : {}),
                       })
                     }
                   >
@@ -2642,6 +2642,14 @@ function GingivalDescriptionControl({
                 </fieldset>
               );
             })}
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              onClick={() => setStructuredObservationsOpen(false)}
+            >
+              Collapse observations
+              <DropdownChevron open />
+            </button>
           </div>
         ) : null}
       </fieldset>
@@ -2835,10 +2843,7 @@ export function AdultHygiene2026Template({
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
   const providerDefaultsAppliedRef = useRef(false);
-  const {
-    providerDefaultsStorageStatus,
-    getProviderDefault,
-  } = useCatalogues();
+  const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId: "adult-hygiene-2026",
@@ -2865,8 +2870,7 @@ export function AdultHygiene2026Template({
   function createNewFormWithProviderDefaults(): AdultHygiene2026Form {
     return {
       ...createEmptyAdultHygiene2026Form(),
-      dentist:
-        getProviderDefault("visit-team.dentist")?.label ?? "",
+      dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
       rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
       rda: getProviderDefault("visit-team.rda")?.label ?? "",
     };
@@ -2888,10 +2892,8 @@ export function AdultHygiene2026Template({
         current.dentist ||
         getProviderDefault("visit-team.dentist")?.label ||
         "",
-      rdh:
-        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda:
-        current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+      rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
     }));
   }, [
     getProviderDefault,
@@ -2973,7 +2975,11 @@ export function AdultHygiene2026Template({
     }
     const copied = await writeClipboard(summaries[mode]);
     const outputLabel =
-      mode === "complete" ? "Complete" : mode === "hygiene" ? "Hygiene" : "Recare";
+      mode === "complete"
+        ? "Complete"
+        : mode === "hygiene"
+        ? "Hygiene"
+        : "Recare";
     setCopyMessage(
       copied
         ? draftSaveResult === "failed"
@@ -3665,9 +3671,7 @@ export function AdultHygiene2026Template({
                 label="Masseter palpation"
                 status={form.masseterStatus}
                 findings={form.masseterFindings}
-                onStatusChange={(value) =>
-                  updateField("masseterStatus", value)
-                }
+                onStatusChange={(value) => updateField("masseterStatus", value)}
                 onFindingsChange={(value) =>
                   updateField("masseterFindings", value)
                 }
@@ -3876,6 +3880,132 @@ export function AdultHygiene2026Template({
               label="Odontogram up to date"
               checked={form.odontogramUpToDate}
               onChange={(value) => updateField("odontogramUpToDate", value)}
+            />
+          </Section>
+
+          <Section title="Appliances and Relevant History">
+            <div className="grid gap-4 md:grid-cols-2">
+              <FixedChoiceListbox
+                id="adult-hygiene-cpap"
+                label="Has a CPAP"
+                value={form.cpapStatus}
+                options={documentationStatusOptions}
+                onChange={(value) => {
+                  updateField("cpapStatus", value);
+                  if (value !== "yes") {
+                    updateField("cpapUseStatus", "not-documented");
+                  }
+                }}
+              />
+              {form.cpapStatus === "yes" ? (
+                <FixedChoiceListbox
+                  id="adult-hygiene-cpap-use"
+                  label="Uses the CPAP"
+                  value={form.cpapUseStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => updateField("cpapUseStatus", value)}
+                />
+              ) : null}
+              <FixedChoiceListbox
+                id="adult-hygiene-occlusal-splint"
+                label="Has an occlusal splint"
+                value={form.occlusalSplintStatus}
+                options={documentationStatusOptions}
+                onChange={(value) => {
+                  updateField("occlusalSplintStatus", value);
+                  if (value !== "yes") {
+                    updateField("occlusalSplintUseStatus", "not-documented");
+                  }
+                }}
+              />
+              {form.occlusalSplintStatus === "yes" ? (
+                <FixedChoiceListbox
+                  id="adult-hygiene-occlusal-splint-use"
+                  label="Uses the occlusal splint"
+                  value={form.occlusalSplintUseStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) =>
+                    updateField("occlusalSplintUseStatus", value)
+                  }
+                />
+              ) : null}
+              <FixedChoiceListbox
+                id="adult-hygiene-night-guard"
+                label="Has a night guard"
+                value={form.nightGuardStatus}
+                options={documentationStatusOptions}
+                onChange={(value) => {
+                  updateField("nightGuardStatus", value);
+                  if (value !== "yes") {
+                    updateField("nightGuardUseStatus", "not-documented");
+                  }
+                }}
+              />
+              {form.nightGuardStatus === "yes" ? (
+                <FixedChoiceListbox
+                  id="adult-hygiene-night-guard-use"
+                  label="Uses the night guard"
+                  value={form.nightGuardUseStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) =>
+                    updateField("nightGuardUseStatus", value)
+                  }
+                />
+              ) : null}
+              <FixedChoiceListbox
+                id="adult-hygiene-orthodontics"
+                label="Orthodontic history"
+                value={form.orthodonticHistoryStatus}
+                options={documentationStatusOptions}
+                onChange={(value) =>
+                  updateField("orthodonticHistoryStatus", value)
+                }
+              />
+              <FixedChoiceListbox<RetainerStatus>
+                id="adult-hygiene-retainers"
+                label="Retainers"
+                value={form.retainerStatus}
+                options={[
+                  { value: "not-documented", label: "Not documented" },
+                  { value: "none", label: "None" },
+                  { value: "fixed", label: "Fixed" },
+                  { value: "removable", label: "Removable" },
+                  {
+                    value: "fixed-and-removable",
+                    label: "Fixed and removable",
+                  },
+                ]}
+                onChange={(value) => updateField("retainerStatus", value)}
+              />
+              <FixedChoiceListbox
+                id="adult-hygiene-removable-dentures"
+                label="Partial/complete removable dentures"
+                value={form.removableDenturesStatus}
+                options={documentationStatusOptions}
+                onChange={(value) =>
+                  updateField("removableDenturesStatus", value)
+                }
+              />
+            </div>
+            <TextareaField
+              id="adult-hygiene-improvement-request"
+              label="What would the patient like to improve about their smile or teeth?"
+              value={form.improvementRequest}
+              onChange={(value) => updateField("improvementRequest", value)}
+            />
+            <TextareaField
+              id="adult-hygiene-recare-comments"
+              label="Additional recare comments"
+              value={form.recareAdditionalComments}
+              onChange={(value) =>
+                updateField("recareAdditionalComments", value)
+              }
+            />
+            <TextareaField
+              id="adult-hygiene-additional-notes"
+              label="Additional notes"
+              value={form.additionalNotes}
+              onChange={(value) => updateField("additionalNotes", value)}
             />
           </Section>
 
@@ -4114,10 +4244,7 @@ export function AdultHygiene2026Template({
                     updateField("treatmentPlan", [
                       ...form.treatmentPlan,
                       {
-                        ...createTreatmentRecommendation(
-                          "plan",
-                          "preventive",
-                        ),
+                        ...createTreatmentRecommendation("plan", "preventive"),
                         treatmentType: "Hygiene maintenance",
                         toothArea: "full mouth",
                       },
@@ -4129,9 +4256,11 @@ export function AdultHygiene2026Template({
                 <button
                   type="button"
                   className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
-                  disabled={!form.treatmentOptions.some((entry) =>
-                    Boolean(entry.treatmentType.trim()),
-                  )}
+                  disabled={
+                    !form.treatmentOptions.some((entry) =>
+                      Boolean(entry.treatmentType.trim()),
+                    )
+                  }
                   onClick={() =>
                     updateField("treatmentPlan", [
                       ...form.treatmentPlan,
@@ -4190,132 +4319,6 @@ export function AdultHygiene2026Template({
               catalogueKey="hygiene-treatment.desensitizer"
               value={form.desensitizer}
               onChange={(value) => updateField("desensitizer", value)}
-            />
-          </Section>
-
-          <Section title="Appliances and Relevant History">
-            <div className="grid gap-4 md:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-cpap"
-                label="Has a CPAP"
-                value={form.cpapStatus}
-                options={documentationStatusOptions}
-                onChange={(value) => {
-                  updateField("cpapStatus", value);
-                  if (value !== "yes") {
-                    updateField("cpapUseStatus", "not-documented");
-                  }
-                }}
-              />
-              {form.cpapStatus === "yes" ? (
-                <FixedChoiceListbox
-                  id="adult-hygiene-cpap-use"
-                  label="Uses the CPAP"
-                  value={form.cpapUseStatus}
-                  options={documentationStatusOptions}
-                  onChange={(value) => updateField("cpapUseStatus", value)}
-                />
-              ) : null}
-              <FixedChoiceListbox
-                id="adult-hygiene-occlusal-splint"
-                label="Has an occlusal splint"
-                value={form.occlusalSplintStatus}
-                options={documentationStatusOptions}
-                onChange={(value) => {
-                  updateField("occlusalSplintStatus", value);
-                  if (value !== "yes") {
-                    updateField("occlusalSplintUseStatus", "not-documented");
-                  }
-                }}
-              />
-              {form.occlusalSplintStatus === "yes" ? (
-                <FixedChoiceListbox
-                  id="adult-hygiene-occlusal-splint-use"
-                  label="Uses the occlusal splint"
-                  value={form.occlusalSplintUseStatus}
-                  options={documentationStatusOptions}
-                  onChange={(value) =>
-                    updateField("occlusalSplintUseStatus", value)
-                  }
-                />
-              ) : null}
-              <FixedChoiceListbox
-                id="adult-hygiene-night-guard"
-                label="Has a night guard"
-                value={form.nightGuardStatus}
-                options={documentationStatusOptions}
-                onChange={(value) => {
-                  updateField("nightGuardStatus", value);
-                  if (value !== "yes") {
-                    updateField("nightGuardUseStatus", "not-documented");
-                  }
-                }}
-              />
-              {form.nightGuardStatus === "yes" ? (
-                <FixedChoiceListbox
-                  id="adult-hygiene-night-guard-use"
-                  label="Uses the night guard"
-                  value={form.nightGuardUseStatus}
-                  options={documentationStatusOptions}
-                  onChange={(value) =>
-                    updateField("nightGuardUseStatus", value)
-                  }
-                />
-              ) : null}
-              <FixedChoiceListbox
-                id="adult-hygiene-orthodontics"
-                label="Orthodontic history"
-                value={form.orthodonticHistoryStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("orthodonticHistoryStatus", value)
-                }
-              />
-              <FixedChoiceListbox<RetainerStatus>
-                id="adult-hygiene-retainers"
-                label="Retainers"
-                value={form.retainerStatus}
-                options={[
-                  { value: "not-documented", label: "Not documented" },
-                  { value: "none", label: "None" },
-                  { value: "fixed", label: "Fixed" },
-                  { value: "removable", label: "Removable" },
-                  {
-                    value: "fixed-and-removable",
-                    label: "Fixed and removable",
-                  },
-                ]}
-                onChange={(value) => updateField("retainerStatus", value)}
-              />
-              <FixedChoiceListbox
-                id="adult-hygiene-removable-dentures"
-                label="Partial/complete removable dentures"
-                value={form.removableDenturesStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("removableDenturesStatus", value)
-                }
-              />
-            </div>
-            <TextareaField
-              id="adult-hygiene-improvement-request"
-              label="What would the patient like to improve about their smile or teeth?"
-              value={form.improvementRequest}
-              onChange={(value) => updateField("improvementRequest", value)}
-            />
-            <TextareaField
-              id="adult-hygiene-recare-comments"
-              label="Additional recare comments"
-              value={form.recareAdditionalComments}
-              onChange={(value) =>
-                updateField("recareAdditionalComments", value)
-              }
-            />
-            <TextareaField
-              id="adult-hygiene-additional-notes"
-              label="Additional notes"
-              value={form.additionalNotes}
-              onChange={(value) => updateField("additionalNotes", value)}
             />
           </Section>
 

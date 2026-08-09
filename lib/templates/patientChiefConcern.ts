@@ -1,5 +1,9 @@
 export const patientChiefConcernSeedValues = [
   ["nothing", "Nothing"],
+  [
+    "periodic-examination-recare",
+    "Patient presents for periodic examination/recare",
+  ],
   ["sore-gums-brushing-flossing", "Sore gums upon brushing/flossing"],
   [
     "appearance-yellowing-stain",
