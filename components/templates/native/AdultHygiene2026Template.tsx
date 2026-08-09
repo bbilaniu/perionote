@@ -3791,7 +3791,32 @@ export function AdultHygiene2026Template({
                   }));
                   setCopyMessage("");
                 }}
-              />
+              >
+                <ExamFinding
+                  id="adult-hygiene-masseter"
+                  label="Masseter palpation"
+                  status={form.masseterStatus}
+                  findings={form.masseterFindings}
+                  onStatusChange={(value) =>
+                    updateField("masseterStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("masseterFindings", value)
+                  }
+                />
+                <ExamFinding
+                  id="adult-hygiene-tmj-load"
+                  label="TMJ loading test"
+                  status={form.tmjLoadStatus}
+                  findings={form.tmjLoadFindings}
+                  onStatusChange={(value) =>
+                    updateField("tmjLoadStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("tmjLoadFindings", value)
+                  }
+                />
+              </TmjAssessmentControl>
               <LymphNodesAssessmentControl
                 idPrefix="adult-hygiene"
                 status={form.lymphNodesStatus}
@@ -3810,26 +3835,6 @@ export function AdultHygiene2026Template({
                   }));
                   setCopyMessage("");
                 }}
-              />
-              <ExamFinding
-                id="adult-hygiene-masseter"
-                label="Masseter palpation"
-                status={form.masseterStatus}
-                findings={form.masseterFindings}
-                onStatusChange={(value) => updateField("masseterStatus", value)}
-                onFindingsChange={(value) =>
-                  updateField("masseterFindings", value)
-                }
-              />
-              <ExamFinding
-                id="adult-hygiene-tmj-load"
-                label="TMJ loading test"
-                status={form.tmjLoadStatus}
-                findings={form.tmjLoadFindings}
-                onStatusChange={(value) => updateField("tmjLoadStatus", value)}
-                onFindingsChange={(value) =>
-                  updateField("tmjLoadFindings", value)
-                }
               />
             </StructuredExtraoralObservations>
           </Section>

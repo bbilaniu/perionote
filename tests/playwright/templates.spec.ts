@@ -256,6 +256,26 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   await page
     .getByRole("button", { name: /Structured extraoral observations/ })
     .click();
+  const temporomandibular = page.getByRole("group", {
+    name: "Temporomandibular assessment",
+    exact: true,
+  });
+  for (const name of [
+    "TMJ",
+    "TMJ clicking",
+    "Masseter palpation",
+    "TMJ loading test",
+  ]) {
+    await expect(
+      temporomandibular.getByRole("button", { name, exact: true }),
+    ).toBeVisible();
+  }
+  await expect(
+    page.getByRole("heading", {
+      name: "Additional extraoral clinical exam",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await page
     .getByRole("button", { name: "Apply normal extraoral exam" })
     .click();

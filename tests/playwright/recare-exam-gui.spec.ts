@@ -538,16 +538,32 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
   ).toHaveCount(0);
 
   await disclosure.click();
+  await expect(
+    structuredExtraoral.getByRole("heading", {
+      name: "Additional extraoral clinical exam",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const temporomandibular = structuredExtraoral.getByRole("group", {
+    name: "Temporomandibular assessment",
+    exact: true,
+  });
   for (const name of [
     "TMJ",
-    "Lymph nodes",
+    "TMJ clicking",
     "Masseter palpation",
     "TMJ loading test",
   ]) {
     await expect(
-      structuredExtraoral.getByRole("button", { name, exact: true }),
+      temporomandibular.getByRole("button", { name, exact: true }),
     ).toBeVisible();
   }
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "Lymph nodes",
+      exact: true,
+    }),
+  ).toBeVisible();
 
   await structuredExtraoral
     .getByRole("button", {

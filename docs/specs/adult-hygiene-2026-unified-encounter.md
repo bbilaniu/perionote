@@ -47,9 +47,10 @@ been entered.
 
 ## Consolidated EOE/TMJ/lymph-node and OHE controls
 
-The structured EOE card owns coordinated **TMJ assessment** and **Lymph nodes**
-groups. TMJ status and free text remain the accepted legacy fields, while
-**TMJ clicking** remains the accepted structured finding. Selecting clicking
+The structured EOE card owns coordinated **Temporomandibular assessment** and
+**Lymph nodes** groups without an additional intermediate section title. The
+Temporomandibular assessment contains TMJ status and free text, structured
+**TMJ clicking**, Masseter palpation, and TMJ loading. Selecting clicking
 promotes TMJ to Findings.
 Changing TMJ to WNL or Not assessed confirms before clearing TMJ text and the
 linked clicking finding. A restored draft that contains clicking with another
@@ -63,7 +64,8 @@ location, and swelling. Selecting Palpable promotes Lymph nodes to Findings;
 changing the status away from Findings confirms before clearing linked data.
 Drafts saved before the status fields existed retain the structured finding and
 offer explicit keep-or-remove resolution. Masseter palpation and TMJ loading
-remain independent.
+retain independent statuses and generated lines within the shared
+Temporomandibular assessment fieldset.
 
 The 2021 and 2026 Oral Hygiene and Education sections share one coordinated
 education card. Standard OHE identifies the concepts it covers; while applied,

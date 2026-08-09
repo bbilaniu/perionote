@@ -945,12 +945,14 @@ export function TmjAssessmentControl({
   findings,
   structuredExtraoralFindings,
   onChange,
+  children,
 }: {
   idPrefix?: string;
   status: ExamStatus;
   findings: string;
   structuredExtraoralFindings: RecareExtraoralFinding[];
   onChange: (patch: TmjAssessmentPatch) => void;
+  children?: ReactNode;
 }) {
   const clickingOptionId = "eoe.tmj_clicking";
   const clicking = structuredExtraoralFindings.find(
@@ -1018,9 +1020,11 @@ export function TmjAssessmentControl({
   return (
     <fieldset
       className="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
-      aria-label="TMJ assessment"
+      aria-label="Temporomandibular assessment"
     >
-      <legend className="px-1 font-medium">TMJ assessment</legend>
+      <legend className="px-1 font-medium">
+        Temporomandibular assessment
+      </legend>
       {hasLegacyConflict ? (
         <div
           className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
@@ -1105,6 +1109,11 @@ export function TmjAssessmentControl({
           </div>
         ) : null}
       </div>
+      {children ? (
+        <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+          {children}
+        </div>
+      ) : null}
     </fieldset>
   );
 }
@@ -1439,7 +1448,6 @@ export function StructuredExtraoralObservations({
           </div>
 
           <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-            <h3 className="font-medium">Additional extraoral clinical exam</h3>
             {children}
           </div>
 
@@ -2629,7 +2637,32 @@ export function RecareExamTemplate({
                   }));
                   setCopyMessage("");
                 }}
-              />
+              >
+                <ExamFinding
+                  id="recare-masseter"
+                  label="Masseter palpation"
+                  status={form.masseterStatus}
+                  findings={form.masseterFindings}
+                  onStatusChange={(value) =>
+                    updateField("masseterStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("masseterFindings", value)
+                  }
+                />
+                <ExamFinding
+                  id="recare-tmj-load"
+                  label="TMJ loading test"
+                  status={form.tmjLoadStatus}
+                  findings={form.tmjLoadFindings}
+                  onStatusChange={(value) =>
+                    updateField("tmjLoadStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("tmjLoadFindings", value)
+                  }
+                />
+              </TmjAssessmentControl>
               <LymphNodesAssessmentControl
                 idPrefix="recare"
                 status={form.lymphNodesStatus}
@@ -2648,30 +2681,6 @@ export function RecareExamTemplate({
                   }));
                   setCopyMessage("");
                 }}
-              />
-              <ExamFinding
-                id="recare-masseter"
-                label="Masseter palpation"
-                status={form.masseterStatus}
-                findings={form.masseterFindings}
-                onStatusChange={(value) =>
-                  updateField("masseterStatus", value)
-                }
-                onFindingsChange={(value) =>
-                  updateField("masseterFindings", value)
-                }
-              />
-              <ExamFinding
-                id="recare-tmj-load"
-                label="TMJ loading test"
-                status={form.tmjLoadStatus}
-                findings={form.tmjLoadFindings}
-                onStatusChange={(value) =>
-                  updateField("tmjLoadStatus", value)
-                }
-                onFindingsChange={(value) =>
-                  updateField("tmjLoadFindings", value)
-                }
               />
             </StructuredExtraoralObservations>
             <ExamFinding
