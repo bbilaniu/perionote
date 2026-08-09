@@ -66,6 +66,8 @@ export interface RecareExamForm {
   structuredExtraoralFindings?: RecareExtraoralFinding[];
   tmjStatus: ExamStatus;
   tmjFindings: string;
+  lymphNodesStatus: ExamStatus;
+  lymphNodesFindings: string;
   masseterStatus: ExamStatus;
   masseterFindings: string;
   tmjLoadStatus: ExamStatus;
@@ -130,6 +132,8 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     structuredExtraoralFindings: [],
     tmjStatus: "not-assessed",
     tmjFindings: "",
+    lymphNodesStatus: "not-assessed",
+    lymphNodesFindings: "",
     masseterStatus: "not-assessed",
     masseterFindings: "",
     tmjLoadStatus: "not-assessed",

@@ -19,6 +19,7 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 import {
+  createRecareExtraoralFinding,
   extraoralLateralityToSides,
   extraoralSidesToLaterality,
   recareExtraoralOptions,
@@ -127,6 +128,7 @@ Intraoral photos: No.
 a) Patient's chief concern: Food catches between teeth; Synthetic concern for demonstration.
 
 b) Extraoral: WNL.
+Lymph nodes: WNL.
 
 c) TMJ: Synthetic bilateral clicking without discomfort.
 Masseter palpation: WNL.
@@ -290,7 +292,7 @@ Masseter palpation: WNL.`);
   it("formats structured EOE findings in catalogue order", () => {
     expect(recareExtraoralOptions.map(({ label }) => label)).toEqual([
       "TMJ clicking",
-      "Palpable Lymph Nodes",
+      "Palpable",
     ]);
     expect(
       buildRecareExamSummary({
@@ -316,6 +318,47 @@ Masseter palpation: WNL.`);
   - TMJ clicking (laterality: Bilateral; status: Asymptomatic; phase: On open).
   - palpable lymph nodes (laterality: Left; location: Submandibular; swelling: Slightly enlarged).
   Observations: Monitor at recare.`);
+  });
+
+  it("formats lymph-node status and palpable details without rewriting legacy findings", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        lymphNodesStatus: "wnl",
+      }),
+    ).toBe(`b) Extraoral examination:
+  Lymph nodes: WNL.`);
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        extraoralStatus: "findings",
+        lymphNodesStatus: "findings",
+        lymphNodesFindings: "Tender on palpation",
+        structuredExtraoralFindings: [
+          {
+            optionId: "eoe.palpable_lymph_nodes",
+            laterality: "Right",
+            locations: ["Submandibular"],
+            swelling: ["Slightly enlarged"],
+          },
+        ],
+      }),
+    ).toBe(`b) Extraoral:
+  - palpable lymph nodes (laterality: Right; location: Submandibular; swelling: Slightly enlarged).
+  Lymph nodes: Tender on palpation.`);
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        extraoralStatus: "findings",
+        lymphNodesStatus: "wnl",
+        structuredExtraoralFindings: [
+          createRecareExtraoralFinding("eoe.palpable_lymph_nodes"),
+        ],
+      }),
+    ).toBe(`b) Extraoral:
+  - palpable lymph nodes.`);
   });
 
   it("renders patient-requested improvements and clinical comments conditionally", () => {

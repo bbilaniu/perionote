@@ -38,6 +38,8 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   ],
   tmjStatus: "not-assessed",
   tmjFindings: "",
+  lymphNodesStatus: "wnl",
+  lymphNodesFindings: "",
   masseterStatus: "wnl",
   masseterFindings: "",
   tmjLoadStatus: "wnl",

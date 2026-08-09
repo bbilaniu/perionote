@@ -1109,6 +1109,181 @@ export function TmjAssessmentControl({
   );
 }
 
+type LymphNodesAssessmentPatch = {
+  lymphNodesStatus?: ExamStatus;
+  lymphNodesFindings?: string;
+  structuredExtraoralFindings?: RecareExtraoralFinding[];
+};
+
+export function LymphNodesAssessmentControl({
+  idPrefix = "recare",
+  status,
+  findings,
+  structuredExtraoralFindings,
+  onChange,
+}: {
+  idPrefix?: string;
+  status: ExamStatus;
+  findings: string;
+  structuredExtraoralFindings: RecareExtraoralFinding[];
+  onChange: (patch: LymphNodesAssessmentPatch) => void;
+}) {
+  const palpableOptionId = "eoe.palpable_lymph_nodes";
+  const palpable = structuredExtraoralFindings.find(
+    (finding) => finding.optionId === palpableOptionId,
+  );
+  const palpableOption = recareExtraoralOptions.find(
+    (option) => option.id === palpableOptionId,
+  )!;
+  const hasLymphNodeFindings = Boolean(findings.trim()) || Boolean(palpable);
+  const hasLegacyConflict = Boolean(palpable) && status !== "findings";
+
+  function withoutPalpable() {
+    return structuredExtraoralFindings.filter(
+      (finding) => finding.optionId !== palpableOptionId,
+    );
+  }
+
+  function changeStatus(nextStatus: ExamStatus) {
+    if (
+      nextStatus !== "findings" &&
+      hasLymphNodeFindings &&
+      !window.confirm(
+        `Set Lymph nodes to ${nextStatus === "wnl" ? "WNL" : "Not assessed"} and clear the documented lymph-node findings?`,
+      )
+    ) {
+      return;
+    }
+    onChange({
+      lymphNodesStatus: nextStatus,
+      ...(nextStatus !== "findings"
+        ? {
+            lymphNodesFindings: "",
+            structuredExtraoralFindings: withoutPalpable(),
+          }
+        : {}),
+    });
+  }
+
+  function togglePalpable() {
+    onChange(
+      palpable
+        ? { structuredExtraoralFindings: withoutPalpable() }
+        : {
+            lymphNodesStatus: "findings",
+            structuredExtraoralFindings: [
+              ...withoutPalpable(),
+              createRecareExtraoralFinding(palpableOptionId),
+            ],
+          },
+    );
+  }
+
+  function patchPalpable(changes: Partial<RecareExtraoralFinding>) {
+    if (!palpable) return;
+    onChange({
+      lymphNodesStatus: "findings",
+      structuredExtraoralFindings: structuredExtraoralFindings.map((finding) =>
+        finding.optionId === palpableOptionId
+          ? { ...finding, ...changes }
+          : finding,
+      ),
+    });
+  }
+
+  return (
+    <fieldset
+      className="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+      aria-label="Lymph nodes"
+    >
+      <legend className="px-1 font-medium">Lymph nodes</legend>
+      {hasLegacyConflict ? (
+        <div
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+          role="alert"
+        >
+          <p>
+            Palpable lymph nodes are documented in this legacy draft while the
+            Lymph nodes status is not Findings. Choose which value to keep.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`${buttonClass} bg-amber-700 text-white hover:bg-amber-800`}
+              onClick={() => onChange({ lymphNodesStatus: "findings" })}
+            >
+              Keep palpable finding and use Findings
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border border-amber-400 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/50`}
+              onClick={() =>
+                onChange({ structuredExtraoralFindings: withoutPalpable() })
+              }
+            >
+              Remove palpable finding
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <ExamFinding
+        id={`${idPrefix}-lymph-nodes`}
+        label="Lymph nodes"
+        status={status}
+        findings={findings}
+        onStatusChange={changeStatus}
+        onFindingsChange={(lymphNodesFindings) =>
+          onChange({ lymphNodesStatus: "findings", lymphNodesFindings })
+        }
+      />
+      <div
+        className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+        role="group"
+        aria-label="Palpable lymph nodes"
+      >
+        <button
+          type="button"
+          aria-pressed={Boolean(palpable)}
+          className={`${buttonClass} w-full justify-start sm:w-auto ${
+            palpable
+              ? "bg-sky-700 text-white hover:bg-sky-800"
+              : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          }`}
+          onClick={togglePalpable}
+        >
+          Palpable
+        </button>
+        {palpable ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <ChoiceToggleButtons
+              label="Laterality"
+              options={extraoralSideOptions}
+              values={extraoralLateralityToSides(palpable.laterality ?? "")}
+              onChange={(sides) =>
+                patchPalpable({
+                  laterality: extraoralSidesToLaterality(sides),
+                })
+              }
+            />
+            <ChoiceToggleButtons
+              label="Location"
+              options={palpableOption.locationOptions}
+              values={palpable.locations ?? []}
+              onChange={(locations) => patchPalpable({ locations })}
+            />
+            <ChoiceToggleButtons
+              label="Swelling"
+              options={palpableOption.swellingOptions}
+              values={palpable.swelling ?? []}
+              onChange={(swelling) => patchPalpable({ swelling })}
+            />
+          </div>
+        ) : null}
+      </div>
+    </fieldset>
+  );
+}
+
 function recareIntraoralChoiceGroups(
   structure: RecareIntraoralStructure,
 ): FixedChoiceMultiComboboxGroup[] {
@@ -1173,6 +1348,11 @@ export function StructuredExtraoralObservations({
   const shouldAutoExpand =
     status === "findings" || documentedFindingCount > 0;
   const [open, setOpen] = useState(shouldAutoExpand);
+  const otherExtraoralOptions = recareExtraoralOptions.filter(
+    (option) =>
+      option.id !== "eoe.tmj_clicking" &&
+      option.id !== "eoe.palpable_lymph_nodes",
+  );
 
   useEffect(() => {
     if (shouldAutoExpand) setOpen(true);
@@ -1263,12 +1443,11 @@ export function StructuredExtraoralObservations({
             {children}
           </div>
 
-          <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-            <h3 className="font-medium">Other EOE findings</h3>
-            <div className="grid gap-3 md:grid-cols-2">
-              {recareExtraoralOptions
-                .filter((option) => option.id !== "eoe.tmj_clicking")
-                .map((option) => {
+          {otherExtraoralOptions.length ? (
+            <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+              <h3 className="font-medium">Other EOE findings</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {otherExtraoralOptions.map((option) => {
                 const selected = values.find(
                   (value) => value.optionId === option.id,
                 );
@@ -1351,8 +1530,9 @@ export function StructuredExtraoralObservations({
                   </div>
                 );
                 })}
+              </div>
             </div>
-          </div>
+          ) : null}
           <button
             type="button"
             className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
@@ -1963,12 +2143,14 @@ export function RecareExamTemplate({
       [
         form.extraoralStatus,
         form.tmjStatus,
+        form.lymphNodesStatus,
         form.masseterStatus,
         form.tmjLoadStatus,
       ].some((status) => status !== "not-assessed") ||
       [
         form.extraoralFindings,
         form.tmjFindings,
+        form.lymphNodesFindings,
         form.masseterFindings,
         form.tmjLoadFindings,
       ].some((value) => Boolean(value.trim())) ||
@@ -2014,6 +2196,8 @@ export function RecareExamTemplate({
       structuredExtraoralFindings: [],
       tmjStatus: "wnl",
       tmjFindings: "",
+      lymphNodesStatus: "wnl",
+      lymphNodesFindings: "",
       masseterStatus: "wnl",
       masseterFindings: "",
       tmjLoadStatus: "wnl",
@@ -2037,6 +2221,8 @@ export function RecareExamTemplate({
       structuredExtraoralFindings: [],
       tmjStatus: "not-assessed",
       tmjFindings: "",
+      lymphNodesStatus: "not-assessed",
+      lymphNodesFindings: "",
       masseterStatus: "not-assessed",
       masseterFindings: "",
       tmjLoadStatus: "not-assessed",
@@ -2409,6 +2595,7 @@ export function RecareExamTemplate({
               status={form.extraoralStatus}
               additionalStatuses={[
                 form.tmjStatus,
+                form.lymphNodesStatus,
                 form.masseterStatus,
                 form.tmjLoadStatus,
               ]}
@@ -2422,6 +2609,7 @@ export function RecareExamTemplate({
               }}
               linkedStatusByOptionId={{
                 "eoe.tmj_clicking": form.tmjStatus,
+                "eoe.palpable_lymph_nodes": form.lymphNodesStatus,
               }}
             >
               <TmjAssessmentControl
@@ -2436,6 +2624,25 @@ export function RecareExamTemplate({
                     ...current,
                     ...patch,
                     ...(patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
+              />
+              <LymphNodesAssessmentControl
+                idPrefix="recare"
+                status={form.lymphNodesStatus}
+                findings={form.lymphNodesFindings}
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
+                }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.lymphNodesStatus === "findings" ||
+                    patch.structuredExtraoralFindings?.length
                       ? { extraoralStatus: "findings" as const }
                       : {}),
                   }));

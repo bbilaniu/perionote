@@ -265,6 +265,9 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "TMJ: WNL.",
   );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Lymph nodes: WNL.",
+  );
   await page
     .getByRole("group", { name: "Structured extraoral observations" })
     .getByRole("button", { name: "Collapse observations" })

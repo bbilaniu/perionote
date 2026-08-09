@@ -27,6 +27,7 @@ describe("2026 Adult Hygiene independence", () => {
       extraoralStatus: "not-assessed",
       structuredExtraoralFindings: [],
       tmjStatus: "not-assessed",
+      lymphNodesStatus: "not-assessed",
       masseterStatus: "not-assessed",
       tmjLoadStatus: "not-assessed",
       intraoralStatus: "not-assessed",
@@ -38,6 +39,7 @@ describe("2026 Adult Hygiene independence", () => {
   - TMJ clicking (laterality: Left; status: Asymptomatic; phase: On open).
   Observations: Synthetic extraoral observation.`);
     expect(summary).toContain("Masseter palpation: WNL.");
+    expect(summary).toContain("Lymph nodes: WNL.");
     expect(summary).toContain("TMJ loading test: WNL.");
     expect(summary).toContain(`IOE:
   - Tongue: fissured.
@@ -133,6 +135,8 @@ describe("2026 Adult Hygiene independence", () => {
       "radiographs",
       "intraoralPhotosStatus",
       "intraoralPhotosDetails",
+      "lymphNodesStatus",
+      "lymphNodesFindings",
       "oralHabits",
       "additionalOcclusalFindings",
       "teethStatus",

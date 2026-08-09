@@ -45,16 +45,25 @@ Older 2026 drafts are merged with the current empty encounter shape. Legacy
 hygiene recommendation fields continue to format when no coordinated plan has
 been entered.
 
-## Consolidated EOE/TMJ and OHE controls
+## Consolidated EOE/TMJ/lymph-node and OHE controls
 
-The structured EOE card owns one **TMJ assessment** group. TMJ status and free
-text remain the accepted legacy fields, while **TMJ clicking** remains the
-accepted structured finding. Selecting clicking promotes TMJ to Findings.
+The structured EOE card owns coordinated **TMJ assessment** and **Lymph nodes**
+groups. TMJ status and free text remain the accepted legacy fields, while
+**TMJ clicking** remains the accepted structured finding. Selecting clicking
+promotes TMJ to Findings.
 Changing TMJ to WNL or Not assessed confirms before clearing TMJ text and the
 linked clicking finding. A restored draft that contains clicking with another
 TMJ status is not silently rewritten: the form identifies the conflict and
-offers explicit keep-clicking or remove-clicking actions. Masseter palpation,
-TMJ loading, and lymph-node findings remain independent.
+offers explicit keep-clicking or remove-clicking actions.
+
+The Lymph nodes group follows the same interaction. Its status and findings
+control owns the structured **Palpable** action, which continues to generate
+the established “palpable lymph nodes” note fragment with optional laterality,
+location, and swelling. Selecting Palpable promotes Lymph nodes to Findings;
+changing the status away from Findings confirms before clearing linked data.
+Drafts saved before the status fields existed retain the structured finding and
+offer explicit keep-or-remove resolution. Masseter palpation and TMJ loading
+remain independent.
 
 The 2021 and 2026 Oral Hygiene and Education sections share one coordinated
 education card. Standard OHE identifies the concepts it covers; while applied,

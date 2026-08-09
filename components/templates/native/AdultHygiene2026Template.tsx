@@ -31,6 +31,7 @@ import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/co
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   ExamFinding,
+  LymphNodesAssessmentControl,
   OcclusalFindingLocations,
   StructuredExtraoralObservations,
   StructuredIntraoralFindings,
@@ -3170,12 +3171,14 @@ export function AdultHygiene2026Template({
       [
         form.extraoralStatus,
         form.tmjStatus,
+        form.lymphNodesStatus,
         form.masseterStatus,
         form.tmjLoadStatus,
       ].some((status) => status !== "not-assessed") ||
       [
         form.extraoralFindings,
         form.tmjFindings,
+        form.lymphNodesFindings,
         form.masseterFindings,
         form.tmjLoadFindings,
       ].some((value) => Boolean(value.trim())) ||
@@ -3219,6 +3222,8 @@ export function AdultHygiene2026Template({
       structuredExtraoralFindings: [],
       tmjStatus: "wnl",
       tmjFindings: "",
+      lymphNodesStatus: "wnl",
+      lymphNodesFindings: "",
       masseterStatus: "wnl",
       masseterFindings: "",
       tmjLoadStatus: "wnl",
@@ -3242,6 +3247,8 @@ export function AdultHygiene2026Template({
       structuredExtraoralFindings: [],
       tmjStatus: "not-assessed",
       tmjFindings: "",
+      lymphNodesStatus: "not-assessed",
+      lymphNodesFindings: "",
       masseterStatus: "not-assessed",
       masseterFindings: "",
       tmjLoadStatus: "not-assessed",
@@ -3750,6 +3757,7 @@ export function AdultHygiene2026Template({
               status={form.extraoralStatus}
               additionalStatuses={[
                 form.tmjStatus,
+                form.lymphNodesStatus,
                 form.masseterStatus,
                 form.tmjLoadStatus,
               ]}
@@ -3763,6 +3771,7 @@ export function AdultHygiene2026Template({
               }}
               linkedStatusByOptionId={{
                 "eoe.tmj_clicking": form.tmjStatus,
+                "eoe.palpable_lymph_nodes": form.lymphNodesStatus,
               }}
             >
               <TmjAssessmentControl
@@ -3777,6 +3786,25 @@ export function AdultHygiene2026Template({
                     ...current,
                     ...patch,
                     ...(patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
+              />
+              <LymphNodesAssessmentControl
+                idPrefix="adult-hygiene"
+                status={form.lymphNodesStatus}
+                findings={form.lymphNodesFindings}
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
+                }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.lymphNodesStatus === "findings" ||
+                    patch.structuredExtraoralFindings?.length
                       ? { extraoralStatus: "findings" as const }
                       : {}),
                   }));

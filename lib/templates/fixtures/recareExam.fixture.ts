@@ -26,6 +26,8 @@ export const recareExamFixture: RecareExamForm = {
   extraoralFindings: "",
   tmjStatus: "findings",
   tmjFindings: "Synthetic bilateral clicking without discomfort.",
+  lymphNodesStatus: "wnl",
+  lymphNodesFindings: "",
   masseterStatus: "wnl",
   masseterFindings: "",
   tmjLoadStatus: "wnl",

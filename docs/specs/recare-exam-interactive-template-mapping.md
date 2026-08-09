@@ -302,6 +302,13 @@ Legacy drafts that contain clicking with another TMJ status expose explicit
 keep-clicking or remove-clicking actions rather than being rewritten during
 restore. Persisted fields and generated output remain unchanged.
 
+Lymph-node status, free text, and structured **Palpable** finding are likewise
+presented in one **Lymph nodes** assessment group. Selecting Palpable sets the
+status to Findings and retains the established “palpable lymph nodes” generated
+wording with laterality, location, and swelling. Changing the status to WNL or
+Not assessed confirms before clearing the linked details. Older drafts without
+the status fields expose explicit keep-or-remove conflict actions.
+
 Masseter palpation and TMJ load testing remain separate controls. The source's
 skeletal-occlusion `N/A` value is an explicit action and is not preselected.
 Right and left molar occlusion likewise have independent explicit N/A actions;

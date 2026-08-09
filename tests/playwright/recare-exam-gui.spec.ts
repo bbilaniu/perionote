@@ -540,6 +540,7 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
   await disclosure.click();
   for (const name of [
     "TMJ",
+    "Lymph nodes",
     "Masseter palpation",
     "TMJ loading test",
   ]) {
@@ -555,7 +556,7 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
     })
     .click();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /b\) Extraoral: WNL\.\n\nc\) TMJ: WNL\.\nMasseter palpation: WNL\.\nTMJ loading test: WNL\./,
+    /b\) Extraoral: WNL\.\nLymph nodes: WNL\.\n\nc\) TMJ: WNL\.\nMasseter palpation: WNL\.\nTMJ loading test: WNL\./,
   );
   await expect(disclosure).toContainText("WNL");
 
@@ -564,11 +565,12 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
     exact: true,
   });
   await expect(tmjClickingButton).toBeVisible();
+  const lymphNodes = structuredExtraoral.getByRole("group", {
+    name: "Lymph nodes",
+    exact: true,
+  });
   await expect(
-    structuredExtraoral.getByRole("button", {
-      name: "Palpable Lymph Nodes",
-      exact: true,
-    }),
+    lymphNodes.getByRole("button", { name: "Palpable", exact: true }),
   ).toBeVisible();
   await tmjClickingButton.click();
   await expect(
@@ -613,6 +615,65 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
       exact: true,
     }),
   ).toHaveAttribute("aria-pressed", "true");
+});
+
+test("Recare Exam coordinates lymph-node status with palpable details", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  await structuredExtraoral
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+  const lymphNodes = structuredExtraoral.getByRole("group", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  const status = lymphNodes.getByRole("button", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  const palpable = lymphNodes.getByRole("button", {
+    name: "Palpable",
+    exact: true,
+  });
+
+  await palpable.click();
+  await expect(status).toHaveAttribute("data-value", "findings");
+  await lymphNodes.getByRole("button", { name: "Left", exact: true }).click();
+  await lymphNodes
+    .getByRole("button", { name: "Submandibular", exact: true })
+    .click();
+  await lymphNodes
+    .getByRole("button", { name: "Slightly enlarged", exact: true })
+    .click();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /palpable lymph nodes \(laterality: Left; location: Submandibular; swelling: Slightly enlarged\)/,
+  );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Set Lymph nodes to WNL and clear the documented lymph-node findings?",
+    );
+    await dialog.dismiss();
+  });
+  await status.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(status).toHaveAttribute("data-value", "findings");
+  await expect(palpable).toHaveAttribute("aria-pressed", "true");
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await status.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(status).toHaveAttribute("data-value", "wnl");
+  await expect(palpable).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Lymph nodes: WNL\./,
+  );
 });
 
 test("Recare Exam confirms before a normal TMJ status clears linked clicking", async ({
@@ -739,6 +800,77 @@ test("Recare Exam resolves legacy TMJ status and clicking conflicts explicitly",
   await expect(page.locator("#recare-summary")).not.toHaveValue(
     /TMJ clicking/,
   );
+});
+
+test("Recare Exam preserves and resolves legacy palpable lymph-node findings", async ({
+  page,
+}) => {
+  const templateId = "recare-exam";
+  const draftId = "legacy-lymph-node-conflict";
+  const marker = "legacy-lymph-node-conflict-tab";
+  const now = new Date().toISOString();
+  const form = {
+    ...createEmptyRecareExamForm(),
+    patientId: "LEGACY-LYMPH",
+    extraoralStatus: "findings" as const,
+    structuredExtraoralFindings: [
+      createRecareExtraoralFinding("eoe.palpable_lymph_nodes"),
+    ],
+  };
+  delete (form as Partial<typeof form>).lymphNodesStatus;
+  delete (form as Partial<typeof form>).lymphNodesFindings;
+  const draft = {
+    kind: "hygienenote.interactive-draft",
+    schemaVersion: 1,
+    templateId,
+    draftId,
+    savedAt: now,
+    startedAt: now,
+    form,
+  };
+  await page.addInitScript(
+    ({ draft, draftId, marker, markerKey, storageKey, tabKey }) => {
+      window.name = `hygienenote-interactive-draft-tab-v1:${marker}`;
+      window.sessionStorage.setItem(tabKey, draftId);
+      window.sessionStorage.setItem(markerKey, marker);
+      window.localStorage.setItem(storageKey, JSON.stringify(draft));
+    },
+    {
+      draft,
+      draftId,
+      marker,
+      markerKey: "hygienenote.interactive-draft.tab-marker.v1.recare-exam",
+      storageKey: interactiveDraftStorageKey(templateId, draftId),
+      tabKey: interactiveDraftTabStorageKey(templateId),
+    },
+  );
+
+  await page.goto(recareExamUrl);
+  const lymphNodes = page.getByRole("group", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  const conflict = lymphNodes.getByRole("alert");
+  await expect(conflict).toContainText(
+    "Palpable lymph nodes are documented in this legacy draft",
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /palpable lymph nodes/,
+  );
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /Lymph nodes: WNL/,
+  );
+
+  await conflict
+    .getByRole("button", {
+      name: "Keep palpable finding and use Findings",
+      exact: true,
+    })
+    .click();
+  await expect(conflict).toHaveCount(0);
+  await expect(
+    lymphNodes.getByRole("button", { name: "Lymph nodes", exact: true }),
+  ).toHaveAttribute("data-value", "findings");
 });
 
 test("Recare Exam separates Occlusion & Habits from Clinical Exam", async ({

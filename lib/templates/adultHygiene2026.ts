@@ -206,6 +206,8 @@ export interface AdultHygiene2026Form {
   structuredExtraoralFindings?: RecareExtraoralFinding[];
   tmjStatus: ExamStatus;
   tmjFindings: string;
+  lymphNodesStatus: ExamStatus;
+  lymphNodesFindings: string;
   masseterStatus: ExamStatus;
   masseterFindings: string;
   tmjLoadStatus: ExamStatus;
@@ -316,6 +318,8 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     structuredExtraoralFindings: [],
     tmjStatus: "not-assessed",
     tmjFindings: "",
+    lymphNodesStatus: "not-assessed",
+    lymphNodesFindings: "",
     masseterStatus: "not-assessed",
     masseterFindings: "",
     tmjLoadStatus: "not-assessed",
