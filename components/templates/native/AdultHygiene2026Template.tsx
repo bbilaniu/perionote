@@ -4447,12 +4447,7 @@ export function AdultHygiene2026Template({
               oheRecap={buildOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
               onApplyRecare={applyRecareExam}
-              onAdd={() =>
-                updateField("treatmentCompleted", [
-                  ...form.treatmentCompleted,
-                  createTreatmentCompletedEntry(),
-                ])
-              }
+              radiographsHref="#adult-hygiene-radiographs"
               onChange={(value) => updateField("treatmentCompleted", value)}
             />
             <CatalogueCombobox

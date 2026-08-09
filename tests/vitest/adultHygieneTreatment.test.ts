@@ -1,12 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
   buildOheTreatmentRecap,
+  createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentCompletedEntries,
   standardTreatmentCompletedPreset,
   syncDerivedOheTreatmentDetails,
   syncRadiographTreatmentEntries,
   type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygieneTreatment";
+import {
+  createEmptyCatalogueState,
+  listCatalogueItems,
+} from "@/lib/catalogues/catalogue";
 import {
   isDyclonineRinseTreatment,
   orderTreatmentToothAreas,
@@ -21,6 +26,40 @@ function format(entries: AdultHygieneTreatmentCompletedEntry[]) {
 }
 
 describe("structured adult hygiene treatment", () => {
+  it("creates categorized structured entries from catalogue defaults", () => {
+    const catalogue = listCatalogueItems(
+      createEmptyCatalogueState(),
+      "hygiene-treatment.completed",
+    );
+    const scaling = createTreatmentEntryFromCatalogueItem(
+      catalogue.find((item) => item.label === "Scaling")!,
+      "scaling",
+    );
+    expect(scaling).toMatchObject({
+      procedureKind: "scaling",
+      careCategory: "instrumentation",
+      quantity: "3",
+      toothAreas: ["full mouth"],
+      instrumentation: ["hand", "power"],
+      powerDevice: "Cavitron",
+    });
+
+    const fluoride = createTreatmentEntryFromCatalogueItem(
+      catalogue.find((item) => item.label.startsWith("FluoriMax"))!,
+      "fluoride",
+    );
+    expect(fluoride).toMatchObject({
+      careCategory: "product-application",
+      toothAreas: ["full mouth"],
+    });
+    expect(
+      createTreatmentEntryFromCatalogueItem(
+        catalogue.find((item) => item.label === "Radiographs")!,
+        "radiographs",
+      ),
+    ).toBeNull();
+  });
+
   it("keeps legacy free-text treatment rows unchanged", () => {
     expect(
       format([

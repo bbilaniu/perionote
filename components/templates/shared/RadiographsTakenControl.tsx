@@ -1,115 +1,249 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import {
-  formatRadiographSelection,
-  parseRadiographSelection,
-  type RadiographType,
-} from "@/lib/templates/adultHygieneTreatment";
+  isRadiographCatalogueMetadata,
+  type RadiographCatalogueMetadata,
+} from "@/lib/catalogues/catalogue";
 
-const radiographTypes = [
-  { type: "BW", label: "Bitewings", defaultQuantity: "4" },
-  { type: "PA", label: "Periapicals", defaultQuantity: "3" },
-  { type: "PAN", label: "Panoramic", defaultQuantity: "1" },
-] as const;
+type RadiographDefinition = RadiographCatalogueMetadata & {
+  id: string;
+  label: string;
+  hidden: boolean;
+};
+
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
 const secondaryButtonClass = `${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`;
 
+function escapeRegularExpression(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseQuantityForType(
+  value: string,
+  definition: RadiographDefinition,
+): string | null {
+  const clean = value.trim();
+  if (definition.code === "PAN" && /^PAN$/i.test(clean)) return "1";
+  const match = clean.match(
+    new RegExp(
+      `^(\\d+(?:\\.\\d+)?)\\s+${escapeRegularExpression(definition.code)}$`,
+      "i",
+    ),
+  );
+  if (!match) return null;
+  const quantity = Number(match[1]);
+  return Number.isFinite(quantity) && quantity > 0 ? String(quantity) : null;
+}
+
+function formatSelection(code: string, quantity: string): string {
+  const numeric = Number(quantity);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "";
+  const clean = String(Math.round(numeric));
+  return code === "PAN" && clean === "1" ? "PAN" : `${clean} ${code}`;
+}
+
+function controlId(prefix: string, code: string): string {
+  return `${prefix}-radiographs-${code
+    .toLocaleLowerCase("en-CA")
+    .replace(/[^a-z0-9]+/g, "-")}`;
+}
+
 export function RadiographsTakenControl({
   values,
   onChange,
+  idPrefix = "adult-hygiene",
+  linkToTreatment = true,
 }: {
   values: string[];
   onChange: (values: string[]) => void;
+  idPrefix?: string;
+  linkToTreatment?: boolean;
 }) {
-  const [otherDraft, setOtherDraft] = useState("");
-  const parsedValues = values.map((value, index) => ({
-    index,
-    value,
-    parsed: parseRadiographSelection(value),
-  }));
-  const otherValues = parsedValues.filter((entry) => !entry.parsed);
+  const { findEquivalent, getItems, rememberValue, storageStatus } =
+    useCatalogues();
+  const [encounterTypes, setEncounterTypes] = useState<RadiographDefinition[]>(
+    [],
+  );
+  const [newTypeLabel, setNewTypeLabel] = useState("");
+  const [newTypeCode, setNewTypeCode] = useState("");
+  const [newTypeQuantity, setNewTypeQuantity] = useState("1");
+  const [message, setMessage] = useState("");
 
-  function typeEntries(type: RadiographType) {
-    return parsedValues.filter((entry) => entry.parsed?.type === type);
+  const definitions = useMemo(() => {
+    const byCode = new Map<string, RadiographDefinition>();
+    for (const item of getItems("imaging.radiographs", {
+      includeHidden: true,
+    })) {
+      if (!isRadiographCatalogueMetadata(item.metadata)) continue;
+      const definition = {
+        ...item.metadata,
+        id: item.id,
+        label: item.label,
+        hidden: item.hidden,
+      };
+      if (!byCode.has(definition.code)) byCode.set(definition.code, definition);
+    }
+    for (const definition of encounterTypes) {
+      if (!byCode.has(definition.code)) byCode.set(definition.code, definition);
+    }
+    return [...byCode.values()];
+  }, [encounterTypes, getItems]);
+
+  const parsedValues = values.map((value, index) => {
+    const definition = definitions.find(
+      (candidate) => parseQuantityForType(value, candidate) !== null,
+    );
+    return {
+      index,
+      value,
+      definition,
+      quantity: definition
+        ? parseQuantityForType(value, definition)
+        : null,
+    };
+  });
+  const otherValues = parsedValues.filter((entry) => !entry.definition);
+
+  function typeEntries(definition: RadiographDefinition) {
+    return parsedValues.filter(
+      (entry) => entry.definition?.code === definition.code,
+    );
   }
 
-  function displayedQuantity(type: RadiographType): string {
-    const quantities = typeEntries(type).map((entry) =>
-      Number(entry.parsed?.quantity ?? 0),
+  function displayedQuantity(definition: RadiographDefinition): string {
+    const quantities = typeEntries(definition).map((entry) =>
+      Number(entry.quantity ?? 0),
     );
     return quantities.length
       ? String(quantities.reduce((total, quantity) => total + quantity, 0))
       : "";
   }
 
-  function replaceType(type: RadiographType, quantity: string) {
-    const cleanQuantity = Number(quantity);
-    const formatted =
-      Number.isFinite(cleanQuantity) && cleanQuantity > 0
-        ? formatRadiographSelection(type, String(Math.round(cleanQuantity)))
-        : "";
+  function replaceType(definition: RadiographDefinition, quantity: string) {
+    const formatted = formatSelection(definition.code, quantity);
     const remaining = values.filter(
-      (value) => parseRadiographSelection(value)?.type !== type,
+      (value) => parseQuantityForType(value, definition) === null,
     );
     if (!formatted) {
       onChange(remaining);
       return;
     }
-    const typeOrder: RadiographType[] = ["BW", "PA", "PAN"];
-    const desiredRank = typeOrder.indexOf(type);
+    const desiredRank = definitions.findIndex(
+      (candidate) => candidate.code === definition.code,
+    );
     const orderedInsertAt = remaining.findIndex((value) => {
-      const parsed = parseRadiographSelection(value);
-      return !parsed || typeOrder.indexOf(parsed.type) > desiredRank;
+      const candidateRank = definitions.findIndex(
+        (candidate) => parseQuantityForType(value, candidate) !== null,
+      );
+      return candidateRank < 0 || candidateRank > desiredRank;
     });
-    const adjustedIndex =
-      orderedInsertAt >= 0 ? orderedInsertAt : remaining.length;
+    const insertAt = orderedInsertAt >= 0 ? orderedInsertAt : remaining.length;
     onChange([
-      ...remaining.slice(0, adjustedIndex),
+      ...remaining.slice(0, insertAt),
       formatted,
-      ...remaining.slice(adjustedIndex),
+      ...remaining.slice(insertAt),
     ]);
   }
 
-  function adjust(type: RadiographType, direction: -1 | 1) {
-    const current = Number(displayedQuantity(type));
-    replaceType(type, String(Math.max(1, current + direction)));
+  function adjust(definition: RadiographDefinition, direction: -1 | 1) {
+    const current = Number(displayedQuantity(definition));
+    replaceType(definition, String(Math.max(1, current + direction)));
   }
 
-  function addOther() {
-    const clean = otherDraft.trim();
-    if (!clean) return;
-    const parsed = parseRadiographSelection(clean);
-    if (parsed) {
-      replaceType(parsed.type, parsed.quantity);
-    } else {
-      onChange([...values, clean]);
+  function addRadiographType(remember: boolean) {
+    const label = newTypeLabel.trim();
+    const code = newTypeCode.trim().toUpperCase();
+    const defaultQuantity = Number(newTypeQuantity);
+    if (!label || !code) {
+      setMessage("Enter both a radiograph type and a short code.");
+      return;
     }
-    setOtherDraft("");
+    if (!/^[A-Z0-9][A-Z0-9+./-]*$/.test(code)) {
+      setMessage("Use letters, numbers, +, period, slash, or hyphen in the code.");
+      return;
+    }
+    if (!Number.isSafeInteger(defaultQuantity) || defaultQuantity <= 0) {
+      setMessage("The default image count must be a positive whole number.");
+      return;
+    }
+    const duplicateCode = definitions.find(
+      (definition) => definition.code === code,
+    );
+    if (duplicateCode) {
+      setMessage(
+        `${code} is already used by ${duplicateCode.label}. Adjust its count above.`,
+      );
+      return;
+    }
+    const duplicateLabel = findEquivalent("imaging.radiographs", label);
+    if (duplicateLabel) {
+      setMessage(
+        `${label} already exists in the radiograph catalogue. Use its existing code or edit it on Manage catalogues.`,
+      );
+      return;
+    }
+    const metadata: RadiographCatalogueMetadata = {
+      kind: "radiograph",
+      code,
+      defaultQuantity,
+    };
+    try {
+      if (remember) {
+        rememberValue("imaging.radiographs", label, metadata);
+      } else {
+        setEncounterTypes((current) => [
+          ...current,
+          {
+            ...metadata,
+            id: `encounter-radiograph-${code}`,
+            label,
+            hidden: false,
+          },
+        ]);
+      }
+      onChange([...values, formatSelection(code, String(defaultQuantity))]);
+      setNewTypeLabel("");
+      setNewTypeCode("");
+      setNewTypeQuantity("1");
+      setMessage(`${label} added${remember ? " and remembered" : ""}.`);
+    } catch (error) {
+      setMessage(
+        error instanceof Error ? error.message : "The radiograph type could not be added.",
+      );
+    }
   }
+
+  const displayedDefinitions = definitions.filter(
+    (definition) => !definition.hidden || Boolean(displayedQuantity(definition)),
+  );
+  const fieldsetId = `${idPrefix}-radiographs`;
 
   return (
     <fieldset
-      id="adult-hygiene-radiographs"
+      id={fieldsetId}
       className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700"
       aria-label="Radiographs taken today"
     >
       <legend className="px-1 font-semibold">Radiographs taken today</legend>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Selected radiographs are linked automatically to Treatment completed
-        today. Counts remain editable here.
+        {linkToTreatment
+          ? "Selected radiographs are linked automatically to Treatment completed today. Counts remain editable here."
+          : "Select each radiograph type taken today and adjust the actual image count for this encounter."}
       </p>
       <div className="grid gap-3 md:grid-cols-3">
-        {radiographTypes.map(({ type, label, defaultQuantity }) => {
-          const quantity = displayedQuantity(type);
+        {displayedDefinitions.map((definition) => {
+          const quantity = displayedQuantity(definition);
           const active = Boolean(quantity);
-          const multipleLegacyValues = typeEntries(type).length > 1;
+          const multipleLegacyValues = typeEntries(definition).length > 1;
+          const id = controlId(idPrefix, definition.code);
           return (
             <div
-              key={type}
+              key={definition.id}
               className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
             >
               <NativeChoiceControl
@@ -117,30 +251,30 @@ export function RadiographsTakenControl({
                 checked={active}
                 className="w-full"
                 onChange={(checked) =>
-                  replaceType(type, checked ? defaultQuantity : "")
+                  replaceType(
+                    definition,
+                    checked ? String(definition.defaultQuantity) : "",
+                  )
                 }
               >
-                {label} ({type})
+                {definition.label} ({definition.code})
               </NativeChoiceControl>
               {active ? (
                 <div>
-                  <label
-                    className="text-sm font-medium"
-                    htmlFor={`adult-hygiene-radiographs-${type.toLowerCase()}-quantity`}
-                  >
+                  <label className="text-sm font-medium" htmlFor={`${id}-quantity`}>
                     Number of images
                   </label>
                   <div className="mt-1 grid grid-cols-[auto_minmax(4rem,1fr)_auto] gap-2">
                     <button
                       type="button"
                       className={secondaryButtonClass}
-                      aria-label={`Decrease ${type} images`}
-                      onClick={() => adjust(type, -1)}
+                      aria-label={`Decrease ${definition.code} images`}
+                      onClick={() => adjust(definition, -1)}
                     >
                       −
                     </button>
                     <input
-                      id={`adult-hygiene-radiographs-${type.toLowerCase()}-quantity`}
+                      id={`${id}-quantity`}
                       type="number"
                       min={1}
                       step={1}
@@ -148,23 +282,23 @@ export function RadiographsTakenControl({
                       value={quantity}
                       onChange={(event) => {
                         if (event.target.value) {
-                          replaceType(type, event.target.value);
+                          replaceType(definition, event.target.value);
                         }
                       }}
                     />
                     <button
                       type="button"
                       className={secondaryButtonClass}
-                      aria-label={`Increase ${type} images`}
-                      onClick={() => adjust(type, 1)}
+                      aria-label={`Increase ${definition.code} images`}
+                      onClick={() => adjust(definition, 1)}
                     >
                       +
                     </button>
                   </div>
                   {multipleLegacyValues ? (
                     <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-                      Multiple legacy {type} entries are shown as their combined
-                      count. Editing the count replaces them with one value.
+                      Multiple legacy {definition.code} entries are shown as
+                      their combined count. Editing replaces them with one value.
                     </p>
                   ) : null}
                 </div>
@@ -174,34 +308,81 @@ export function RadiographsTakenControl({
         })}
       </div>
 
-      <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-700">
-        <label className="text-sm font-medium" htmlFor="adult-hygiene-radiographs-other">
-          Other radiographs
-        </label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            id="adult-hygiene-radiographs-other"
-            className={formControlClass()}
-            value={otherDraft}
-            placeholder="Enter another radiograph type"
-            onChange={(event) => setOtherDraft(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                addOther();
-              }
-            }}
-          />
+      <fieldset className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+        <legend className="px-1 text-sm font-semibold">
+          Add a radiograph type
+        </legend>
+        <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(8rem,1fr)]">
+          <div>
+            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-label`}>
+              Type name
+            </label>
+            <input
+              id={`${fieldsetId}-new-label`}
+              className={`mt-1 ${formControlClass()}`}
+              value={newTypeLabel}
+              placeholder="e.g. Occlusal view"
+              onChange={(event) => setNewTypeLabel(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-code`}>
+              Short code
+            </label>
+            <input
+              id={`${fieldsetId}-new-code`}
+              className={`mt-1 ${formControlClass()}`}
+              value={newTypeCode}
+              placeholder="e.g. OCC"
+              onChange={(event) => setNewTypeCode(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-quantity`}>
+              Default images
+            </label>
+            <input
+              id={`${fieldsetId}-new-quantity`}
+              type="number"
+              min={1}
+              step={1}
+              className={`mt-1 ${formControlClass()}`}
+              value={newTypeQuantity}
+              onChange={(event) => setNewTypeQuantity(event.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             className={secondaryButtonClass}
-            disabled={!otherDraft.trim()}
-            onClick={addOther}
+            disabled={!newTypeLabel.trim() || !newTypeCode.trim()}
+            onClick={() => addRadiographType(false)}
           >
-            Add other radiograph
+            Add for this encounter
+          </button>
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={
+              !newTypeLabel.trim() ||
+              !newTypeCode.trim() ||
+              storageStatus !== "ready"
+            }
+            onClick={() => addRadiographType(true)}
+          >
+            Remember and add
           </button>
         </div>
-        {otherValues.length ? (
+        <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+          {message ||
+            "Remembered types become reusable catalogue entries; the image count remains encounter-specific."}
+        </p>
+      </fieldset>
+
+      {otherValues.length ? (
+        <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+          <p className="text-sm font-medium">Legacy or unrecognized entries</p>
           <ul className="space-y-2" aria-label="Other radiographs taken">
             {otherValues.map((entry) => (
               <li
@@ -222,8 +403,8 @@ export function RadiographsTakenControl({
               </li>
             ))}
           </ul>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </fieldset>
   );
 }

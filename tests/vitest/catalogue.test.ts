@@ -133,16 +133,15 @@ describe("local catalogues", () => {
       listCatalogueItems(emptyState, "imaging.radiographs").map(
         (item) => item.label,
       ),
+    ).toEqual(["Bitewings", "Periapicals", "Panoramic"]);
+    expect(
+      listCatalogueItems(emptyState, "imaging.radiographs").map(
+        (item) => item.metadata,
+      ),
     ).toEqual([
-      "PAN",
-      "1 BW",
-      "2 BW",
-      "3 BW",
-      "4 BW",
-      "5 BW",
-      "6 BW",
-      "1 PA",
-      "2 PA",
+      { kind: "radiograph", code: "BW", defaultQuantity: 4 },
+      { kind: "radiograph", code: "PA", defaultQuantity: 3 },
+      { kind: "radiograph", code: "PAN", defaultQuantity: 1 },
     ]);
     expect(
       listCatalogueItems(
@@ -222,14 +221,17 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
+      "Radiographs",
       "FMP",
+      "Dentist Recare Exam",
+      "Scaling",
+      "Selective polish",
+      "Dyclonine 1% rinse 5 ml",
       "FluoriMax 2.5% NaF Varnish application",
       "Advantage Arrest® Silver Diamine Fluoride 38% application",
-      "Dyclonine 1% rinse 5 ml",
-      "Dentist Recare Exam",
+      "Crystal X-PUR",
       "Sealant application, resin-based material",
       "OHE",
-      "Crystal X-PUR",
     ]);
     expect(
       listCatalogueItems(emptyState, "recare-treatment.items").map(
@@ -335,6 +337,48 @@ describe("local catalogues", () => {
         hidden: false,
         favorite: false,
         sortOrder: 6,
+      },
+    ]);
+  });
+
+  it("migrates counted radiograph seed preferences to typed radiograph entries", () => {
+    const migrated = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [],
+      seedPreferences: [
+        {
+          seedId: "seed.imaging.radiographs.4-bw",
+          hidden: false,
+          favorite: true,
+          sortOrder: 4,
+        },
+        {
+          seedId: "seed.imaging.radiographs.1-bw",
+          hidden: false,
+          favorite: false,
+          sortOrder: 1,
+        },
+        {
+          seedId: "seed.imaging.radiographs.pan",
+          hidden: true,
+          favorite: false,
+          sortOrder: 0,
+        },
+      ],
+    });
+
+    expect(migrated.seedPreferences).toEqual([
+      {
+        seedId: "seed.imaging.radiographs.bitewings",
+        hidden: false,
+        favorite: false,
+        sortOrder: 1,
+      },
+      {
+        seedId: "seed.imaging.radiographs.panoramic",
+        hidden: true,
+        favorite: false,
+        sortOrder: 0,
       },
     ]);
   });
@@ -549,6 +593,67 @@ describe("local catalogues", () => {
     expect(parsedJson).not.toHaveProperty("form");
     expect(parsedJson).not.toHaveProperty("theme");
     expect(parsed.catalogueState).toEqual(state);
+  });
+
+  it("round-trips typed metadata while accepting legacy items without it", () => {
+    const typed = rememberCatalogueValue(
+      createEmptyCatalogueState(),
+      "imaging.radiographs",
+      "Occlusal view",
+      {
+        id: "radiograph-occ",
+        now: new Date("2026-07-25T20:00:00.000Z"),
+        metadata: {
+          kind: "radiograph",
+          code: "OCC",
+          defaultQuantity: 2,
+        },
+      },
+    ).state;
+    const parsed = parseCatalogueExport(
+      serializeCatalogueExport(
+        typed,
+        new Date("2026-07-25T20:30:00.000Z"),
+      ),
+    );
+    expect(parsed.catalogueState.userItems[0].metadata).toEqual({
+      kind: "radiograph",
+      code: "OCC",
+      defaultQuantity: 2,
+    });
+    expect(() =>
+      rememberCatalogueValue(
+        typed,
+        "imaging.radiographs",
+        "Second occlusal view",
+        {
+          id: "radiograph-occ-duplicate",
+          metadata: {
+            kind: "radiograph",
+            code: "OCC",
+            defaultQuantity: 1,
+          },
+        },
+      ),
+    ).toThrow("already used by Occlusal view");
+
+    const legacy = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [
+        {
+          id: "legacy-care",
+          catalogueKey: "hygiene-treatment.completed",
+          label: "Legacy completed care",
+          hidden: false,
+          favorite: false,
+          sortOrder: 0,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+      ],
+      seedPreferences: [],
+    });
+    expect(legacy.userItems[0]).not.toHaveProperty("metadata");
   });
 
   it("rejects malformed, duplicate, future, and oversized imports", () => {

@@ -1,17 +1,29 @@
 "use client";
 
+import { useState } from "react";
+
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
+import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
+  COMPLETED_CARE_CATEGORIES,
+  COMPLETED_CARE_CATEGORY_LABELS,
+  isCompletedCareCatalogueMetadata,
+  type CatalogueItem,
+  type CompletedCareCategory,
+  type CompletedCareProcedure,
+} from "@/lib/catalogues/catalogue";
+import {
+  createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentEntry,
   inferredHygieneProcedureKind,
+  treatmentCompletedEntryIdentity,
   type AdultHygieneTreatmentCompletedEntry,
   type HygieneInstrumentationMethod,
-  type HygieneProcedureKind,
 } from "@/lib/templates/adultHygieneTreatment";
 import {
   isDyclonineRinseTreatment,
@@ -137,16 +149,89 @@ export function TreatmentCompletedList({
   oheRecap = "",
   onApplyStandard,
   onApplyRecare,
-  onAdd,
+  radiographsHref,
   onChange,
 }: {
   entries: AdultHygieneTreatmentCompletedEntry[];
   oheRecap?: string;
   onApplyStandard: () => void;
   onApplyRecare?: () => void;
-  onAdd: () => void;
+  radiographsHref?: string;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
 }) {
+  const { getItems, rememberValue, storageStatus } = useCatalogues();
+  const [showAddCare, setShowAddCare] = useState(false);
+  const [customCareLabel, setCustomCareLabel] = useState("");
+  const [customCareCategory, setCustomCareCategory] =
+    useState<CompletedCareCategory>("other");
+  const [rememberCustomCare, setRememberCustomCare] = useState(false);
+  const [addCareMessage, setAddCareMessage] = useState("");
+  const catalogueItems = getItems("hygiene-treatment.completed");
+
+  function nextEntryId(prefix: string): string {
+    return `${prefix}-${Date.now()}-${
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(16).slice(2)
+    }`;
+  }
+
+  function addCatalogueCare(item: CatalogueItem) {
+    const added = createTreatmentEntryFromCatalogueItem(
+      item,
+      nextEntryId("completed"),
+      oheRecap,
+    );
+    if (!added) return;
+    const identity = treatmentCompletedEntryIdentity(added);
+    if (
+      added.procedureKind &&
+      entries.some(
+        (entry) => treatmentCompletedEntryIdentity(entry) === identity,
+      )
+    ) {
+      setAddCareMessage(`${item.label} is already in completed care.`);
+      return;
+    }
+    onChange([...entries, added]);
+    setAddCareMessage(`${item.label} added.`);
+  }
+
+  function addCustomCare() {
+    const label = customCareLabel.trim();
+    if (!label) return;
+    const procedure: CompletedCareProcedure =
+      customCareCategory === "product-application"
+        ? "product-application"
+        : customCareCategory === "preventive-procedure"
+          ? "preventive-procedure"
+          : "other";
+    const metadata = {
+      kind: "completed-care" as const,
+      category: customCareCategory,
+      procedure,
+    };
+    try {
+      if (rememberCustomCare) {
+        rememberValue("hygiene-treatment.completed", label, metadata);
+      }
+      addCatalogueCare({
+        id: nextEntryId("encounter-care"),
+        catalogueKey: "hygiene-treatment.completed",
+        label,
+        owner: "user",
+        hidden: false,
+        favorite: false,
+        sortOrder: catalogueItems.length,
+        metadata,
+      });
+      setCustomCareLabel("");
+    } catch (error) {
+      setAddCareMessage(
+        error instanceof Error ? error.message : "Completed care could not be added.",
+      );
+    }
+  }
   function updateEntry(
     entryId: string,
     patch: Partial<Omit<AdultHygieneTreatmentCompletedEntry, "id">>,
@@ -186,48 +271,6 @@ export function TreatmentCompletedList({
     updateEntry(entry.id, { instrumentation: [...current] });
   }
 
-  function addCommonProcedure(
-    kind: Extract<HygieneProcedureKind, "scaling" | "polish" | "ohe">,
-  ) {
-    const base: Pick<
-      AdultHygieneTreatmentCompletedEntry,
-      "id" | "toothAreas" | "procedureKind"
-    > = {
-      id: `completed-${kind}-${Date.now()}`,
-      toothAreas: [],
-      procedureKind: kind,
-    };
-    const entry: AdultHygieneTreatmentCompletedEntry =
-      kind === "scaling"
-        ? {
-            ...base,
-            treatmentType: "Scaling",
-            toothAreas: ["full mouth"],
-            quantity: "3",
-            instrumentation: ["hand", "power"],
-            powerDevice: "Cavitron",
-          }
-        : kind === "polish"
-          ? {
-              ...base,
-              treatmentType: "Selective polish",
-              quantity: "1",
-              product: "EnamelPro Strawberry with Fluoride",
-            }
-          : {
-              ...base,
-              treatmentType: "OHE",
-              procedureSource: "ohe",
-              details: oheRecap,
-              detailsCustomized: false,
-            };
-    onChange([...entries, entry]);
-  }
-
-  const existingProcedureKinds = new Set(
-    entries.map(inferredHygieneProcedureKind).filter(Boolean),
-  );
-
   return (
     <section className="space-y-4" aria-labelledby="completed-care-heading">
       <div>
@@ -235,8 +278,8 @@ export function TreatmentCompletedList({
           Treatment completed today
         </h3>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Common procedures use concise quantities and details. Add other
-          treatment for encounter-specific or remembered wording.
+          Choose completed care by category. Catalogue defaults prefill common
+          quantities and products, while this encounter remains editable.
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -256,30 +299,143 @@ export function TreatmentCompletedList({
             Apply recare exam
           </button>
         ) : null}
-        <button type="button" className={rowButtonClass} onClick={onAdd}>
-          Add other treatment
+        <button
+          type="button"
+          className={rowButtonClass}
+          aria-expanded={showAddCare}
+          aria-controls="adult-hygiene-add-completed-care"
+          onClick={() => setShowAddCare((current) => !current)}
+        >
+          {showAddCare ? "Close completed care catalogue" : "Add completed care"}
         </button>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium">Add common procedure:</span>
-        {(
-          [
-            ["scaling", "Scaling"],
-            ["polish", "Selective polish"],
-            ["ohe", "OHE"],
-          ] as const
-        ).map(([kind, label]) => (
-          <button
-            key={kind}
-            type="button"
-            className={rowButtonClass}
-            disabled={existingProcedureKinds.has(kind)}
-            onClick={() => addCommonProcedure(kind)}
-          >
-            {existingProcedureKinds.has(kind) ? `${label} added` : `Add ${label}`}
-          </button>
-        ))}
-      </div>
+
+      {showAddCare ? (
+        <div
+          id="adult-hygiene-add-completed-care"
+          className="space-y-4 rounded-xl border border-slate-300 bg-white p-4 dark:border-slate-700 dark:bg-slate-900"
+        >
+          {COMPLETED_CARE_CATEGORIES.filter((category) =>
+            catalogueItems.some((item) => {
+              const metadata = isCompletedCareCatalogueMetadata(item.metadata)
+                ? item.metadata
+                : undefined;
+              return (metadata?.category ?? "other") === category;
+            }),
+          ).map((category) => (
+            <fieldset key={category} className="space-y-2">
+              <legend className="text-sm font-semibold">
+                {COMPLETED_CARE_CATEGORY_LABELS[category]}
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {catalogueItems
+                  .filter((item) => {
+                    const metadata = isCompletedCareCatalogueMetadata(item.metadata)
+                      ? item.metadata
+                      : undefined;
+                    return (metadata?.category ?? "other") === category;
+                  })
+                  .map((item) => {
+                    const metadata = isCompletedCareCatalogueMetadata(item.metadata)
+                      ? item.metadata
+                      : undefined;
+                    if (metadata?.procedure === "radiographs") {
+                      if (!radiographsHref) return null;
+                      return (
+                        <a
+                          key={item.id}
+                          href={radiographsHref}
+                          className={rowButtonClass}
+                        >
+                          Edit radiographs
+                        </a>
+                      );
+                    }
+                    const kind = createTreatmentEntryFromCatalogueItem(
+                      item,
+                      "preview",
+                      oheRecap,
+                    )?.procedureKind;
+                    const alreadyAdded = Boolean(
+                      kind &&
+                        entries.some(
+                          (entry) => inferredHygieneProcedureKind(entry) === kind,
+                        ),
+                    );
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={rowButtonClass}
+                        disabled={alreadyAdded}
+                        onClick={() => addCatalogueCare(item)}
+                      >
+                        {alreadyAdded ? `${item.label} added` : item.label}
+                      </button>
+                    );
+                  })}
+              </div>
+            </fieldset>
+          ))}
+
+          <fieldset className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+            <legend className="px-1 text-sm font-semibold">
+              Encounter-specific completed care
+            </legend>
+            <div className="grid gap-3 md:grid-cols-2">
+              <TextInput
+                id="adult-hygiene-custom-completed-care"
+                label="Completed care"
+                value={customCareLabel}
+                onChange={setCustomCareLabel}
+              />
+              <div>
+                <label
+                  className="text-sm font-medium"
+                  htmlFor="adult-hygiene-custom-completed-care-category"
+                >
+                  Category
+                </label>
+                <select
+                  id="adult-hygiene-custom-completed-care-category"
+                  className={inputClass}
+                  value={customCareCategory}
+                  onChange={(event) =>
+                    setCustomCareCategory(
+                      event.target.value as CompletedCareCategory,
+                    )
+                  }
+                >
+                  {COMPLETED_CARE_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {COMPLETED_CARE_CATEGORY_LABELS[category]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <NativeChoiceControl
+              type="checkbox"
+              checked={rememberCustomCare}
+              disabled={storageStatus !== "ready"}
+              onChange={setRememberCustomCare}
+            >
+              Remember this completed-care item in this browser
+            </NativeChoiceControl>
+            <button
+              type="button"
+              className={rowButtonClass}
+              disabled={!customCareLabel.trim()}
+              onClick={addCustomCare}
+            >
+              Add completed care
+            </button>
+          </fieldset>
+          <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+            {addCareMessage}
+          </p>
+        </div>
+      ) : null}
 
       {entries.length ? (
         <ol className="space-y-3" aria-label="Treatment completed today entries">
@@ -318,7 +474,11 @@ export function TreatmentCompletedList({
                               ? "Radiographs"
                               : entry.procedureKind === "recare-exam"
                                 ? "Dentist Recare Exam"
-                                : "Other treatment"}
+                                : entry.careCategory
+                                  ? COMPLETED_CARE_CATEGORY_LABELS[
+                                      entry.careCategory
+                                    ]
+                                  : "Other completed care"}
                     </h4>
                     {entry.procedureSource ? (
                       <span className="mt-1 inline-flex rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -471,14 +631,14 @@ export function TreatmentCompletedList({
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <CatalogueCombobox
                       id={`adult-hygiene-treatment-completed-${entry.id}-type`}
-                      label="Treatment type"
+                      label="Completed care"
                       catalogueKey="hygiene-treatment.completed"
                       value={entry.treatmentType}
                       onChange={(treatmentType) =>
                         updateEntry(entry.id, { treatmentType })
                       }
-                      rememberActionLabel="Remember treatment type"
-                      unhideActionLabel="Unhide treatment type"
+                      rememberActionLabel="Remember completed care"
+                      unhideActionLabel="Unhide completed care"
                       roomyActions
                     />
                     <ClinicalLocationMultiCombobox

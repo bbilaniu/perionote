@@ -48,6 +48,7 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
@@ -2529,14 +2530,11 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Records and Chief Concern">
-            <CatalogueMultiCombobox
-              id="recare-radiographs"
-              label="Radiographs"
-              catalogueKey="imaging.radiographs"
+            <RadiographsTakenControl
+              idPrefix="recare"
               values={form.radiographs}
               onChange={(value) => updateField("radiographs", value)}
-              allowDuplicateValues
-              roomySelectionActions
+              linkToTreatment={false}
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"

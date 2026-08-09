@@ -1,3 +1,9 @@
+import {
+  isCompletedCareCatalogueMetadata,
+  type CatalogueItem,
+  type CompletedCareCategory,
+} from "@/lib/catalogues/catalogue";
+
 export type HygieneProcedureKind =
   | "scaling"
   | "polish"
@@ -27,6 +33,8 @@ export type AdultHygieneTreatmentCompletedEntry = {
   details?: string;
   detailsCustomized?: boolean;
   radiographType?: RadiographType;
+  careCategory?: CompletedCareCategory;
+  catalogueItemId?: string;
 };
 
 export type AdultHygieneTreatmentPresetEntry = Omit<
@@ -39,11 +47,13 @@ export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPre
     treatmentType: "Dyclonine 1% rinse 5 ml",
     toothAreas: ["full mouth"],
     procedureSource: "standard-treatment",
+    careCategory: "product-application",
   },
   {
     treatmentType: "FMP",
     toothAreas: ["full mouth"],
     procedureSource: "standard-treatment",
+    careCategory: "exam",
   },
   {
     treatmentType: "Scaling",
@@ -53,6 +63,7 @@ export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPre
     quantity: "3",
     instrumentation: ["hand", "power"],
     powerDevice: "Cavitron",
+    careCategory: "instrumentation",
   },
   {
     treatmentType: "Selective polish",
@@ -61,6 +72,7 @@ export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPre
     procedureSource: "standard-treatment",
     quantity: "1",
     product: "EnamelPro Strawberry with Fluoride",
+    careCategory: "instrumentation",
   },
   {
     treatmentType: "OHE",
@@ -69,11 +81,13 @@ export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPre
     procedureSource: "ohe",
     details: "",
     detailsCustomized: false,
+    careCategory: "education",
   },
   {
     treatmentType: "FluoriMax 2.5% NaF Varnish application",
     toothAreas: ["full mouth"],
     procedureSource: "standard-treatment",
+    careCategory: "product-application",
   },
 ] as const;
 
@@ -82,7 +96,58 @@ export const recareExamTreatmentPreset = {
   toothAreas: [],
   procedureKind: "recare-exam",
   procedureSource: "recare-exam",
+  careCategory: "exam",
 } as const satisfies AdultHygieneTreatmentPresetEntry;
+
+export function createTreatmentEntryFromCatalogueItem(
+  item: CatalogueItem,
+  id: string,
+  oheRecap = "",
+): AdultHygieneTreatmentCompletedEntry | null {
+  const metadata = isCompletedCareCatalogueMetadata(item.metadata)
+    ? item.metadata
+    : undefined;
+  if (metadata?.procedure === "radiographs") return null;
+
+  const base: AdultHygieneTreatmentCompletedEntry = {
+    id,
+    treatmentType: item.label,
+    toothAreas: [...(metadata?.defaultToothAreas ?? [])],
+    careCategory: metadata?.category ?? "other",
+    catalogueItemId: item.id,
+  };
+
+  switch (metadata?.procedure) {
+    case "scaling":
+      return {
+        ...base,
+        procedureKind: "scaling",
+        quantity: String(metadata.defaultQuantity ?? 3),
+        instrumentation: ["hand", "power"],
+        powerDevice: "Cavitron",
+      };
+    case "polish":
+      return {
+        ...base,
+        procedureKind: "polish",
+        quantity: String(metadata.defaultQuantity ?? 1),
+        product:
+          metadata.defaultProduct ?? "EnamelPro Strawberry with Fluoride",
+      };
+    case "recare-exam":
+      return { ...base, procedureKind: "recare-exam" };
+    case "ohe":
+      return {
+        ...base,
+        procedureKind: "ohe",
+        procedureSource: "ohe",
+        details: oheRecap,
+        detailsCustomized: false,
+      };
+    default:
+      return base;
+  }
+}
 
 function normalized(value: string): string {
   return value.normalize("NFKC").trim().toLocaleLowerCase("en-CA");
@@ -272,6 +337,7 @@ export function syncRadiographTreatmentEntries(
         toothAreas: [],
         procedureKind: "radiograph" as const,
         procedureSource: "radiographs" as const,
+        careCategory: "exam" as const,
         ...(parsed
           ? { radiographType: parsed.type, quantity: parsed.quantity }
           : { details: radiograph }),

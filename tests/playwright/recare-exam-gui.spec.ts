@@ -43,100 +43,50 @@ async function toggleIntraoralObservation(
   await control.click();
 }
 
-test("Recare Exam radiographs use the reviewed catalogue and ordered note values", async ({
+test("Recare Exam radiographs use typed defaults and remember custom types", async ({
   page,
 }) => {
   await page.goto(recareExamUrl);
 
-  const radiographs = page.getByRole("combobox", {
-    name: "Radiographs",
+  const radiographs = page.getByRole("group", {
+    name: "Radiographs taken today",
     exact: true,
   });
-  await radiographs.focus();
-  for (const label of [
-    "PAN",
-    "1 BW",
-    "2 BW",
-    "3 BW",
-    "4 BW",
-    "5 BW",
-    "6 BW",
-    "1 PA",
-    "2 PA",
-  ]) {
-    await expect(
-      page.getByRole("option", {
-        name: `${label} Starter`,
-        exact: true,
-      }),
-    ).toBeVisible();
-  }
-  await page
-    .getByRole("button", {
-      name: "Hide 2 PA from suggestions",
-      exact: true,
-    })
-    .click();
-  await expect(radiographs).toBeFocused();
-  await expect(radiographs).toHaveValue("");
+  const bitewings = radiographs.getByRole("checkbox", {
+    name: "Bitewings (BW)",
+    exact: true,
+  });
+  await bitewings.click();
   await expect(
-    page.getByRole("option", { name: "2 PA Starter", exact: true }),
-  ).toHaveCount(0);
-
-  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
-  await multiControl(page, "Radiographs")
-    .getByRole("button", { name: "Show Radiographs suggestions" })
+    radiographs.getByRole("spinbutton", { name: "Number of images" }).first(),
+  ).toHaveValue("4");
+  await radiographs
+    .getByRole("button", { name: "Increase BW images", exact: true })
     .click();
-  await expect(
-    page.getByRole("option", { name: "4 BW Starter", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
-  await radiographs.fill("Synthetic supplemental view");
-  await multiControl(page, "Radiographs")
-    .getByRole("button", { name: "Remember and add" })
+  await radiographs
+    .getByRole("checkbox", { name: "Panoramic (PAN)", exact: true })
     .click();
-  await page
-    .getByRole("button", {
-      name: "Move Synthetic supplemental view earlier",
-    })
-    .click();
-  await page
-    .getByRole("button", {
-      name: "Move Synthetic supplemental view earlier",
-    })
-    .click();
-
-  await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view; 4 BW; 4 BW/,
+  await radiographs.getByLabel("Type name", { exact: true }).fill(
+    "Synthetic supplemental view",
   );
-  const selectedRadiographs = page.getByRole("list", {
-    name: "Radiographs selected values",
-  });
-  await expect(selectedRadiographs.locator(":scope > li")).toHaveCount(3);
-  const selectedRadiographRow = selectedRadiographs
-    .locator(":scope > li")
-    .first();
-  await expect(
-    selectedRadiographRow.getByRole("button", {
-      name: "Move Synthetic supplemental view earlier",
-    }),
-  ).toHaveClass(/py-2/);
-  const removeSelectedRadiograph = selectedRadiographRow.getByRole("button", {
-    name: "Remove Synthetic supplemental view",
-  });
-  await expect(removeSelectedRadiograph).toHaveClass(/border-red-300/);
-  await removeSelectedRadiograph.focus();
-  await expect(
-    selectedRadiographRow.getByRole("tooltip").filter({
-      hasText: "Remove this value from the note.",
-    }),
-  ).toBeVisible();
-  await selectedRadiographs
-    .getByRole("button", { name: "Remove 4 BW" })
-    .first()
+  await radiographs.getByLabel("Short code", { exact: true }).fill("SV");
+  await radiographs.getByLabel("Default images", { exact: true }).fill("2");
+  await radiographs
+    .getByRole("button", { name: "Remember and add", exact: true })
     .click();
+
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view; 4 BW/,
+    /Radiographs: 5 BW; PAN; 2 SV/,
+  );
+  await expect(
+    radiographs.getByRole("checkbox", {
+      name: "Synthetic supplemental view (SV)",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await bitewings.click();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Radiographs: PAN; 2 SV/,
   );
 });
 

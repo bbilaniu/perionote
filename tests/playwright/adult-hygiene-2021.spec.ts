@@ -1589,23 +1589,24 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   }
 
   await page
-    .getByRole("button", { name: "Add other treatment", exact: true })
+    .getByRole("button", { name: "Add completed care", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Advantage Arrest® Silver Diamine Fluoride 38% application",
+      exact: true,
+    })
     .click();
   const completedValues = page.getByRole("list", {
     name: "Treatment completed today entries",
   });
   const completedRow = completedValues.locator(":scope > li").first();
-  const treatmentCompleted = completedRow.getByRole("combobox", {
-    name: "Treatment type",
-    exact: true,
-  });
-  await treatmentCompleted.focus();
-  await page
-    .getByRole("option", {
-      name: "Advantage Arrest® Silver Diamine Fluoride 38% application Starter",
+  await expect(
+    completedRow.getByRole("heading", {
+      name: "Product applications",
       exact: true,
-    })
-    .click();
+    }),
+  ).toBeVisible();
 
   await completedRow.getByText("Select Tooth/area", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {

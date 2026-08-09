@@ -3505,12 +3505,6 @@ export function AdultHygiene2021Template({
               entries={form.treatmentCompleted}
               oheRecap={buildOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
-              onAdd={() =>
-                updateField("treatmentCompleted", [
-                  ...form.treatmentCompleted,
-                  createTreatmentCompletedEntry(),
-                ])
-              }
               onChange={(value) => updateField("treatmentCompleted", value)}
             />
             <CatalogueCombobox

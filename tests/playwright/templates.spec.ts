@@ -607,12 +607,22 @@ test("2026 Adult Hygiene links radiograph quantities and a recare exam to comple
   await radiographs
     .getByRole("checkbox", { name: "Panoramic (PAN)", exact: true })
     .click();
+  await radiographs
+    .getByLabel("Type name", { exact: true })
+    .fill("Occlusal view");
+  await radiographs.getByLabel("Short code", { exact: true }).fill("OCC");
+  await radiographs
+    .getByLabel("Default images", { exact: true })
+    .fill("2");
+  await radiographs
+    .getByRole("button", { name: "Remember and add", exact: true })
+    .click();
 
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Radiographs: 5 BW; 3 PA; PAN",
+    "Radiographs: 5 BW; 3 PA; PAN; 2 OCC",
   );
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Treatment completed today: 5 BW; 3 PA; PAN",
+    "Treatment completed today: 5 BW; 3 PA; PAN; 2 OCC",
   );
 
   await page
@@ -622,13 +632,13 @@ test("2026 Adult Hygiene links radiograph quantities and a recare exam to comple
     .getByRole("button", { name: "Apply recare exam", exact: true })
     .click();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Treatment completed today: 5 BW; 3 PA; PAN; Dentist Recare Exam",
+    "Treatment completed today: 5 BW; 3 PA; PAN; 2 OCC; Dentist Recare Exam",
   );
   await expect(
     page
       .getByRole("list", { name: "Treatment completed today entries" })
       .locator(":scope > li"),
-  ).toHaveCount(4);
+  ).toHaveCount(5);
 
   await bitewings.click();
   await expect(bitewings).not.toBeChecked();
@@ -636,7 +646,7 @@ test("2026 Adult Hygiene links radiograph quantities and a recare exam to comple
     "5 BW",
   );
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Treatment completed today: 3 PA; PAN; Dentist Recare Exam",
+    "Treatment completed today: 3 PA; PAN; 2 OCC; Dentist Recare Exam",
   );
 });
 
