@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -44,6 +45,7 @@ import {
   type FixedChoiceMultiComboboxGroup,
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
@@ -898,6 +900,7 @@ function ChoiceToggleButtons({
   singleSelect?: boolean;
 }) {
   const selected = new Set(values);
+  const groupName = useId();
   return (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium">{label}</legend>
@@ -905,27 +908,25 @@ function ChoiceToggleButtons({
         {options.map((option) => {
           const active = selected.has(option);
           return (
-            <button
+            <NativeChoiceControl
               key={option}
-              type="button"
-              aria-pressed={active}
-              className={`${buttonClass} ${
-                active
-                  ? "bg-sky-700 text-white hover:bg-sky-800"
-                  : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-              }`}
-              onClick={() =>
+              type={singleSelect ? "radio" : "checkbox"}
+              name={singleSelect ? groupName : undefined}
+              checked={active}
+              onChange={(checked) =>
                 onChange(
-                  active
-                    ? values.filter((value) => value !== option)
-                    : singleSelect
+                  checked
+                    ? singleSelect
                       ? [option]
-                      : [...values, option],
+                      : [...values, option]
+                    : singleSelect
+                      ? values
+                      : values.filter((value) => value !== option),
                 )
               }
             >
               {option}
-            </button>
+            </NativeChoiceControl>
           );
         })}
       </div>
@@ -1069,18 +1070,14 @@ export function TmjAssessmentControl({
         role="group"
         aria-label="TMJ clicking"
       >
-        <button
-          type="button"
-          aria-pressed={Boolean(clicking)}
-          className={`${buttonClass} w-full justify-start sm:w-auto ${
-            clicking
-              ? "bg-sky-700 text-white hover:bg-sky-800"
-              : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-          }`}
-          onClick={toggleClicking}
+        <NativeChoiceControl
+          type="checkbox"
+          checked={Boolean(clicking)}
+          className="w-full justify-start sm:w-auto"
+          onChange={toggleClicking}
         >
           TMJ clicking
-        </button>
+        </NativeChoiceControl>
         {clicking ? (
           <div className="grid gap-3 md:grid-cols-3">
             <ChoiceToggleButtons
@@ -1250,18 +1247,14 @@ export function LymphNodesAssessmentControl({
         role="group"
         aria-label="Palpable lymph nodes"
       >
-        <button
-          type="button"
-          aria-pressed={Boolean(palpable)}
-          className={`${buttonClass} w-full justify-start sm:w-auto ${
-            palpable
-              ? "bg-sky-700 text-white hover:bg-sky-800"
-              : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-          }`}
-          onClick={togglePalpable}
+        <NativeChoiceControl
+          type="checkbox"
+          checked={Boolean(palpable)}
+          className="w-full justify-start sm:w-auto"
+          onChange={togglePalpable}
         >
           Palpable
-        </button>
+        </NativeChoiceControl>
         {palpable ? (
           <div className="grid gap-3 md:grid-cols-3">
             <ChoiceToggleButtons
@@ -1466,18 +1459,14 @@ export function StructuredExtraoralObservations({
                     aria-label={option.label}
                     className="space-y-2"
                   >
-                    <button
-                      type="button"
-                      aria-pressed={Boolean(selected)}
-                      className={`${buttonClass} w-full justify-start ${
-                        selected
-                          ? "bg-sky-700 text-white hover:bg-sky-800"
-                          : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                      }`}
-                      onClick={() => toggleOption(option.id)}
+                    <NativeChoiceControl
+                      type="checkbox"
+                      checked={Boolean(selected)}
+                      className="w-full justify-start"
+                      onChange={() => toggleOption(option.id)}
                     >
                       {option.label}
-                    </button>
+                    </NativeChoiceControl>
                     {selected ? (
                       <div className="grid gap-3">
                         <ChoiceToggleButtons
@@ -1735,19 +1724,14 @@ export function StructuredIntraoralFindings({
               {recareIntraoralQuickPresets.map((preset) => {
                 const active = quickPresetIsActive(preset);
                 return (
-                  <button
+                  <NativeChoiceControl
                     key={preset.optionId}
-                    type="button"
-                    aria-pressed={active}
-                    className={`${buttonClass} ${
-                      active
-                        ? "bg-sky-700 text-white hover:bg-sky-800"
-                        : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                    }`}
-                    onClick={() => toggleQuickPreset(preset)}
+                    type="checkbox"
+                    checked={active}
+                    onChange={() => toggleQuickPreset(preset)}
                   >
                     {preset.label}
-                  </button>
+                  </NativeChoiceControl>
                 );
               })}
             </div>
@@ -1898,8 +1882,11 @@ export function OcclusalFindingLocations({
       !quick.has(location as (typeof recareIntraoralLocationChoices)[number])
   );
   return (
-    <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-3 dark:border-slate-700">
-      <span className="text-xs font-medium">Location (optional)</span>
+    <fieldset
+      className="mt-3 space-y-2 border-l-2 border-slate-300 pl-3 dark:border-slate-600"
+      aria-label={`${entry.finding} location`}
+    >
+      <legend className="text-xs font-medium">Location (optional)</legend>
       <div className="flex flex-wrap gap-3">
         {recareIntraoralLocationChoices.map((location) => (
           <label key={location} className="flex gap-1 text-xs">
@@ -1940,7 +1927,7 @@ export function OcclusalFindingLocations({
           })
         }
       />
-    </div>
+    </fieldset>
   );
 }
 
@@ -2842,21 +2829,23 @@ export function RecareExamTemplate({
                 )}
                 onChange={changeAdditionalOcclusalValues}
                 roomySelectionActions
+                renderSelectedDetails={(_, index) => {
+                  const entry = (form.additionalOcclusalFindings ?? [])[index];
+                  return entry ? (
+                    <OcclusalFindingLocations
+                      entry={entry}
+                      onChange={(updated) =>
+                        updateField(
+                          "additionalOcclusalFindings",
+                          (form.additionalOcclusalFindings ?? []).map((item) =>
+                            item.id === entry.id ? updated : item
+                          )
+                        )
+                      }
+                    />
+                  ) : null;
+                }}
               />
-              {(form.additionalOcclusalFindings ?? []).map((entry) => (
-                <OcclusalFindingLocations
-                  key={entry.id}
-                  entry={entry}
-                  onChange={(updated) =>
-                    updateField(
-                      "additionalOcclusalFindings",
-                      (form.additionalOcclusalFindings ?? []).map((item) =>
-                        item.id === entry.id ? updated : item
-                      )
-                    )
-                  }
-                />
-              ))}
             </div>
           </Section>
 

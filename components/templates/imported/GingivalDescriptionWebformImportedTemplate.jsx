@@ -1,5 +1,6 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useState } from "react";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
 import {
   extraoralLateralityToSides,
@@ -1706,6 +1707,7 @@ function DentalRegionGrid({
   rows,
   selected,
   onChange,
+  groupName,
   singleSelect = false,
 }) {
   const selectedSet = new Set(selected);
@@ -1734,29 +1736,27 @@ function DentalRegionGrid({
                 const isActive = selectedSet.has(option);
 
                 return (
-                  <Button
+                  <NativeChoiceControl
                     key={option}
-                    type="button"
-                    variant={isActive ? "default" : "outline"}
-                    className="h-14 rounded-2xl px-3 text-base font-semibold"
-                    aria-pressed={isActive}
-                    aria-label={option}
-                    onClick={() => {
-                      if (singleSelect) {
-                        onChange(isActive ? [] : [option]);
-                        return;
-                      }
-
-                      if (isActive) {
-                        onChange(selected.filter((item) => item !== option));
-                        return;
-                      }
-
-                      onChange([...selected, option]);
+                    type={singleSelect ? "radio" : "checkbox"}
+                    name={singleSelect ? groupName : undefined}
+                    checked={isActive}
+                    ariaLabel={option}
+                    className="h-14 rounded-2xl px-3 text-base"
+                    onChange={(checked) => {
+                      onChange(
+                        checked
+                          ? singleSelect
+                            ? [option]
+                            : [...selected, option]
+                          : singleSelect
+                            ? selected
+                            : selected.filter((item) => item !== option),
+                      );
                     }}
                   >
                     {getDentalRegionButtonLabel(option)}
-                  </Button>
+                  </NativeChoiceControl>
                 );
               })}
             </div>
@@ -1779,6 +1779,7 @@ function MultiToggle({
 }) {
   const { groups: dentalRegionGroups, remainingOptions } =
     getDentalRegionGroups(options);
+  const groupName = useId();
   const selectedSet = new Set(selected);
   const allSelected = options.length > 0 && selected.length === options.length;
 
@@ -1813,6 +1814,7 @@ function MultiToggle({
               rows={group.rows}
               selected={selected}
               onChange={onChange}
+              groupName={groupName}
               singleSelect={singleSelect}
             />
           ))}
@@ -1829,27 +1831,26 @@ function MultiToggle({
             {remainingOptions.map((option) => {
               const isActive = selectedSet.has(option);
               return (
-                <Button
+                <NativeChoiceControl
                   key={option}
-                  type="button"
-                  aria-pressed={isActive}
-                  variant={isActive ? "default" : "outline"}
+                  type={singleSelect ? "radio" : "checkbox"}
+                  name={singleSelect ? groupName : undefined}
+                  checked={isActive}
                   className="rounded-2xl"
-                  onClick={() => {
-                    if (singleSelect) {
-                      onChange(isActive ? [] : [option]);
-                      return;
-                    }
-
-                    if (isActive) {
-                      onChange(selected.filter((item) => item !== option));
-                    } else {
-                      onChange([...selected, option]);
-                    }
+                  onChange={(checked) => {
+                    onChange(
+                      checked
+                        ? singleSelect
+                          ? [option]
+                          : [...selected, option]
+                        : singleSelect
+                          ? selected
+                          : selected.filter((item) => item !== option),
+                    );
                   }}
                 >
                   {option}
-                </Button>
+                </NativeChoiceControl>
               );
             })}
           </div>

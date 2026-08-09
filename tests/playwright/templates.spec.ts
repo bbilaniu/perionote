@@ -56,19 +56,19 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   ).toBeVisible();
   await expect(
     page
-      .getByRole("group", { name: "Card opens" })
-      .getByRole("button", { name: "Interactive", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("radiogroup", { name: "Card opens" })
+      .getByRole("radio", { name: "Interactive", exact: true }),
+  ).toBeChecked();
   await expect(
     page
-      .getByRole("group", { name: "Card opens" })
-      .getByRole("button", { name: "Original", exact: true }),
-  ).toHaveAttribute("aria-pressed", "false");
+      .getByRole("radiogroup", { name: "Card opens" })
+      .getByRole("radio", { name: "Original", exact: true }),
+  ).not.toBeChecked();
   await expect(
     page
-      .getByRole("group", { name: "Show templates" })
-      .getByRole("button", { name: "All", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("radiogroup", { name: "Show templates" })
+      .getByRole("radio", { name: "All", exact: true }),
+  ).toBeChecked();
 
   const recareCard = page
     .getByRole("article")
@@ -91,14 +91,14 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   ).toHaveAttribute("href", "/templates/clinic/local-anesthetic/");
 
   await page
-    .getByRole("group", { name: "Card opens" })
-    .getByRole("button", { name: "Original", exact: true })
+    .getByRole("radiogroup", { name: "Card opens" })
+    .getByRole("radio", { name: "Original", exact: true })
     .click();
   await expect(
     page
-      .getByRole("group", { name: "Card opens" })
-      .getByRole("button", { name: "Original", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("radiogroup", { name: "Card opens" })
+      .getByRole("radio", { name: "Original", exact: true }),
+  ).toBeChecked();
   await expect(
     recareCard.getByRole("link", { name: "Open original Recare Exam" }),
   ).toHaveAttribute("href", "/templates/clinic/recare-exam/");
@@ -140,8 +140,8 @@ test("clinical template cards follow the selected default destination", async ({
 
   await page.goto("/templates/clinic");
   await page
-    .getByRole("group", { name: "Card opens" })
-    .getByRole("button", { name: "Original", exact: true })
+    .getByRole("radiogroup", { name: "Card opens" })
+    .getByRole("radio", { name: "Original", exact: true })
     .click();
   const recareCard = page
     .getByRole("article")
@@ -170,17 +170,14 @@ test("clinical template catalogue can show only interactive versions", async ({
 }) => {
   await page.goto("/templates/clinic");
 
-  const showTemplates = page.getByRole("group", { name: "Show templates" });
-  await showTemplates
-    .getByRole("button", { name: "Interactive only", exact: true })
-    .click();
+  const showTemplates = page.getByRole("radiogroup", { name: "Show templates" });
+  const interactiveOnly = showTemplates.getByRole("radio", {
+    name: "Interactive only",
+    exact: true,
+  });
+  await interactiveOnly.click();
 
-  await expect(
-    showTemplates.getByRole("button", {
-      name: "Interactive only",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(interactiveOnly).toBeChecked();
   await expect(
     page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
   ).toBeVisible();
@@ -198,7 +195,7 @@ test("clinical template catalogue can show only interactive versions", async ({
   ).toHaveCount(4);
 
   await showTemplates
-    .getByRole("button", { name: "All", exact: true })
+    .getByRole("radio", { name: "All", exact: true })
     .click();
   await expect(
     page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
@@ -262,7 +259,6 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   });
   for (const name of [
     "TMJ",
-    "TMJ clicking",
     "Masseter palpation",
     "TMJ loading test",
   ]) {
@@ -270,6 +266,12 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
       temporomandibular.getByRole("button", { name, exact: true }),
     ).toBeVisible();
   }
+  await expect(
+    temporomandibular.getByRole("checkbox", {
+      name: "TMJ clicking",
+      exact: true,
+    }),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", {
       name: "Additional extraoral clinical exam",
@@ -300,7 +302,7 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   await page
     .getByRole("button", { name: /Structured intraoral observations/ })
     .click();
-  await page.getByRole("button", { name: "Coated tongue" }).click();
+  await page.getByRole("checkbox", { name: "Coated tongue" }).click();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "IOE:\n  - Tongue: coated.",
   );
@@ -331,7 +333,18 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   ]);
 
   const output = page.getByRole("group", { name: "Note output" });
-  await output.getByRole("button", { name: "Hygiene" }).click();
+  const completeOutput = output.getByRole("radio", {
+    name: "Complete",
+    exact: true,
+  });
+  const hygieneOutput = output.getByRole("radio", {
+    name: "Hygiene",
+    exact: true,
+  });
+  await expect(completeOutput).toBeChecked();
+  await hygieneOutput.click();
+  await expect(hygieneOutput).toBeChecked();
+  await expect(completeOutput).not.toBeChecked();
   await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
     "EOE:",
   );
@@ -342,7 +355,7 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
     page.getByRole("button", { name: "Copy hygiene note" }),
   ).toBeVisible();
 
-  await output.getByRole("button", { name: "Recare" }).click();
+  await output.getByRole("radio", { name: "Recare" }).click();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "EOE: WNL.",
   );
@@ -360,7 +373,7 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
     "EOE: WNL.",
   );
 
-  await output.getByRole("button", { name: "Hygiene" }).click();
+  await output.getByRole("radio", { name: "Hygiene" }).click();
   await page.getByRole("button", { name: "Copy hygiene note" }).click();
   await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.not.toContain(
     "EOE:",
@@ -402,6 +415,59 @@ test("2026 Adult Hygiene conditionally documents removable-dentures comments", a
   await status.click();
   await page.getByRole("option", { name: "Yes", exact: true }).click();
   await expect(comment).toHaveValue("Lower complete denture used routinely");
+});
+
+test("2026 Adult Hygiene keeps each occlusal location editor with its finding", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const input = page.getByRole("combobox", {
+    name: "Additional occlusal findings",
+    exact: true,
+  });
+  await input.focus();
+  await page
+    .getByRole("option", { name: "Spacing Starter", exact: true })
+    .click();
+  await input.fill("Crowd");
+  await page
+    .getByRole("option", { name: "Crowding Starter", exact: true })
+    .click();
+
+  const selected = page.getByRole("list", {
+    name: "Additional occlusal findings selected values",
+  });
+  const spacing = selected
+    .getByRole("listitem")
+    .filter({ hasText: "Spacing" });
+  const crowding = selected
+    .getByRole("listitem")
+    .filter({ hasText: "Crowding" });
+  const spacingLocation = spacing.getByRole("group", {
+    name: "Spacing location",
+    exact: true,
+  });
+  const crowdingLocation = crowding.getByRole("group", {
+    name: "Crowding location",
+    exact: true,
+  });
+
+  await spacingLocation
+    .getByRole("checkbox", { name: "Anterior", exact: true })
+    .check();
+  await expect(
+    spacingLocation.getByRole("checkbox", {
+      name: "Anterior",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(
+    crowdingLocation.getByRole("checkbox", {
+      name: "Anterior",
+      exact: true,
+    }),
+  ).not.toBeChecked();
 });
 
 test("2026 Adult Hygiene coordinates standard and additional OHE controls", async ({
@@ -477,9 +543,13 @@ test("2026 Adult Hygiene links radiograph quantities and a recare exam to comple
     name: "Radiographs taken today",
     exact: true,
   });
-  await radiographs
-    .getByRole("button", { name: "Bitewings (BW)", exact: true })
-    .click();
+  const bitewings = radiographs.getByRole("checkbox", {
+    name: "Bitewings (BW)",
+    exact: true,
+  });
+  await expect(bitewings).not.toBeChecked();
+  await bitewings.click();
+  await expect(bitewings).toBeChecked();
   const bwQuantity = radiographs.getByRole("spinbutton", {
     name: "Number of images",
     exact: true,
@@ -489,10 +559,10 @@ test("2026 Adult Hygiene links radiograph quantities and a recare exam to comple
     .getByRole("button", { name: "Increase BW images", exact: true })
     .click();
   await radiographs
-    .getByRole("button", { name: "Periapicals (PA)", exact: true })
+    .getByRole("checkbox", { name: "Periapicals (PA)", exact: true })
     .click();
   await radiographs
-    .getByRole("button", { name: "Panoramic (PAN)", exact: true })
+    .getByRole("checkbox", { name: "Panoramic (PAN)", exact: true })
     .click();
 
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
@@ -517,9 +587,8 @@ test("2026 Adult Hygiene links radiograph quantities and a recare exam to comple
       .locator(":scope > li"),
   ).toHaveCount(4);
 
-  await radiographs
-    .getByRole("button", { name: "Bitewings (BW)", exact: true })
-    .click();
+  await bitewings.click();
+  await expect(bitewings).not.toBeChecked();
   await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
     "5 BW",
   );
@@ -560,17 +629,16 @@ test("2026 Adult Hygiene standard treatment uses structured procedure controls",
   await expect(
     scaling.getByRole("spinbutton", { name: "Scaling units", exact: true }),
   ).toHaveValue("3");
-  await expect(
-    scaling.getByRole("button", {
-      name: "Hand instrumentation",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-pressed", "true");
-  const power = scaling.getByRole("button", {
+  const hand = scaling.getByRole("checkbox", {
+    name: "Hand instrumentation",
+    exact: true,
+  });
+  await expect(hand).toBeChecked();
+  const power = scaling.getByRole("checkbox", {
     name: "Power instrumentation",
     exact: true,
   });
-  await expect(power).toHaveAttribute("aria-pressed", "true");
+  await expect(power).toBeChecked();
   await expect(
     scaling.getByRole("combobox", { name: "Power device", exact: true }),
   ).toHaveValue("Cavitron");
@@ -579,6 +647,7 @@ test("2026 Adult Hygiene standard treatment uses structured procedure controls",
     .getByRole("spinbutton", { name: "Scaling units", exact: true })
     .fill("2");
   await power.click();
+  await expect(power).not.toBeChecked();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "Full mouth scaling with hand instrumentation (2U Scale)",
   );
@@ -974,13 +1043,13 @@ test("Very short template combines side buttons as bilateral and keeps symptom s
     name: "Laterality",
     exact: true,
   }).first();
-  const left = laterality.getByRole("button", { name: "Left", exact: true });
-  const right = laterality.getByRole("button", { name: "Right", exact: true });
+  const left = laterality.getByRole("checkbox", { name: "Left", exact: true });
+  const right = laterality.getByRole("checkbox", { name: "Right", exact: true });
   await left.click();
-  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await expect(left).toBeChecked();
   await right.click();
-  await expect(right).toHaveAttribute("aria-pressed", "true");
-  await expect(left).toHaveAttribute("aria-pressed", "true");
+  await expect(right).toBeChecked();
+  await expect(left).toBeChecked();
   await expect(page.locator("textarea[readonly]")).toHaveValue(
     /EOE: bilateral tmj clicking/,
   );
@@ -989,18 +1058,18 @@ test("Very short template combines side buttons as bilateral and keeps symptom s
     name: "Status",
     exact: true,
   });
-  const symptomatic = status.getByRole("button", {
+  const symptomatic = status.getByRole("radio", {
     name: "Symptomatic",
     exact: true,
   });
-  const asymptomatic = status.getByRole("button", {
+  const asymptomatic = status.getByRole("radio", {
     name: "Asymptomatic",
     exact: true,
   });
   await symptomatic.click();
   await asymptomatic.click();
-  await expect(symptomatic).toHaveAttribute("aria-pressed", "false");
-  await expect(asymptomatic).toHaveAttribute("aria-pressed", "true");
+  await expect(symptomatic).not.toBeChecked();
+  await expect(asymptomatic).toBeChecked();
 });
 
 test("OHE section can select all topics with one click", async ({ page }) => {
@@ -1048,7 +1117,7 @@ test("last vitals reading can be removed and re-added", async ({ page }) => {
 test("local anesthesia entry time can be cleared and reset", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
-  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
   const entry = page.locator("#local-anesthesia-entry-0");
@@ -1074,7 +1143,7 @@ test("very short template local anesthesia product list filters by route", async
 
   await page.goto("/templates/very-short-template");
   await page.getByRole("button", { name: "Expand all sections" }).click();
-  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
   const injectionEntry = page.locator("#local-anesthesia-entry-0");
@@ -1104,14 +1173,14 @@ test("local anesthesia assessment is emphasized when activity is documented with
 }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
-  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add topical entry" }).click();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "No adverse reactions noted" }).click();
+  await page.getByRole("checkbox", { name: "No adverse reactions noted" }).click();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
@@ -1182,7 +1251,7 @@ test("combined instrumentation control exposes device and area selections", asyn
     "#template-section-treatmentDoneToday-content",
   );
   await treatmentSection
-    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .getByRole("checkbox", { name: "Hand and Power Instrumentation" })
     .click();
   await expect(
     page.getByText("Instrumentation area (today)", { exact: true }),
@@ -1190,8 +1259,8 @@ test("combined instrumentation control exposes device and area selections", asyn
   await expect(
     page.getByText("Power instrumentation device (today)", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Piezo" }).click();
-  await page.getByRole("button", { name: "Q1" }).click();
+  await page.getByRole("checkbox", { name: "Piezo" }).click();
+  await page.getByRole("checkbox", { name: "Q1" }).click();
 
   const summary = await page.locator("textarea[readonly]").inputValue();
   expect(summary).toContain("Q1 Hand and Power Instrumentation (Piezo)");
@@ -1205,10 +1274,10 @@ test("short and very short templates include Full mouth instrumentation area", a
     "#template-section-treatmentDoneToday-content",
   );
   await shortTreatmentSection
-    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .getByRole("checkbox", { name: "Hand and Power Instrumentation" })
     .click();
   await expect(
-    shortTreatmentSection.getByRole("button", {
+    shortTreatmentSection.getByRole("checkbox", {
       name: "Full mouth",
       exact: true,
     }),
@@ -1220,10 +1289,10 @@ test("short and very short templates include Full mouth instrumentation area", a
     "#template-section-treatmentDoneToday-content",
   );
   await veryShortTreatmentSection
-    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .getByRole("checkbox", { name: "Hand and Power Instrumentation" })
     .click();
   await expect(
-    veryShortTreatmentSection.getByRole("button", {
+    veryShortTreatmentSection.getByRole("checkbox", {
       name: "Full mouth",
       exact: true,
     }),

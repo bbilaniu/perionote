@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formControlClass } from "@/components/forms/controlStyles";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import {
   formatRadiographSelection,
   parseRadiographSelection,
@@ -111,21 +112,16 @@ export function RadiographsTakenControl({
               key={type}
               className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950"
             >
-              <button
-                type="button"
-                aria-pressed={active}
-                className={`${buttonClass} w-full ${
-                  active
-                    ? "bg-sky-700 text-white hover:bg-sky-800"
-                    : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                }`}
-                onClick={() =>
-                  replaceType(type, active ? "" : defaultQuantity)
+              <NativeChoiceControl
+                type="checkbox"
+                checked={active}
+                className="w-full"
+                onChange={(checked) =>
+                  replaceType(type, checked ? defaultQuantity : "")
                 }
               >
-                {active ? <span aria-hidden="true">✓ </span> : null}
                 {label} ({type})
-              </button>
+              </NativeChoiceControl>
               {active ? (
                 <div>
                   <label

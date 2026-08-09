@@ -3,6 +3,7 @@
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
@@ -95,19 +96,13 @@ function InstrumentationToggle({
 }) {
   const label = method === "hand" ? "Hand instrumentation" : "Power instrumentation";
   return (
-    <button
-      type="button"
-      aria-pressed={active}
-      className={`${buttonClass} ${
-        active
-          ? "bg-sky-700 text-white hover:bg-sky-800"
-          : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-      }`}
-      onClick={() => onChange(!active)}
+    <NativeChoiceControl
+      type="checkbox"
+      checked={active}
+      onChange={onChange}
     >
-      {active ? <span aria-hidden="true">✓ </span> : null}
       {label}
-    </button>
+    </NativeChoiceControl>
   );
 }
 

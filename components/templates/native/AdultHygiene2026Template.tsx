@@ -22,6 +22,7 @@ import {
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
@@ -3997,22 +3998,24 @@ export function AdultHygiene2026Template({
                 )}
                 onChange={changeAdditionalOcclusalValues}
                 roomySelectionActions
+                renderSelectedDetails={(_, index) => {
+                  const entry = (form.additionalOcclusalFindings ?? [])[index];
+                  return entry ? (
+                    <OcclusalFindingLocations
+                      idPrefix="adult-hygiene"
+                      entry={entry}
+                      onChange={(updated) =>
+                        updateField(
+                          "additionalOcclusalFindings",
+                          (form.additionalOcclusalFindings ?? []).map((item) =>
+                            item.id === entry.id ? updated : item,
+                          ),
+                        )
+                      }
+                    />
+                  ) : null;
+                }}
               />
-              {(form.additionalOcclusalFindings ?? []).map((entry) => (
-                <OcclusalFindingLocations
-                  key={entry.id}
-                  idPrefix="adult-hygiene"
-                  entry={entry}
-                  onChange={(updated) =>
-                    updateField(
-                      "additionalOcclusalFindings",
-                      (form.additionalOcclusalFindings ?? []).map((item) =>
-                        item.id === entry.id ? updated : item,
-                      ),
-                    )
-                  }
-                />
-              ))}
             </div>
           </Section>
 
@@ -4562,22 +4565,19 @@ export function AdultHygiene2026Template({
                     ["recare", "Recare"],
                   ] as const
                 ).map(([value, label]) => (
-                  <button
+                  <NativeChoiceControl
                     key={value}
-                    type="button"
-                    aria-pressed={outputMode === value}
-                    className={`${buttonClass} px-2 ${
-                      outputMode === value
-                        ? "bg-sky-700 text-white hover:bg-sky-800"
-                        : "border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
-                    }`}
-                    onClick={() => {
+                    type="radio"
+                    name="adult-hygiene-note-output"
+                    checked={outputMode === value}
+                    className="px-2"
+                    onChange={() => {
                       setOutputMode(value);
                       setCopyMessage("");
                     }}
                   >
                     {label}
-                  </button>
+                  </NativeChoiceControl>
                 ))}
               </div>
             </fieldset>

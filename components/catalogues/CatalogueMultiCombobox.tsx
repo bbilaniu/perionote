@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { HideCatalogueSuggestionIcon } from "@/components/catalogues/HideCatalogueSuggestionIcon";
 import { EditableCombobox } from "@/components/forms/EditableCombobox";
@@ -26,6 +26,7 @@ export function CatalogueMultiCombobox({
   onChange,
   allowDuplicateValues = false,
   roomySelectionActions = false,
+  renderSelectedDetails,
 }: {
   id: string;
   label: string;
@@ -34,6 +35,7 @@ export function CatalogueMultiCombobox({
   onChange: (values: string[]) => void;
   allowDuplicateValues?: boolean;
   roomySelectionActions?: boolean;
+  renderSelectedDetails?: (value: string, index: number) => ReactNode;
 }) {
   const {
     storageStatus,
@@ -162,49 +164,52 @@ export function CatalogueMultiCombobox({
       {values.map((value, index) => (
         <li
           key={`${normalizeCatalogueLabel(value)}-${index}`}
-          className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
+          className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950"
         >
-          <span>{value}</span>
-          <span className="flex flex-wrap gap-2">
-            <TooltipActionButton
-              tooltip="Move this value earlier in the note."
-              className={
-                roomySelectionActions
-                  ? roomyButtonClass
-                  : secondaryButtonClass
-              }
-              disabled={index === 0}
-              ariaLabel={`Move ${value} earlier`}
-              onClick={() => moveValue(index, "up")}
-            >
-              Earlier
-            </TooltipActionButton>
-            <TooltipActionButton
-              tooltip="Move this value later in the note."
-              className={
-                roomySelectionActions
-                  ? roomyButtonClass
-                  : secondaryButtonClass
-              }
-              disabled={index === values.length - 1}
-              ariaLabel={`Move ${value} later`}
-              onClick={() => moveValue(index, "down")}
-            >
-              Later
-            </TooltipActionButton>
-            <TooltipActionButton
-              tooltip="Remove this value from the note."
-              className={
-                roomySelectionActions
-                  ? roomyRemoveButtonClass
-                  : secondaryButtonClass
-              }
-              ariaLabel={`Remove ${value}`}
-              onClick={() => removeValue(index)}
-            >
-              Remove
-            </TooltipActionButton>
-          </span>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium">{value}</span>
+            <span className="flex flex-wrap gap-2">
+              <TooltipActionButton
+                tooltip="Move this value earlier in the note."
+                className={
+                  roomySelectionActions
+                    ? roomyButtonClass
+                    : secondaryButtonClass
+                }
+                disabled={index === 0}
+                ariaLabel={`Move ${value} earlier`}
+                onClick={() => moveValue(index, "up")}
+              >
+                Earlier
+              </TooltipActionButton>
+              <TooltipActionButton
+                tooltip="Move this value later in the note."
+                className={
+                  roomySelectionActions
+                    ? roomyButtonClass
+                    : secondaryButtonClass
+                }
+                disabled={index === values.length - 1}
+                ariaLabel={`Move ${value} later`}
+                onClick={() => moveValue(index, "down")}
+              >
+                Later
+              </TooltipActionButton>
+              <TooltipActionButton
+                tooltip="Remove this value from the note."
+                className={
+                  roomySelectionActions
+                    ? roomyRemoveButtonClass
+                    : secondaryButtonClass
+                }
+                ariaLabel={`Remove ${value}`}
+                onClick={() => removeValue(index)}
+              >
+                Remove
+              </TooltipActionButton>
+            </span>
+          </div>
+          {renderSelectedDetails ? renderSelectedDetails(value, index) : null}
         </li>
       ))}
     </ol>
