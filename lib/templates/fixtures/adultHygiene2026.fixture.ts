@@ -223,6 +223,7 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   orthodonticHistoryStatus: "yes",
   retainerStatus: "fixed",
   removableDenturesStatus: "no",
+  removableDenturesComment: "",
   improvementRequest: "Synthetic request to discuss whitening.",
   recareAdditionalComments: "Synthetic recare comment.",
   additionalNotes: "Synthetic demonstration data only.",

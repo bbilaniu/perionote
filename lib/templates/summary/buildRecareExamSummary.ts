@@ -601,7 +601,10 @@ export function buildRecareExamSummary(
     retainerLine(form.retainerStatus),
     yesNoLine(
       "Partial/complete removable dentures",
-      form.removableDenturesStatus
+      form.removableDenturesStatus,
+      form.removableDenturesStatus === "yes"
+        ? form.removableDenturesComment
+        : "",
     ),
   ];
 

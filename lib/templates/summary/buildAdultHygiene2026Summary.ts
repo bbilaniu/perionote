@@ -316,9 +316,13 @@ export function formatGingivalDescription(
 
 function documentationStatusLine(
   label: string,
-  status: DocumentationStatus
+  status: DocumentationStatus,
+  details = "",
 ): string {
   if (status === "not-documented") return "";
+  if (status === "yes" && trimmed(details)) {
+    return `${label}: Yes—${withTerminalPunctuation(details)}`;
+  }
   return `${label}: ${status === "yes" ? "Yes" : "No"}.`;
 }
 
@@ -852,6 +856,7 @@ export function buildAdultHygiene2026Summary(
     documentationStatusLine(
       "Partial/complete removable dentures",
       form.removableDenturesStatus,
+      form.removableDenturesComment,
     ),
     labelledLine(
       "Patient-requested smile or dental improvements",

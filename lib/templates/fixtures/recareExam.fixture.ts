@@ -69,6 +69,7 @@ export const recareExamFixture: RecareExamForm = {
   orthodonticHistoryStatus: "yes",
   retainerStatus: "fixed",
   removableDenturesStatus: "no",
+  removableDenturesComment: "",
   improvementRequest: "Synthetic request to discuss whitening.",
   additionalComments: "Synthetic demonstration data only.",
   odontogramUpToDate: true,

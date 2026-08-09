@@ -147,6 +147,7 @@ describe("2026 Adult Hygiene independence", () => {
       "cpapStatus",
       "occlusalSplintStatus",
       "removableDenturesStatus",
+      "removableDenturesComment",
       "improvementRequest",
       "recareAdditionalComments",
       "dentalNextVisit",
@@ -176,6 +177,29 @@ describe("2026 Adult Hygiene independence", () => {
         treatmentPlan: [{ id: 42, treatmentType: "Invalid", toothArea: "" }],
       }),
     ).toBe(false);
+  });
+
+  it("adds removable-dentures comments only to documented Yes output", () => {
+    const withComment = {
+      ...createEmptyAdultHygiene2026Form(),
+      removableDenturesStatus: "yes" as const,
+      removableDenturesComment: "Upper partial worn during the day",
+    };
+    expect(buildAdultHygiene2026Summary(withComment)).toContain(
+      "Partial/complete removable dentures: Yes—Upper partial worn during the day.",
+    );
+    expect(
+      buildAdultHygiene2026Summary({
+        ...withComment,
+        removableDenturesStatus: "no",
+      }),
+    ).toContain("Partial/complete removable dentures: No.");
+    expect(
+      buildAdultHygiene2026Summary({
+        ...withComment,
+        removableDenturesStatus: "no",
+      }),
+    ).not.toContain("Upper partial worn during the day");
   });
 
   it("preserves legacy OHE fields and note wording in both hygiene templates", () => {

@@ -277,6 +277,7 @@ export interface AdultHygiene2026Form {
   orthodonticHistoryStatus: DocumentationStatus;
   retainerStatus: RetainerStatus;
   removableDenturesStatus: DocumentationStatus;
+  removableDenturesComment: string;
   improvementRequest: string;
   recareAdditionalComments: string;
   additionalNotes: string;
@@ -389,6 +390,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     orthodonticHistoryStatus: "not-documented",
     retainerStatus: "not-documented",
     removableDenturesStatus: "not-documented",
+    removableDenturesComment: "",
     improvementRequest: "",
     recareAdditionalComments: "",
     additionalNotes: "",

@@ -171,6 +171,43 @@ test("Recare Exam documents CPAP ownership and conditional use", async ({
   await expect(page.locator("#recare-summary")).toHaveValue(/CPAP: No\./);
 });
 
+test("Recare Exam conditionally documents removable-dentures comments", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const status = page.getByRole("button", {
+    name: "Partial/complete removable dentures",
+    exact: true,
+  });
+  const comment = page.getByRole("textbox", {
+    name: "Removable dentures comments",
+    exact: true,
+  });
+  await expect(comment).toHaveCount(0);
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await comment.fill("Upper partial worn during the day");
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Partial\/complete removable dentures: Yes—Upper partial worn during the day\./,
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+  await expect(comment).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Partial\/complete removable dentures: No\./,
+  );
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /Upper partial worn during the day/,
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await expect(comment).toHaveValue("Upper partial worn during the day");
+});
+
 test("Recare Exam aligns Intraoral with the primary exam and conditionally shows structured details", async ({
   page,
 }) => {

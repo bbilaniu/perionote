@@ -378,6 +378,29 @@ Masseter palpation: WNL.`);
 Additional comments: Patient-specific observation.`);
   });
 
+  it("adds removable-dentures comments only to documented Yes output", () => {
+    const withComment = {
+      ...createEmptyRecareExamForm(),
+      removableDenturesStatus: "yes" as const,
+      removableDenturesComment: "Upper partial worn during the day",
+    };
+    expect(buildRecareExamSummary(withComment)).toBe(
+      "Partial/complete removable dentures: Yes—Upper partial worn during the day.",
+    );
+    expect(
+      buildRecareExamSummary({
+        ...withComment,
+        removableDenturesStatus: "no",
+      }),
+    ).toBe("Partial/complete removable dentures: No.");
+    expect(
+      buildRecareExamSummary({
+        ...withComment,
+        removableDenturesStatus: "not-documented",
+      }),
+    ).toBe("");
+  });
+
   it("preserves documented No answers and unknown editable values", () => {
     const form = {
       ...createEmptyRecareExamForm(),

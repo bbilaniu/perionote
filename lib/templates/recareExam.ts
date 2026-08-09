@@ -93,6 +93,7 @@ export interface RecareExamForm {
   orthodonticHistoryStatus: DocumentationStatus;
   retainerStatus: RetainerStatus;
   removableDenturesStatus: DocumentationStatus;
+  removableDenturesComment: string;
   improvementRequest: string;
   additionalComments: string;
   teethStatus?: ExamStatus;
@@ -159,6 +160,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     orthodonticHistoryStatus: "not-documented",
     retainerStatus: "not-documented",
     removableDenturesStatus: "not-documented",
+    removableDenturesComment: "",
     improvementRequest: "",
     additionalComments: "",
     teethStatus: "not-assessed",

@@ -367,6 +367,43 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   );
 });
 
+test("2026 Adult Hygiene conditionally documents removable-dentures comments", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const status = page.getByRole("button", {
+    name: "Partial/complete removable dentures",
+    exact: true,
+  });
+  const comment = page.getByRole("textbox", {
+    name: "Removable dentures comments",
+    exact: true,
+  });
+  await expect(comment).toHaveCount(0);
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await comment.fill("Lower complete denture used routinely");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Partial/complete removable dentures: Yes—Lower complete denture used routinely.",
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+  await expect(comment).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Partial/complete removable dentures: No.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Lower complete denture used routinely",
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await expect(comment).toHaveValue("Lower complete denture used routinely");
+});
+
 test("2026 Adult Hygiene coordinates standard and additional OHE controls", async ({
   page,
 }) => {

@@ -4136,6 +4136,18 @@ export function AdultHygiene2026Template({
                   updateField("removableDenturesStatus", value)
                 }
               />
+              {form.removableDenturesStatus === "yes" ? (
+                <div className="md:col-span-2">
+                  <TextareaField
+                    id="adult-hygiene-removable-dentures-comment"
+                    label="Removable dentures comments"
+                    value={form.removableDenturesComment}
+                    onChange={(value) =>
+                      updateField("removableDenturesComment", value)
+                    }
+                  />
+                </div>
+              ) : null}
             </div>
             <TextareaField
               id="adult-hygiene-improvement-request"

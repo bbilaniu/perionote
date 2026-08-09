@@ -2940,6 +2940,18 @@ export function RecareExamTemplate({
                   updateField("removableDenturesStatus", value)
                 }
               />
+              {form.removableDenturesStatus === "yes" ? (
+                <div className="md:col-span-2">
+                  <TextareaField
+                    id="recare-removable-dentures-comment"
+                    label="Removable dentures comments"
+                    value={form.removableDenturesComment}
+                    onChange={(value) =>
+                      updateField("removableDenturesComment", value)
+                    }
+                  />
+                </div>
+              ) : null}
             </div>
             <TextareaField
               id="recare-improvement-request"

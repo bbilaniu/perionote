@@ -45,6 +45,12 @@ Older 2026 drafts are merged with the current empty encounter shape. Legacy
 hygiene recommendation fields continue to format when no coordinated plan has
 been entered.
 
+The shared **Partial/complete removable dentures** control exposes an optional
+patient-specific comment only when Yes is selected. The comment is appended to
+the affirmative note line when non-empty, remains hidden from output for No or
+Not documented, and restores if the clinician returns the status to Yes. Drafts
+saved before the comment field existed restore with an empty comment.
+
 ## Consolidated EOE/TMJ/lymph-node and OHE controls
 
 The structured EOE card owns coordinated **Temporomandibular assessment** and
