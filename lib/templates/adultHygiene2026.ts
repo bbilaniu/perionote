@@ -24,6 +24,32 @@ export {
   type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygieneTreatment";
 
+export function resolveOcclusalSplintState(
+  form: Pick<
+    AdultHygiene2026Form,
+    | "occlusalSplintStatus"
+    | "occlusalSplintUseStatus"
+    | "nightGuardStatus"
+    | "nightGuardUseStatus"
+  >,
+): {
+  status: DocumentationStatus;
+  useStatus: DocumentationStatus;
+} {
+  const canonicalStatus =
+    form.occlusalSplintStatus ?? "not-documented";
+  if (canonicalStatus !== "not-documented") {
+    return {
+      status: canonicalStatus,
+      useStatus: form.occlusalSplintUseStatus ?? "not-documented",
+    };
+  }
+  return {
+    status: form.nightGuardStatus ?? "not-documented",
+    useStatus: form.nightGuardUseStatus ?? "not-documented",
+  };
+}
+
 export const plaqueChoices = [
   "None",
   "Localized mild interproximal",
@@ -226,6 +252,7 @@ export interface AdultHygiene2026Form {
   overbitePercent: string;
   overbiteMm?: string;
   additionalOcclusalFindings?: RecareOcclusalFinding[];
+  listAdditionalOcclusalFindings: boolean;
   teethStatus?: ExamStatus;
   toothFindings?: RecareToothFinding[];
   additionalToothFindings?: string;
@@ -339,6 +366,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     overbitePercent: "",
     overbiteMm: "",
     additionalOcclusalFindings: [],
+    listAdditionalOcclusalFindings: false,
     teethStatus: "not-assessed",
     toothFindings: [],
     additionalToothFindings: "",

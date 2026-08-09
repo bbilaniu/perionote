@@ -1422,6 +1422,15 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Additional occlusal findings: Synthetic edge-to-edge relationship; Crossbite \(location: Posterior, Left, tooth 16\)\.$/,
   );
+  await page
+    .getByRole("checkbox", {
+      name: "List each additional occlusal finding on a separate line in the note",
+      exact: true,
+    })
+    .check();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Additional occlusal findings:\n  - Synthetic edge-to-edge relationship\.\n  - Crossbite \(location: Posterior, Left, tooth 16\)\./,
+  );
 
   await additionalFindings.fill("Synthetic functional shift");
   await multiControl(page, "Additional occlusal findings")

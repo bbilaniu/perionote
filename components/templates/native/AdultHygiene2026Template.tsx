@@ -54,6 +54,7 @@ import {
   isDyclonineRinseTreatment,
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
+  resolveOcclusalSplintState,
   standardOheStatement,
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2026";
@@ -3016,6 +3017,7 @@ export function AdultHygiene2026Template({
   );
   const summary = summaries[outputMode];
   const cariesRiskSuggestion = suggestAdultCariesRisk(form.cariesRiskFactors);
+  const occlusalSplintState = resolveOcclusalSplintState(form);
 
   function updateField<TKey extends keyof AdultHygiene2026Form>(
     key: TKey,
@@ -3988,7 +3990,7 @@ export function AdultHygiene2026Template({
                 inputMode="decimal"
               />
             </div>
-            <div>
+            <div className="space-y-3">
               <CatalogueMultiCombobox
                 id="adult-hygiene-additional-occlusal-findings"
                 label="Additional occlusal findings"
@@ -4015,6 +4017,14 @@ export function AdultHygiene2026Template({
                     />
                   ) : null;
                 }}
+              />
+              <CheckboxField
+                id="adult-hygiene-additional-occlusal-findings-list-format"
+                label="List each additional occlusal finding on a separate line in the note"
+                checked={form.listAdditionalOcclusalFindings}
+                onChange={(value) =>
+                  updateField("listAdditionalOcclusalFindings", value)
+                }
               />
             </div>
           </Section>
@@ -4061,48 +4071,38 @@ export function AdultHygiene2026Template({
               ) : null}
               <FixedChoiceListbox
                 id="adult-hygiene-occlusal-splint"
-                label="Has an occlusal splint"
-                value={form.occlusalSplintStatus}
+                label="Has an occlusal splint (night guard)"
+                value={occlusalSplintState.status}
                 options={documentationStatusOptions}
                 onChange={(value) => {
-                  updateField("occlusalSplintStatus", value);
-                  if (value !== "yes") {
-                    updateField("occlusalSplintUseStatus", "not-documented");
-                  }
+                  setForm((current) => ({
+                    ...current,
+                    occlusalSplintStatus: value,
+                    nightGuardStatus: value,
+                    ...(value !== "yes"
+                      ? {
+                          occlusalSplintUseStatus: "not-documented" as const,
+                          nightGuardUseStatus: "not-documented" as const,
+                        }
+                      : {}),
+                  }));
+                  setCopyMessage("");
                 }}
               />
-              {form.occlusalSplintStatus === "yes" ? (
+              {occlusalSplintState.status === "yes" ? (
                 <FixedChoiceListbox
                   id="adult-hygiene-occlusal-splint-use"
-                  label="Uses the occlusal splint"
-                  value={form.occlusalSplintUseStatus}
+                  label="Uses the occlusal splint (night guard)"
+                  value={occlusalSplintState.useStatus}
                   options={documentationStatusOptions}
-                  onChange={(value) =>
-                    updateField("occlusalSplintUseStatus", value)
-                  }
-                />
-              ) : null}
-              <FixedChoiceListbox
-                id="adult-hygiene-night-guard"
-                label="Has a night guard"
-                value={form.nightGuardStatus}
-                options={documentationStatusOptions}
-                onChange={(value) => {
-                  updateField("nightGuardStatus", value);
-                  if (value !== "yes") {
-                    updateField("nightGuardUseStatus", "not-documented");
-                  }
-                }}
-              />
-              {form.nightGuardStatus === "yes" ? (
-                <FixedChoiceListbox
-                  id="adult-hygiene-night-guard-use"
-                  label="Uses the night guard"
-                  value={form.nightGuardUseStatus}
-                  options={documentationStatusOptions}
-                  onChange={(value) =>
-                    updateField("nightGuardUseStatus", value)
-                  }
+                  onChange={(value) => {
+                    setForm((current) => ({
+                      ...current,
+                      occlusalSplintUseStatus: value,
+                      nightGuardUseStatus: value,
+                    }));
+                    setCopyMessage("");
+                  }}
                 />
               ) : null}
               <FixedChoiceListbox

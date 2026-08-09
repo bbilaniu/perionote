@@ -73,6 +73,7 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
       locations: ["Posterior", "Left"],
     },
   ],
+  listAdditionalOcclusalFindings: false,
   teethStatus: "findings",
   toothFindings: [
     {

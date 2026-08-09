@@ -353,11 +353,14 @@ function additionalOcclusalFindingLine(form: RecareExamForm): string {
         : finding,
     ];
   });
-  return findings.length
-    ? `Additional occlusal findings: ${withTerminalPunctuation(
+  if (!findings.length) return "";
+  return form.listAdditionalOcclusalFindings
+    ? `Additional occlusal findings:\n${findings
+        .map((finding) => `  - ${withTerminalPunctuation(finding)}`)
+        .join("\n")}`
+    : `Additional occlusal findings: ${withTerminalPunctuation(
         findings.join("; ")
-      )}`
-    : "";
+      )}`;
 }
 
 function retainerLine(status: RetainerStatus): string {
@@ -593,7 +596,7 @@ export function buildRecareExamSummary(
   const appliancesAndHistory = [
     ownershipUseLine("CPAP", form.cpapStatus, form.cpapUseStatus),
     ownershipUseLine(
-      "Occlusal splint",
+      "Occlusal splint (night guard)",
       form.occlusalSplintStatus,
       form.occlusalSplintUseStatus
     ),

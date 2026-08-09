@@ -15,6 +15,10 @@ describe("2026 Adult Hygiene independence", () => {
     const source2021 = getClinicTemplateBySlug("adult-hygiene-2021")?.content;
     expect(source).toContain("Last Recare Date: [AUTO: Last Recall Date]");
     expect(source).toContain("Recommended Recare Interval:");
+    expect(source).toContain(
+      "Does patient have an occlusal splint (night guard)?",
+    );
+    expect(source).not.toContain("Does patient have a NightGuard?");
     expect(source2021).toContain("Last Recare Date: [AUTO: Last Recall Date]");
     expect(source2021).toContain("Recommended Recare Interval:");
     expect(source).toContain("EOE:\nExtraoral: [SELECT/INSERT: EOE]");
@@ -74,7 +78,13 @@ describe("2026 Adult Hygiene independence", () => {
     expect(complete).toContain("Teeth:");
     expect(complete).toContain("Molar occlusion—right: Class I.");
     expect(complete).toContain("CPAP: No.");
-    expect(complete).toContain("Occlusal splint: Yes; uses.");
+    expect(complete).toContain(
+      "Occlusal splint (night guard): Yes; uses.",
+    );
+    expect(
+      complete.match(/Occlusal splint \(night guard\):/g),
+    ).toHaveLength(1);
+    expect(complete).not.toContain("Night guard:");
     expect(complete).toContain("Partial/complete removable dentures: No.");
     expect(complete).toContain(
       "Patient-requested smile or dental improvements: Synthetic request to discuss whitening.",
@@ -127,6 +137,37 @@ describe("2026 Adult Hygiene independence", () => {
     expect(recare).not.toContain("Next Hygiene Visit:");
   });
 
+  it("can list additional occlusal findings on separate note lines", () => {
+    const form = {
+      ...createEmptyAdultHygiene2026Form(),
+      additionalOcclusalFindings: [
+        { id: "spacing", finding: "Spacing", locations: ["Anterior"] },
+        { id: "crowding", finding: "Crowding", locations: [] },
+      ],
+      listAdditionalOcclusalFindings: true,
+    };
+
+    expect(buildAdultHygiene2026Summary(form)).toContain(
+      `Additional occlusal findings:
+  - Spacing (location: Anterior).
+  - Crowding.`,
+    );
+  });
+
+  it("uses legacy night-guard answers when a draft has no splint answer", () => {
+    const form = {
+      ...createEmptyAdultHygiene2026Form(),
+      nightGuardStatus: "yes" as const,
+      nightGuardUseStatus: "no" as const,
+    };
+
+    const summary = buildAdultHygiene2026Summary(form);
+    expect(summary).toContain(
+      "Occlusal splint (night guard): Yes; does not use.",
+    );
+    expect(summary).not.toContain("Night guard:");
+  });
+
   it("accepts pre-unification 2026 drafts and rejects malformed new card state", () => {
     const legacyDraft = {
       ...createEmptyAdultHygiene2026Form(),
@@ -139,6 +180,7 @@ describe("2026 Adult Hygiene independence", () => {
       "lymphNodesFindings",
       "oralHabits",
       "additionalOcclusalFindings",
+      "listAdditionalOcclusalFindings",
       "teethStatus",
       "toothFindings",
       "odontogramUpToDate",

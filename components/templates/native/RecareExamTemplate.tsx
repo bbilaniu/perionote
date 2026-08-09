@@ -2819,7 +2819,7 @@ export function RecareExamTemplate({
                 inputMode="decimal"
               />
             </div>
-            <div>
+            <div className="space-y-3">
               <CatalogueMultiCombobox
                 id="recare-additional-occlusal-findings"
                 label="Additional occlusal findings"
@@ -2845,6 +2845,14 @@ export function RecareExamTemplate({
                     />
                   ) : null;
                 }}
+              />
+              <CheckboxField
+                id="recare-additional-occlusal-findings-list-format"
+                label="List each additional occlusal finding on a separate line in the note"
+                checked={form.listAdditionalOcclusalFindings}
+                onChange={(value) =>
+                  updateField("listAdditionalOcclusalFindings", value)
+                }
               />
             </div>
           </Section>
@@ -2874,7 +2882,7 @@ export function RecareExamTemplate({
               ) : null}
               <FixedChoiceListbox
                 id="recare-occlusal-splint"
-                label="Has an occlusal splint?"
+                label="Has an occlusal splint (night guard)"
                 value={form.occlusalSplintStatus}
                 options={statusOptions}
                 onChange={(value) => {
@@ -2887,7 +2895,7 @@ export function RecareExamTemplate({
               {form.occlusalSplintStatus === "yes" ? (
                 <FixedChoiceListbox
                   id="recare-occlusal-splint-use"
-                  label="Uses the occlusal splint"
+                  label="Uses the occlusal splint (night guard)"
                   value={form.occlusalSplintUseStatus}
                   options={statusOptions}
                   onChange={(value) =>

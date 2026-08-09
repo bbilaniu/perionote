@@ -3,6 +3,7 @@ import {
   type AdultHygiene2026Form,
   isDyclonineRinseTreatment,
   orderTreatmentToothAreas,
+  resolveOcclusalSplintState,
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2026";
 import { formatAdultHygieneTreatmentCompletedEntries } from "@/lib/templates/adultHygieneTreatment";
@@ -98,11 +99,14 @@ function additionalOcclusalFindingLine(form: AdultHygiene2026Form): string {
         : finding,
     ];
   });
-  return findings.length
-    ? `Additional occlusal findings: ${withTerminalPunctuation(
+  if (!findings.length) return "";
+  return form.listAdditionalOcclusalFindings
+    ? `Additional occlusal findings:\n${findings
+        .map((finding) => `  - ${withTerminalPunctuation(finding)}`)
+        .join("\n")}`
+    : `Additional occlusal findings: ${withTerminalPunctuation(
         findings.join("; "),
-      )}`
-    : "";
+      )}`;
 }
 
 function formatTreatmentEntries(
@@ -820,19 +824,15 @@ export function buildAdultHygiene2026Summary(
     labelledLine("Desensitizer", form.desensitizer),
   ];
 
-  const nightGuard =
-    form.nightGuardStatus === "no"
-      ? "Night guard: No."
-      : form.nightGuardStatus === "yes"
-      ? form.nightGuardUseStatus === "yes"
-        ? "Night guard: Yes; uses."
-        : form.nightGuardUseStatus === "no"
-        ? "Night guard: Yes; does not use."
-        : "Night guard: Yes; use not documented."
-      : "";
+  const occlusalSplintState = resolveOcclusalSplintState(form);
+  const occlusalSplint = ownershipUseLine(
+    "Occlusal splint (night guard)",
+    occlusalSplintState.status,
+    occlusalSplintState.useStatus,
+  );
 
   const hygieneAppliancesAndHistory = [
-    nightGuard,
+    occlusalSplint,
     documentationStatusLine(
       "Orthodontic history",
       form.orthodonticHistoryStatus
@@ -843,11 +843,7 @@ export function buildAdultHygiene2026Summary(
 
   const recareAppliancesAndHistory = [
     ownershipUseLine("CPAP", form.cpapStatus, form.cpapUseStatus),
-    ownershipUseLine(
-      "Occlusal splint",
-      form.occlusalSplintStatus,
-      form.occlusalSplintUseStatus,
-    ),
+    occlusalSplint,
     documentationStatusLine(
       "Orthodontic history",
       form.orthodonticHistoryStatus,
@@ -866,7 +862,6 @@ export function buildAdultHygiene2026Summary(
   ];
 
   const combinedAppliancesAndHistory = [
-    nightGuard,
     ...recareAppliancesAndHistory,
     labelledLine("Additional Notes", form.additionalNotes),
   ];

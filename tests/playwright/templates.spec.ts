@@ -242,6 +242,37 @@ test("2026 Adult Hygiene uses its own route and draft storage", async ({
   ).toBe(false);
 });
 
+test("2026 Adult Hygiene merges night guard into the occlusal splint control", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const splint = page.getByRole("button", {
+    name: "Has an occlusal splint (night guard)",
+    exact: true,
+  });
+  await expect(splint).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Has a night guard", exact: true }),
+  ).toHaveCount(0);
+
+  await splint.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  const usesSplint = page.getByRole("button", {
+    name: "Uses the occlusal splint (night guard)",
+    exact: true,
+  });
+  await usesSplint.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Occlusal splint (night guard): Yes; uses.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Night guard:",
+  );
+});
+
 test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   page,
   context,
@@ -468,6 +499,18 @@ test("2026 Adult Hygiene keeps each occlusal location editor with its finding", 
       exact: true,
     }),
   ).not.toBeChecked();
+
+  await page
+    .getByRole("checkbox", {
+      name: "List each additional occlusal finding on a separate line in the note",
+      exact: true,
+    })
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    `Additional occlusal findings:
+  - Spacing (location: Anterior).
+  - Crowding.`,
+  );
 });
 
 test("2026 Adult Hygiene coordinates standard and additional OHE controls", async ({
@@ -898,7 +941,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
     page.getByRole("button", { name: "Caries risk level", exact: true }),
   ).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Occlusal splint: Yes; uses\./,
+    /Occlusal splint \(night guard\): Yes; uses\./,
   );
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Molar occlusion—right: Synthetic Class I\.\nMolar occlusion—left: N\/A\./,

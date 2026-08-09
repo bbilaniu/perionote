@@ -86,6 +86,7 @@ export interface RecareExamForm {
   overbitePercent: string;
   overbiteMm?: string;
   additionalOcclusalFindings?: RecareOcclusalFinding[];
+  listAdditionalOcclusalFindings: boolean;
   cpapStatus: DocumentationStatus;
   cpapUseStatus: DocumentationStatus;
   occlusalSplintStatus: DocumentationStatus;
@@ -153,6 +154,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     overbitePercent: "",
     overbiteMm: "",
     additionalOcclusalFindings: [],
+    listAdditionalOcclusalFindings: false,
     cpapStatus: "not-documented",
     cpapUseStatus: "not-documented",
     occlusalSplintStatus: "not-documented",

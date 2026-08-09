@@ -62,6 +62,7 @@ export const recareExamFixture: RecareExamForm = {
       locations: ["Posterior", "Left"],
     },
   ],
+  listAdditionalOcclusalFindings: false,
   cpapStatus: "no",
   cpapUseStatus: "not-documented",
   occlusalSplintStatus: "yes",

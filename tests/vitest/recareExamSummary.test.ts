@@ -146,7 +146,7 @@ Overbite: 30%; 3 mm.
 Additional occlusal findings: Crossbite (location: Posterior, Left).
 
 CPAP: No.
-Occlusal splint: Yes; uses.
+Occlusal splint (night guard): Yes; uses.
 Orthodontic history: Yes.
 Retainers: Fixed.
 Partial/complete removable dentures: No.
@@ -197,6 +197,21 @@ Medical history reviewed: YES- NO CHANGES.`
     expect(buildRecareExamSummary(form)).toBe(`a) Patient's chief concern:
   - Food catches between teeth
   - Sensitivity to hot and cold`);
+  });
+
+  it("can list additional occlusal findings on separate note lines", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      additionalOcclusalFindings: [
+        { id: "spacing", finding: "Spacing", locations: ["Anterior"] },
+        { id: "crowding", finding: "Crowding", locations: [] },
+      ],
+      listAdditionalOcclusalFindings: true,
+    };
+
+    expect(buildRecareExamSummary(form)).toContain(`Additional occlusal findings:
+  - Spacing (location: Anterior).
+  - Crowding.`);
   });
 
   it("renders only meaningful lettered examination sections in source order", () => {
@@ -441,7 +456,7 @@ RDH:
 Radiographs: Imported value ZX/7; Imported value ZX/7
 
 CPAP: Yes; does not use.
-Occlusal splint: No.
+Occlusal splint (night guard): No.
 Retainers: None.
 
 Treatment Options:

@@ -333,10 +333,8 @@ Anesthetic:  [SELECT/INSERT: HYGIENE ANESTHETIC]
 
 Desensitizer: [SELECT/INSERT: DESENSITIZER]
 
-Does patient have a NightGuard?
-Do they use NightGuard?
 Does patient have a CPAP? Do they use it?
-Does patient have an occlusal splint? Do they use it?
+Does patient have an occlusal splint (night guard)? Do they use it?
 
 Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
@@ -501,8 +499,8 @@ Overbite-    %
 
 Do they use a CPAP?
 
-Does patient have a Splint?
-Do they use Splint?
+Does patient have an occlusal splint (night guard)?
+Do they use the occlusal splint (night guard)?
 
 Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
