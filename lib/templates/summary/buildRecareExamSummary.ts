@@ -164,7 +164,11 @@ function examLine(label: string, status: ExamStatus, findings: string): string {
 
 type ExtraoralSummaryFields = Pick<
   RecareExamForm,
-  "extraoralStatus" | "extraoralFindings" | "structuredExtraoralFindings"
+  | "extraoralStatus"
+  | "extraoralFindings"
+  | "structuredExtraoralFindings"
+  | "lymphNodesStatus"
+  | "lymphNodesFindings"
 >;
 
 type IntraoralSummaryFields = Pick<
@@ -175,13 +179,28 @@ type IntraoralSummaryFields = Pick<
 export function formatRecareExtraoralLines(
   form: ExtraoralSummaryFields,
 ): string[] {
+  const palpableLymphNodes = form.structuredExtraoralFindings?.some(
+    (finding) => finding.optionId === "eoe.palpable_lymph_nodes",
+  );
+  const lymphNodesLine =
+    palpableLymphNodes && form.lymphNodesStatus !== "findings"
+      ? ""
+      : examLine(
+          "Lymph nodes",
+          form.lymphNodesStatus,
+          form.lymphNodesFindings,
+        );
+
   if (form.extraoralStatus !== "findings") {
     const line = examLine(
       "Extraoral",
       form.extraoralStatus,
       form.extraoralFindings,
     );
-    return line ? [line] : [];
+    if (line) return [line, lymphNodesLine].filter(Boolean);
+    return lymphNodesLine
+      ? ["Extraoral examination:", `  ${lymphNodesLine}`]
+      : [];
   }
 
   const selectedByOptionId = new Map(
@@ -228,7 +247,10 @@ export function formatRecareExtraoralLines(
       form.extraoralStatus,
       form.extraoralFindings,
     );
-    return line ? [line] : [];
+    if (line) return [line, lymphNodesLine].filter(Boolean);
+    return lymphNodesLine
+      ? ["Extraoral examination:", `  ${lymphNodesLine}`]
+      : [];
   }
 
   return [
@@ -237,6 +259,7 @@ export function formatRecareExtraoralLines(
     ...(trimmed(form.extraoralFindings)
       ? [`  Observations: ${withTerminalPunctuation(form.extraoralFindings)}`]
       : []),
+    ...(lymphNodesLine ? [`  ${lymphNodesLine}`] : []),
   ];
 }
 
@@ -330,11 +353,14 @@ function additionalOcclusalFindingLine(form: RecareExamForm): string {
         : finding,
     ];
   });
-  return findings.length
-    ? `Additional occlusal findings: ${withTerminalPunctuation(
+  if (!findings.length) return "";
+  return form.listAdditionalOcclusalFindings
+    ? `Additional occlusal findings:\n${findings
+        .map((finding) => `  - ${withTerminalPunctuation(finding)}`)
+        .join("\n")}`
+    : `Additional occlusal findings: ${withTerminalPunctuation(
         findings.join("; ")
-      )}`
-    : "";
+      )}`;
 }
 
 function retainerLine(status: RetainerStatus): string {
@@ -570,7 +596,7 @@ export function buildRecareExamSummary(
   const appliancesAndHistory = [
     ownershipUseLine("CPAP", form.cpapStatus, form.cpapUseStatus),
     ownershipUseLine(
-      "Occlusal splint",
+      "Occlusal splint (night guard)",
       form.occlusalSplintStatus,
       form.occlusalSplintUseStatus
     ),
@@ -578,7 +604,10 @@ export function buildRecareExamSummary(
     retainerLine(form.retainerStatus),
     yesNoLine(
       "Partial/complete removable dentures",
-      form.removableDenturesStatus
+      form.removableDenturesStatus,
+      form.removableDenturesStatus === "yes"
+        ? form.removableDenturesComment
+        : "",
     ),
   ];
 

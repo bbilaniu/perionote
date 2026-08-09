@@ -33,6 +33,7 @@ export function CatalogueCombobox({
   rememberActionLabel = "Remember this value",
   unhideActionLabel = "Unhide this value",
   roomyActions = false,
+  showAllSuggestionsWhenSelected = false,
 }: {
   id: string;
   label: string;
@@ -45,6 +46,7 @@ export function CatalogueCombobox({
   rememberActionLabel?: string;
   unhideActionLabel?: string;
   roomyActions?: boolean;
+  showAllSuggestionsWhenSelected?: boolean;
 }) {
   const {
     storageStatus,
@@ -59,17 +61,17 @@ export function CatalogueCombobox({
   } = useCatalogues();
   const [statusMessage, setStatusMessage] = useState("");
 
+  const equivalent = findEquivalent(catalogueKey, value);
   const suggestions = useMemo(() => {
     const query = normalizeCatalogueLabel(value);
     const allItems = getItems(catalogueKey);
-    return query
+    return query && !(showAllSuggestionsWhenSelected && equivalent)
       ? allItems.filter((item) =>
           normalizeCatalogueLabel(item.label).includes(query),
         )
       : allItems;
-  }, [catalogueKey, getItems, value]);
+  }, [catalogueKey, equivalent, getItems, showAllSuggestionsWhenSelected, value]);
 
-  const equivalent = findEquivalent(catalogueKey, value);
   const canRemember = Boolean(value.trim()) && !equivalent;
   const canUnhide = Boolean(value.trim()) && equivalent?.hidden;
   const providerCatalogueKey = isProviderCatalogueKey(catalogueKey)

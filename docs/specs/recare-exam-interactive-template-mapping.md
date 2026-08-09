@@ -295,14 +295,24 @@ The pilot will not impose undocumented clinical minimums, maximums, or decimal
 precision on overjet or overbite. Basic numeric parsing may prevent nonnumeric
 output, but clinical ranges require a sourced decision.
 
-TMJ status, free text, and structured TMJ clicking are presented in one TMJ
-assessment group. Selecting clicking sets TMJ to Findings. Changing TMJ to WNL
-or Not assessed confirms before clearing its free text and linked clicking.
+TMJ status, free text, structured TMJ clicking, Masseter palpation, and TMJ
+loading are presented in one **Temporomandibular assessment** group. Selecting
+clicking sets TMJ to Findings. Changing TMJ to WNL or Not assessed confirms
+before clearing its free text and linked clicking.
 Legacy drafts that contain clicking with another TMJ status expose explicit
 keep-clicking or remove-clicking actions rather than being rewritten during
 restore. Persisted fields and generated output remain unchanged.
 
-Masseter palpation and TMJ load testing remain separate controls. The source's
+Lymph-node status, free text, and structured **Palpable** finding are likewise
+presented in one **Lymph nodes** assessment group. Selecting Palpable sets the
+status to Findings and retains the established “palpable lymph nodes” generated
+wording with laterality, location, and swelling. Changing the status to WNL or
+Not assessed confirms before clearing the linked details. Older drafts without
+the status fields expose explicit keep-or-remove conflict actions.
+
+Masseter palpation and TMJ load testing retain independent status and findings
+controls inside that fieldset. The redundant **Additional extraoral clinical
+exam** title is omitted. The source's
 skeletal-occlusion `N/A` value is an explicit action and is not preselected.
 Right and left molar occlusion likewise have independent explicit N/A actions;
 neither is preselected.
@@ -316,7 +326,7 @@ neither is preselected.
 | R25 | `Do they use Splint?`                                       | Status: **Not documented / No / Yes** labelled **Uses the occlusal splint**, shown when ownership is Yes                 | `appCore`          | `Occlusal splint: Yes; {uses/does not use/use not documented}.`                           |
 | R26 | `Have they had orthodontics?`                               | Status: **Not documented / No / Yes**                                                                                    | `appCore`          | `Orthodontic history: No.` or `Orthodontic history: Yes.`                                 |
 | R27 | `Do they wear Retainers? Fixed or removable?`               | Status: **Not documented / None / Fixed / Removable / Fixed and removable**                                              | `appCore`          | `Retainers: {selected status}.`                                                           |
-| R28 | `Do they have Partial Dentures`                             | Status: **Not documented / No / Yes** labelled **Partial/complete removable dentures**                                   | `appCore`          | `Partial/complete removable dentures: No.` or `Partial/complete removable dentures: Yes.` |
+| R28 | `Do they have Partial Dentures`                             | Status: **Not documented / No / Yes** labelled **Partial/complete removable dentures**; when Yes, show **Removable dentures comments** | Status: `appCore`; comment: `patient-specific` | `Partial/complete removable dentures: No.`, `Partial/complete removable dentures: Yes.`, or the Yes answer followed by the entered comment |
 | R29 | Smile or teeth improvement question                         | Textarea: **What would the patient like to improve about their smile or teeth?**                                         | `patient-specific` | `Patient-requested smile or dental improvements: {text}`                                  |
 | R30 | `Additional Comments-`                                      | Textarea: **Additional comments**                                                                                        | `patient-specific` | `Additional comments: {text}`                                                             |
 
@@ -327,7 +337,10 @@ will not assume that a negative or undocumented orthodontic history makes a
 retainer value impossible. The UI and generated note use **Occlusal splint**
 and **Partial/complete removable dentures**. Every documented negative,
 affirmative, or selected-status answer appears in the generated note for CPAP,
-occlusal splint, orthodontic history, retainers, and removable dentures.
+occlusal splint, orthodontic history, retainers, and removable dentures. The
+removable-dentures comment is visible and included in output only while the
+status is Yes. A temporarily hidden comment is retained if the status changes
+and is restored when Yes is selected again.
 
 ### Odontogram and Caries Risk
 
@@ -532,7 +545,7 @@ CPAP: {documented ownership and use}
 Occlusal splint: {documented ownership and use}
 Orthodontic history: {documented answer}
 Retainers: {documented answer}
-Partial/complete removable dentures: {documented answer}
+Partial/complete removable dentures: {documented answer and optional Yes comment}
 
 Patient-requested smile or dental improvements: {entered text}
 Additional comments: {entered text}
@@ -653,7 +666,9 @@ contract are genuinely the same, not only because two fields look similar.
 - The UI and generated note use **Occlusal splint**, and every documented
   negative, affirmative, or selected-status appliance/history answer appears
   in the generated note.
-- The UI and generated note use **Partial/complete removable dentures**.
+- The UI and generated note use **Partial/complete removable dentures**. A
+  patient-specific comment is available when Yes is selected and is appended
+  to the affirmative generated line when non-empty.
 - Odontogram status is not inferred and appears as `ODONTOGRAM UP TO DATE`
   only when explicitly checked.
 - Teeth starts Not assessed, WNL requires explicit action, and an absent or

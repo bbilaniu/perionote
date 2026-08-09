@@ -19,6 +19,7 @@ import {
 } from "@/lib/templates/summary/buildRecareExamSummary";
 import { recareToothOptions } from "@/lib/templates/recareTeethCatalog";
 import {
+  createRecareExtraoralFinding,
   extraoralLateralityToSides,
   extraoralSidesToLaterality,
   recareExtraoralOptions,
@@ -127,6 +128,7 @@ Intraoral photos: No.
 a) Patient's chief concern: Food catches between teeth; Synthetic concern for demonstration.
 
 b) Extraoral: WNL.
+Lymph nodes: WNL.
 
 c) TMJ: Synthetic bilateral clicking without discomfort.
 Masseter palpation: WNL.
@@ -144,7 +146,7 @@ Overbite: 30%; 3 mm.
 Additional occlusal findings: Crossbite (location: Posterior, Left).
 
 CPAP: No.
-Occlusal splint: Yes; uses.
+Occlusal splint (night guard): Yes; uses.
 Orthodontic history: Yes.
 Retainers: Fixed.
 Partial/complete removable dentures: No.
@@ -195,6 +197,21 @@ Medical history reviewed: YES- NO CHANGES.`
     expect(buildRecareExamSummary(form)).toBe(`a) Patient's chief concern:
   - Food catches between teeth
   - Sensitivity to hot and cold`);
+  });
+
+  it("can list additional occlusal findings on separate note lines", () => {
+    const form = {
+      ...createEmptyRecareExamForm(),
+      additionalOcclusalFindings: [
+        { id: "spacing", finding: "Spacing", locations: ["Anterior"] },
+        { id: "crowding", finding: "Crowding", locations: [] },
+      ],
+      listAdditionalOcclusalFindings: true,
+    };
+
+    expect(buildRecareExamSummary(form)).toContain(`Additional occlusal findings:
+  - Spacing (location: Anterior).
+  - Crowding.`);
   });
 
   it("renders only meaningful lettered examination sections in source order", () => {
@@ -290,7 +307,7 @@ Masseter palpation: WNL.`);
   it("formats structured EOE findings in catalogue order", () => {
     expect(recareExtraoralOptions.map(({ label }) => label)).toEqual([
       "TMJ clicking",
-      "Palpable Lymph Nodes",
+      "Palpable",
     ]);
     expect(
       buildRecareExamSummary({
@@ -318,6 +335,47 @@ Masseter palpation: WNL.`);
   Observations: Monitor at recare.`);
   });
 
+  it("formats lymph-node status and palpable details without rewriting legacy findings", () => {
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        lymphNodesStatus: "wnl",
+      }),
+    ).toBe(`b) Extraoral examination:
+  Lymph nodes: WNL.`);
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        extraoralStatus: "findings",
+        lymphNodesStatus: "findings",
+        lymphNodesFindings: "Tender on palpation",
+        structuredExtraoralFindings: [
+          {
+            optionId: "eoe.palpable_lymph_nodes",
+            laterality: "Right",
+            locations: ["Submandibular"],
+            swelling: ["Slightly enlarged"],
+          },
+        ],
+      }),
+    ).toBe(`b) Extraoral:
+  - palpable lymph nodes (laterality: Right; location: Submandibular; swelling: Slightly enlarged).
+  Lymph nodes: Tender on palpation.`);
+
+    expect(
+      buildRecareExamSummary({
+        ...createEmptyRecareExamForm(),
+        extraoralStatus: "findings",
+        lymphNodesStatus: "wnl",
+        structuredExtraoralFindings: [
+          createRecareExtraoralFinding("eoe.palpable_lymph_nodes"),
+        ],
+      }),
+    ).toBe(`b) Extraoral:
+  - palpable lymph nodes.`);
+  });
+
   it("renders patient-requested improvements and clinical comments conditionally", () => {
     expect(
       buildRecareExamSummary({
@@ -333,6 +391,29 @@ Masseter palpation: WNL.`);
       }),
     ).toBe(`Patient-requested smile or dental improvements: Discuss whitening.
 Additional comments: Patient-specific observation.`);
+  });
+
+  it("adds removable-dentures comments only to documented Yes output", () => {
+    const withComment = {
+      ...createEmptyRecareExamForm(),
+      removableDenturesStatus: "yes" as const,
+      removableDenturesComment: "Upper partial worn during the day",
+    };
+    expect(buildRecareExamSummary(withComment)).toBe(
+      "Partial/complete removable dentures: Yes—Upper partial worn during the day.",
+    );
+    expect(
+      buildRecareExamSummary({
+        ...withComment,
+        removableDenturesStatus: "no",
+      }),
+    ).toBe("Partial/complete removable dentures: No.");
+    expect(
+      buildRecareExamSummary({
+        ...withComment,
+        removableDenturesStatus: "not-documented",
+      }),
+    ).toBe("");
   });
 
   it("preserves documented No answers and unknown editable values", () => {
@@ -375,7 +456,7 @@ RDH:
 Radiographs: Imported value ZX/7; Imported value ZX/7
 
 CPAP: Yes; does not use.
-Occlusal splint: No.
+Occlusal splint (night guard): No.
 Retainers: None.
 
 Treatment Options:

@@ -73,7 +73,7 @@ export const recareExtraoralOptions: RecareExtraoralOption[] = [
   },
   {
     id: "eoe.palpable_lymph_nodes",
-    label: "Palpable Lymph Nodes",
+    label: "Palpable",
     noteFragment: "palpable lymph nodes",
     statusOptions: [],
     phaseOptions: [],

@@ -26,6 +26,7 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
+import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   type AdultHygieneTreatmentCompletedEntry,
@@ -39,13 +40,18 @@ import {
   homeCareOheTopicChoices,
   isDyclonineRinseTreatment,
   oheTopicChoices,
-  orderTreatmentToothAreas,
   preventionAndMaintenanceOheTopicChoices,
+  standardHygieneGoal,
   standardOheStatement,
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  buildOheTreatmentRecap,
+  syncDerivedOheTreatmentDetails,
+  treatmentCompletedEntryIdentity,
+} from "@/lib/templates/adultHygieneTreatment";
 import type {
   DocumentationStatus,
   PremedicationStatus,
@@ -3021,25 +3027,22 @@ export function AdultHygiene2021Template({
   }
 
   function applyStandardTreatment() {
-    const entryKey = (entry: {
-      treatmentType: string;
-      toothAreas: readonly string[];
-    }) =>
-      `${entry.treatmentType
-        .normalize("NFKC")
-        .trim()
-        .toLocaleLowerCase("en-CA")}|${orderTreatmentToothAreas([
-        ...entry.toothAreas,
-      ])
-        .map((area) => area.toLocaleLowerCase("en-CA"))
-        .join("|")}`;
-    const existingKeys = new Set(form.treatmentCompleted.map(entryKey));
+    const existingKeys = new Set(
+      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
+    );
+    const oheRecap = buildOheTreatmentRecap(form);
     const additions = standardTreatmentCompletedPreset
-      .filter((entry) => !existingKeys.has(entryKey(entry)))
+      .filter(
+        (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+      )
       .map((entry) => ({
         ...createTreatmentCompletedEntry(),
-        treatmentType: entry.treatmentType,
+        ...entry,
         toothAreas: [...entry.toothAreas],
+        ...(entry.instrumentation
+          ? { instrumentation: [...entry.instrumentation] }
+          : {}),
+        ...(entry.procedureKind === "ohe" ? { details: oheRecap } : {}),
       }));
     if (additions.length) {
       updateField("treatmentCompleted", [
@@ -3460,9 +3463,22 @@ export function AdultHygiene2021Template({
             <OheEducationControl
               value={form}
               standardStatement={standardOheStatement}
+              standardGoal={standardHygieneGoal}
               topicChoices={oheTopicChoices}
               topicChoiceGroups={oheTopicChoiceGroups}
-              onChange={(key, value) => updateField(key, value)}
+              onChange={(key, value) => {
+                setForm((current) => {
+                  const next = { ...current, [key]: value };
+                  return {
+                    ...next,
+                    treatmentCompleted: syncDerivedOheTreatmentDetails(
+                      next.treatmentCompleted,
+                      buildOheTreatmentRecap(next),
+                    ),
+                  };
+                });
+                setCopyMessage("");
+              }}
             />
           </Section>
 
@@ -3487,15 +3503,10 @@ export function AdultHygiene2021Template({
                 placeholder="Enter one item per line"
               />
             </fieldset>
-            <TreatmentCompletedList
+            <StructuredTreatmentCompletedList
               entries={form.treatmentCompleted}
+              oheRecap={buildOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
-              onAdd={() =>
-                updateField("treatmentCompleted", [
-                  ...form.treatmentCompleted,
-                  createTreatmentCompletedEntry(),
-                ])
-              }
               onChange={(value) => updateField("treatmentCompleted", value)}
             />
             <CatalogueCombobox

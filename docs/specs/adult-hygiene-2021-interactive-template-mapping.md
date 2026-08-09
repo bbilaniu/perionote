@@ -594,28 +594,31 @@ the generated note, and a separate clear action removes it.
 | ID  | Source                                                       | Proposed control                                                                                                                                              | Classification                                                                                                        | Generated output                                                                                              |
 | --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE`        | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea                                                              | `patient-specific` clinical decision                                                                                  | A `Treatment recommended:` block containing only explicitly selected or entered items                         |
-| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional multi-value **Tooth/area**, including encounter-only custom text; Dyclonine exposes optional **Time of application/use**; an explicit button adds the reviewed standard rows | Row, Tooth/area, and timing: `patient-specific`; reusable treatment types: `catalogue`; fixed Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional comma-separated Tooth/area values}{ — or ; time of application/use: value}` joined with `; ` |
+| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered procedure cards for structured Scaling, Selective polish, and OHE plus catalogue-backed **Other treatment** rows; Dyclonine exposes optional **Time of application/use**; an explicit button adds the reviewed standard rows | Procedure quantity/details and Tooth/area: `patient-specific`; common procedure defaults and fixed Tooth/area vocabulary: `appCore`; other reusable treatment types: `catalogue` | Structured common procedures use concise quantity, instrumentation, product, and OHE wording; legacy and other rows retain `{treatment type}{ — optional Tooth/area}` formatting |
 | A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]`            | Catalogue-backed editable text: **Anesthetic**                                                                                                                | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Anesthetic: {text}`                                                                                          |
 | A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]`                | Catalogue-backed editable text: **Desensitizer**                                                                                                              | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Desensitizer: {text}`                                                                                        |
 
 Hygiene maintenance is an explicit option, not a default or recommendation.
-All eight originally visible Treatment completed values, the eight additional
-issue 68 treatment values, and all four Desensitizer values are approved public
-starter values. Anesthetic remains unseeded and must be reworked before its
-options are reconsidered. Selecting an item records text only and never infers
-dose, amount, safety, appropriateness, or treatment.
+The remaining reviewed Treatment completed catalogue values and all four
+Desensitizer values are approved public starters. Anesthetic remains unseeded
+and must be reworked before its options are reconsidered. Structured procedure
+defaults are visible and editable; no control infers dose, safety,
+appropriateness, or treatment from unrelated findings.
 Tooth/area starts with no selection for every row. Any number of the 13
 approved fixed choices may be selected simultaneously, and custom text may be
 added to the current encounter. Tooth/area is not a catalogue: custom values
 are discarded on reset or reload and cannot become reusable suggestions.
 
-Issue 68 adds reviewed starter values for the selective aesthetic-zone polish,
-FluoriMax varnish, Advantage Arrest silver diamine fluoride, Dyclonine rinse,
-DDS Recall Exam, resin-based sealant application, OHE, and the requested 3U
-Cavitron/hand-instrumentation wording. **Apply standard treatment** appends only
-missing reviewed rows and is idempotent. Dyclonine's optional timing field is
-free text so a clinician can document either a clock time or duration without
-the application inferring one.
+Issue 68 adds reviewed starter values for FluoriMax varnish, Advantage Arrest
+silver diamine fluoride, Dyclonine rinse, Dentist Recare Exam, resin-based
+sealant application, and OHE. Scaling and selective polish are now structured
+procedure cards rather than separate quantity-specific catalogue strings.
+**Apply standard treatment** appends only missing reviewed rows and is
+idempotent. It keeps Dyclonine and FMP, defaults scaling to 3U with Hand and
+Cavitron instrumentation, defaults polish to 1U with EnamelPro Strawberry with
+Fluoride, derives a visible OHE recap, and places FluoriMax varnish after OHE.
+Dyclonine's optional timing field is free text so a clinician can document
+either a clock time or duration without the application inferring one.
 
 ### Appliances and Relevant History
 

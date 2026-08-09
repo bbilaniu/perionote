@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -44,8 +45,10 @@ import {
   type FixedChoiceMultiComboboxGroup,
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
@@ -898,6 +901,7 @@ function ChoiceToggleButtons({
   singleSelect?: boolean;
 }) {
   const selected = new Set(values);
+  const groupName = useId();
   return (
     <fieldset className="space-y-2">
       <legend className="text-sm font-medium">{label}</legend>
@@ -905,27 +909,25 @@ function ChoiceToggleButtons({
         {options.map((option) => {
           const active = selected.has(option);
           return (
-            <button
+            <NativeChoiceControl
               key={option}
-              type="button"
-              aria-pressed={active}
-              className={`${buttonClass} ${
-                active
-                  ? "bg-sky-700 text-white hover:bg-sky-800"
-                  : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-              }`}
-              onClick={() =>
+              type={singleSelect ? "radio" : "checkbox"}
+              name={singleSelect ? groupName : undefined}
+              checked={active}
+              onChange={(checked) =>
                 onChange(
-                  active
-                    ? values.filter((value) => value !== option)
-                    : singleSelect
+                  checked
+                    ? singleSelect
                       ? [option]
-                      : [...values, option],
+                      : [...values, option]
+                    : singleSelect
+                      ? values
+                      : values.filter((value) => value !== option),
                 )
               }
             >
               {option}
-            </button>
+            </NativeChoiceControl>
           );
         })}
       </div>
@@ -945,12 +947,14 @@ export function TmjAssessmentControl({
   findings,
   structuredExtraoralFindings,
   onChange,
+  children,
 }: {
   idPrefix?: string;
   status: ExamStatus;
   findings: string;
   structuredExtraoralFindings: RecareExtraoralFinding[];
   onChange: (patch: TmjAssessmentPatch) => void;
+  children?: ReactNode;
 }) {
   const clickingOptionId = "eoe.tmj_clicking";
   const clicking = structuredExtraoralFindings.find(
@@ -1018,9 +1022,11 @@ export function TmjAssessmentControl({
   return (
     <fieldset
       className="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
-      aria-label="TMJ assessment"
+      aria-label="Temporomandibular assessment"
     >
-      <legend className="px-1 font-medium">TMJ assessment</legend>
+      <legend className="px-1 font-medium">
+        Temporomandibular assessment
+      </legend>
       {hasLegacyConflict ? (
         <div
           className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
@@ -1065,18 +1071,14 @@ export function TmjAssessmentControl({
         role="group"
         aria-label="TMJ clicking"
       >
-        <button
-          type="button"
-          aria-pressed={Boolean(clicking)}
-          className={`${buttonClass} w-full justify-start sm:w-auto ${
-            clicking
-              ? "bg-sky-700 text-white hover:bg-sky-800"
-              : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-          }`}
-          onClick={toggleClicking}
+        <NativeChoiceControl
+          type="checkbox"
+          checked={Boolean(clicking)}
+          className="w-full justify-start sm:w-auto"
+          onChange={toggleClicking}
         >
           TMJ clicking
-        </button>
+        </NativeChoiceControl>
         {clicking ? (
           <div className="grid gap-3 md:grid-cols-3">
             <ChoiceToggleButtons
@@ -1101,6 +1103,182 @@ export function TmjAssessmentControl({
               options={clickingOption.phaseOptions}
               values={clicking.phases ?? []}
               onChange={(phases) => patchClicking({ phases })}
+            />
+          </div>
+        ) : null}
+      </div>
+      {children ? (
+        <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+          {children}
+        </div>
+      ) : null}
+    </fieldset>
+  );
+}
+
+type LymphNodesAssessmentPatch = {
+  lymphNodesStatus?: ExamStatus;
+  lymphNodesFindings?: string;
+  structuredExtraoralFindings?: RecareExtraoralFinding[];
+};
+
+export function LymphNodesAssessmentControl({
+  idPrefix = "recare",
+  status,
+  findings,
+  structuredExtraoralFindings,
+  onChange,
+}: {
+  idPrefix?: string;
+  status: ExamStatus;
+  findings: string;
+  structuredExtraoralFindings: RecareExtraoralFinding[];
+  onChange: (patch: LymphNodesAssessmentPatch) => void;
+}) {
+  const palpableOptionId = "eoe.palpable_lymph_nodes";
+  const palpable = structuredExtraoralFindings.find(
+    (finding) => finding.optionId === palpableOptionId,
+  );
+  const palpableOption = recareExtraoralOptions.find(
+    (option) => option.id === palpableOptionId,
+  )!;
+  const hasLymphNodeFindings = Boolean(findings.trim()) || Boolean(palpable);
+  const hasLegacyConflict = Boolean(palpable) && status !== "findings";
+
+  function withoutPalpable() {
+    return structuredExtraoralFindings.filter(
+      (finding) => finding.optionId !== palpableOptionId,
+    );
+  }
+
+  function changeStatus(nextStatus: ExamStatus) {
+    if (
+      nextStatus !== "findings" &&
+      hasLymphNodeFindings &&
+      !window.confirm(
+        `Set Lymph nodes to ${nextStatus === "wnl" ? "WNL" : "Not assessed"} and clear the documented lymph-node findings?`,
+      )
+    ) {
+      return;
+    }
+    onChange({
+      lymphNodesStatus: nextStatus,
+      ...(nextStatus !== "findings"
+        ? {
+            lymphNodesFindings: "",
+            structuredExtraoralFindings: withoutPalpable(),
+          }
+        : {}),
+    });
+  }
+
+  function togglePalpable() {
+    onChange(
+      palpable
+        ? { structuredExtraoralFindings: withoutPalpable() }
+        : {
+            lymphNodesStatus: "findings",
+            structuredExtraoralFindings: [
+              ...withoutPalpable(),
+              createRecareExtraoralFinding(palpableOptionId),
+            ],
+          },
+    );
+  }
+
+  function patchPalpable(changes: Partial<RecareExtraoralFinding>) {
+    if (!palpable) return;
+    onChange({
+      lymphNodesStatus: "findings",
+      structuredExtraoralFindings: structuredExtraoralFindings.map((finding) =>
+        finding.optionId === palpableOptionId
+          ? { ...finding, ...changes }
+          : finding,
+      ),
+    });
+  }
+
+  return (
+    <fieldset
+      className="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+      aria-label="Lymph nodes"
+    >
+      <legend className="px-1 font-medium">Lymph nodes</legend>
+      {hasLegacyConflict ? (
+        <div
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+          role="alert"
+        >
+          <p>
+            Palpable lymph nodes are documented in this legacy draft while the
+            Lymph nodes status is not Findings. Choose which value to keep.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`${buttonClass} bg-amber-700 text-white hover:bg-amber-800`}
+              onClick={() => onChange({ lymphNodesStatus: "findings" })}
+            >
+              Keep palpable finding and use Findings
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border border-amber-400 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/50`}
+              onClick={() =>
+                onChange({ structuredExtraoralFindings: withoutPalpable() })
+              }
+            >
+              Remove palpable finding
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <ExamFinding
+        id={`${idPrefix}-lymph-nodes`}
+        label="Lymph nodes"
+        status={status}
+        findings={findings}
+        onStatusChange={changeStatus}
+        onFindingsChange={(lymphNodesFindings) =>
+          onChange({ lymphNodesStatus: "findings", lymphNodesFindings })
+        }
+      />
+      <div
+        className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+        role="group"
+        aria-label="Palpable lymph nodes"
+      >
+        <NativeChoiceControl
+          type="checkbox"
+          checked={Boolean(palpable)}
+          className="w-full justify-start sm:w-auto"
+          onChange={togglePalpable}
+        >
+          Palpable
+        </NativeChoiceControl>
+        {palpable ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <ChoiceToggleButtons
+              label="Laterality"
+              options={extraoralSideOptions}
+              values={extraoralLateralityToSides(palpable.laterality ?? "")}
+              onChange={(sides) =>
+                patchPalpable({
+                  laterality: extraoralSidesToLaterality(sides),
+                })
+              }
+            />
+            <ChoiceToggleButtons
+              label="Location"
+              options={palpableOption.locationOptions}
+              values={palpable.locations ?? []}
+              onChange={(locations) => patchPalpable({ locations })}
+            />
+            <ChoiceToggleButtons
+              label="Swelling"
+              options={palpableOption.swellingOptions}
+              values={palpable.swelling ?? []}
+              onChange={(swelling) => patchPalpable({ swelling })}
             />
           </div>
         ) : null}
@@ -1173,6 +1351,11 @@ export function StructuredExtraoralObservations({
   const shouldAutoExpand =
     status === "findings" || documentedFindingCount > 0;
   const [open, setOpen] = useState(shouldAutoExpand);
+  const otherExtraoralOptions = recareExtraoralOptions.filter(
+    (option) =>
+      option.id !== "eoe.tmj_clicking" &&
+      option.id !== "eoe.palpable_lymph_nodes",
+  );
 
   useEffect(() => {
     if (shouldAutoExpand) setOpen(true);
@@ -1259,16 +1442,14 @@ export function StructuredExtraoralObservations({
           </div>
 
           <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-            <h3 className="font-medium">Additional extraoral clinical exam</h3>
             {children}
           </div>
 
-          <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-            <h3 className="font-medium">Other EOE findings</h3>
-            <div className="grid gap-3 md:grid-cols-2">
-              {recareExtraoralOptions
-                .filter((option) => option.id !== "eoe.tmj_clicking")
-                .map((option) => {
+          {otherExtraoralOptions.length ? (
+            <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
+              <h3 className="font-medium">Other EOE findings</h3>
+              <div className="grid gap-3 md:grid-cols-2">
+                {otherExtraoralOptions.map((option) => {
                 const selected = values.find(
                   (value) => value.optionId === option.id,
                 );
@@ -1279,18 +1460,14 @@ export function StructuredExtraoralObservations({
                     aria-label={option.label}
                     className="space-y-2"
                   >
-                    <button
-                      type="button"
-                      aria-pressed={Boolean(selected)}
-                      className={`${buttonClass} w-full justify-start ${
-                        selected
-                          ? "bg-sky-700 text-white hover:bg-sky-800"
-                          : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                      }`}
-                      onClick={() => toggleOption(option.id)}
+                    <NativeChoiceControl
+                      type="checkbox"
+                      checked={Boolean(selected)}
+                      className="w-full justify-start"
+                      onChange={() => toggleOption(option.id)}
                     >
                       {option.label}
-                    </button>
+                    </NativeChoiceControl>
                     {selected ? (
                       <div className="grid gap-3">
                         <ChoiceToggleButtons
@@ -1351,8 +1528,9 @@ export function StructuredExtraoralObservations({
                   </div>
                 );
                 })}
+              </div>
             </div>
-          </div>
+          ) : null}
           <button
             type="button"
             className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
@@ -1547,19 +1725,14 @@ export function StructuredIntraoralFindings({
               {recareIntraoralQuickPresets.map((preset) => {
                 const active = quickPresetIsActive(preset);
                 return (
-                  <button
+                  <NativeChoiceControl
                     key={preset.optionId}
-                    type="button"
-                    aria-pressed={active}
-                    className={`${buttonClass} ${
-                      active
-                        ? "bg-sky-700 text-white hover:bg-sky-800"
-                        : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-                    }`}
-                    onClick={() => toggleQuickPreset(preset)}
+                    type="checkbox"
+                    checked={active}
+                    onChange={() => toggleQuickPreset(preset)}
                   >
                     {preset.label}
-                  </button>
+                  </NativeChoiceControl>
                 );
               })}
             </div>
@@ -1710,8 +1883,11 @@ export function OcclusalFindingLocations({
       !quick.has(location as (typeof recareIntraoralLocationChoices)[number])
   );
   return (
-    <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-3 dark:border-slate-700">
-      <span className="text-xs font-medium">Location (optional)</span>
+    <fieldset
+      className="mt-3 space-y-2 border-l-2 border-slate-300 pl-3 dark:border-slate-600"
+      aria-label={`${entry.finding} location`}
+    >
+      <legend className="text-xs font-medium">Location (optional)</legend>
       <div className="flex flex-wrap gap-3">
         {recareIntraoralLocationChoices.map((location) => (
           <label key={location} className="flex gap-1 text-xs">
@@ -1752,7 +1928,7 @@ export function OcclusalFindingLocations({
           })
         }
       />
-    </div>
+    </fieldset>
   );
 }
 
@@ -1963,12 +2139,14 @@ export function RecareExamTemplate({
       [
         form.extraoralStatus,
         form.tmjStatus,
+        form.lymphNodesStatus,
         form.masseterStatus,
         form.tmjLoadStatus,
       ].some((status) => status !== "not-assessed") ||
       [
         form.extraoralFindings,
         form.tmjFindings,
+        form.lymphNodesFindings,
         form.masseterFindings,
         form.tmjLoadFindings,
       ].some((value) => Boolean(value.trim())) ||
@@ -2014,6 +2192,8 @@ export function RecareExamTemplate({
       structuredExtraoralFindings: [],
       tmjStatus: "wnl",
       tmjFindings: "",
+      lymphNodesStatus: "wnl",
+      lymphNodesFindings: "",
       masseterStatus: "wnl",
       masseterFindings: "",
       tmjLoadStatus: "wnl",
@@ -2037,6 +2217,8 @@ export function RecareExamTemplate({
       structuredExtraoralFindings: [],
       tmjStatus: "not-assessed",
       tmjFindings: "",
+      lymphNodesStatus: "not-assessed",
+      lymphNodesFindings: "",
       masseterStatus: "not-assessed",
       masseterFindings: "",
       tmjLoadStatus: "not-assessed",
@@ -2348,14 +2530,11 @@ export function RecareExamTemplate({
           </Section>
 
           <Section title="Records and Chief Concern">
-            <CatalogueMultiCombobox
-              id="recare-radiographs"
-              label="Radiographs"
-              catalogueKey="imaging.radiographs"
+            <RadiographsTakenControl
+              idPrefix="recare"
               values={form.radiographs}
               onChange={(value) => updateField("radiographs", value)}
-              allowDuplicateValues
-              roomySelectionActions
+              linkToTreatment={false}
             />
             <YesNoWithDetails
               id="recare-intraoral-photos"
@@ -2409,6 +2588,7 @@ export function RecareExamTemplate({
               status={form.extraoralStatus}
               additionalStatuses={[
                 form.tmjStatus,
+                form.lymphNodesStatus,
                 form.masseterStatus,
                 form.tmjLoadStatus,
               ]}
@@ -2422,6 +2602,7 @@ export function RecareExamTemplate({
               }}
               linkedStatusByOptionId={{
                 "eoe.tmj_clicking": form.tmjStatus,
+                "eoe.palpable_lymph_nodes": form.lymphNodesStatus,
               }}
             >
               <TmjAssessmentControl
@@ -2441,30 +2622,50 @@ export function RecareExamTemplate({
                   }));
                   setCopyMessage("");
                 }}
-              />
-              <ExamFinding
-                id="recare-masseter"
-                label="Masseter palpation"
-                status={form.masseterStatus}
-                findings={form.masseterFindings}
-                onStatusChange={(value) =>
-                  updateField("masseterStatus", value)
+              >
+                <ExamFinding
+                  id="recare-masseter"
+                  label="Masseter palpation"
+                  status={form.masseterStatus}
+                  findings={form.masseterFindings}
+                  onStatusChange={(value) =>
+                    updateField("masseterStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("masseterFindings", value)
+                  }
+                />
+                <ExamFinding
+                  id="recare-tmj-load"
+                  label="TMJ loading test"
+                  status={form.tmjLoadStatus}
+                  findings={form.tmjLoadFindings}
+                  onStatusChange={(value) =>
+                    updateField("tmjLoadStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("tmjLoadFindings", value)
+                  }
+                />
+              </TmjAssessmentControl>
+              <LymphNodesAssessmentControl
+                idPrefix="recare"
+                status={form.lymphNodesStatus}
+                findings={form.lymphNodesFindings}
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
                 }
-                onFindingsChange={(value) =>
-                  updateField("masseterFindings", value)
-                }
-              />
-              <ExamFinding
-                id="recare-tmj-load"
-                label="TMJ loading test"
-                status={form.tmjLoadStatus}
-                findings={form.tmjLoadFindings}
-                onStatusChange={(value) =>
-                  updateField("tmjLoadStatus", value)
-                }
-                onFindingsChange={(value) =>
-                  updateField("tmjLoadFindings", value)
-                }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.lymphNodesStatus === "findings" ||
+                    patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
               />
             </StructuredExtraoralObservations>
             <ExamFinding
@@ -2616,7 +2817,7 @@ export function RecareExamTemplate({
                 inputMode="decimal"
               />
             </div>
-            <div>
+            <div className="space-y-3">
               <CatalogueMultiCombobox
                 id="recare-additional-occlusal-findings"
                 label="Additional occlusal findings"
@@ -2626,21 +2827,31 @@ export function RecareExamTemplate({
                 )}
                 onChange={changeAdditionalOcclusalValues}
                 roomySelectionActions
+                renderSelectedDetails={(_, index) => {
+                  const entry = (form.additionalOcclusalFindings ?? [])[index];
+                  return entry ? (
+                    <OcclusalFindingLocations
+                      entry={entry}
+                      onChange={(updated) =>
+                        updateField(
+                          "additionalOcclusalFindings",
+                          (form.additionalOcclusalFindings ?? []).map((item) =>
+                            item.id === entry.id ? updated : item
+                          )
+                        )
+                      }
+                    />
+                  ) : null;
+                }}
               />
-              {(form.additionalOcclusalFindings ?? []).map((entry) => (
-                <OcclusalFindingLocations
-                  key={entry.id}
-                  entry={entry}
-                  onChange={(updated) =>
-                    updateField(
-                      "additionalOcclusalFindings",
-                      (form.additionalOcclusalFindings ?? []).map((item) =>
-                        item.id === entry.id ? updated : item
-                      )
-                    )
-                  }
-                />
-              ))}
+              <CheckboxField
+                id="recare-additional-occlusal-findings-list-format"
+                label="List each additional occlusal finding on a separate line in the note"
+                checked={form.listAdditionalOcclusalFindings}
+                onChange={(value) =>
+                  updateField("listAdditionalOcclusalFindings", value)
+                }
+              />
             </div>
           </Section>
 
@@ -2669,7 +2880,7 @@ export function RecareExamTemplate({
               ) : null}
               <FixedChoiceListbox
                 id="recare-occlusal-splint"
-                label="Has an occlusal splint?"
+                label="Has an occlusal splint (night guard)"
                 value={form.occlusalSplintStatus}
                 options={statusOptions}
                 onChange={(value) => {
@@ -2682,7 +2893,7 @@ export function RecareExamTemplate({
               {form.occlusalSplintStatus === "yes" ? (
                 <FixedChoiceListbox
                   id="recare-occlusal-splint-use"
-                  label="Uses the occlusal splint"
+                  label="Uses the occlusal splint (night guard)"
                   value={form.occlusalSplintUseStatus}
                   options={statusOptions}
                   onChange={(value) =>
@@ -2724,6 +2935,18 @@ export function RecareExamTemplate({
                   updateField("removableDenturesStatus", value)
                 }
               />
+              {form.removableDenturesStatus === "yes" ? (
+                <div className="md:col-span-2">
+                  <TextareaField
+                    id="recare-removable-dentures-comment"
+                    label="Removable dentures comments"
+                    value={form.removableDenturesComment}
+                    onChange={(value) =>
+                      updateField("removableDenturesComment", value)
+                    }
+                  />
+                </div>
+              ) : null}
             </div>
             <TextareaField
               id="recare-improvement-request"

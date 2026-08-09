@@ -38,6 +38,8 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   ],
   tmjStatus: "not-assessed",
   tmjFindings: "",
+  lymphNodesStatus: "wnl",
+  lymphNodesFindings: "",
   masseterStatus: "wnl",
   masseterFindings: "",
   tmjLoadStatus: "wnl",
@@ -71,6 +73,7 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
       locations: ["Posterior", "Left"],
     },
   ],
+  listAdditionalOcclusalFindings: false,
   teethStatus: "findings",
   toothFindings: [
     {
@@ -221,6 +224,7 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   orthodonticHistoryStatus: "yes",
   retainerStatus: "fixed",
   removableDenturesStatus: "no",
+  removableDenturesComment: "",
   improvementRequest: "Synthetic request to discuss whitening.",
   recareAdditionalComments: "Synthetic recare comment.",
   additionalNotes: "Synthetic demonstration data only.",

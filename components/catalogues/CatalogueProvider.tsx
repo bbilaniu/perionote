@@ -12,6 +12,7 @@ import {
   CATALOGUE_STORAGE_KEY,
   CatalogueImportPreview,
   CatalogueItem,
+  CatalogueItemMetadata,
   CatalogueKey,
   CatalogueOwner,
   CatalogueValidationError,
@@ -68,12 +69,17 @@ type CatalogueContextValue = {
   rememberValue: (
     catalogueKey: CatalogueKey,
     label: string,
+    metadata?: CatalogueItemMetadata,
   ) => "added" | "existing" | "reactivated";
   rememberAndSetProviderDefault: (
     catalogueKey: ProviderCatalogueKey,
     label: string,
   ) => "added" | "existing" | "reactivated";
-  updateItem: (itemId: string, label: string) => void;
+  updateItem: (
+    itemId: string,
+    label: string,
+    metadata?: CatalogueItemMetadata,
+  ) => void;
   setHidden: (
     itemId: string,
     owner: CatalogueOwner,
@@ -278,9 +284,15 @@ export function CatalogueProvider({
   );
 
   const rememberValue = useCallback(
-    (catalogueKey: CatalogueKey, label: string) => {
-      const result = rememberCatalogueValue(state, catalogueKey, label);
-      if (result.status !== "existing") {
+    (
+      catalogueKey: CatalogueKey,
+      label: string,
+      metadata?: CatalogueItemMetadata,
+    ) => {
+      const result = rememberCatalogueValue(state, catalogueKey, label, {
+        metadata,
+      });
+      if (result.state !== state) {
         commit(result.state);
       }
       return result.status;
@@ -291,7 +303,7 @@ export function CatalogueProvider({
   const rememberAndSetProviderDefault = useCallback(
     (catalogueKey: ProviderCatalogueKey, label: string) => {
       const result = rememberCatalogueValue(state, catalogueKey, label);
-      if (result.status !== "existing") {
+      if (result.state !== state) {
         commit(result.state);
       }
       commitProviderDefaults(
@@ -308,8 +320,8 @@ export function CatalogueProvider({
   );
 
   const updateItem = useCallback(
-    (itemId: string, label: string) => {
-      commit(updateUserCatalogueItem(state, itemId, label));
+    (itemId: string, label: string, metadata?: CatalogueItemMetadata) => {
+      commit(updateUserCatalogueItem(state, itemId, label, new Date(), metadata));
     },
     [commit, state],
   );

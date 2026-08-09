@@ -25,6 +25,7 @@ export const CATALOGUE_KEYS = [
   "oral-hygiene.compliance",
   "oral-hygiene.aids-reviewed",
   "hygiene-treatment.completed",
+  "hygiene-treatment.polishing-products",
   "recare-treatment.items",
   "hygiene-treatment.anesthetic",
   "hygiene-treatment.desensitizer",
@@ -36,6 +37,68 @@ export const CATALOGUE_KEYS = [
 export type CatalogueKey = (typeof CATALOGUE_KEYS)[number];
 export type CatalogueOwner = "seed" | "user";
 
+export const COMPLETED_CARE_CATEGORIES = [
+  "exam",
+  "instrumentation",
+  "product-application",
+  "preventive-procedure",
+  "education",
+  "other",
+] as const;
+
+export type CompletedCareCategory =
+  (typeof COMPLETED_CARE_CATEGORIES)[number];
+
+export const COMPLETED_CARE_CATEGORY_LABELS: Record<
+  CompletedCareCategory,
+  string
+> = {
+  exam: "Exams & diagnostics",
+  instrumentation: "Instrumentation",
+  "product-application": "Product applications",
+  "preventive-procedure": "Preventive procedures",
+  education: "Education",
+  other: "Other completed care",
+};
+
+export type CompletedCareProcedure =
+  | "radiographs"
+  | "fmp"
+  | "recare-exam"
+  | "scaling"
+  | "polish"
+  | "ohe"
+  | "product-application"
+  | "preventive-procedure"
+  | "other";
+
+export type RadiographCatalogueMetadata = {
+  kind: "radiograph";
+  code: string;
+  defaultQuantity: number;
+};
+
+export type CompletedCareCatalogueMetadata = {
+  kind: "completed-care";
+  category: CompletedCareCategory;
+  procedure: CompletedCareProcedure;
+  defaultQuantity?: number;
+  defaultProduct?: string;
+  defaultToothAreas?: string[];
+};
+
+export type PolishingProductCatalogueMetadata = {
+  kind: "polishing-product";
+  productName: string;
+  flavour: string;
+  containsFluoride: boolean;
+};
+
+export type CatalogueItemMetadata =
+  | RadiographCatalogueMetadata
+  | CompletedCareCatalogueMetadata
+  | PolishingProductCatalogueMetadata;
+
 export const CATALOGUE_SECTIONS = [
   "Visit Team",
   "Records and Chief Concern",
@@ -44,7 +107,7 @@ export const CATALOGUE_SECTIONS = [
   "Periodontal Assessment",
   "Oral Hygiene and Education",
   "Treatment",
-  "Intervals and Next Visit",
+  "Continuity of care",
 ] as const;
 
 export type CatalogueSection = (typeof CATALOGUE_SECTIONS)[number];
@@ -52,6 +115,7 @@ export type CatalogueSection = (typeof CATALOGUE_SECTIONS)[number];
 export type CatalogueSeed = {
   id: string;
   label: string;
+  metadata?: CatalogueItemMetadata;
 };
 
 export type CatalogueDefinition = {
@@ -72,6 +136,7 @@ export type UserCatalogueItem = {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+  metadata?: CatalogueItemMetadata;
 };
 
 export type SeedPreference = {
@@ -102,6 +167,7 @@ export type CatalogueItem = {
   hidden: boolean;
   favorite: boolean;
   sortOrder: number;
+  metadata?: CatalogueItemMetadata;
 };
 
 export type CatalogueImportPreview = {
@@ -155,17 +221,23 @@ const medicalHistoryReviewSeeds = catalogueSeeds("medical-history.review", [
   ["updated-meds", "YES- UPDATED MEDS"],
 ]);
 
-const radiographSeeds = catalogueSeeds("imaging.radiographs", [
-  ["pan", "PAN"],
-  ["1-bw", "1 BW"],
-  ["2-bw", "2 BW"],
-  ["3-bw", "3 BW"],
-  ["4-bw", "4 BW"],
-  ["5-bw", "5 BW"],
-  ["6-bw", "6 BW"],
-  ["1-pa", "1 PA"],
-  ["2-pa", "2 PA"],
-]);
+const radiographSeeds: CatalogueSeed[] = [
+  {
+    id: "seed.imaging.radiographs.bitewings",
+    label: "Bitewings",
+    metadata: { kind: "radiograph", code: "BW", defaultQuantity: 4 },
+  },
+  {
+    id: "seed.imaging.radiographs.periapicals",
+    label: "Periapicals",
+    metadata: { kind: "radiograph", code: "PA", defaultQuantity: 3 },
+  },
+  {
+    id: "seed.imaging.radiographs.panoramic",
+    label: "Panoramic",
+    metadata: { kind: "radiograph", code: "PAN", defaultQuantity: 1 },
+  },
+];
 
 const patientChiefConcernSeeds = catalogueSeeds(
   "patient.chief-concerns",
@@ -213,22 +285,104 @@ const oralHygieneComplianceSeeds = catalogueSeeds("oral-hygiene.compliance", [
   ["fair-good", "Fair–good"],
 ]);
 
-const treatmentCompletedSeeds = catalogueSeeds("hygiene-treatment.completed", [
-  ["1u-scale", "1U scale (cavitron and hand instrumentation)"],
-  ["2u-scale", "2U scale (cavitron and hand instrumentation)"],
-  ["3u-scale", "3U scale (cavitron and hand instrumentation)"],
-  //["3u-scale-hand-instrumentation", "3U scale (Cavitron and hand instrumentation)"],
-  ["4u-scale", "4U scale (cavitron and hand instrumentation)"],
-  ["fmp", "FMP"],
-  ["1u-polish", "1U polish - Selective polish of aesthetic zone as per patient's request"],
-  ["fluorimax-varnish", "FluoriMax 2.5% NaF Varnish application"],
-  ["advantage-arrest-sdf", "Advantage Arrest® Silver Diamine Fluoride 38% application"],
-  ["dyclonine-rinse", "Dyclonine 1% rinse 5 ml"],
-  ["dds-recall-exam", "DDS Recall Exam"],
-  ["resin-sealant", "Sealant application, resin-based material"],
-  ["ohe", "OHE"],
-  ["crystal-x-pur", "Crystal X-PUR"],
-]);
+function completedCareSeed(
+  id: string,
+  label: string,
+  metadata: Omit<CompletedCareCatalogueMetadata, "kind">,
+): CatalogueSeed {
+  return {
+    id: `seed.hygiene-treatment.completed.${id}`,
+    label,
+    metadata: { kind: "completed-care", ...metadata },
+  };
+}
+
+const treatmentCompletedSeeds: CatalogueSeed[] = [
+  completedCareSeed("radiographs", "Radiographs", {
+    category: "exam",
+    procedure: "radiographs",
+  }),
+  completedCareSeed("fmp", "FMP", {
+    category: "exam",
+    procedure: "fmp",
+    defaultToothAreas: ["full mouth"],
+  }),
+  completedCareSeed("dentist-recare-exam", "Dentist Recare Exam", {
+    category: "exam",
+    procedure: "recare-exam",
+  }),
+  completedCareSeed("scaling", "Scaling", {
+    category: "instrumentation",
+    procedure: "scaling",
+    defaultQuantity: 3,
+    defaultToothAreas: ["full mouth"],
+  }),
+  completedCareSeed("selective-polish", "Selective polish", {
+    category: "instrumentation",
+    procedure: "polish",
+    defaultQuantity: 1,
+    defaultProduct:
+      "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+  }),
+  completedCareSeed("dyclonine-rinse", "Dyclonine 1% rinse 5 ml", {
+    category: "product-application",
+    procedure: "product-application",
+    defaultToothAreas: ["full mouth"],
+  }),
+  completedCareSeed(
+    "fluorimax-varnish",
+    "FluoriMax 2.5% NaF Varnish application",
+    {
+      category: "product-application",
+      procedure: "product-application",
+      defaultToothAreas: ["full mouth"],
+    },
+  ),
+  completedCareSeed(
+    "advantage-arrest-sdf",
+    "Advantage Arrest® Silver Diamine Fluoride 38% application",
+    {
+      category: "product-application",
+      procedure: "product-application",
+    },
+  ),
+  completedCareSeed("crystal-x-pur", "Crystal X-PUR", {
+    category: "product-application",
+    procedure: "product-application",
+  }),
+  completedCareSeed(
+    "resin-sealant",
+    "Sealant application, resin-based material",
+    {
+      category: "preventive-procedure",
+      procedure: "preventive-procedure",
+    },
+  ),
+  completedCareSeed("ohe", "OHE", {
+    category: "education",
+    procedure: "ohe",
+  }),
+];
+
+const enamelProProductName = "Enamel Pro® Prophy Paste";
+
+const polishingProductSeeds: CatalogueSeed[] = [
+  "Strawberry",
+  "Mint",
+  "Raspberry",
+  "Vanilla Mint",
+].map((flavour) => ({
+  id: `seed.hygiene-treatment.polishing-products.${flavour
+    .toLocaleLowerCase("en-CA")
+    .replaceAll(" ", "-")}`,
+  label: `${enamelProProductName} with Fluoride (${flavour})`,
+  metadata: {
+    kind: "polishing-product",
+    productName: enamelProProductName,
+    flavour,
+    containsFluoride: true,
+  },
+}));
 
 const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
   ["hygiene-maintenance", "Hygiene maintenance"],
@@ -332,8 +486,8 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
     key: "imaging.radiographs",
     section: "Records and Chief Concern",
-    title: "Radiographs",
-    fieldLabels: ["Radiographs"],
+    title: "Radiograph types",
+    fieldLabels: ["Radiographs taken today"],
     seeds: radiographSeeds,
     lifecycle: "pilot",
   },
@@ -388,9 +542,17 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
     key: "hygiene-treatment.completed",
     section: "Treatment",
-    title: "Treatment completed today",
+    title: "Completed care",
     fieldLabels: ["Treatment completed today"],
     seeds: treatmentCompletedSeeds,
+    lifecycle: "pilot",
+  },
+  {
+    key: "hygiene-treatment.polishing-products",
+    section: "Treatment",
+    title: "Polishing products",
+    fieldLabels: ["Polish product"],
+    seeds: polishingProductSeeds,
     lifecycle: "pilot",
   },
   {
@@ -411,15 +573,15 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   },
   {
     key: "scheduling.recall-interval",
-    section: "Intervals and Next Visit",
-    title: "Recommended recall interval",
-    fieldLabels: ["Recommended recall interval"],
+    section: "Continuity of care",
+    title: "Recommended recare interval",
+    fieldLabels: ["Recommended recare interval"],
     seeds: recallIntervalSeeds,
     lifecycle: "pilot",
   },
   {
     key: "scheduling.hygiene-interval",
-    section: "Intervals and Next Visit",
+    section: "Continuity of care",
     title: "Recommended hygiene interval",
     fieldLabels: ["Recommended hygiene interval"],
     seeds: hygieneIntervalSeeds,
@@ -427,7 +589,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   },
   {
     key: "scheduling.next-visit",
-    section: "Intervals and Next Visit",
+    section: "Continuity of care",
     title: "Next visit",
     fieldLabels: ["Next visit"],
     seeds: nextVisitSeeds,
@@ -455,6 +617,18 @@ const seedsById = new Map(
     ]),
   ),
 );
+
+const legacyRadiographSeedAliases = new Map<string, string>([
+  ["seed.imaging.radiographs.pan", "seed.imaging.radiographs.panoramic"],
+  ["seed.imaging.radiographs.1-bw", "seed.imaging.radiographs.bitewings"],
+  ["seed.imaging.radiographs.2-bw", "seed.imaging.radiographs.bitewings"],
+  ["seed.imaging.radiographs.3-bw", "seed.imaging.radiographs.bitewings"],
+  ["seed.imaging.radiographs.4-bw", "seed.imaging.radiographs.bitewings"],
+  ["seed.imaging.radiographs.5-bw", "seed.imaging.radiographs.bitewings"],
+  ["seed.imaging.radiographs.6-bw", "seed.imaging.radiographs.bitewings"],
+  ["seed.imaging.radiographs.1-pa", "seed.imaging.radiographs.periapicals"],
+  ["seed.imaging.radiographs.2-pa", "seed.imaging.radiographs.periapicals"],
+]);
 
 export class CatalogueValidationError extends Error {
   constructor(message: string) {
@@ -555,6 +729,133 @@ function readTimestamp(record: Record<string, unknown>, key: string): string {
   return value;
 }
 
+function readOptionalPositiveNumber(
+  record: Record<string, unknown>,
+  key: string,
+): number | undefined {
+  const value = record[key];
+  if (value === undefined) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
+    throw new CatalogueValidationError(`Invalid ${key} value.`);
+  }
+  return value;
+}
+
+function readOptionalStringArray(
+  record: Record<string, unknown>,
+  key: string,
+): string[] | undefined {
+  const value = record[key];
+  if (value === undefined) return undefined;
+  if (
+    !Array.isArray(value) ||
+    value.length > 20 ||
+    value.some(
+      (item) =>
+        typeof item !== "string" || !item.trim() || item.length > 200,
+    )
+  ) {
+    throw new CatalogueValidationError(`Invalid ${key} value.`);
+  }
+  return value.map((item) => item.trim());
+}
+
+function parseCatalogueItemMetadata(
+  value: unknown,
+): CatalogueItemMetadata | undefined {
+  if (value === undefined) return undefined;
+  if (!isRecord(value)) {
+    throw new CatalogueValidationError("Invalid catalogue metadata.");
+  }
+  if (value.kind === "radiograph") {
+    const code = readString(value, "code", 20).trim().toUpperCase();
+    if (!/^[A-Z0-9][A-Z0-9+./-]*$/.test(code)) {
+      throw new CatalogueValidationError("Invalid radiograph code.");
+    }
+    const defaultQuantity = readOptionalPositiveNumber(
+      value,
+      "defaultQuantity",
+    );
+    if (!defaultQuantity || !Number.isSafeInteger(defaultQuantity)) {
+      throw new CatalogueValidationError(
+        "Radiograph defaultQuantity must be a positive whole number.",
+      );
+    }
+    return { kind: "radiograph", code, defaultQuantity };
+  }
+  if (value.kind === "completed-care") {
+    const category = value.category;
+    const procedure = value.procedure;
+    if (
+      typeof category !== "string" ||
+      !(COMPLETED_CARE_CATEGORIES as readonly string[]).includes(category)
+    ) {
+      throw new CatalogueValidationError("Invalid completed-care category.");
+    }
+    const procedures: CompletedCareProcedure[] = [
+      "radiographs",
+      "fmp",
+      "recare-exam",
+      "scaling",
+      "polish",
+      "ohe",
+      "product-application",
+      "preventive-procedure",
+      "other",
+    ];
+    if (typeof procedure !== "string" || !procedures.includes(procedure as CompletedCareProcedure)) {
+      throw new CatalogueValidationError("Invalid completed-care procedure.");
+    }
+    const defaultQuantity = readOptionalPositiveNumber(
+      value,
+      "defaultQuantity",
+    );
+    const defaultProduct =
+      value.defaultProduct === undefined
+        ? undefined
+        : readString(value, "defaultProduct", 200).trim();
+    const defaultToothAreas = readOptionalStringArray(
+      value,
+      "defaultToothAreas",
+    );
+    return {
+      kind: "completed-care",
+      category: category as CompletedCareCategory,
+      procedure: procedure as CompletedCareProcedure,
+      ...(defaultQuantity === undefined ? {} : { defaultQuantity }),
+      ...(defaultProduct === undefined ? {} : { defaultProduct }),
+      ...(defaultToothAreas === undefined ? {} : { defaultToothAreas }),
+    };
+  }
+  if (value.kind === "polishing-product") {
+    return {
+      kind: "polishing-product",
+      productName: readString(value, "productName", 200).trim(),
+      flavour: readString(value, "flavour", 100).trim(),
+      containsFluoride: readBoolean(value, "containsFluoride"),
+    };
+  }
+  throw new CatalogueValidationError("Invalid catalogue metadata kind.");
+}
+
+export function isRadiographCatalogueMetadata(
+  metadata: CatalogueItemMetadata | undefined,
+): metadata is RadiographCatalogueMetadata {
+  return metadata?.kind === "radiograph";
+}
+
+export function isCompletedCareCatalogueMetadata(
+  metadata: CatalogueItemMetadata | undefined,
+): metadata is CompletedCareCatalogueMetadata {
+  return metadata?.kind === "completed-care";
+}
+
+export function isPolishingProductCatalogueMetadata(
+  metadata: CatalogueItemMetadata | undefined,
+): metadata is PolishingProductCatalogueMetadata {
+  return metadata?.kind === "polishing-product";
+}
+
 function parseUserItem(value: unknown): UserCatalogueItem {
   if (!isRecord(value)) {
     throw new CatalogueValidationError("Invalid user catalogue item.");
@@ -572,6 +873,9 @@ function parseUserItem(value: unknown): UserCatalogueItem {
     sortOrder: readSortOrder(value),
     createdAt: readTimestamp(value, "createdAt"),
     updatedAt: readTimestamp(value, "updatedAt"),
+    ...(value.metadata === undefined
+      ? {}
+      : { metadata: parseCatalogueItemMetadata(value.metadata) }),
   };
 }
 
@@ -579,7 +883,8 @@ function parseSeedPreference(value: unknown): SeedPreference {
   if (!isRecord(value)) {
     throw new CatalogueValidationError("Invalid seed preference.");
   }
-  const seedId = readIdentifier(value, "seedId");
+  const storedSeedId = readIdentifier(value, "seedId");
+  const seedId = legacyRadiographSeedAliases.get(storedSeedId) ?? storedSeedId;
   if (!seedsById.has(seedId)) {
     throw new CatalogueValidationError(`Unknown seed: ${seedId}`);
   }
@@ -598,6 +903,13 @@ function assertNoDuplicateStateRecords(
 ): void {
   const itemIds = new Set<string>();
   const labels = new Set<string>();
+  const radiographCodes = new Map(
+    getCatalogueDefinition("imaging.radiographs").seeds.flatMap((seed) =>
+      isRadiographCatalogueMetadata(seed.metadata)
+        ? [[seed.metadata.code, seed.label] as const]
+        : [],
+    ),
+  );
   for (const item of userItems) {
     if (itemIds.has(item.id) || seedsById.has(item.id)) {
       throw new CatalogueValidationError(
@@ -622,6 +934,18 @@ function assertNoDuplicateStateRecords(
       throw new CatalogueValidationError(
         `Duplicate starter value in ${item.catalogueKey}.`,
       );
+    }
+    if (
+      item.catalogueKey === "imaging.radiographs" &&
+      isRadiographCatalogueMetadata(item.metadata)
+    ) {
+      const existingLabel = radiographCodes.get(item.metadata.code);
+      if (existingLabel && !(matchingSeed && options.allowSeedDuplicates)) {
+        throw new CatalogueValidationError(
+          `Radiograph code ${item.metadata.code} is already used by ${existingLabel}.`,
+        );
+      }
+      if (!existingLabel) radiographCodes.set(item.metadata.code, item.label);
     }
     labels.add(labelKey);
   }
@@ -689,7 +1013,13 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
   }
 
   const userItems = value.userItems.map(parseUserItem);
-  const seedPreferences = value.seedPreferences.map(parseSeedPreference);
+  const seedPreferences = [
+    ...new Map(
+      value.seedPreferences
+        .map(parseSeedPreference)
+        .map((preference) => [preference.seedId, preference]),
+    ).values(),
+  ];
   assertNoDuplicateStateRecords(userItems, seedPreferences, {
     allowSeedDuplicates: true,
   });
@@ -757,6 +1087,7 @@ export function listCatalogueItems(
       hidden: preference?.hidden ?? false,
       favorite: preference?.favorite ?? false,
       sortOrder: preference?.sortOrder ?? index,
+      metadata: seed.metadata,
     };
   });
   const userItems = state.userItems
@@ -770,6 +1101,7 @@ export function listCatalogueItems(
         hidden: item.hidden,
         favorite: item.favorite,
         sortOrder: item.sortOrder,
+        metadata: item.metadata,
       }),
     );
 
@@ -795,6 +1127,33 @@ export function findEquivalentCatalogueItem(
   return listCatalogueItems(state, catalogueKey, {
     includeHidden: true,
   }).find((item) => normalizeCatalogueLabel(item.label) === normalized);
+}
+
+function assertCatalogueMetadataUnique(
+  state: StoredCatalogueStateV1,
+  catalogueKey: CatalogueKey,
+  metadata: CatalogueItemMetadata | undefined,
+  excludedItemId?: string,
+): void {
+  if (
+    catalogueKey !== "imaging.radiographs" ||
+    !isRadiographCatalogueMetadata(metadata)
+  ) {
+    return;
+  }
+  const duplicateCode = listCatalogueItems(state, catalogueKey, {
+    includeHidden: true,
+  }).find(
+    (item) =>
+      item.id !== excludedItemId &&
+      isRadiographCatalogueMetadata(item.metadata) &&
+      item.metadata.code === metadata.code,
+  );
+  if (duplicateCode) {
+    throw new CatalogueValidationError(
+      `Radiograph code ${metadata.code} is already used by ${duplicateCode.label}.`,
+    );
+  }
 }
 
 function updateSeedPreference(
@@ -839,17 +1198,40 @@ export function rememberCatalogueValue(
   state: StoredCatalogueStateV1,
   catalogueKey: CatalogueKey,
   value: string,
-  options: { id?: string; now?: Date } = {},
+  options: {
+    id?: string;
+    now?: Date;
+    metadata?: CatalogueItemMetadata;
+  } = {},
 ): RememberCatalogueValueResult {
   getCatalogueDefinition(catalogueKey);
   const label = validateCatalogueLabel(value);
+  const metadata = parseCatalogueItemMetadata(options.metadata);
   const existing = findEquivalentCatalogueItem(state, catalogueKey, label);
+  assertCatalogueMetadataUnique(
+    state,
+    catalogueKey,
+    metadata,
+    existing?.id,
+  );
   if (existing) {
-    if (!existing.hidden) {
-      return { state, status: "existing", item: existing };
+    let nextState = state;
+    let nextItem = existing;
+    if (metadata && existing.owner === "user") {
+      const updatedAt = (options.now ?? new Date()).toISOString();
+      nextState = {
+        ...nextState,
+        userItems: nextState.userItems.map((item) =>
+          item.id === existing.id ? { ...item, metadata, updatedAt } : item,
+        ),
+      };
+      nextItem = { ...nextItem, metadata };
     }
-    const nextState = setCatalogueItemHidden(
-      state,
+    if (!existing.hidden) {
+      return { state: nextState, status: "existing", item: nextItem };
+    }
+    nextState = setCatalogueItemHidden(
+      nextState,
       existing.id,
       existing.owner,
       false,
@@ -857,7 +1239,7 @@ export function rememberCatalogueValue(
     return {
       state: nextState,
       status: "reactivated",
-      item: { ...existing, hidden: false },
+      item: { ...nextItem, hidden: false },
     };
   }
 
@@ -878,6 +1260,7 @@ export function rememberCatalogueValue(
     }).length,
     createdAt: now,
     updatedAt: now,
+    ...(metadata ? { metadata } : {}),
   };
   return {
     state: { ...state, userItems: [...state.userItems, item] },
@@ -891,12 +1274,21 @@ export function updateUserCatalogueItem(
   itemId: string,
   labelValue: string,
   now = new Date(),
+  metadata?: CatalogueItemMetadata,
 ): StoredCatalogueStateV1 {
   const item = state.userItems.find((candidate) => candidate.id === itemId);
   if (!item) {
     throw new CatalogueValidationError("The catalogue item no longer exists.");
   }
   const label = validateCatalogueLabel(labelValue);
+  const validatedMetadata =
+    metadata === undefined ? undefined : parseCatalogueItemMetadata(metadata);
+  assertCatalogueMetadataUnique(
+    state,
+    item.catalogueKey,
+    validatedMetadata,
+    itemId,
+  );
   const duplicate = listCatalogueItems(state, item.catalogueKey, {
     includeHidden: true,
   }).find(
@@ -914,7 +1306,14 @@ export function updateUserCatalogueItem(
     ...state,
     userItems: state.userItems.map((candidate) =>
       candidate.id === itemId
-        ? { ...candidate, label, updatedAt: now.toISOString() }
+        ? {
+            ...candidate,
+            label,
+            updatedAt: now.toISOString(),
+            ...(validatedMetadata === undefined
+              ? {}
+              : { metadata: validatedMetadata }),
+          }
         : candidate,
     ),
   };

@@ -66,6 +66,8 @@ export interface RecareExamForm {
   structuredExtraoralFindings?: RecareExtraoralFinding[];
   tmjStatus: ExamStatus;
   tmjFindings: string;
+  lymphNodesStatus: ExamStatus;
+  lymphNodesFindings: string;
   masseterStatus: ExamStatus;
   masseterFindings: string;
   tmjLoadStatus: ExamStatus;
@@ -84,6 +86,7 @@ export interface RecareExamForm {
   overbitePercent: string;
   overbiteMm?: string;
   additionalOcclusalFindings?: RecareOcclusalFinding[];
+  listAdditionalOcclusalFindings: boolean;
   cpapStatus: DocumentationStatus;
   cpapUseStatus: DocumentationStatus;
   occlusalSplintStatus: DocumentationStatus;
@@ -91,6 +94,7 @@ export interface RecareExamForm {
   orthodonticHistoryStatus: DocumentationStatus;
   retainerStatus: RetainerStatus;
   removableDenturesStatus: DocumentationStatus;
+  removableDenturesComment: string;
   improvementRequest: string;
   additionalComments: string;
   teethStatus?: ExamStatus;
@@ -130,6 +134,8 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     structuredExtraoralFindings: [],
     tmjStatus: "not-assessed",
     tmjFindings: "",
+    lymphNodesStatus: "not-assessed",
+    lymphNodesFindings: "",
     masseterStatus: "not-assessed",
     masseterFindings: "",
     tmjLoadStatus: "not-assessed",
@@ -148,6 +154,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     overbitePercent: "",
     overbiteMm: "",
     additionalOcclusalFindings: [],
+    listAdditionalOcclusalFindings: false,
     cpapStatus: "not-documented",
     cpapUseStatus: "not-documented",
     occlusalSplintStatus: "not-documented",
@@ -155,6 +162,7 @@ export function createEmptyRecareExamForm(): RecareExamForm {
     orthodonticHistoryStatus: "not-documented",
     retainerStatus: "not-documented",
     removableDenturesStatus: "not-documented",
+    removableDenturesComment: "",
     improvementRequest: "",
     additionalComments: "",
     teethStatus: "not-assessed",

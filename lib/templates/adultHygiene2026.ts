@@ -17,6 +17,38 @@ import {
   createEmptyPeriodontalClassification,
   type PeriodontalClassification,
 } from "@/lib/templates/periodontalClassification";
+import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
+
+export {
+  standardTreatmentCompletedPreset,
+  type AdultHygieneTreatmentCompletedEntry,
+} from "@/lib/templates/adultHygieneTreatment";
+
+export function resolveOcclusalSplintState(
+  form: Pick<
+    AdultHygiene2026Form,
+    | "occlusalSplintStatus"
+    | "occlusalSplintUseStatus"
+    | "nightGuardStatus"
+    | "nightGuardUseStatus"
+  >,
+): {
+  status: DocumentationStatus;
+  useStatus: DocumentationStatus;
+} {
+  const canonicalStatus =
+    form.occlusalSplintStatus ?? "not-documented";
+  if (canonicalStatus !== "not-documented") {
+    return {
+      status: canonicalStatus,
+      useStatus: form.occlusalSplintUseStatus ?? "not-documented",
+    };
+  }
+  return {
+    status: form.nightGuardStatus ?? "not-documented",
+    useStatus: form.nightGuardUseStatus ?? "not-documented",
+  };
+}
 
 export const plaqueChoices = [
   "None",
@@ -157,19 +189,15 @@ export function orderTreatmentToothAreas(values: string[]) {
   return [...fixedValues, ...customValues];
 }
 
-export type AdultHygieneTreatmentCompletedEntry = {
-  id: string;
-  treatmentType: string;
-  toothAreas: string[];
-  applicationTime?: string;
-};
-
 export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
 
 export type AdultHygiene2026Output = "complete" | "hygiene" | "recare";
 
 export const standardOheStatement =
   "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
+
+export const standardHygieneGoal =
+  "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
 export const dyclonineRinseTreatment = "Dyclonine 1% rinse 5 ml";
 
@@ -180,25 +208,6 @@ export function isDyclonineRinseTreatment(value: string): boolean {
     .toLocaleLowerCase("en-CA");
   return normalized.includes("dyclonine") && normalized.includes("rinse");
 }
-
-export const standardTreatmentCompletedPreset = [
-  { treatmentType: "Dyclonine 1% rinse 5 ml", toothAreas: ["full mouth"]},
-  { treatmentType: "FMP", toothAreas: ["full mouth"] },
-  {
-    treatmentType: "3U scale (Cavitron and hand instrumentation)",
-    toothAreas: ["full mouth"],
-  },
-  {
-    treatmentType:
-      "1U polish - Selective polish of aesthetic zone as per patient's request",
-    toothAreas: [],
-  },
-  {
-    treatmentType: "FluoriMax 2.5% NaF Varnish application",
-    toothAreas: ["full mouth"],
-  },
-  { treatmentType: "OHE", toothAreas: [] },
-] as const;
 
 export interface AdultHygiene2026Form {
   patientId: string;
@@ -226,6 +235,8 @@ export interface AdultHygiene2026Form {
   structuredExtraoralFindings?: RecareExtraoralFinding[];
   tmjStatus: ExamStatus;
   tmjFindings: string;
+  lymphNodesStatus: ExamStatus;
+  lymphNodesFindings: string;
   masseterStatus: ExamStatus;
   masseterFindings: string;
   tmjLoadStatus: ExamStatus;
@@ -244,6 +255,7 @@ export interface AdultHygiene2026Form {
   overbitePercent: string;
   overbiteMm?: string;
   additionalOcclusalFindings?: RecareOcclusalFinding[];
+  listAdditionalOcclusalFindings: boolean;
   teethStatus?: ExamStatus;
   toothFindings?: RecareToothFinding[];
   additionalToothFindings?: string;
@@ -295,6 +307,7 @@ export interface AdultHygiene2026Form {
   orthodonticHistoryStatus: DocumentationStatus;
   retainerStatus: RetainerStatus;
   removableDenturesStatus: DocumentationStatus;
+  removableDenturesComment: string;
   improvementRequest: string;
   recareAdditionalComments: string;
   additionalNotes: string;
@@ -336,6 +349,8 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     structuredExtraoralFindings: [],
     tmjStatus: "not-assessed",
     tmjFindings: "",
+    lymphNodesStatus: "not-assessed",
+    lymphNodesFindings: "",
     masseterStatus: "not-assessed",
     masseterFindings: "",
     tmjLoadStatus: "not-assessed",
@@ -354,6 +369,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     overbitePercent: "",
     overbiteMm: "",
     additionalOcclusalFindings: [],
+    listAdditionalOcclusalFindings: false,
     teethStatus: "not-assessed",
     toothFindings: [],
     additionalToothFindings: "",
@@ -405,6 +421,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     orthodonticHistoryStatus: "not-documented",
     retainerStatus: "not-documented",
     removableDenturesStatus: "not-documented",
+    removableDenturesComment: "",
     improvementRequest: "",
     recareAdditionalComments: "",
     additionalNotes: "",

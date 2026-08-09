@@ -45,16 +45,33 @@ Older 2026 drafts are merged with the current empty encounter shape. Legacy
 hygiene recommendation fields continue to format when no coordinated plan has
 been entered.
 
-## Consolidated EOE/TMJ and OHE controls
+The shared **Partial/complete removable dentures** control exposes an optional
+patient-specific comment only when Yes is selected. The comment is appended to
+the affirmative note line when non-empty, remains hidden from output for No or
+Not documented, and restores if the clinician returns the status to Yes. Drafts
+saved before the comment field existed restore with an empty comment.
 
-The structured EOE card owns one **TMJ assessment** group. TMJ status and free
-text remain the accepted legacy fields, while **TMJ clicking** remains the
-accepted structured finding. Selecting clicking promotes TMJ to Findings.
+## Consolidated EOE/TMJ/lymph-node and OHE controls
+
+The structured EOE card owns coordinated **Temporomandibular assessment** and
+**Lymph nodes** groups without an additional intermediate section title. The
+Temporomandibular assessment contains TMJ status and free text, structured
+**TMJ clicking**, Masseter palpation, and TMJ loading. Selecting clicking
+promotes TMJ to Findings.
 Changing TMJ to WNL or Not assessed confirms before clearing TMJ text and the
 linked clicking finding. A restored draft that contains clicking with another
 TMJ status is not silently rewritten: the form identifies the conflict and
-offers explicit keep-clicking or remove-clicking actions. Masseter palpation,
-TMJ loading, and lymph-node findings remain independent.
+offers explicit keep-clicking or remove-clicking actions.
+
+The Lymph nodes group follows the same interaction. Its status and findings
+control owns the structured **Palpable** action, which continues to generate
+the established “palpable lymph nodes” note fragment with optional laterality,
+location, and swelling. Selecting Palpable promotes Lymph nodes to Findings;
+changing the status away from Findings confirms before clearing linked data.
+Drafts saved before the status fields existed retain the structured finding and
+offer explicit keep-or-remove resolution. Masseter palpation and TMJ loading
+retain independent statuses and generated lines within the shared
+Temporomandibular assessment fieldset.
 
 The 2021 and 2026 Oral Hygiene and Education sections share one coordinated
 education card. Standard OHE identifies the concepts it covers; while applied,
@@ -68,6 +85,43 @@ covered duplicate selections.
 This consolidation changes presentation and conflict handling only. It does
 not add a draft migration, rename persisted properties, or change the summary
 renderers.
+
+## Completed-care composition
+
+The 2026 Records section treats its radiograph values as radiographs taken
+today. Bitewings, periapicals, and panoramic images use compact quantity
+controls with defaults of 4 BW, 3 PA, and 1 PAN. Other radiograph text remains
+available. Changing these values maintains source-linked entries at the start
+of Treatment completed today; linked entries can only be removed by changing
+the Records source.
+
+An explicit **Apply recare exam** action adds one idempotent **Dentist Recare
+Exam** entry after linked radiographs. It records the completed service but does
+not infer normal EOE/IOE findings. The Recare-only output continues to omit the
+Treatment completed today block; Complete and Hygiene outputs include it.
+
+Common adult hygiene procedures use structured cards in both the 2021 and 2026
+forms:
+
+- Scaling has an editable quantity in 0.5U steps, default 3U, independent Hand
+  and Power instrumentation toggles, and a conditional editable power device
+  with Cavitron as the standard default.
+- Selective polish has an editable quantity, default 1U, and defaults to
+  EnamelPro Strawberry with Fluoride.
+- OHE previews a concise recap derived from documented education. The recap
+  stays synchronized until the clinician customizes it; **Reset from
+  education** restores derived behavior.
+
+**Apply standard treatment** retains Dyclonine 1% rinse and FMP, then adds the
+structured scaling, polish, OHE, and FluoriMax varnish procedures in clinical
+sequence. Common procedures can also be added individually. The free-text
+catalogue remains available for other treatment, but quantity-specific scaling
+and polish starters are removed because their quantities now belong to the
+procedure cards.
+
+Structured properties are optional additions to the accepted treatment row.
+Legacy rows and drafts without them retain their exact existing output and are
+not silently converted.
 
 ## Decision support
 

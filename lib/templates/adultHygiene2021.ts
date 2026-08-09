@@ -11,6 +11,12 @@ import {
   createEmptyPeriodontalClassification,
   type PeriodontalClassification,
 } from "@/lib/templates/periodontalClassification";
+import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
+
+export {
+  standardTreatmentCompletedPreset,
+  type AdultHygieneTreatmentCompletedEntry,
+} from "@/lib/templates/adultHygieneTreatment";
 
 export const plaqueChoices = [
   "None",
@@ -151,17 +157,13 @@ export function orderTreatmentToothAreas(values: string[]) {
   return [...fixedValues, ...customValues];
 }
 
-export type AdultHygieneTreatmentCompletedEntry = {
-  id: string;
-  treatmentType: string;
-  toothAreas: string[];
-  applicationTime?: string;
-};
-
 export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
 
 export const standardOheStatement =
   "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
+
+export const standardHygieneGoal =
+  "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
 export const dyclonineRinseTreatment = "Dyclonine 1% rinse 5 ml";
 
@@ -172,25 +174,6 @@ export function isDyclonineRinseTreatment(value: string): boolean {
     .toLocaleLowerCase("en-CA");
   return normalized.includes("dyclonine") && normalized.includes("rinse");
 }
-
-export const standardTreatmentCompletedPreset = [
-  { treatmentType: "Dyclonine 1% rinse 5 ml", toothAreas: ["full mouth"]},
-  { treatmentType: "FMP", toothAreas: ["full mouth"] },
-  {
-    treatmentType: "3U scale (Cavitron and hand instrumentation)",
-    toothAreas: ["full mouth"],
-  },
-  {
-    treatmentType:
-      "1U polish - Selective polish of aesthetic zone as per patient's request",
-    toothAreas: [],
-  },
-  {
-    treatmentType: "FluoriMax 2.5% NaF Varnish application",
-    toothAreas: ["full mouth"],
-  },
-  { treatmentType: "OHE", toothAreas: [] },
-] as const;
 
 export interface AdultHygiene2021Form {
   patientId: string;
