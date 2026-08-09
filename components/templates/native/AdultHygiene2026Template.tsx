@@ -55,6 +55,7 @@ import {
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
   resolveOcclusalSplintState,
+  standardHygieneGoal,
   standardOheStatement,
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2026";
@@ -4341,6 +4342,7 @@ export function AdultHygiene2026Template({
             <OheEducationControl
               value={form}
               standardStatement={standardOheStatement}
+              standardGoal={standardHygieneGoal}
               topicChoices={oheTopicChoices}
               topicChoiceGroups={oheTopicChoiceGroups}
               onChange={(key, value) => {

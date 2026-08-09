@@ -33,6 +33,7 @@ const standardIncludedConcepts = [
   "Bass brushing demonstration",
   "C-shape flossing demonstration",
   "Prevident or Opti-Rinse benefits",
+  "Flossing and Bass-brushing goal",
 ] as const;
 
 const buttonClass =
@@ -96,12 +97,14 @@ function TextareaField({
 export function OheEducationControl<TValue extends OheEducationValue>({
   value,
   standardStatement,
+  standardGoal,
   topicChoices,
   topicChoiceGroups,
   onChange,
 }: {
   value: TValue;
   standardStatement: string;
+  standardGoal: string;
   topicChoices: readonly string[];
   topicChoiceGroups: readonly FixedChoiceMultiComboboxGroup[];
   onChange: <TKey extends keyof OheEducationValue>(
@@ -148,6 +151,20 @@ export function OheEducationControl<TValue extends OheEducationValue>({
     );
   }
 
+  function applyStandardOhe() {
+    onChange("standardOheStatementApplies", true);
+    if (!value.hygieneGoal.trim()) {
+      onChange("hygieneGoal", standardGoal);
+    }
+  }
+
+  function clearStandardOhe() {
+    onChange("standardOheStatementApplies", false);
+    if (value.hygieneGoal === standardGoal) {
+      onChange("hygieneGoal", "");
+    }
+  }
+
   return (
     <fieldset
       className="space-y-5 rounded-xl border border-slate-200 p-4 dark:border-slate-700"
@@ -169,7 +186,7 @@ export function OheEducationControl<TValue extends OheEducationValue>({
             type="button"
             className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
             disabled={value.standardOheStatementApplies}
-            onClick={() => onChange("standardOheStatementApplies", true)}
+            onClick={applyStandardOhe}
           >
             {value.standardOheStatementApplies
               ? "Standard OHE applied"
@@ -179,7 +196,7 @@ export function OheEducationControl<TValue extends OheEducationValue>({
             <button
               type="button"
               className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
-              onClick={() => onChange("standardOheStatementApplies", false)}
+              onClick={clearStandardOhe}
             >
               Clear standard OHE
             </button>

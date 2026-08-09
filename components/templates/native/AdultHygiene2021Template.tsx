@@ -41,6 +41,7 @@ import {
   isDyclonineRinseTreatment,
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
+  standardHygieneGoal,
   standardOheStatement,
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
@@ -3462,6 +3463,7 @@ export function AdultHygiene2021Template({
             <OheEducationControl
               value={form}
               standardStatement={standardOheStatement}
+              standardGoal={standardHygieneGoal}
               topicChoices={oheTopicChoices}
               topicChoiceGroups={oheTopicChoiceGroups}
               onChange={(key, value) => {

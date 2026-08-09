@@ -532,9 +532,21 @@ test("2026 Adult Hygiene coordinates standard and additional OHE controls", asyn
     "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY",
   );
 
+  const automaticGoal =
+    "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
+  const hygieneGoal = education.getByRole("textbox", {
+    name: "Hygiene goal",
+    exact: true,
+  });
+  await expect(hygieneGoal).toHaveValue("");
+
   await education
     .getByRole("button", { name: "Apply standard OHE", exact: true })
     .click();
+  await expect(hygieneGoal).toHaveValue(automaticGoal);
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    `Hygiene goal: ${automaticGoal}`,
+  );
   await expect(
     education.getByText("Included in Standard OHE", { exact: true }),
   ).toBeVisible();
@@ -561,6 +573,7 @@ test("2026 Adult Hygiene coordinates standard and additional OHE controls", asyn
   await education
     .getByRole("button", { name: "Clear standard OHE", exact: true })
     .click();
+  await expect(hygieneGoal).toHaveValue("");
   await education
     .getByRole("button", {
       name: "Additional OHE topics reviewed",
@@ -575,6 +588,23 @@ test("2026 Adult Hygiene coordinates standard and additional OHE controls", asyn
       })
       .getByText("Bass brushing", { exact: true }),
   ).toBeVisible();
+
+  await page
+    .getByRole("dialog", {
+      name: "Additional OHE topics reviewed options",
+      exact: true,
+    })
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+  await hygieneGoal.fill("Customized hygiene goal.");
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(hygieneGoal).toHaveValue("Customized hygiene goal.");
+  await education
+    .getByRole("button", { name: "Clear standard OHE", exact: true })
+    .click();
+  await expect(hygieneGoal).toHaveValue("Customized hygiene goal.");
 });
 
 test("2026 Adult Hygiene links radiograph quantities and a recare exam to completed care", async ({
