@@ -45,6 +45,30 @@ Older 2026 drafts are merged with the current empty encounter shape. Legacy
 hygiene recommendation fields continue to format when no coordinated plan has
 been entered.
 
+## Consolidated EOE/TMJ and OHE controls
+
+The structured EOE card owns one **TMJ assessment** group. TMJ status and free
+text remain the accepted legacy fields, while **TMJ clicking** remains the
+accepted structured finding. Selecting clicking promotes TMJ to Findings.
+Changing TMJ to WNL or Not assessed confirms before clearing TMJ text and the
+linked clicking finding. A restored draft that contains clicking with another
+TMJ status is not silently rewritten: the form identifies the conflict and
+offers explicit keep-clicking or remove-clicking actions. Masseter palpation,
+TMJ loading, and lymph-node findings remain independent.
+
+The 2021 and 2026 Oral Hygiene and Education sections share one coordinated
+education card. Standard OHE identifies the concepts it covers; while applied,
+those concepts are omitted from new additional-topic choices. Brushing and
+flossing frequency coaching, other education, aids/products, notes, and the
+hygiene goal remain separately documentable. Existing drafts with both
+Standard OHE and separately selected covered education keep every stored value
+and the existing note wording until the clinician explicitly removes the
+covered duplicate selections.
+
+This consolidation changes presentation and conflict handling only. It does
+not add a draft migration, rename persisted properties, or change the summary
+renderers.
+
 ## Decision support
 
 Decision support is derived from the current encounter without changing a

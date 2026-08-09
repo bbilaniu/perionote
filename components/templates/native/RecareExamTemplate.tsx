@@ -933,6 +933,182 @@ function ChoiceToggleButtons({
   );
 }
 
+type TmjAssessmentPatch = {
+  tmjStatus?: ExamStatus;
+  tmjFindings?: string;
+  structuredExtraoralFindings?: RecareExtraoralFinding[];
+};
+
+export function TmjAssessmentControl({
+  idPrefix = "recare",
+  status,
+  findings,
+  structuredExtraoralFindings,
+  onChange,
+}: {
+  idPrefix?: string;
+  status: ExamStatus;
+  findings: string;
+  structuredExtraoralFindings: RecareExtraoralFinding[];
+  onChange: (patch: TmjAssessmentPatch) => void;
+}) {
+  const clickingOptionId = "eoe.tmj_clicking";
+  const clicking = structuredExtraoralFindings.find(
+    (finding) => finding.optionId === clickingOptionId,
+  );
+  const clickingOption = recareExtraoralOptions.find(
+    (option) => option.id === clickingOptionId,
+  )!;
+  const hasTmjFindings = Boolean(findings.trim()) || Boolean(clicking);
+  const hasLegacyConflict = Boolean(clicking) && status !== "findings";
+
+  function withoutClicking() {
+    return structuredExtraoralFindings.filter(
+      (finding) => finding.optionId !== clickingOptionId,
+    );
+  }
+
+  function changeStatus(nextStatus: ExamStatus) {
+    if (
+      nextStatus !== "findings" &&
+      hasTmjFindings &&
+      !window.confirm(
+        `Set TMJ to ${nextStatus === "wnl" ? "WNL" : "Not assessed"} and clear the documented TMJ findings?`,
+      )
+    ) {
+      return;
+    }
+    onChange({
+      tmjStatus: nextStatus,
+      ...(nextStatus !== "findings"
+        ? {
+            tmjFindings: "",
+            structuredExtraoralFindings: withoutClicking(),
+          }
+        : {}),
+    });
+  }
+
+  function toggleClicking() {
+    onChange(
+      clicking
+        ? { structuredExtraoralFindings: withoutClicking() }
+        : {
+            tmjStatus: "findings",
+            structuredExtraoralFindings: [
+              ...withoutClicking(),
+              createRecareExtraoralFinding(clickingOptionId),
+            ],
+          },
+    );
+  }
+
+  function patchClicking(changes: Partial<RecareExtraoralFinding>) {
+    if (!clicking) return;
+    onChange({
+      tmjStatus: "findings",
+      structuredExtraoralFindings: structuredExtraoralFindings.map((finding) =>
+        finding.optionId === clickingOptionId
+          ? { ...finding, ...changes }
+          : finding,
+      ),
+    });
+  }
+
+  return (
+    <fieldset
+      className="space-y-3 rounded-xl border border-slate-200 p-3 dark:border-slate-700"
+      aria-label="TMJ assessment"
+    >
+      <legend className="px-1 font-medium">TMJ assessment</legend>
+      {hasLegacyConflict ? (
+        <div
+          className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+          role="alert"
+        >
+          <p>
+            TMJ clicking is documented in this legacy draft while the TMJ
+            status is not Findings. Choose which value to keep.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`${buttonClass} bg-amber-700 text-white hover:bg-amber-800`}
+              onClick={() => onChange({ tmjStatus: "findings" })}
+            >
+              Keep clicking and use Findings
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border border-amber-400 hover:bg-amber-100 dark:border-amber-700 dark:hover:bg-amber-900/50`}
+              onClick={() =>
+                onChange({ structuredExtraoralFindings: withoutClicking() })
+              }
+            >
+              Remove clicking
+            </button>
+          </div>
+        </div>
+      ) : null}
+      <ExamFinding
+        id={`${idPrefix}-tmj`}
+        label="TMJ"
+        status={status}
+        findings={findings}
+        onStatusChange={changeStatus}
+        onFindingsChange={(tmjFindings) =>
+          onChange({ tmjStatus: "findings", tmjFindings })
+        }
+      />
+      <div
+        className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700"
+        role="group"
+        aria-label="TMJ clicking"
+      >
+        <button
+          type="button"
+          aria-pressed={Boolean(clicking)}
+          className={`${buttonClass} w-full justify-start sm:w-auto ${
+            clicking
+              ? "bg-sky-700 text-white hover:bg-sky-800"
+              : "border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          }`}
+          onClick={toggleClicking}
+        >
+          TMJ clicking
+        </button>
+        {clicking ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            <ChoiceToggleButtons
+              label="Laterality"
+              options={extraoralSideOptions}
+              values={extraoralLateralityToSides(clicking.laterality ?? "")}
+              onChange={(sides) =>
+                patchClicking({
+                  laterality: extraoralSidesToLaterality(sides),
+                })
+              }
+            />
+            <ChoiceToggleButtons
+              label="Status"
+              options={clickingOption.statusOptions}
+              values={clicking.statuses ?? []}
+              onChange={(statuses) => patchClicking({ statuses })}
+              singleSelect
+            />
+            <ChoiceToggleButtons
+              label="On open / close"
+              options={clickingOption.phaseOptions}
+              values={clicking.phases ?? []}
+              onChange={(phases) => patchClicking({ phases })}
+            />
+          </div>
+        ) : null}
+      </div>
+    </fieldset>
+  );
+}
+
 function recareIntraoralChoiceGroups(
   structure: RecareIntraoralStructure,
 ): FixedChoiceMultiComboboxGroup[] {
@@ -959,6 +1135,7 @@ export function StructuredExtraoralObservations({
   onClear,
   clearDisabled,
   onChange,
+  linkedStatusByOptionId = {},
   children,
 }: {
   idPrefix?: string;
@@ -969,14 +1146,19 @@ export function StructuredExtraoralObservations({
   onClear: () => void;
   clearDisabled: boolean;
   onChange: (values: RecareExtraoralFinding[]) => void;
+  linkedStatusByOptionId?: Partial<Record<string, ExamStatus>>;
   children: ReactNode;
 }) {
   const additionalAssessedCount = additionalStatuses.filter(
     (status) => status !== "not-assessed",
   ).length;
+  const linkedFindingDuplicates = values.filter(
+    (finding) => linkedStatusByOptionId[finding.optionId] === "findings",
+  ).length;
   const documentedFindingCount =
     additionalStatuses.filter((status) => status === "findings").length +
-    values.length;
+    values.length -
+    linkedFindingDuplicates;
   const summary = documentedFindingCount
     ? `${documentedFindingCount} ${
         documentedFindingCount === 1 ? "finding" : "findings"
@@ -1082,9 +1264,11 @@ export function StructuredExtraoralObservations({
           </div>
 
           <div className="space-y-3 border-t border-slate-200 pt-3 dark:border-slate-700">
-            <h3 className="font-medium">EOE findings</h3>
+            <h3 className="font-medium">Other EOE findings</h3>
             <div className="grid gap-3 md:grid-cols-2">
-              {recareExtraoralOptions.map((option) => {
+              {recareExtraoralOptions
+                .filter((option) => option.id !== "eoe.tmj_clicking")
+                .map((option) => {
                 const selected = values.find(
                   (value) => value.optionId === option.id,
                 );
@@ -1166,7 +1350,7 @@ export function StructuredExtraoralObservations({
                     ) : null}
                   </div>
                 );
-              })}
+                })}
             </div>
           </div>
           <button
@@ -2236,16 +2420,27 @@ export function RecareExamTemplate({
                 updateField("structuredExtraoralFindings", values);
                 if (values.length) updateField("extraoralStatus", "findings");
               }}
+              linkedStatusByOptionId={{
+                "eoe.tmj_clicking": form.tmjStatus,
+              }}
             >
-              <ExamFinding
-                id="recare-tmj"
-                label="TMJ"
+              <TmjAssessmentControl
+                idPrefix="recare"
                 status={form.tmjStatus}
                 findings={form.tmjFindings}
-                onStatusChange={(value) => updateField("tmjStatus", value)}
-                onFindingsChange={(value) =>
-                  updateField("tmjFindings", value)
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
                 }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
               />
               <ExamFinding
                 id="recare-masseter"

@@ -159,6 +159,37 @@ describe("2026 Adult Hygiene independence", () => {
     ).toBe(false);
   });
 
+  it("preserves legacy OHE fields and note wording in both hygiene templates", () => {
+    const legacyOhe = {
+      homeCareInstructionReviewed: true,
+      ohiAidsReviewed: ["Interdental brush"],
+      diseaseProcessReviewed: true,
+      standardOheStatementApplies: true,
+      oheTopicsReviewed: [
+        "Bass brushing",
+        "Sulcabrush and interdental brush technique",
+      ],
+    };
+    const expected = `Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
+OH Aids Reviewed/Recommended: Interdental brush
+REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
+OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
+
+    expect(
+      buildAdultHygiene2021Summary({
+        ...createEmptyAdultHygiene2021Form(),
+        ...legacyOhe,
+      }),
+    ).toContain(expected);
+    expect(
+      buildAdultHygiene2026Summary({
+        ...createEmptyAdultHygiene2026Form(),
+        ...legacyOhe,
+      }),
+    ).toContain(expected);
+  });
+
   it("uses independent model, fixture, summary, component, and draft identities", () => {
     const originalForm = createEmptyAdultHygiene2021Form();
     const copiedForm = createEmptyAdultHygiene2026Form();

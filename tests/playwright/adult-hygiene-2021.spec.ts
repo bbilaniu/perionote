@@ -16,7 +16,7 @@ test("Adult Hygiene pilot pill matches the amber pilot notice", async ({
 }) => {
   await page.goto("/templates/clinic");
   const pilotPills = page.getByText("Interactive · pilot", { exact: true });
-  await expect(pilotPills).toHaveCount(2);
+  await expect(pilotPills).toHaveCount(3);
   await expect(pilotPills.first()).toHaveClass(/bg-amber-100/);
   await expect(pilotPills.first()).toHaveClass(/text-amber-900/);
 });
@@ -800,7 +800,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await expect(customFindings).toBeVisible();
   await customFindings.fill("Custom gingival observation");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description:\n  - Color: coral pink\.[\s\S]*  - Position \/ Size: no recession\.\n  Observations: Custom gingival observation\./
+    /Gingival Description:\n  - Color: coral pink \(extent: generalized\)\.[\s\S]*  - Position \/ Size: no recession \(extent: generalized\)\.\n  Observations: Custom gingival observation\./
   );
 });
 
@@ -1474,6 +1474,79 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
   );
 });
 
+test("Adult Hygiene preserves overlapping legacy OHE until explicit cleanup", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const education = page.getByRole("group", {
+    name: "Education provided today",
+    exact: true,
+  });
+  await education
+    .getByRole("checkbox", {
+      name: "Disease process reviewed with patient today",
+      exact: true,
+    })
+    .check();
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  const topics = page.getByRole("dialog", {
+    name: "Additional OHE topics reviewed options",
+    exact: true,
+  });
+  await topics.getByText("Bass brushing", { exact: true }).click();
+  await topics
+    .getByText("Sulcabrush and interdental brush technique", { exact: true })
+    .click();
+  await topics.getByRole("button", { name: "Done", exact: true }).click();
+
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(
+    education.getByText("Included in Standard OHE", { exact: true }),
+  ).toBeVisible();
+  const compatibilityAlert = education.getByRole("alert");
+  await expect(compatibilityAlert).toContainText(
+    "preserved for compatibility",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /REVIEWED DISEASE PROCESS WITH PATIENT TODAY[\s\S]*Patient's diagnoses and risk factors were explained to them\.[\s\S]*OHE: Bass brushing; Sulcabrush and interdental brush technique\./,
+  );
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await compatibilityAlert
+    .getByRole("button", { name: "Remove covered selections", exact: true })
+    .click();
+  await expect(compatibilityAlert).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /REVIEWED DISEASE PROCESS|Bass brushing/,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient's diagnoses and risk factors were explained to them\.[\s\S]*OHE: Sulcabrush and interdental brush technique\./,
+  );
+
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog", {
+        name: "Additional OHE topics reviewed options",
+        exact: true,
+      })
+      .getByText("Bass brushing", { exact: true }),
+  ).toHaveCount(0);
+});
+
 test("Adult Hygiene catalogue values and encounter recovery draft persist independently", async ({
   page,
 }) => {
@@ -2004,11 +2077,19 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
 
   await expect(rblExtent).toContainText("Middle third or beyond");
   await expect(page.getByText(/Stage III; Grade B/)).toBeVisible();
-  await page.getByText("Why this was suggested", { exact: true }).click();
+  const classification = page
+    .getByRole("heading", {
+      name: "Periodontitis classification",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  await classification
+    .getByText("Why this was suggested", { exact: true })
+    .click();
   await expect(
-    page.getByText(
+    classification.getByText(
       /radiographic bone loss \(RBL\) extends to the middle third of the root or beyond/
-    )
+    ),
   ).toBeVisible();
 });
 

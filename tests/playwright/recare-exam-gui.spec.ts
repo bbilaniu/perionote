@@ -1,5 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { CATALOGUE_STORAGE_KEY } from "@/lib/catalogues/catalogue";
+import { createRecareExtraoralFinding } from "@/lib/templates/extraoralObservationsCatalog";
+import {
+  interactiveDraftStorageKey,
+  interactiveDraftTabStorageKey,
+} from "@/lib/templates/localDrafts";
+import { createEmptyRecareExamForm } from "@/lib/templates/recareExam";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 
@@ -565,6 +571,12 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
     }),
   ).toBeVisible();
   await tmjClickingButton.click();
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "TMJ",
+      exact: true,
+    }),
+  ).toHaveAttribute("data-value", "findings");
 
   const clicking = structuredExtraoral.getByRole("group", {
     name: "TMJ clicking",
@@ -601,6 +613,132 @@ test("Recare Exam groups the extraoral clinical exam in structured observations"
       exact: true,
     }),
   ).toHaveAttribute("aria-pressed", "true");
+});
+
+test("Recare Exam confirms before a normal TMJ status clears linked clicking", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  await structuredExtraoral
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+
+  const tmjStatus = structuredExtraoral.getByRole("button", {
+    name: "TMJ",
+    exact: true,
+  });
+  const tmjClicking = structuredExtraoral.getByRole("button", {
+    name: "TMJ clicking",
+    exact: true,
+  });
+  await tmjClicking.click();
+  await expect(tmjStatus).toHaveAttribute("data-value", "findings");
+  await expect(tmjClicking).toHaveAttribute("aria-pressed", "true");
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Set TMJ to WNL and clear the documented TMJ findings?",
+    );
+    await dialog.dismiss();
+  });
+  await tmjStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(tmjStatus).toHaveAttribute("data-value", "findings");
+  await expect(tmjClicking).toHaveAttribute("aria-pressed", "true");
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await tmjStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(tmjStatus).toHaveAttribute("data-value", "wnl");
+  await expect(tmjClicking).toHaveAttribute("aria-pressed", "false");
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /TMJ clicking/,
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(/c\) TMJ: WNL\./);
+});
+
+test("Recare Exam resolves legacy TMJ status and clicking conflicts explicitly", async ({
+  page,
+}) => {
+  const templateId = "recare-exam";
+  const draftId = "legacy-tmj-conflict";
+  const marker = "legacy-tmj-conflict-tab";
+  const now = new Date().toISOString();
+  const draft = {
+    kind: "hygienenote.interactive-draft",
+    schemaVersion: 1,
+    templateId,
+    draftId,
+    savedAt: now,
+    startedAt: now,
+    form: {
+      ...createEmptyRecareExamForm(),
+      patientId: "LEGACY-TMJ",
+      extraoralStatus: "findings",
+      tmjStatus: "wnl",
+      structuredExtraoralFindings: [
+        createRecareExtraoralFinding("eoe.tmj_clicking"),
+      ],
+    },
+  };
+  await page.addInitScript(
+    ({ draft, draftId, marker, markerKey, storageKey, tabKey }) => {
+      window.name = `hygienenote-interactive-draft-tab-v1:${marker}`;
+      window.sessionStorage.setItem(tabKey, draftId);
+      window.sessionStorage.setItem(markerKey, marker);
+      window.localStorage.setItem(storageKey, JSON.stringify(draft));
+    },
+    {
+      draft,
+      draftId,
+      marker,
+      markerKey:
+        "hygienenote.interactive-draft.tab-marker.v1.recare-exam",
+      storageKey: interactiveDraftStorageKey(templateId, draftId),
+      tabKey: interactiveDraftTabStorageKey(templateId),
+    },
+  );
+
+  await page.goto(recareExamUrl);
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  const conflict = structuredExtraoral.getByRole("alert");
+  await expect(conflict).toContainText(
+    "TMJ clicking is documented in this legacy draft",
+  );
+  await conflict
+    .getByRole("button", {
+      name: "Keep clicking and use Findings",
+      exact: true,
+    })
+    .click();
+  await expect(conflict).toHaveCount(0);
+  await expect(
+    structuredExtraoral.getByRole("button", { name: "TMJ", exact: true }),
+  ).toHaveAttribute("data-value", "findings");
+  await expect(page.locator("#recare-summary")).toHaveValue(/TMJ clicking/);
+
+  await page.reload();
+  const restoredConflict = page
+    .getByRole("group", {
+      name: "Structured extraoral observations",
+      exact: true,
+    })
+    .getByRole("alert");
+  await restoredConflict
+    .getByRole("button", { name: "Remove clicking", exact: true })
+    .click();
+  await expect(restoredConflict).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /TMJ clicking/,
+  );
 });
 
 test("Recare Exam separates Occlusion & Habits from Clinical Exam", async ({

@@ -25,6 +25,7 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   ExamFinding,
@@ -32,6 +33,7 @@ import {
   StructuredExtraoralObservations,
   StructuredIntraoralFindings,
   TeethAssessment,
+  TmjAssessmentControl,
   TreatmentEntryList,
 } from "@/components/templates/native/RecareExamTemplate";
 import {
@@ -3352,10 +3354,6 @@ export function AdultHygiene2026Template({
     };
   }
 
-  function applyStandardOhe() {
-    updateField("standardOheStatementApplies", true);
-  }
-
   function applyStandardTreatment() {
     const entryKey = (entry: {
       treatmentType: string;
@@ -3730,14 +3728,27 @@ export function AdultHygiene2026Template({
                 updateField("structuredExtraoralFindings", values);
                 if (values.length) updateField("extraoralStatus", "findings");
               }}
+              linkedStatusByOptionId={{
+                "eoe.tmj_clicking": form.tmjStatus,
+              }}
             >
-              <ExamFinding
-                id="adult-hygiene-tmj"
-                label="TMJ"
+              <TmjAssessmentControl
+                idPrefix="adult-hygiene"
                 status={form.tmjStatus}
                 findings={form.tmjFindings}
-                onStatusChange={(value) => updateField("tmjStatus", value)}
-                onFindingsChange={(value) => updateField("tmjFindings", value)}
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
+                }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
               />
               <ExamFinding
                 id="adult-hygiene-masseter"
@@ -4246,83 +4257,12 @@ export function AdultHygiene2026Template({
                 placeholder="Select or enter a brushing frequency"
               />
             </div>
-            <CheckboxField
-              id="adult-hygiene-home-care-reviewed"
-              label="Standard home-care instruction reviewed"
-              checked={form.homeCareInstructionReviewed}
-              onChange={(value) =>
-                updateField("homeCareInstructionReviewed", value)
-              }
-            />
-            <CatalogueMultiCombobox
-              id="adult-hygiene-ohi-aids"
-              label="OH aids reviewed/recommended"
-              catalogueKey="oral-hygiene.aids-reviewed"
-              values={form.ohiAidsReviewed}
-              onChange={(value) => updateField("ohiAidsReviewed", value)}
-              roomySelectionActions
-            />
-            <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-              <div>
-                <h3 className="font-semibold">Standard OHE</h3>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  {standardOheStatement}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
-                  disabled={form.standardOheStatementApplies}
-                  onClick={applyStandardOhe}
-                >
-                  {form.standardOheStatementApplies
-                    ? "Standard OHE applied"
-                    : "Apply standard OHE"}
-                </button>
-                {form.standardOheStatementApplies ? (
-                  <button
-                    type="button"
-                    className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
-                    onClick={() =>
-                      updateField("standardOheStatementApplies", false)
-                    }
-                  >
-                    Clear standard OHE
-                  </button>
-                ) : null}
-              </div>
-            </div>
-            <CheckboxField
-              id="adult-hygiene-disease-process-reviewed"
-              label="Disease process reviewed with patient today"
-              checked={form.diseaseProcessReviewed}
-              onChange={(value) => updateField("diseaseProcessReviewed", value)}
-            />
-            <FixedChoiceMultiCombobox
-              id="adult-hygiene-ohe-topics"
-              label="Additional OHE topics reviewed"
-              choices={oheTopicChoices}
-              choiceGroups={oheTopicChoiceGroups}
-              values={form.oheTopicsReviewed}
-              onChange={(values) => updateField("oheTopicsReviewed", values)}
-              customPlaceholder="Search OHE topics"
-              customHelpText=""
-              showSelectedChips={false}
-              allowCustomValues={false}
-            />
-            <TextareaField
-              id="adult-hygiene-ohe-notes"
-              label="OHE notes"
-              value={form.oheNotes}
-              onChange={(value) => updateField("oheNotes", value)}
-              placeholder="Optional OHE details discussed today"
-            />
-            <TextareaField
-              id="adult-hygiene-goal"
-              label="Hygiene goal"
-              value={form.hygieneGoal}
-              onChange={(value) => updateField("hygieneGoal", value)}
+            <OheEducationControl
+              value={form}
+              standardStatement={standardOheStatement}
+              topicChoices={oheTopicChoices}
+              topicChoiceGroups={oheTopicChoiceGroups}
+              onChange={(key, value) => updateField(key, value)}
             />
           </Section>
 

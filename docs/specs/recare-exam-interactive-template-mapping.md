@@ -295,6 +295,13 @@ The pilot will not impose undocumented clinical minimums, maximums, or decimal
 precision on overjet or overbite. Basic numeric parsing may prevent nonnumeric
 output, but clinical ranges require a sourced decision.
 
+TMJ status, free text, and structured TMJ clicking are presented in one TMJ
+assessment group. Selecting clicking sets TMJ to Findings. Changing TMJ to WNL
+or Not assessed confirms before clearing its free text and linked clicking.
+Legacy drafts that contain clicking with another TMJ status expose explicit
+keep-clicking or remove-clicking actions rather than being rewritten during
+restore. Persisted fields and generated output remain unchanged.
+
 Masseter palpation and TMJ load testing remain separate controls. The source's
 skeletal-occlusion `N/A` value is an explicit action and is not preselected.
 Right and left molar occlusion likewise have independent explicit N/A actions;

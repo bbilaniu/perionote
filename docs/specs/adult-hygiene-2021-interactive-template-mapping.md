@@ -543,7 +543,7 @@ JSON import/export.
 | ID   | Source                                                                                  | Proposed control                                                                                                                                     | Classification                                                                         | Generated output                                                                                                                      |
 | ---- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | A23  | `Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]`                              | Catalogue-backed editable text: **Oral hygiene compliance**, plus independent **Oral hygiene compliance comment**                                    | Current value and comment: `patient-specific`; reusable compliance values: `catalogue` | Separate `Oral hygiene compliance: {selected or entered text}` and `Oral hygiene compliance comment: {comment}` lines when documented |
-| A24  | Fixed home-care instruction sentence                                                    | Unchecked checkbox: **Standard home-care instruction reviewed**                                                                                      | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
+| A24  | Fixed home-care instruction sentence                                                    | Unchecked checkbox: **Reviewed brushing and flossing frequency recommendations**                                                                     | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
 | A25  | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]`          | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended**                                                                      | Current selections: `patient-specific`; reusable options: `catalogue`                  | `OH Aids Reviewed/Recommended: {selected and entered values}`                                                                         |
 | A26  | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY`                                           | Unchecked checkbox: **Disease process reviewed with patient today**                                                                                  | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
 | A26a | Additive OHE extension                                                                  | Grouped fixed multi-value control: **Additional OHE topics reviewed**                                                                                | `appCore`; no value selected by default                                                | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed                 |
@@ -573,6 +573,15 @@ therefore remain unchanged unless a user explicitly documents an additional
 topic or OHE note. The topic menu is visually grouped into home-care
 techniques, disease and risk, and prevention and maintenance. It uses fixed
 reviewed choices; non-standard discussion belongs in OHE notes.
+
+The accepted OHE fields now appear in one coordinated education card shared
+with the 2026 template. Applying Standard OHE displays its covered concepts and
+omits those concepts from new additional-topic selections. Legacy drafts that
+already contain covered topics or the disease-process checkbox keep those
+values and their existing output. The card warns that wording may repeat and
+offers an explicit, confirmed action that removes only the covered selections;
+unrelated topics, aids, notes, and goals are preserved. No field key or summary
+wording changes as part of this presentation consolidation.
 
 Issue 68 adds **BASS-BRUSHING TECHNIQUE** to the editable OH-aids starter
 catalogue, plus fixed additional topics for bruxism-guard counselling and

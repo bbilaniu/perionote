@@ -344,6 +344,70 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
   );
 });
 
+test("2026 Adult Hygiene coordinates standard and additional OHE controls", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const education = page.getByRole("group", {
+    name: "Education provided today",
+    exact: true,
+  });
+  await education
+    .getByRole("checkbox", {
+      name: "Reviewed brushing and flossing frequency recommendations",
+      exact: true,
+    })
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY",
+  );
+
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(
+    education.getByText("Included in Standard OHE", { exact: true }),
+  ).toBeVisible();
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  const topics = page.getByRole("dialog", {
+    name: "Additional OHE topics reviewed options",
+    exact: true,
+  });
+  await expect(topics.getByText("Bass brushing", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    topics.getByText("Sulcabrush and interdental brush technique", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await topics.getByRole("button", { name: "Done", exact: true }).click();
+
+  await education
+    .getByRole("button", { name: "Clear standard OHE", exact: true })
+    .click();
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog", {
+        name: "Additional OHE topics reviewed options",
+        exact: true,
+      })
+      .getByText("Bass brushing", { exact: true }),
+  ).toBeVisible();
+});
+
 test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({
   page,
 }) => {
