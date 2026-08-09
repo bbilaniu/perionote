@@ -59,6 +59,16 @@ const catalogueTabGroups: Array<{
     keys: [
       "clinical-exam.molar-occlusion",
       "clinical-exam.skeletal-occlusion",
+      "clinical-exam.additional-occlusal-findings",
+    ],
+  },
+  {
+    section: "Continuity of care",
+    title: "Intervals and next visit",
+    keys: [
+      "scheduling.recall-interval",
+      "scheduling.hygiene-interval",
+      "scheduling.next-visit",
     ],
   },
 ];

@@ -107,7 +107,7 @@ export const CATALOGUE_SECTIONS = [
   "Periodontal Assessment",
   "Oral Hygiene and Education",
   "Treatment",
-  "Intervals and Next Visit",
+  "Continuity of care",
 ] as const;
 
 export type CatalogueSection = (typeof CATALOGUE_SECTIONS)[number];
@@ -573,15 +573,15 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   },
   {
     key: "scheduling.recall-interval",
-    section: "Intervals and Next Visit",
-    title: "Recommended recall interval",
-    fieldLabels: ["Recommended recall interval"],
+    section: "Continuity of care",
+    title: "Recommended recare interval",
+    fieldLabels: ["Recommended recare interval"],
     seeds: recallIntervalSeeds,
     lifecycle: "pilot",
   },
   {
     key: "scheduling.hygiene-interval",
-    section: "Intervals and Next Visit",
+    section: "Continuity of care",
     title: "Recommended hygiene interval",
     fieldLabels: ["Recommended hygiene interval"],
     seeds: hygieneIntervalSeeds,
@@ -589,7 +589,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   },
   {
     key: "scheduling.next-visit",
-    section: "Intervals and Next Visit",
+    section: "Continuity of care",
     title: "Next visit",
     fieldLabels: ["Next visit"],
     seeds: nextVisitSeeds,
