@@ -338,7 +338,7 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
   }),
   completedCareSeed(
     "fluorimax-varnish",
-    "FluoriMax 2.5% NaF Varnish application",
+    "Oral Science Inc. FluoriMax 2.5% NaF Varnish application",
     {
       category: "product-application",
       procedure: "product-application",
@@ -353,7 +353,7 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
       procedure: "product-application",
     },
   ),
-  completedCareSeed("crystal-x-pur", "Crystal X-PUR", {
+  completedCareSeed("crystal-x-pur", "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)", {
     category: "product-application",
     procedure: "product-application",
   }),
@@ -397,9 +397,9 @@ const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
 
 const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
   ["none", "NONE"],
-  ["prevident-fl", "PREVIDENT FL"],
-  ["voco-fl", "VOCO FL"],
-  ["crystal-x-pur", "crystal x-pur"],
+  ["prevident-fl", "Colgate® PreviDent® Varnish (5% NaF)"],
+  ["voco-fl", "VOCO GmbH Profluoride® Varnish (5% NaF)"],
+  ["crystal-x-pur", "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)"],
 ]);
 
 const anestheticSeeds: CatalogueSeed[] = [
@@ -944,11 +944,7 @@ function parseCatalogueItemMetadata(
   }
   if (value.kind === "local-anesthetic") {
     const route = value.route;
-    if (
-      route !== "injection" &&
-      route !== "topical" &&
-      route !== "rinse"
-    ) {
+    if (route !== "injection" && route !== "topical" && route !== "rinse") {
       throw new CatalogueValidationError("Invalid local-anesthetic route.");
     }
     const defaultAmountMl = readOptionalPositiveNumber(

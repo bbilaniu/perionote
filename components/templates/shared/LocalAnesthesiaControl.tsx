@@ -115,17 +115,16 @@ export function LocalAnesthesiaControl({
     >
       <legend className="px-1 font-semibold">Local Anesthesia</legend>
 
-      <NativeChoiceControl
-        type="checkbox"
-        checked={value.localAnesthesiaNoContraindication}
-        onChange={(localAnesthesiaNoContraindication) =>
-          onChange({ ...value, localAnesthesiaNoContraindication })
-        }
-      >
-        No C/I to LA
-      </NativeChoiceControl>
-
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <NativeChoiceControl
+          type="checkbox"
+          checked={value.localAnesthesiaNoContraindication}
+          onChange={(localAnesthesiaNoContraindication) =>
+            onChange({ ...value, localAnesthesiaNoContraindication })
+          }
+        >
+          No C/I to LA
+        </NativeChoiceControl>
         <button
           type="button"
           className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
@@ -136,6 +135,9 @@ export function LocalAnesthesiaControl({
             ? "Dyclonine rinse applied"
             : "Apply Dyclonine rinse"}
         </button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
         <button type="button" className={buttonClass} onClick={() => addEntry("injection")}>
           Add injection entry
         </button>
@@ -183,8 +185,8 @@ export function LocalAnesthesiaControl({
                   </button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  <label className="text-sm font-medium">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+                  <label className="text-sm font-medium lg:col-span-3">
                     Route
                     <select
                       className={`mt-1 ${inputClass}`}
@@ -209,7 +211,7 @@ export function LocalAnesthesiaControl({
                   </label>
 
                   {entry.route !== "rinse" ? (
-                    <label className="text-sm font-medium">
+                    <label className="text-sm font-medium lg:col-span-3">
                       {entry.route === "injection"
                         ? "Injection type"
                         : "Application type"}
@@ -230,9 +232,25 @@ export function LocalAnesthesiaControl({
                         ))}
                       </select>
                     </label>
-                  ) : null}
+                  ) : (
+                    <label className="text-sm font-medium lg:col-span-3">
+                      Duration (s)
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        className={`mt-1 ${inputClass}`}
+                        value={entry.durationSeconds}
+                        onChange={(event) =>
+                          updateEntry(entry.id, {
+                            durationSeconds: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  )}
 
-                  <label className="text-sm font-medium">
+                  <label className="text-sm font-medium lg:col-span-3">
                     Area
                     <select
                       className={`mt-1 ${inputClass}`}
@@ -250,7 +268,7 @@ export function LocalAnesthesiaControl({
                     </select>
                   </label>
 
-                  <label className="text-sm font-medium md:col-span-2 lg:col-span-1">
+                  <label className="text-sm font-medium md:col-span-2 lg:col-span-3">
                     Anesthetic product
                     <select
                       className={`mt-1 ${inputClass}`}
@@ -285,7 +303,7 @@ export function LocalAnesthesiaControl({
                     </select>
                   </label>
 
-                  <label className="text-sm font-medium">
+                  <label className="text-sm font-medium lg:col-span-3">
                     Amount (mL)
                     <input
                       type="number"
@@ -299,25 +317,7 @@ export function LocalAnesthesiaControl({
                     />
                   </label>
 
-                  {entry.route === "rinse" ? (
-                    <label className="text-sm font-medium">
-                      Duration (seconds)
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        className={`mt-1 ${inputClass}`}
-                        value={entry.durationSeconds}
-                        onChange={(event) =>
-                          updateEntry(entry.id, {
-                            durationSeconds: event.target.value,
-                          })
-                        }
-                      />
-                    </label>
-                  ) : null}
-
-                  <div className="text-sm font-medium">
+                  <div className="text-sm font-medium md:col-span-2 lg:col-span-9">
                     <label htmlFor={`local-anesthesia-time-${entry.id}`}>
                       Time administered
                     </label>

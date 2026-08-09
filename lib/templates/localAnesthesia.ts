@@ -36,11 +36,11 @@ export const localAnesthesiaTopicalApplicationTypes = [
 ] as const;
 
 export const localAnesthesiaAreas = [
-  "full mouth",
   "Q1",
   "Q2",
   "Q3",
   "Q4",
+  "full mouth",
 ] as const;
 
 export function createEmptyLocalAnesthesiaValue(): LocalAnesthesiaValue {
