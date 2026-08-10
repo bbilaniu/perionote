@@ -976,11 +976,17 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     .locator(":scope > li");
   await expect(entry).toHaveCount(1);
   await expect(
-    entry.getByRole("combobox", { name: "Route", exact: true }),
-  ).toHaveValue("rinse");
+    entry.getByRole("button", { name: "Route", exact: true }),
+  ).toHaveAttribute("data-value", "rinse");
   await expect(
-    entry.getByRole("combobox", { name: "Anesthetic product", exact: true }),
-  ).toHaveValue("seed.hygiene-treatment.anesthetic.dyclonine-rinse");
+    entry.getByRole("button", {
+      name: "Anesthetic product",
+      exact: true,
+    }),
+  ).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.dyclonine-rinse",
+  );
   await expect(
     entry.getByRole("spinbutton", { name: "Amount (mL)", exact: true }),
   ).toHaveValue("5");
@@ -994,7 +1000,7 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     entry.getByRole("button", { name: "Tooth/area", exact: true }),
   ).toContainText("full mouth");
   const routeTop = await entry
-    .getByRole("combobox", { name: "Route", exact: true })
+    .getByRole("button", { name: "Route", exact: true })
     .evaluate((element) => element.getBoundingClientRect().top);
   const toothAreaTop = await entry
     .getByRole("button", { name: "Tooth/area", exact: true })
@@ -1037,6 +1043,53 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     .check();
   await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
     "Local anesthetic administered:",
+  );
+});
+
+test("2026 Local Anesthesia uses styled pointer-selectable dropdowns", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  await localAnesthesia
+    .getByRole("button", { name: "Add topical entry", exact: true })
+    .click();
+  const entry = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+
+  await expect(entry.locator("select")).toHaveCount(0);
+  const applicationType = entry.getByRole("button", {
+    name: "Application type",
+    exact: true,
+  });
+  await applicationType.click();
+  await entry
+    .getByRole("option", { name: "Sulcular application", exact: true })
+    .click();
+  await expect(applicationType).toHaveAttribute(
+    "data-value",
+    "Sulcular application",
+  );
+
+  const product = entry.getByRole("button", {
+    name: "Anesthetic product",
+    exact: true,
+  });
+  await product.click();
+  await entry
+    .getByRole("option", {
+      name: "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+      exact: true,
+    })
+    .click();
+  await expect(product).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.oraqix",
   );
 });
 

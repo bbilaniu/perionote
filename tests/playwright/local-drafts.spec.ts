@@ -108,11 +108,14 @@ test("2026 Adult Hygiene restores local anesthesia with a Tooth/area after reloa
     .locator(":scope > li");
   await expect(restoredEntry).toHaveCount(1);
   await expect(
-    restoredEntry.getByRole("combobox", {
+    restoredEntry.getByRole("button", {
       name: "Anesthetic product",
       exact: true,
     }),
-  ).toHaveValue("seed.hygiene-treatment.anesthetic.dyclonine-rinse");
+  ).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.dyclonine-rinse",
+  );
   await expect(
     restoredEntry.getByRole("button", { name: "Tooth/area", exact: true }),
   ).toContainText("full mouth");

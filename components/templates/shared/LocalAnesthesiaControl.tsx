@@ -3,6 +3,7 @@
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
+import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { isLocalAnestheticCatalogueMetadata } from "@/lib/catalogues/catalogue";
 import {
@@ -18,6 +19,14 @@ const dyclonineCatalogueItemId =
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 const inputClass = formControlClass();
+const routeOptions: ReadonlyArray<{
+  value: LocalAnesthesiaRoute;
+  label: string;
+}> = [
+  { value: "injection", label: "Injection" },
+  { value: "topical", label: "Topical" },
+  { value: "rinse", label: "Rinse" },
+];
 
 function currentTime(): string {
   const now = new Date();
@@ -186,13 +195,13 @@ export function LocalAnesthesiaControl({
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
-                  <label className="text-sm font-medium lg:col-span-3">
-                    Route
-                    <select
-                      className={`mt-1 ${inputClass}`}
+                  <div className="lg:col-span-3">
+                    <FixedChoiceListbox
+                      id={`local-anesthesia-route-${entry.id}`}
+                      label="Route"
                       value={entry.route}
-                      onChange={(event) => {
-                        const route = event.target.value as LocalAnesthesiaRoute;
+                      options={routeOptions}
+                      onChange={(route) => {
                         updateEntry(entry.id, {
                           route,
                           administrationType: "",
@@ -204,35 +213,33 @@ export function LocalAnesthesiaControl({
                           durationSeconds: "",
                         });
                       }}
-                    >
-                      <option value="injection">Injection</option>
-                      <option value="topical">Topical</option>
-                      <option value="rinse">Rinse</option>
-                    </select>
-                  </label>
+                    />
+                  </div>
 
                   {entry.route !== "rinse" ? (
-                    <label className="text-sm font-medium lg:col-span-3">
-                      {entry.route === "injection"
-                        ? "Injection type"
-                        : "Application type"}
-                      <select
-                        className={`mt-1 ${inputClass}`}
+                    <div className="lg:col-span-3">
+                      <FixedChoiceListbox
+                        id={`local-anesthesia-administration-type-${entry.id}`}
+                        label={
+                          entry.route === "injection"
+                            ? "Injection type"
+                            : "Application type"
+                        }
                         value={entry.administrationType}
-                        onChange={(event) =>
+                        options={[
+                          { value: "", label: "None selected" },
+                          ...typeOptions.map((option) => ({
+                            value: option,
+                            label: option,
+                          })),
+                        ]}
+                        onChange={(administrationType) =>
                           updateEntry(entry.id, {
-                            administrationType: event.target.value,
+                            administrationType,
                           })
                         }
-                      >
-                        <option value="">None selected</option>
-                        {typeOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                      />
+                    </div>
                   ) : (
                     <label className="text-sm font-medium lg:col-span-3">
                       Duration (s)
@@ -263,14 +270,21 @@ export function LocalAnesthesiaControl({
                     />
                   </div>
 
-                  <label className="text-sm font-medium md:col-span-2 lg:col-span-3">
-                    Anesthetic product
-                    <select
-                      className={`mt-1 ${inputClass}`}
+                  <div className="md:col-span-2 lg:col-span-3">
+                    <FixedChoiceListbox
+                      id={`local-anesthesia-product-${entry.id}`}
+                      label="Anesthetic product"
                       value={entry.catalogueItemId ?? ""}
-                      onChange={(event) => {
+                      options={[
+                        { value: "", label: "None selected" },
+                        ...routeProducts.map((item) => ({
+                          value: item.id,
+                          label: item.label,
+                        })),
+                      ]}
+                      onChange={(catalogueItemId) => {
                         const item = routeProducts.find(
-                          (candidate) => candidate.id === event.target.value,
+                          (candidate) => candidate.id === catalogueItemId,
                         );
                         const metadata = isLocalAnestheticCatalogueMetadata(
                           item?.metadata,
@@ -288,15 +302,8 @@ export function LocalAnesthesiaControl({
                             : "",
                         });
                       }}
-                    >
-                      <option value="">None selected</option>
-                      {routeProducts.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                    />
+                  </div>
 
                   <label className="text-sm font-medium lg:col-span-3">
                     Amount (mL)
