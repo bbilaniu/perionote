@@ -2175,141 +2175,12 @@ export function PeriodontalClassificationControl({
         </section>
       ) : null}
 
-      {hasAssessedDiagnosis ? (
+      {hasAssessedDiagnosis &&
+      (showGingivalContextWorkflow || isPeriodontitisDiagnosis) ? (
         <fieldset className="space-y-6 border-t border-slate-200 pt-4 dark:border-slate-700">
-          {showGingivalContextWorkflow ? (
-            <section
-              className="space-y-4"
-              aria-labelledby="periodontal-current-condition-heading"
-            >
-              <h3
-                id="periodontal-current-condition-heading"
-                className="font-semibold"
-              >
-                Current clinical condition
-              </h3>
-
-              <>
-                <div className="border-l-4 border-sky-600 pl-4">
-                  <h4 className="font-semibold">
-                    Recommended current condition
-                  </h4>
-                  <p className="mt-1 text-sm">
-                    {gingivalHealthCandidate.context
-                      ? choiceLabel(
-                          healthGingivitisContextChoices,
-                          gingivalHealthCandidate.context,
-                        )
-                      : "Not available"}
-                  </p>
-                  {gingivalHealthCandidate.missingFields.length ? (
-                    <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                      <p>
-                        More information is needed to calculate a suggestion:
-                      </p>
-                      <ul className="mt-1 list-disc space-y-1 pl-5">
-                        {gingivalHealthCandidate.missingFields.map((field) => (
-                          <li key={field.id}>
-                            <button
-                              type="button"
-                              className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
-                              onClick={() => navigateToMissingField(field.id)}
-                            >
-                              {field.label}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                  {gingivalHealthCandidate.warnings.length ? (
-                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-                      {gingivalHealthCandidate.warnings.map((warning) => (
-                        <li key={warning}>{warning}</li>
-                      ))}
-                    </ul>
-                  ) : null}
-                  {gingivalHealthCandidate.context ? (
-                    <button
-                      type="button"
-                      className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
-                      onClick={() =>
-                        updateGingivalContext(gingivalHealthCandidate.context)
-                      }
-                    >
-                      Apply suggestion
-                    </button>
-                  ) : null}
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <FixedChoiceListbox
-                    id="adult-hygiene-health-gingivitis-context"
-                    label={gingivalContextLabel}
-                    value={value.gingivalHealth.context}
-                    options={healthGingivitisOptions}
-                    onChange={updateGingivalContext}
-                  />
-                  {value.gingivalHealth.context &&
-                  value.gingivalHealth.context !==
-                    gingivalHealthCandidate.context ? (
-                    <TextField
-                      id="adult-hygiene-health-gingivitis-override"
-                      label={gingivalContextOverrideLabel}
-                      value={value.gingivalHealth.overrideReason}
-                      onChange={(overrideReason) =>
-                        updateGingivalHealth({ overrideReason })
-                      }
-                    />
-                  ) : null}
-                </div>
-                {showReducedPeriodontiumBasis ? (
-                  <div className="space-y-3">
-                    <FixedChoiceMultiCombobox
-                      id="adult-hygiene-reduced-periodontium-basis"
-                      label="Basis for reduced periodontium"
-                      choices={reducedPeriodontiumBasisChoices}
-                      values={value.gingivalHealth.reducedPeriodontiumBases}
-                      onChange={(reducedPeriodontiumBases) =>
-                        updateGingivalHealth({
-                          reducedPeriodontiumBases,
-                          ...(!reducedPeriodontiumBases.length
-                            ? { reducedPeriodontiumBasisDetails: "" }
-                            : {}),
-                        })
-                      }
-                      customPlaceholder="Search basis options"
-                      allowCustomValues={false}
-                    />
-                    {value.gingivalHealth.reducedPeriodontiumBases.length ? (
-                      <TextField
-                        id="adult-hygiene-reduced-periodontium-basis-details"
-                        label={
-                          value.gingivalHealth.reducedPeriodontiumBases.includes(
-                            "Other",
-                          )
-                            ? "Other basis details / location"
-                            : "Basis details / location (optional)"
-                        }
-                        value={
-                          value.gingivalHealth.reducedPeriodontiumBasisDetails
-                        }
-                        onChange={(reducedPeriodontiumBasisDetails) =>
-                          updateGingivalHealth({
-                            reducedPeriodontiumBasisDetails,
-                          })
-                        }
-                      />
-                    ) : null}
-                  </div>
-                ) : null}
-              </>
-            </section>
-          ) : null}
-
           {isPeriodontitisDiagnosis ? (
             <section
-              className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700"
+              className="space-y-4"
               aria-labelledby="periodontal-stage-grade-heading"
             >
               <h3
@@ -2426,28 +2297,162 @@ export function PeriodontalClassificationControl({
             </section>
           ) : null}
 
-          {isPeriodontitisDiagnosis ? (
-            <div className="grid gap-3 md:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-periodontal-status"
-                label="Current periodontal status"
-                value={displayedPeriodontalStatus}
-                options={compatiblePeriodontalStatusChoices}
-                onChange={(status) =>
-                  update({
-                    status,
-                    ...(!status ? { statusComment: "" } : {}),
-                  })
-                }
-              />
-              <TextField
-                id="adult-hygiene-periodontal-status-comment"
-                label="Periodontal status comment"
-                value={value.statusComment}
-                onChange={(statusComment) => update({ statusComment })}
-              />
-            </div>
-          ) : null}
+          <section
+            className={`space-y-4 ${
+              isPeriodontitisDiagnosis
+                ? "border-t border-slate-200 pt-4 dark:border-slate-700"
+                : ""
+            }`}
+            aria-labelledby="periodontal-current-condition-heading"
+          >
+              <h3
+                id="periodontal-current-condition-heading"
+                className="font-semibold"
+              >
+                Current clinical condition
+              </h3>
+
+              {showGingivalContextWorkflow ? (
+                <>
+                <div className="border-l-4 border-sky-600 pl-4">
+                  <h4 className="font-semibold">
+                    Recommended current condition
+                  </h4>
+                  <p className="mt-1 text-sm">
+                    {gingivalHealthCandidate.context
+                      ? choiceLabel(
+                          healthGingivitisContextChoices,
+                          gingivalHealthCandidate.context,
+                        )
+                      : "Not available"}
+                  </p>
+                  {gingivalHealthCandidate.missingFields.length ? (
+                    <div className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                      <p>
+                        More information is needed to calculate a suggestion:
+                      </p>
+                      <ul className="mt-1 list-disc space-y-1 pl-5">
+                        {gingivalHealthCandidate.missingFields.map((field) => (
+                          <li key={field.id}>
+                            <button
+                              type="button"
+                              className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                              onClick={() => navigateToMissingField(field.id)}
+                            >
+                              {field.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {gingivalHealthCandidate.warnings.length ? (
+                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                      {gingivalHealthCandidate.warnings.map((warning) => (
+                        <li key={warning}>{warning}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  {gingivalHealthCandidate.context ? (
+                    <button
+                      type="button"
+                      className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
+                      onClick={() =>
+                        updateGingivalContext(gingivalHealthCandidate.context)
+                      }
+                    >
+                      Apply suggestion
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FixedChoiceListbox
+                    id="adult-hygiene-health-gingivitis-context"
+                    label={gingivalContextLabel}
+                    value={value.gingivalHealth.context}
+                    options={healthGingivitisOptions}
+                    onChange={updateGingivalContext}
+                  />
+                  {value.gingivalHealth.context &&
+                  value.gingivalHealth.context !==
+                    gingivalHealthCandidate.context ? (
+                    <TextField
+                      id="adult-hygiene-health-gingivitis-override"
+                      label={gingivalContextOverrideLabel}
+                      value={value.gingivalHealth.overrideReason}
+                      onChange={(overrideReason) =>
+                        updateGingivalHealth({ overrideReason })
+                      }
+                    />
+                  ) : null}
+                </div>
+                {showReducedPeriodontiumBasis ? (
+                  <div className="space-y-3">
+                    <FixedChoiceMultiCombobox
+                      id="adult-hygiene-reduced-periodontium-basis"
+                      label="Basis for reduced periodontium"
+                      choices={reducedPeriodontiumBasisChoices}
+                      values={value.gingivalHealth.reducedPeriodontiumBases}
+                      onChange={(reducedPeriodontiumBases) =>
+                        updateGingivalHealth({
+                          reducedPeriodontiumBases,
+                          ...(!reducedPeriodontiumBases.length
+                            ? { reducedPeriodontiumBasisDetails: "" }
+                            : {}),
+                        })
+                      }
+                      customPlaceholder="Search basis options"
+                      allowCustomValues={false}
+                    />
+                    {value.gingivalHealth.reducedPeriodontiumBases.length ? (
+                      <TextField
+                        id="adult-hygiene-reduced-periodontium-basis-details"
+                        label={
+                          value.gingivalHealth.reducedPeriodontiumBases.includes(
+                            "Other",
+                          )
+                            ? "Other basis details / location"
+                            : "Basis details / location (optional)"
+                        }
+                        value={
+                          value.gingivalHealth.reducedPeriodontiumBasisDetails
+                        }
+                        onChange={(reducedPeriodontiumBasisDetails) =>
+                          updateGingivalHealth({
+                            reducedPeriodontiumBasisDetails,
+                          })
+                        }
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
+                </>
+              ) : null}
+
+              {isPeriodontitisDiagnosis ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <FixedChoiceListbox
+                    id="adult-hygiene-periodontal-status"
+                    label="Current periodontal status"
+                    value={displayedPeriodontalStatus}
+                    options={compatiblePeriodontalStatusChoices}
+                    onChange={(status) =>
+                      update({
+                        status,
+                        ...(!status ? { statusComment: "" } : {}),
+                      })
+                    }
+                  />
+                  <TextField
+                    id="adult-hygiene-periodontal-status-comment"
+                    label="Periodontal status comment"
+                    value={value.statusComment}
+                    onChange={(statusComment) => update({ statusComment })}
+                  />
+                </div>
+              ) : null}
+          </section>
         </fieldset>
       ) : null}
     </div>

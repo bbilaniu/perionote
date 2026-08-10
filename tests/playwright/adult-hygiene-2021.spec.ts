@@ -1069,6 +1069,43 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
   ).toBeVisible();
+  const periodontitisClassificationHeading = page.locator(
+    "#periodontal-stage-grade-heading"
+  );
+  const currentClinicalConditionHeading = page.locator(
+    "#periodontal-current-condition-heading"
+  );
+  await expect(currentClinicalConditionHeading).toBeVisible();
+  expect(
+    await periodontitisClassificationHeading.evaluate(
+      (classificationHeading, currentConditionHeadingId) => {
+        const currentConditionHeading = document.getElementById(
+          currentConditionHeadingId
+        );
+        return Boolean(
+          currentConditionHeading &&
+            (classificationHeading.compareDocumentPosition(
+              currentConditionHeading
+            ) &
+              Node.DOCUMENT_POSITION_FOLLOWING)
+        );
+      },
+      "periodontal-current-condition-heading"
+    )
+  ).toBe(true);
+  const currentClinicalConditionSection = currentClinicalConditionHeading.locator(
+    "xpath=ancestor::section[1]"
+  );
+  await expect(
+    currentClinicalConditionSection.getByLabel("Current periodontal status", {
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    currentClinicalConditionSection.getByLabel("Periodontal status comment", {
+      exact: true,
+    })
+  ).toBeVisible();
 
   await page
     .getByRole("button", { name: /Structured periodontal observations/ })
