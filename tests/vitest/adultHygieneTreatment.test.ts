@@ -55,11 +55,14 @@ describe("structured adult hygiene treatment", () => {
     });
 
     const fluoride = createTreatmentEntryFromCatalogueItem(
-      catalogue.find((item) => item.label.startsWith("FluoriMax"))!,
+      catalogue.find((item) => item.label === "Fluoride varnish application")!,
       "fluoride",
     );
     expect(fluoride).toMatchObject({
       careCategory: "product-application",
+      procedureKind: "product-application",
+      productApplicationType: "fluoride-varnish",
+      product: "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
       toothAreas: ["full mouth"],
     });
     expect(
@@ -129,7 +132,41 @@ describe("structured adult hygiene treatment", () => {
     }));
 
     expect(format(entries)).toBe(
-      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE on proper home care (Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride); FluoriMax 2.5% NaF Varnish application — full mouth",
+      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE on proper home care (Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride); Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth",
+    );
+  });
+
+  it("formats each structured preventive product without flattening its procedure type", () => {
+    expect(
+      format([
+        {
+          id: "fluoride",
+          treatmentType: "Fluoride varnish application",
+          toothAreas: ["full mouth"],
+          procedureKind: "product-application",
+          productApplicationType: "fluoride-varnish",
+          product: "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
+        },
+        {
+          id: "sdf",
+          treatmentType: "SDF application",
+          toothAreas: ["14"],
+          procedureKind: "product-application",
+          productApplicationType: "silver-diamine-fluoride",
+          product: "Advantage Arrest® Silver Diamine Fluoride 38%",
+        },
+        {
+          id: "desensitizer",
+          treatmentType: "Desensitizer application",
+          toothAreas: ["24"],
+          procedureKind: "product-application",
+          productApplicationType: "desensitizer",
+          product:
+            "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+        },
+      ]),
+    ).toBe(
+      "Treatment completed today: Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth; Advantage Arrest® Silver Diamine Fluoride 38% application — 14; Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals) application — 24",
     );
   });
 

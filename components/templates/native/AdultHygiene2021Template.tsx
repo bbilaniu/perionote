@@ -28,6 +28,7 @@ import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftReco
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
+import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
 import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2021Form,
@@ -3546,6 +3547,17 @@ export function AdultHygiene2021Template({
               catalogueKey="hygiene-treatment.desensitizer"
               value={form.desensitizer}
               onChange={(value) => updateField("desensitizer", value)}
+              suggestionFilter={(item) => {
+                const metadata =
+                  isDesensitizingRemineralizingProductMetadata(item.metadata)
+                    ? item.metadata
+                    : undefined;
+                return !metadata || metadata.productType === "desensitizer";
+              }}
+              rememberMetadata={{
+                kind: "desensitizing-remineralizing-product",
+                productType: "desensitizer",
+              }}
             />
           </Section>
 

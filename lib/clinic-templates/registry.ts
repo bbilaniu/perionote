@@ -331,8 +331,6 @@ Treatment completed today: [SELECT/INSERT: RDH: Treatment]
 
 Anesthetic:  [SELECT/INSERT: HYGIENE ANESTHETIC]
 
-Desensitizer: [SELECT/INSERT: DESENSITIZER]
-
 Does patient have a CPAP? Do they use it?
 Does patient have an occlusal splint (night guard)? Do they use it?
 

@@ -64,6 +64,7 @@ import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  migrateLegacyDesensitizerToTreatmentCompleted,
   recareExamTreatmentPreset,
   syncDerivedOheTreatmentDetails,
   syncRadiographTreatmentEntries,
@@ -2949,6 +2950,11 @@ export function AdultHygiene2026Template({
       setForm({
         ...emptyForm,
         ...draft.form,
+        treatmentCompleted: migrateLegacyDesensitizerToTreatmentCompleted(
+          draft.form.treatmentCompleted ?? [],
+          draft.form.desensitizer ?? "",
+        ),
+        desensitizer: "",
         gingivalDescription: copyGingivalDescriptionAssessment(
           draft.form.gingivalDescription,
         ),
@@ -4544,13 +4550,6 @@ export function AdultHygiene2026Template({
               onChange={(localAnesthesia) =>
                 setForm((current) => ({ ...current, ...localAnesthesia }))
               }
-            />
-            <CatalogueCombobox
-              id="adult-hygiene-desensitizer"
-              label="Desensitizer"
-              catalogueKey="hygiene-treatment.desensitizer"
-              value={form.desensitizer}
-              onChange={(value) => updateField("desensitizer", value)}
             />
           </Section>
 

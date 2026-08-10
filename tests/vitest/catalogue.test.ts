@@ -212,9 +212,9 @@ describe("local catalogues", () => {
       "Dentist Recare Exam",
       "Scaling",
       "Selective polish",
-      "FluoriMax 2.5% NaF Varnish application",
-      "Advantage Arrest® Silver Diamine Fluoride 38% application",
-      "Crystal X-PUR",
+      "Fluoride varnish application",
+      "SDF application",
+      "Desensitizer application",
       "Sealant application, resin-based material",
       "OHE",
     ]);
@@ -244,7 +244,18 @@ describe("local catalogues", () => {
       listCatalogueItems(emptyState, "dental-treatment.items").map(
         (item) => item.label,
       ),
-    ).toEqual(["Hygiene maintenance"]);
+    ).toEqual([
+      "Filling (Direct Restoration)",
+      "Root Canals (Endodontic Therapy)",
+      "Crown (Indirect Restoration)",
+      "Bridge (Indirect Restoration)",
+      "Denture (Removable Prosthesis)",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.items").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Periodontal therapy", "Hygiene maintenance"]);
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.anesthetic").map(
         (item) => item.label,
@@ -271,7 +282,39 @@ describe("local catalogues", () => {
       listCatalogueItems(emptyState, "hygiene-treatment.desensitizer").map(
         (item) => item.label,
       ),
-    ).toEqual(["NONE", "PREVIDENT FL", "VOCO FL", "crystal x-pur"]);
+    ).toEqual([
+      "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
+      "Colgate® PreviDent® Varnish (5% NaF)",
+      "VOCO GmbH Profluoride® Varnish (5% NaF)",
+      "Advantage Arrest® Silver Diamine Fluoride 38%",
+      "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.desensitizer").map(
+        (item) => item.metadata,
+      ),
+    ).toEqual([
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "fluoride-varnish",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "fluoride-varnish",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "fluoride-varnish",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "silver-diamine-fluoride",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "desensitizer",
+      },
+    ]);
     expect(
       listCatalogueItems(emptyState, "scheduling.recall-interval").map(
         (item) => item.label,
@@ -354,7 +397,7 @@ describe("local catalogues", () => {
         sortOrder: 2,
       },
       {
-        seedId: "seed.hygiene-treatment.completed.fluorimax-varnish",
+        seedId: "seed.hygiene-treatment.desensitizer.fluorimax-varnish",
         hidden: false,
         favorite: false,
         sortOrder: 6,
@@ -702,6 +745,30 @@ describe("local catalogues", () => {
         },
       ),
     ).toThrow("already used by Occlusal view");
+
+    const preventiveProduct = rememberCatalogueValue(
+      createEmptyCatalogueState(),
+      "hygiene-treatment.desensitizer",
+      "Custom SDF product",
+      {
+        id: "custom-sdf-product",
+        metadata: {
+          kind: "desensitizing-remineralizing-product",
+          productType: "silver-diamine-fluoride",
+        },
+      },
+    ).state;
+    expect(
+      parseCatalogueExport(
+        serializeCatalogueExport(
+          preventiveProduct,
+          new Date("2026-07-25T20:30:00.000Z"),
+        ),
+      ).catalogueState.userItems[0].metadata,
+    ).toEqual({
+      kind: "desensitizing-remineralizing-product",
+      productType: "silver-diamine-fluoride",
+    });
 
     const legacy = parseCatalogueState({
       schemaVersion: 1,

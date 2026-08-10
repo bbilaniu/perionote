@@ -660,7 +660,7 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     ];
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; FluoriMax 2.5% NaF Varnish application — full mouth",
+      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth",
     );
   });
 

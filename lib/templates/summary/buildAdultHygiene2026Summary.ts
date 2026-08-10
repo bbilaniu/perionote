@@ -5,7 +5,10 @@ import {
   resolveOcclusalSplintState,
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2026";
-import { formatAdultHygieneTreatmentCompletedEntries } from "@/lib/templates/adultHygieneTreatment";
+import {
+  formatAdultHygieneTreatmentCompletedEntries,
+  migrateLegacyDesensitizerToTreatmentCompleted,
+} from "@/lib/templates/adultHygieneTreatment";
 import { formatLocalAnesthesiaSummary } from "@/lib/templates/localAnesthesia";
 import {
   choiceLabel,
@@ -823,9 +826,13 @@ export function buildAdultHygiene2026Summary(
       );
 
   const treatmentCompleted = [
-    formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
+    formatAdultHygieneTreatmentCompleted(
+      migrateLegacyDesensitizerToTreatmentCompleted(
+        form.treatmentCompleted,
+        form.desensitizer,
+      ),
+    ),
     formatLocalAnesthesiaSummary(form),
-    labelledLine("Desensitizer", form.desensitizer),
   ];
 
   const occlusalSplintState = resolveOcclusalSplintState(form);

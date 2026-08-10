@@ -861,6 +861,96 @@ test("2026 Adult Hygiene standard treatment uses structured procedure controls",
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "OHE on proper home care (Customized OHE recap)",
   );
+
+  const fluoride = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", {
+      name: "Fluoride varnish application",
+      exact: true,
+    }),
+  });
+  await expect(
+    fluoride.getByRole("combobox", {
+      name: "Fluoride varnish product",
+      exact: true,
+    }),
+  ).toHaveValue("Oral Science Inc. FluoriMax 2.5% NaF Varnish");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth",
+  );
+});
+
+test("2026 Adult Hygiene filters structured SDF and desensitizer products", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(page.locator("#adult-hygiene-desensitizer")).toHaveCount(0);
+  const completedCare = page.getByRole("region", {
+    name: "Treatment completed today controls",
+    exact: true,
+  });
+  await completedCare
+    .getByRole("button", { name: "Add completed care", exact: true })
+    .click();
+  await completedCare
+    .getByRole("button", { name: "SDF application", exact: true })
+    .click();
+  await completedCare
+    .getByRole("button", { name: "Desensitizer application", exact: true })
+    .click();
+
+  const entries = page
+    .getByRole("list", { name: "Treatment completed today entries", exact: true })
+    .locator(":scope > li");
+  const sdf = entries.filter({
+    has: page.getByRole("heading", { name: "SDF application", exact: true }),
+  });
+  const sdfProduct = sdf.getByRole("combobox", {
+    name: "SDF product",
+    exact: true,
+  });
+  await expect(sdfProduct).toHaveValue(
+    "Advantage Arrest® Silver Diamine Fluoride 38%",
+  );
+  await sdfProduct.focus();
+  await expect(
+    page.getByRole("option", {
+      name: /Advantage Arrest® Silver Diamine Fluoride 38% Starter/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: /FluoriMax.*Starter/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("option", { name: /X-PUR.*Starter/ }),
+  ).toHaveCount(0);
+
+  const desensitizer = entries.filter({
+    has: page.getByRole("heading", {
+      name: "Desensitizer application",
+      exact: true,
+    }),
+  });
+  const desensitizingProduct = desensitizer.getByRole("combobox", {
+    name: "Desensitizing product",
+    exact: true,
+  });
+  await desensitizingProduct.focus();
+  await expect(
+    page.getByRole("option", {
+      name: /X-PUR® Crystal.*Starter/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: /Advantage Arrest.*Starter/ }),
+  ).toHaveCount(0);
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Advantage Arrest® Silver Diamine Fluoride 38% application",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals) application",
+  );
 });
 
 test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({

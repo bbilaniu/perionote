@@ -91,6 +91,7 @@ export type CompletedCareCatalogueMetadata = {
   defaultQuantity?: number;
   defaultProduct?: string;
   defaultToothAreas?: string[];
+  productType?: DesensitizingRemineralizingProductType;
 };
 
 export type PolishingProductCatalogueMetadata = {
@@ -107,11 +108,26 @@ export type LocalAnestheticCatalogueMetadata = {
   defaultDurationSeconds?: number;
 };
 
+export const DESENSITIZING_REMINERALIZING_PRODUCT_TYPES = [
+  "fluoride-varnish",
+  "silver-diamine-fluoride",
+  "desensitizer",
+] as const;
+
+export type DesensitizingRemineralizingProductType =
+  (typeof DESENSITIZING_REMINERALIZING_PRODUCT_TYPES)[number];
+
+export type DesensitizingRemineralizingProductMetadata = {
+  kind: "desensitizing-remineralizing-product";
+  productType: DesensitizingRemineralizingProductType;
+};
+
 export type CatalogueItemMetadata =
   | RadiographCatalogueMetadata
   | CompletedCareCatalogueMetadata
   | PolishingProductCatalogueMetadata
-  | LocalAnestheticCatalogueMetadata;
+  | LocalAnestheticCatalogueMetadata
+  | DesensitizingRemineralizingProductMetadata;
 
 export const CATALOGUE_SECTIONS = [
   "Visit Team",
@@ -338,28 +354,35 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
     defaultProduct: "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
   }),
   completedCareSeed(
-    "fluorimax-varnish",
-    "Oral Science Inc. FluoriMax 2.5% NaF Varnish application",
+    "fluoride-varnish-application",
+    "Fluoride varnish application",
     {
       category: "product-application",
       procedure: "product-application",
+      productType: "fluoride-varnish",
+      defaultProduct: "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
       defaultToothAreas: ["full mouth"],
     },
   ),
   completedCareSeed(
-    "advantage-arrest-sdf",
-    "Advantage Arrest® Silver Diamine Fluoride 38% application",
+    "sdf-application",
+    "SDF application",
     {
       category: "product-application",
       procedure: "product-application",
+      productType: "silver-diamine-fluoride",
+      defaultProduct: "Advantage Arrest® Silver Diamine Fluoride 38%",
     },
   ),
   completedCareSeed(
-    "crystal-x-pur",
-    "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+    "desensitizer-application",
+    "Desensitizer application",
     {
       category: "product-application",
       procedure: "product-application",
+      productType: "desensitizer",
+      defaultProduct:
+        "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
     },
   ),
   completedCareSeed(
@@ -409,15 +432,48 @@ const hygieneTreatmentSeeds = catalogueSeeds("hygiene-treatment.items", [
   ["hygiene-maintenance", "Hygiene maintenance"],
 ]);
 
-const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
-  ["none", "NONE"],
-  ["prevident-fl", "Colgate® PreviDent® Varnish (5% NaF)"],
-  ["voco-fl", "VOCO GmbH Profluoride® Varnish (5% NaF)"],
-  [
+function desensitizingRemineralizingProductSeed(
+  id: string,
+  label: string,
+  productType: DesensitizingRemineralizingProductType,
+): CatalogueSeed {
+  return {
+    id: `seed.hygiene-treatment.desensitizer.${id}`,
+    label,
+    metadata: {
+      kind: "desensitizing-remineralizing-product",
+      productType,
+    },
+  };
+}
+
+const desensitizerSeeds: CatalogueSeed[] = [
+  desensitizingRemineralizingProductSeed(
+    "fluorimax-varnish",
+    "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
+    "fluoride-varnish",
+  ),
+  desensitizingRemineralizingProductSeed(
+    "prevident-fl",
+    "Colgate® PreviDent® Varnish (5% NaF)",
+    "fluoride-varnish",
+  ),
+  desensitizingRemineralizingProductSeed(
+    "voco-fl",
+    "VOCO GmbH Profluoride® Varnish (5% NaF)",
+    "fluoride-varnish",
+  ),
+  desensitizingRemineralizingProductSeed(
+    "advantage-arrest-sdf",
+    "Advantage Arrest® Silver Diamine Fluoride 38%",
+    "silver-diamine-fluoride",
+  ),
+  desensitizingRemineralizingProductSeed(
     "crystal-x-pur",
     "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
-  ],
-]);
+    "desensitizer",
+  ),
+];
 
 const anestheticSeeds: CatalogueSeed[] = [
   {
@@ -661,7 +717,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     key: "hygiene-treatment.desensitizer",
     section: "Treatment",
     title: "Desensitizing and remineralizing products",
-    fieldLabels: ["Desensitizer"],
+    fieldLabels: ["Preventive or desensitizing product"],
     seeds: desensitizerSeeds,
     lifecycle: "pilot",
   },
@@ -721,6 +777,18 @@ const seedsById = new Map(
 );
 
 const legacySeedAliases = new Map<string, string>([
+  [
+    "seed.hygiene-treatment.completed.fluorimax-varnish",
+    "seed.hygiene-treatment.desensitizer.fluorimax-varnish",
+  ],
+  [
+    "seed.hygiene-treatment.completed.advantage-arrest-sdf",
+    "seed.hygiene-treatment.desensitizer.advantage-arrest-sdf",
+  ],
+  [
+    "seed.hygiene-treatment.completed.crystal-x-pur",
+    "seed.hygiene-treatment.desensitizer.crystal-x-pur",
+  ],
   ["seed.imaging.radiographs.pan", "seed.imaging.radiographs.panoramic"],
   ["seed.imaging.radiographs.1-bw", "seed.imaging.radiographs.bitewings"],
   ["seed.imaging.radiographs.2-bw", "seed.imaging.radiographs.bitewings"],
@@ -758,6 +826,9 @@ const legacySeedAliases = new Map<string, string>([
     "seed.scheduling.next-visit.9-mrc",
     "seed.scheduling.dentist-next-visit.9-mrc",
   ],
+]);
+const retiredSeedIds = new Set([
+  "seed.hygiene-treatment.desensitizer.none",
 ]);
 
 export class CatalogueValidationError extends Error {
@@ -950,6 +1021,18 @@ function parseCatalogueItemMetadata(
       value,
       "defaultToothAreas",
     );
+    const productType = value.productType;
+    if (
+      productType !== undefined &&
+      (typeof productType !== "string" ||
+        !(DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]).includes(
+          productType,
+        ))
+    ) {
+      throw new CatalogueValidationError(
+        "Invalid completed-care productType.",
+      );
+    }
     return {
       kind: "completed-care",
       category: category as CompletedCareCategory,
@@ -957,6 +1040,12 @@ function parseCatalogueItemMetadata(
       ...(defaultQuantity === undefined ? {} : { defaultQuantity }),
       ...(defaultProduct === undefined ? {} : { defaultProduct }),
       ...(defaultToothAreas === undefined ? {} : { defaultToothAreas }),
+      ...(productType === undefined
+        ? {}
+        : {
+            productType:
+              productType as DesensitizingRemineralizingProductType,
+          }),
     };
   }
   if (value.kind === "polishing-product") {
@@ -994,6 +1083,23 @@ function parseCatalogueItemMetadata(
         : { defaultDurationSeconds }),
     };
   }
+  if (value.kind === "desensitizing-remineralizing-product") {
+    const productType = value.productType;
+    if (
+      typeof productType !== "string" ||
+      !(DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]).includes(
+        productType,
+      )
+    ) {
+      throw new CatalogueValidationError(
+        "Invalid desensitizing/remineralizing product type.",
+      );
+    }
+    return {
+      kind: "desensitizing-remineralizing-product",
+      productType: productType as DesensitizingRemineralizingProductType,
+    };
+  }
   throw new CatalogueValidationError("Invalid catalogue metadata kind.");
 }
 
@@ -1019,6 +1125,12 @@ export function isLocalAnestheticCatalogueMetadata(
   metadata: CatalogueItemMetadata | undefined,
 ): metadata is LocalAnestheticCatalogueMetadata {
   return metadata?.kind === "local-anesthetic";
+}
+
+export function isDesensitizingRemineralizingProductMetadata(
+  metadata: CatalogueItemMetadata | undefined,
+): metadata is DesensitizingRemineralizingProductMetadata {
+  return metadata?.kind === "desensitizing-remineralizing-product";
 }
 
 function parseUserItem(value: unknown): ParsedUserCatalogueItem {
@@ -1047,11 +1159,12 @@ function parseUserItem(value: unknown): ParsedUserCatalogueItem {
   };
 }
 
-function parseSeedPreference(value: unknown): SeedPreference {
+function parseSeedPreference(value: unknown): SeedPreference | null {
   if (!isRecord(value)) {
     throw new CatalogueValidationError("Invalid seed preference.");
   }
   const storedSeedId = readIdentifier(value, "seedId");
+  if (retiredSeedIds.has(storedSeedId)) return null;
   const seedId = legacySeedAliases.get(storedSeedId) ?? storedSeedId;
   if (!seedsById.has(seedId)) {
     throw new CatalogueValidationError(`Unknown seed: ${seedId}`);
@@ -1140,8 +1253,51 @@ function migrateUserItemsMatchingSeeds(
   const preferencesBySeedId = new Map(
     seedPreferences.map((preference) => [preference.seedId, preference]),
   );
+  const movedCompletedCareProducts = new Map([
+    [
+      normalizeCatalogueLabel("FluoriMax 2.5% NaF Varnish application"),
+      "seed.hygiene-treatment.desensitizer.fluorimax-varnish",
+    ],
+    [
+      normalizeCatalogueLabel(
+        "Oral Science Inc. FluoriMax 2.5% NaF Varnish application",
+      ),
+      "seed.hygiene-treatment.desensitizer.fluorimax-varnish",
+    ],
+    [
+      normalizeCatalogueLabel(
+        "Advantage Arrest® Silver Diamine Fluoride 38% application",
+      ),
+      "seed.hygiene-treatment.desensitizer.advantage-arrest-sdf",
+    ],
+    [
+      normalizeCatalogueLabel("Crystal X-PUR"),
+      "seed.hygiene-treatment.desensitizer.crystal-x-pur",
+    ],
+    [
+      normalizeCatalogueLabel(
+        "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+      ),
+      "seed.hygiene-treatment.desensitizer.crystal-x-pur",
+    ],
+  ]);
 
   for (const item of userItems) {
+    const movedProductSeedId =
+      item.catalogueKey === "hygiene-treatment.completed"
+        ? movedCompletedCareProducts.get(normalizeCatalogueLabel(item.label))
+        : undefined;
+    if (movedProductSeedId) {
+      if (!preferencesBySeedId.has(movedProductSeedId)) {
+        preferencesBySeedId.set(movedProductSeedId, {
+          seedId: movedProductSeedId,
+          hidden: item.hidden,
+          favorite: item.favorite,
+          sortOrder: item.sortOrder,
+        });
+      }
+      continue;
+    }
     const matchingSeed = getCatalogueDefinition(item.catalogueKey).seeds.find(
       (seed) =>
         normalizeCatalogueLabel(seed.label) ===
@@ -1218,6 +1374,9 @@ export function parseCatalogueState(value: unknown): StoredCatalogueStateV1 {
     ...new Map(
       value.seedPreferences
         .map(parseSeedPreference)
+        .filter((preference): preference is SeedPreference =>
+          Boolean(preference),
+        )
         .map((preference) => [preference.seedId, preference]),
     ).values(),
   ];

@@ -2,6 +2,7 @@ import {
   isCompletedCareCatalogueMetadata,
   type CatalogueItem,
   type CompletedCareCategory,
+  type DesensitizingRemineralizingProductType,
 } from "@/lib/catalogues/catalogue";
 
 export type HygieneProcedureKind =
@@ -9,7 +10,8 @@ export type HygieneProcedureKind =
   | "polish"
   | "radiograph"
   | "recare-exam"
-  | "ohe";
+  | "ohe"
+  | "product-application";
 
 export type HygieneInstrumentationMethod = "hand" | "power";
 export type HygieneProcedureSource =
@@ -39,6 +41,7 @@ export type AdultHygieneTreatmentCompletedEntry = {
   productName?: string;
   productFlavour?: string;
   productContainsFluoride?: boolean;
+  productApplicationType?: DesensitizingRemineralizingProductType;
   details?: string;
   detailsCustomized?: boolean;
   radiographType?: RadiographType;
@@ -56,7 +59,7 @@ export const standardTreatmentCatalogueItemIds = [
   "seed.hygiene-treatment.completed.scaling",
   "seed.hygiene-treatment.completed.selective-polish",
   "seed.hygiene-treatment.completed.ohe",
-  "seed.hygiene-treatment.completed.fluorimax-varnish",
+  "seed.hygiene-treatment.completed.fluoride-varnish-application",
 ] as const;
 
 export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPresetEntry[] = [
@@ -98,8 +101,11 @@ export const standardTreatmentCompletedPreset: readonly AdultHygieneTreatmentPre
     careCategory: "education",
   },
   {
-    treatmentType: "FluoriMax 2.5% NaF Varnish application",
+    treatmentType: "Fluoride varnish application",
     toothAreas: ["full mouth"],
+    procedureKind: "product-application",
+    productApplicationType: "fluoride-varnish",
+    product: "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
     procedureSource: "standard-treatment",
     careCategory: "product-application",
   },
@@ -160,6 +166,15 @@ export function createTreatmentEntryFromCatalogueItem(
         details: oheRecap,
         detailsCustomized: false,
       };
+    case "product-application":
+      return metadata.productType
+        ? {
+            ...base,
+            procedureKind: "product-application",
+            productApplicationType: metadata.productType,
+            product: metadata.defaultProduct ?? "",
+          }
+        : base;
     default:
       return base;
   }
@@ -219,10 +234,17 @@ export function inferredHygieneProcedureKind(
 export function treatmentCompletedEntryIdentity(
   entry: Pick<
     AdultHygieneTreatmentCompletedEntry,
-    "procedureKind" | "procedureSource" | "treatmentType" | "toothAreas"
+    | "procedureKind"
+    | "procedureSource"
+    | "treatmentType"
+    | "toothAreas"
+    | "productApplicationType"
   >,
 ): string {
   const kind = inferredHygieneProcedureKind(entry);
+  if (kind === "product-application") {
+    return `procedure:${kind}:${entry.productApplicationType ?? "other"}`;
+  }
   if (kind) return `procedure:${kind}`;
   return `legacy:${normalized(entry.treatmentType)}|${entry.toothAreas
     .map(normalized)
@@ -268,6 +290,17 @@ function formatStructuredPolish(
   const treatment = `Selective polish${product ? ` with ${product}` : ""}${
     quantity ? ` (${quantity}U Polish)` : ""
   }`;
+  return areas.length ? `${treatment} — ${areas.join(", ")}` : treatment;
+}
+
+function formatStructuredProductApplication(
+  entry: AdultHygieneTreatmentCompletedEntry,
+): string {
+  const product = entry.product?.trim();
+  const treatment = product
+    ? `${product} application`
+    : entry.treatmentType.trim();
+  const areas = formatAreas(entry.toothAreas);
   return areas.length ? `${treatment} — ${areas.join(", ")}` : treatment;
 }
 
@@ -332,6 +365,12 @@ export function formatAdultHygieneTreatmentEntry(
     const details = entry.details?.trim();
     return details ? `OHE on proper home care (${details})` : "OHE";
   }
+  if (entry.procedureKind === "product-application") {
+    return formatStructuredProductApplication({
+      ...entry,
+      toothAreas: orderAreas(entry.toothAreas),
+    });
+  }
 
   const treatmentType = entry.treatmentType.trim();
   if (!treatmentType) return "";
@@ -352,6 +391,34 @@ export function formatAdultHygieneTreatmentCompletedEntries(
   return completed.length
     ? `Treatment completed today: ${completed.join("; ")}`
     : "";
+}
+
+export function migrateLegacyDesensitizerToTreatmentCompleted(
+  entries: AdultHygieneTreatmentCompletedEntry[],
+  legacyDesensitizer: string,
+): AdultHygieneTreatmentCompletedEntry[] {
+  const product = legacyDesensitizer.trim();
+  if (
+    !product ||
+    normalized(product) === "none" ||
+    entries.some(
+      (entry) => entry.productApplicationType === "desensitizer",
+    )
+  ) {
+    return entries;
+  }
+  return [
+    ...entries,
+    {
+      id: "legacy-desensitizer-application",
+      treatmentType: "Desensitizer application",
+      toothAreas: [],
+      procedureKind: "product-application",
+      productApplicationType: "desensitizer",
+      product,
+      careCategory: "product-application",
+    },
+  ];
 }
 
 export function syncRadiographTreatmentEntries(

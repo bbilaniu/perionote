@@ -62,7 +62,20 @@ const catalogueTabGroups: Array<{
       "clinical-exam.additional-occlusal-findings",
     ],
   },
-  {section: "Treatment", title: "Dental treatment", keys: ["dental-treatment.items", "hygiene-treatment.items"]},
+  {
+    section: "Treatment",
+    title: "Dental treatment",
+    keys: ["dental-treatment.items", "hygiene-treatment.items"],
+  },
+  {
+    section: "Treatment",
+    title: "Treatment Products",
+    keys: [
+      "hygiene-treatment.desensitizer",
+      "hygiene-treatment.polishing-products",
+      "hygiene-treatment.anesthetic",
+    ],
+  },
   {
     section: "Continuity of care",
     title: "Intervals and next visits",

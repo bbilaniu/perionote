@@ -1482,7 +1482,7 @@ test("Adult Hygiene applies standard OHE and treatment presets without local ane
     .click();
   await expect(completedRows).toHaveCount(5);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with Enamel Pro® Prophy Paste with Fluoride \(Strawberry\) \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); FluoriMax 2\.5% NaF Varnish application — full mouth/,
+    /Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with Enamel Pro® Prophy Paste with Fluoride \(Strawberry\) \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); Oral Science Inc\. FluoriMax 2\.5% NaF Varnish application — full mouth/,
   );
 });
 

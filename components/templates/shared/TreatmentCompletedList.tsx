@@ -13,6 +13,7 @@ import {
   COMPLETED_CARE_CATEGORIES,
   COMPLETED_CARE_CATEGORY_LABELS,
   isCompletedCareCatalogueMetadata,
+  isDesensitizingRemineralizingProductMetadata,
   isPolishingProductCatalogueMetadata,
   type CatalogueItem,
   type CompletedCareCategory,
@@ -21,7 +22,6 @@ import {
 import {
   createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentEntry,
-  inferredHygieneProcedureKind,
   treatmentCompletedEntryIdentity,
   type AdultHygieneTreatmentCompletedEntry,
   type HygieneInstrumentationMethod,
@@ -383,15 +383,17 @@ export function TreatmentCompletedList({
                         </a>
                       );
                     }
-                    const kind = createTreatmentEntryFromCatalogueItem(
+                    const previewEntry = createTreatmentEntryFromCatalogueItem(
                       item,
                       "preview",
                       oheRecap,
-                    )?.procedureKind;
+                    );
                     const alreadyAdded = Boolean(
-                      kind &&
+                      previewEntry?.procedureKind &&
                         entries.some(
-                          (entry) => inferredHygieneProcedureKind(entry) === kind,
+                          (entry) =>
+                            treatmentCompletedEntryIdentity(entry) ===
+                            treatmentCompletedEntryIdentity(previewEntry),
                         ),
                     );
                     return (
@@ -505,11 +507,13 @@ export function TreatmentCompletedList({
                               ? "Radiographs"
                               : entry.procedureKind === "recare-exam"
                                 ? "Dentist Recare Exam"
-                                : entry.careCategory
-                                  ? COMPLETED_CARE_CATEGORY_LABELS[
-                                      entry.careCategory
-                                    ]
-                                  : "Other completed care"}
+                                : entry.procedureKind === "product-application"
+                                  ? entry.treatmentType
+                                  : entry.careCategory
+                                    ? COMPLETED_CARE_CATEGORY_LABELS[
+                                        entry.careCategory
+                                      ]
+                                    : "Other completed care"}
                     </h4>
                     {entry.procedureSource ? (
                       <span className="mt-1 inline-flex rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -616,6 +620,53 @@ export function TreatmentCompletedList({
                         }
                       />
                     </div>
+                  </div>
+                ) : entry.procedureKind === "product-application" &&
+                  entry.productApplicationType ? (
+                  <div className="mt-4 grid gap-4 md:grid-cols-2">
+                    <CatalogueCombobox
+                      id={`adult-hygiene-${entry.id}-preventive-product`}
+                      label={
+                        entry.productApplicationType === "fluoride-varnish"
+                          ? "Fluoride varnish product"
+                          : entry.productApplicationType ===
+                              "silver-diamine-fluoride"
+                            ? "SDF product"
+                            : "Desensitizing product"
+                      }
+                      catalogueKey="hygiene-treatment.desensitizer"
+                      value={entry.product ?? ""}
+                      onChange={(product) => updateEntry(entry.id, { product })}
+                      suggestionFilter={(item) => {
+                        const metadata =
+                          isDesensitizingRemineralizingProductMetadata(
+                            item.metadata,
+                          )
+                            ? item.metadata
+                            : undefined;
+                        return (
+                          !metadata ||
+                          metadata.productType === entry.productApplicationType
+                        );
+                      }}
+                      rememberMetadata={{
+                        kind: "desensitizing-remineralizing-product",
+                        productType: entry.productApplicationType,
+                      }}
+                      rememberActionLabel="Remember product"
+                      unhideActionLabel="Unhide product"
+                      roomyActions
+                      showAllSuggestionsWhenSelected
+                    />
+                    <ClinicalLocationMultiCombobox
+                      id={`adult-hygiene-${entry.id}-area`}
+                      label="Tooth/area"
+                      preset="treatment"
+                      values={entry.toothAreas}
+                      onChange={(toothAreas) =>
+                        updateEntry(entry.id, { toothAreas })
+                      }
+                    />
                   </div>
                 ) : entry.procedureKind === "ohe" ? (
                   <div className="mt-4 space-y-3">

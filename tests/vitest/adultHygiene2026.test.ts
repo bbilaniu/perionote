@@ -97,6 +97,9 @@ describe("2026 Adult Hygiene independence", () => {
     );
     expect(complete).toContain("Treatment completed today:");
     expect(complete).toContain(
+      "Synthetic desensitizing product application — 14",
+    );
+    expect(complete).toContain(
       "Local anesthetic administered: No C/I to LA",
     );
     expect(complete).toContain(
@@ -186,6 +189,18 @@ describe("2026 Adult Hygiene independence", () => {
       "Occlusal splint (night guard): Yes; does not use.",
     );
     expect(summary).not.toContain("Night guard:");
+  });
+
+  it("folds a legacy standalone desensitizer into completed care", () => {
+    const summary = buildAdultHygiene2026Summary({
+      ...createEmptyAdultHygiene2026Form(),
+      desensitizer: "Legacy desensitizing product",
+    });
+
+    expect(summary).toContain(
+      "Treatment completed today: Legacy desensitizing product application",
+    );
+    expect(summary).not.toContain("Desensitizer:");
   });
 
   it("accepts pre-unification 2026 drafts and rejects malformed new card state", () => {
