@@ -20,14 +20,14 @@ users to a closed list, or storing completed and partial forms.
 This proposal turns six currently editable Recare Exam fields into
 catalogue-backed editable fields:
 
-| Section | Field | Initial public seeds |
+| Section       | Field                 | Initial public seeds      |
 | ------------- | --------------------- | ------------------------- |
-| Visit Team | Dentist | None |
-| Visit Team | RDA | None |
-| Visit Team | RDH | None |
-| Clinical Exam | Left molar occlusion | `Cl I`, `Cl II`, `Cl III` |
+| Visit Team    | Dentist               | None                      |
+| Visit Team    | RDA                   | None                      |
+| Visit Team    | RDH                   | None                      |
+| Clinical Exam | Left molar occlusion  | `Cl I`, `Cl II`, `Cl III` |
 | Clinical Exam | Right molar occlusion | `Cl I`, `Cl II`, `Cl III` |
-| Clinical Exam | Skeletal occlusion | `Cl I`, `Cl II`, `Cl III` |
+| Clinical Exam | Skeletal occlusion    | `Cl I`, `Cl II`, `Cl III` |
 
 The seed labels above preserve the requested `Cl I`, `Cl II`, and `Cl III`
 wording. Changing them to `Class I`, `Class II`, and `Class III` would be a
@@ -96,15 +96,15 @@ Treatment Plan vocabulary.
 The nine form fields should be allowlisted explicitly. They should be backed by
 seven catalogue groups:
 
-| Catalogue key | Recare Exam fields | Public seeds | Locally remembered values |
+| Catalogue key                      | Recare Exam fields                          | Public seeds                                 | Locally remembered values |
 | ---------------------------------- | ------------------------------------------- | -------------------------------------------- | ------------------------- |
-| `visit-team.dentist` | Dentist | None | Yes |
-| `visit-team.rda` | RDA | None | Yes |
-| `visit-team.rdh` | RDH | None | Yes |
-| `clinical-exam.molar-occlusion` | Left molar occlusion; Right molar occlusion | `Cl I`, `Cl II`, `Cl III` | Yes |
-| `clinical-exam.skeletal-occlusion` | Skeletal occlusion | `Cl I`, `Cl II`, `Cl III` | Yes |
-| `imaging.radiographs` | Radiographs | `PAN`, `1 BW` through `6 BW`, `1 PA`, `2 PA` | Yes |
-| `recare-treatment.items` | Treatment Options; Treatment Plan | `Hygiene maintenance` | Yes |
+| `visit-team.dentist`               | Dentist                                     | None                                         | Yes                       |
+| `visit-team.rda`                   | RDA                                         | None                                         | Yes                       |
+| `visit-team.rdh`                   | RDH                                         | None                                         | Yes                       |
+| `clinical-exam.molar-occlusion`    | Left molar occlusion; Right molar occlusion | `Cl I`, `Cl II`, `Cl III`                    | Yes                       |
+| `clinical-exam.skeletal-occlusion` | Skeletal occlusion                          | `Cl I`, `Cl II`, `Cl III`                    | Yes                       |
+| `imaging.radiographs`              | Radiographs                                 | `PAN`, `1 BW` through `6 BW`, `1 PA`, `2 PA` | Yes                       |
+| `dental-treatment.items`           | Treatment Options; Treatment Plan           | `Hygiene maintenance`                        | Yes                       |
 
 Dentist, RDA, and RDH remain separate because their suggestions represent
 different roles. The right and left molar fields share one catalogue because

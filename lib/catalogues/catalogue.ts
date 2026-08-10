@@ -27,7 +27,8 @@ export const CATALOGUE_KEYS = [
   "oral-hygiene.aids-reviewed",
   "hygiene-treatment.completed",
   "hygiene-treatment.polishing-products",
-  "recare-treatment.items",
+  "dental-treatment.items",
+  "hygiene-treatment.items",
   "hygiene-treatment.anesthetic",
   "hygiene-treatment.desensitizer",
   "scheduling.recall-interval",
@@ -353,10 +354,14 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
       procedure: "product-application",
     },
   ),
-  completedCareSeed("crystal-x-pur", "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)", {
-    category: "product-application",
-    procedure: "product-application",
-  }),
+  completedCareSeed(
+    "crystal-x-pur",
+    "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+    {
+      category: "product-application",
+      procedure: "product-application",
+    },
+  ),
   completedCareSeed(
     "resin-sealant",
     "Sealant application, resin-based material",
@@ -391,7 +396,16 @@ const polishingProductSeeds: CatalogueSeed[] = [
   },
 }));
 
-const recareTreatmentSeeds = catalogueSeeds("recare-treatment.items", [
+const dentalTreatmentSeeds = catalogueSeeds("dental-treatment.items", [
+  ["filling", "Filling (Direct Restoration)"],
+  ["root-canals", "Root Canals (Endodontic Therapy)"],
+  ["crown", "Crown (Indirect Restoration)"],
+  ["bridge", "Bridge (Indirect Restoration)"],
+  ["denture", "Denture (Removable Prosthesis)"],
+]);
+
+const hygieneTreatmentSeeds = catalogueSeeds("hygiene-treatment.items", [
+  ["periodontal-therapy", "Periodontal therapy"],
   ["hygiene-maintenance", "Hygiene maintenance"],
 ]);
 
@@ -399,7 +413,10 @@ const desensitizerSeeds = catalogueSeeds("hygiene-treatment.desensitizer", [
   ["none", "NONE"],
   ["prevident-fl", "Colgate® PreviDent® Varnish (5% NaF)"],
   ["voco-fl", "VOCO GmbH Profluoride® Varnish (5% NaF)"],
-  ["crystal-x-pur", "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)"],
+  [
+    "crystal-x-pur",
+    "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+  ],
 ]);
 
 const anestheticSeeds: CatalogueSeed[] = [
@@ -601,11 +618,19 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     lifecycle: "pilot",
   },
   {
-    key: "recare-treatment.items",
+    key: "dental-treatment.items",
     section: "Treatment",
     title: "Recare treatment options and plan",
     fieldLabels: ["Treatment Options", "Treatment Plan"],
-    seeds: recareTreatmentSeeds,
+    seeds: dentalTreatmentSeeds,
+    lifecycle: "pilot",
+  },
+  {
+    key: "hygiene-treatment.items",
+    section: "Treatment",
+    title: "Hygiene treatment options and plan",
+    fieldLabels: ["Treatment Options", "Treatment Plan"],
+    seeds: hygieneTreatmentSeeds,
     lifecycle: "pilot",
   },
   {

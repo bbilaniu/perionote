@@ -1009,6 +1009,68 @@ test("2026 Local Anesthesia limits preset Tooth/area choices by route", async ({
   }
 });
 
+test("2026 coordinated plan routes preventive care to the hygiene treatment catalogue", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await page
+    .getByRole("button", { name: "Add recommendation", exact: true })
+    .click();
+  const planEntry = page
+    .getByRole("list", { name: "Coordinated plan entries", exact: true })
+    .locator(":scope > li")
+    .first();
+  const careType = planEntry.getByRole("button", {
+    name: "Care type",
+    exact: true,
+  });
+  const treatmentType = planEntry.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+
+  await careType.click();
+  await page.getByRole("option", { name: "Preventive", exact: true }).click();
+  await treatmentType.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "Hygiene maintenance Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "Periodontal therapy Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "Filling (Direct Restoration) Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  await careType.click();
+  await page
+    .getByRole("option", { name: "Restorative", exact: true })
+    .click();
+  await treatmentType.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "Filling (Direct Restoration) Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "Hygiene maintenance Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+});
+
 test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({
   page,
 }) => {
