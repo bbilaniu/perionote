@@ -1440,6 +1440,80 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
 });
 
+test("2026 Adult Hygiene documents the basis for a reduced non-periodontitis periodontium", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await page
+    .getByRole("button", {
+      name: "Periodontal diagnosis category",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+
+  const classification = page.getByRole("button", {
+    name: "Health/Gingivitis classification",
+    exact: true,
+  });
+  await classification.click();
+  await page
+    .getByRole("option", {
+      name: "HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+      exact: true,
+    })
+    .click();
+
+  const basis = page.getByRole("button", {
+    name: "Basis for reduced periodontium",
+    exact: true,
+  });
+  await expect(basis).toBeVisible();
+  await basis.click();
+  const basisOptions = page.getByRole("dialog", {
+    name: "Basis for reduced periodontium options",
+    exact: true,
+  });
+  await basisOptions
+    .getByText("Previous crown lengthening", { exact: true })
+    .click();
+  await basisOptions.getByText("Other", { exact: true }).click();
+  await basisOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+
+  const details = page.getByLabel("Other basis details / location", {
+    exact: true,
+  });
+  await details.fill("Localized to teeth 31–33");
+  const summary = page.locator("#adult-hygiene-summary");
+  await expect(summary).toContainText(
+    "Periodontal diagnosis: HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+  );
+  await expect(summary).toContainText(
+    "Basis for reduced periodontium: Previous crown lengthening; Other.",
+  );
+  await expect(summary).toContainText(
+    "Reduced periodontium details/location: Localized to teeth 31–33.",
+  );
+
+  await classification.click();
+  await page
+    .getByRole("option", {
+      name: "HEALTH - INTACT PERIODONTIUM",
+      exact: true,
+    })
+    .click();
+  await expect(basis).toHaveCount(0);
+  await expect(summary).not.toContainText("Basis for reduced periodontium:");
+  await expect(summary).not.toContainText(
+    "Reduced periodontium details/location:",
+  );
+});
+
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
   page,
   context,

@@ -285,6 +285,19 @@ TMJ: WNL.
     ]) {
       delete legacyDraft[field];
     }
+    const legacyPeriodontalClassification = {
+      ...(legacyDraft.periodontalClassification as Record<string, unknown>),
+    };
+    const legacyGingivalHealth = {
+      ...(legacyPeriodontalClassification.gingivalHealth as Record<
+        string,
+        unknown
+      >),
+    };
+    delete legacyGingivalHealth.reducedPeriodontiumBases;
+    delete legacyGingivalHealth.reducedPeriodontiumBasisDetails;
+    legacyPeriodontalClassification.gingivalHealth = legacyGingivalHealth;
+    legacyDraft.periodontalClassification = legacyPeriodontalClassification;
     expect(isAdultHygieneDraftForm(legacyDraft)).toBe(true);
     expect(
       isAdultHygieneDraftForm({

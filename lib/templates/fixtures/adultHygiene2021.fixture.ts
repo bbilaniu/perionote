@@ -93,6 +93,8 @@ export const adultHygiene2021Fixture: AdultHygiene2021Form = {
       ppd4OrGreaterWithBop: "no",
       progressiveDestruction: "no",
       context: "inflammation-periodontitis-history",
+      reducedPeriodontiumBases: [],
+      reducedPeriodontiumBasisDetails: "",
       overrideReason: "",
     },
   },

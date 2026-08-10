@@ -82,6 +82,8 @@ import {
   formatPeriodontalEvidence,
   formatSmokingModifier,
   healthGingivitisContextChoices,
+  isReducedNonPeriodontitisContext,
+  normalizePeriodontalClassification,
   periodontalDiagnosisChoices,
   periodontalExtentChoices,
   periodontalGradeChoices,
@@ -91,6 +93,7 @@ import {
   periodontalStageChoices,
   periodontalStageCriterionCatalogue,
   periodontalStatusChoices,
+  reducedPeriodontiumBasisChoices,
   requiredPeriodontalStatusForContext,
   isPeriodontalStatusCompatibleWithContext,
   type ClinicalMeasurement,
@@ -187,6 +190,7 @@ const adultHygieneDraftArrayItemShapes = {
   "gingivalDescription.findings[].locations": "",
   "periodontalClassification.stageBasis": { criterionId: "" },
   "periodontalClassification.gradeBasis": { criterionId: "" },
+  "periodontalClassification.gingivalHealth.reducedPeriodontiumBases": "",
   cariesRiskFactors: "",
   ohiAidsReviewed: "",
   oheTopicsReviewed: "",
@@ -218,6 +222,9 @@ function isAdultHygieneDraftForm(
     {
       ...adultHygieneDraftExemplar,
       ...candidate,
+      periodontalClassification: normalizePeriodontalClassification(
+        candidate.periodontalClassification,
+      ),
       gingivalDescription:
         gingivalDescription &&
         typeof gingivalDescription === "object" &&
@@ -1054,6 +1061,9 @@ export function PeriodontalClassificationControl({
     value.gingivalHealth.periodontium === "reduced-treated-periodontitis";
   const showGingivalContextWorkflow =
     isHealthGingivitisDiagnosis || isTreatedPeriodontitisContext;
+  const showReducedPeriodontiumBasis = isReducedNonPeriodontitisContext(
+    value.gingivalHealth.context,
+  );
   const gingivalContextLabel = isTreatedPeriodontitisContext
     ? "Treated-periodontitis context"
     : "Health/Gingivitis classification";
@@ -1277,6 +1287,12 @@ export function PeriodontalClassificationControl({
       gingivalHealth: {
         ...value.gingivalHealth,
         context,
+        ...(!isReducedNonPeriodontitisContext(context)
+          ? {
+              reducedPeriodontiumBases: [],
+              reducedPeriodontiumBasisDetails: "",
+            }
+          : {}),
         overrideReason: "",
       },
       ...(requiredStatus && value.status && value.status !== requiredStatus
@@ -2001,6 +2017,8 @@ export function PeriodontalClassificationControl({
                 gingivalHealth: {
                   ...value.gingivalHealth,
                   context: "",
+                  reducedPeriodontiumBases: [],
+                  reducedPeriodontiumBasisDetails: "",
                   overrideReason: "",
                 },
                 ...(diagnosis !== "periodontitis"
@@ -2115,6 +2133,46 @@ export function PeriodontalClassificationControl({
                     />
                   ) : null}
                 </div>
+                {showReducedPeriodontiumBasis ? (
+                  <div className="space-y-3">
+                    <FixedChoiceMultiCombobox
+                      id="adult-hygiene-reduced-periodontium-basis"
+                      label="Basis for reduced periodontium"
+                      choices={reducedPeriodontiumBasisChoices}
+                      values={value.gingivalHealth.reducedPeriodontiumBases}
+                      onChange={(reducedPeriodontiumBases) =>
+                        updateGingivalHealth({
+                          reducedPeriodontiumBases,
+                          ...(!reducedPeriodontiumBases.length
+                            ? { reducedPeriodontiumBasisDetails: "" }
+                            : {}),
+                        })
+                      }
+                      customPlaceholder="Search basis options"
+                      allowCustomValues={false}
+                    />
+                    {value.gingivalHealth.reducedPeriodontiumBases.length ? (
+                      <TextField
+                        id="adult-hygiene-reduced-periodontium-basis-details"
+                        label={
+                          value.gingivalHealth.reducedPeriodontiumBases.includes(
+                            "Other",
+                          )
+                            ? "Other basis details / location"
+                            : "Basis details / location (optional)"
+                        }
+                        value={
+                          value.gingivalHealth.reducedPeriodontiumBasisDetails
+                        }
+                        onChange={(reducedPeriodontiumBasisDetails) =>
+                          updateGingivalHealth({
+                            reducedPeriodontiumBasisDetails,
+                          })
+                        }
+                      />
+                    ) : null}
+                  </div>
+                ) : null}
               </>
             </section>
           ) : null}
@@ -2819,6 +2877,9 @@ export function AdultHygiene2021Template({
       setForm({
         ...emptyForm,
         ...draft.form,
+        periodontalClassification: normalizePeriodontalClassification(
+          draft.form.periodontalClassification,
+        ),
         gingivalDescription: copyGingivalDescriptionAssessment(
           draft.form.gingivalDescription,
         ),
@@ -2992,6 +3053,10 @@ export function AdultHygiene2021Template({
         diabetes: { ...fixture.periodontalClassification.diabetes },
         gingivalHealth: {
           ...fixture.periodontalClassification.gingivalHealth,
+          reducedPeriodontiumBases: [
+            ...fixture.periodontalClassification.gingivalHealth
+              .reducedPeriodontiumBases,
+          ],
           ...(fixture.periodontalClassification.gingivalHealth.bopPercent
             ? {
                 bopPercent: {

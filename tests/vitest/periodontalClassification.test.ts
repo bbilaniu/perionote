@@ -3,10 +3,12 @@ import {
   classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
   classifyPeriodontalDiagnosisCandidates,
+  copyPeriodontalClassification,
   createEmptyPeriodontalClassification,
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
   isPeriodontalStatusCompatibleWithContext,
+  normalizePeriodontalClassification,
   type GingivalHealthAssessment,
   type HealthGingivitisContext,
   type PeriodontalDiagnosis,
@@ -664,6 +666,56 @@ describe("Health/Gingivitis classification", () => {
     expect(formatHealthGingivitisBlock(classification)).toBe(
       "Periodontal diagnosis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
     );
+  });
+
+  it("documents the basis and optional location for a reduced non-periodontitis periodontium", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      context: "health-reduced-non-periodontitis",
+      reducedPeriodontiumBases: [
+        "Previous crown lengthening",
+        "Orthodontic movement-associated recession",
+      ],
+      reducedPeriodontiumBasisDetails: "Localized to mandibular incisors",
+    };
+
+    expect(formatHealthGingivitisBlock(classification))
+      .toBe(`Periodontal diagnosis: HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT
+Basis for reduced periodontium: Previous crown lengthening; Orthodontic movement-associated recession.
+Reduced periodontium details/location: Localized to mandibular incisors.`);
+
+    const copied = copyPeriodontalClassification(classification);
+    expect(copied).toEqual(classification);
+    expect(copied.gingivalHealth.reducedPeriodontiumBases).not.toBe(
+      classification.gingivalHealth.reducedPeriodontiumBases,
+    );
+
+    classification.gingivalHealth.context = "health-intact";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
+    );
+  });
+
+  it("adds empty reduced-periodontium fields to legacy classifications", () => {
+    const legacy = createEmptyPeriodontalClassification() as unknown as Record<
+      string,
+      unknown
+    >;
+    const gingivalHealth = {
+      ...(legacy.gingivalHealth as Record<string, unknown>),
+    };
+    delete gingivalHealth.reducedPeriodontiumBases;
+    delete gingivalHealth.reducedPeriodontiumBasisDetails;
+    legacy.gingivalHealth = gingivalHealth;
+
+    expect(
+      normalizePeriodontalClassification(legacy).gingivalHealth,
+    ).toMatchObject({
+      reducedPeriodontiumBases: [],
+      reducedPeriodontiumBasisDetails: "",
+    });
   });
 
   it("omits a selected treated context when periodontal support is incompatible", () => {

@@ -90,6 +90,28 @@ export const healthGingivitisContextChoices = [
   },
 ] as const;
 
+export const reducedPeriodontiumBasisChoices = [
+  "Gingival recession—cause not established",
+  "Suspected toothbrushing-associated traumatic recession",
+  "Previous crown lengthening",
+  "Previous periodontal or mucogingival surgery",
+  "Orthodontic movement-associated recession",
+  "Anatomic/mucogingival factors",
+  "Other local traumatic factor",
+  "Other non-periodontitis attachment loss",
+  "Unknown",
+  "Other",
+] as const;
+
+export function isReducedNonPeriodontitisContext(
+  context: HealthGingivitisContext,
+): boolean {
+  return (
+    context === "health-reduced-non-periodontitis" ||
+    context === "gingivitis-reduced-non-periodontitis"
+  );
+}
+
 export const assessedPresenceChoices = [
   { value: "not-assessed", label: "Not assessed" },
   { value: "absent", label: "Absent" },
@@ -428,6 +450,8 @@ export interface GingivalHealthAssessment {
   ppd4OrGreaterWithBop: AssessedBoolean;
   progressiveDestruction: AssessedBoolean;
   context: HealthGingivitisContext;
+  reducedPeriodontiumBases: string[];
+  reducedPeriodontiumBasisDetails: string;
   overrideReason: string;
 }
 
@@ -455,6 +479,8 @@ export function createEmptyGingivalHealthAssessment(): GingivalHealthAssessment 
     ppd4OrGreaterWithBop: "not-assessed",
     progressiveDestruction: "not-assessed",
     context: "",
+    reducedPeriodontiumBases: [],
+    reducedPeriodontiumBasisDetails: "",
     overrideReason: "",
   };
 }
@@ -477,32 +503,59 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
   };
 }
 
+export function normalizePeriodontalClassification(
+  value: unknown,
+): PeriodontalClassification {
+  const empty = createEmptyPeriodontalClassification();
+  if (!value || typeof value !== "object" || Array.isArray(value)) return empty;
+  const candidate = value as Record<string, unknown>;
+  const gingivalHealth = candidate.gingivalHealth;
+  const normalizedGingivalHealth =
+    gingivalHealth &&
+    typeof gingivalHealth === "object" &&
+    !Array.isArray(gingivalHealth)
+      ? {
+          ...empty.gingivalHealth,
+          ...gingivalHealth,
+        }
+      : empty.gingivalHealth;
+  return {
+    ...empty,
+    ...candidate,
+    gingivalHealth: normalizedGingivalHealth,
+  } as PeriodontalClassification;
+}
+
 export function copyPeriodontalClassification(
   classification: PeriodontalClassification,
 ): PeriodontalClassification {
+  const normalized = normalizePeriodontalClassification(classification);
   return {
-    ...classification,
-    stageBasis: classification.stageBasis.map((evidence) => ({
+    ...normalized,
+    stageBasis: normalized.stageBasis.map((evidence) => ({
       ...evidence,
       ...(evidence.measurement
         ? { measurement: { ...evidence.measurement } }
         : {}),
     })),
-    gradeBasis: classification.gradeBasis.map((evidence) => ({
+    gradeBasis: normalized.gradeBasis.map((evidence) => ({
       ...evidence,
       ...(evidence.measurement
         ? { measurement: { ...evidence.measurement } }
         : {}),
     })),
-    smoking: { ...classification.smoking },
-    diabetes: { ...classification.diabetes },
+    smoking: { ...normalized.smoking },
+    diabetes: { ...normalized.diabetes },
     gingivalHealth: {
-      ...classification.gingivalHealth,
-      ...(classification.gingivalHealth.bopPercent
-        ? { bopPercent: { ...classification.gingivalHealth.bopPercent } }
+      ...normalized.gingivalHealth,
+      reducedPeriodontiumBases: [
+        ...(normalized.gingivalHealth.reducedPeriodontiumBases ?? []),
+      ],
+      ...(normalized.gingivalHealth.bopPercent
+        ? { bopPercent: { ...normalized.gingivalHealth.bopPercent } }
         : {}),
-      ...(classification.gingivalHealth.maximumPpd
-        ? { maximumPpd: { ...classification.gingivalHealth.maximumPpd } }
+      ...(normalized.gingivalHealth.maximumPpd
+        ? { maximumPpd: { ...normalized.gingivalHealth.maximumPpd } }
         : {}),
     },
   };
@@ -1307,12 +1360,34 @@ export function formatHealthGingivitisBlock(
     assessment.context,
   );
   const overrideReason = assessment.overrideReason.trim();
+  const reducedPeriodontiumBases = isReducedNonPeriodontitisContext(
+    assessment.context,
+  )
+    ? (assessment.reducedPeriodontiumBases ?? [])
+        .map((basis) => basis.trim())
+        .filter(Boolean)
+    : [];
+  const reducedPeriodontiumBasisDetails = isReducedNonPeriodontitisContext(
+    assessment.context,
+  )
+    ? (assessment.reducedPeriodontiumBasisDetails ?? "").trim()
+    : "";
   const label =
     classification.diagnosis === "periodontitis"
       ? "Current periodontal condition"
       : "Periodontal diagnosis";
   return [
     `${label}: ${contextLabel}`,
+    reducedPeriodontiumBases.length
+      ? `Basis for reduced periodontium: ${reducedPeriodontiumBases.join(
+          "; ",
+        )}.`
+      : "",
+    reducedPeriodontiumBasisDetails
+      ? `Reduced periodontium details/location: ${reducedPeriodontiumBasisDetails}${
+          /[.!?]$/.test(reducedPeriodontiumBasisDetails) ? "" : "."
+        }`
+      : "",
     overrideReason
       ? `Health/Gingivitis override: ${overrideReason}${
           /[.!?]$/.test(overrideReason) ? "" : "."
