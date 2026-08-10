@@ -35,6 +35,7 @@ import {
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import type { CatalogueKey } from "@/lib/catalogues/catalogue";
 import {
   DropdownChevron,
   formControlClass,
@@ -677,6 +678,7 @@ export function TreatmentEntryList({
   onAdd,
   onChange,
   showCareType = false,
+  catalogueKey = "dental-treatment.items",
 }: {
   id: string;
   label: string;
@@ -685,6 +687,7 @@ export function TreatmentEntryList({
   onAdd: () => void;
   onChange: (entries: RecareTreatmentEntry[]) => void;
   showCareType?: boolean;
+  catalogueKey?: CatalogueKey;
 }) {
   function updateEntry(
     entryId: string,
@@ -749,7 +752,7 @@ export function TreatmentEntryList({
                   catalogueKey={
                     showCareType && entry.careType === "preventive"
                       ? "hygiene-treatment.items"
-                      : "dental-treatment.items"
+                      : catalogueKey
                   }
                   value={entry.treatmentType}
                   onChange={(value) =>

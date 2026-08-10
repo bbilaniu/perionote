@@ -187,6 +187,14 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
       toothArea: "14",
     },
   ],
+  hygieneTreatmentOptions: [
+    {
+      id: "fixture-hygiene-option-1",
+      treatmentType: "Synthetic periodontal therapy",
+      toothArea: "Q2, Q3",
+      careType: "preventive",
+    },
+  ],
   treatmentPlan: [
     {
       id: "fixture-plan-1",

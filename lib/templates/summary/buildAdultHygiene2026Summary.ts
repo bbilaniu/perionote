@@ -799,16 +799,21 @@ export function buildAdultHygiene2026Summary(
     labelledLine("Hygiene goal", form.hygieneGoal),
   ];
 
-  const treatmentOptions = formatTreatmentEntries(
-    "Treatment Options Discussed",
+  const dentalTreatmentOptions = formatTreatmentEntries(
+    "Dental Treatment Options Discussed",
     form.treatmentOptions,
     false,
   );
-  const coordinatedRecommendations = form.treatmentPlan.some((entry) =>
+  const hygieneTreatmentOptions = formatTreatmentEntries(
+    "Hygiene Treatment Options Discussed",
+    form.hygieneTreatmentOptions,
+    false,
+  );
+  const combinedTreatmentPlan = form.treatmentPlan.some((entry) =>
     Boolean(entry.treatmentType.trim()),
   )
     ? formatTreatmentEntries(
-        "Coordinated Treatment Recommendations",
+        "Combined Treatment Plan",
         form.treatmentPlan,
         true,
       )
@@ -927,8 +932,9 @@ export function buildAdultHygiene2026Summary(
       : []),
     cariesRisk,
     ...(includesHygiene ? [oralHygieneAndEducation] : []),
-    treatmentOptions,
-    coordinatedRecommendations,
+    dentalTreatmentOptions,
+    hygieneTreatmentOptions,
+    combinedTreatmentPlan,
     ...(includesHygiene ? [treatmentCompleted] : []),
     ...(output === "hygiene" ? [hygieneAppliancesAndHistory] : []),
     ...(output === "complete"

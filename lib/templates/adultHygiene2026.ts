@@ -288,6 +288,7 @@ export interface AdultHygiene2026Form {
   treatmentRecommendedHygieneMaintenance: boolean;
   otherTreatmentRecommended: string;
   treatmentOptions: RecareTreatmentEntry[];
+  hygieneTreatmentOptions: RecareTreatmentEntry[];
   treatmentPlan: RecareTreatmentEntry[];
   treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
   localAnesthesiaNoContraindication: boolean;
@@ -406,6 +407,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     treatmentRecommendedHygieneMaintenance: false,
     otherTreatmentRecommended: "",
     treatmentOptions: [],
+    hygieneTreatmentOptions: [],
     treatmentPlan: [],
     treatmentCompleted: [],
     ...createEmptyLocalAnesthesiaValue(),

@@ -322,7 +322,7 @@ Hygiene goal:
 
 Treatment options discussed:
 
-Coordinated treatment recommendations:
+Combined treatment plan:
 1) PREVENTIVE — HYGIENE MAINTENANCE
 2) RESTORATIVE —
 

@@ -1009,7 +1009,7 @@ test("2026 Local Anesthesia limits preset Tooth/area choices by route", async ({
   }
 });
 
-test("2026 coordinated plan routes preventive care to the hygiene treatment catalogue", async ({
+test("2026 combined treatment plan routes preventive care to the hygiene treatment catalogue", async ({
   page,
 }) => {
   await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
@@ -1018,7 +1018,7 @@ test("2026 coordinated plan routes preventive care to the hygiene treatment cata
     .getByRole("button", { name: "Add recommendation", exact: true })
     .click();
   const planEntry = page
-    .getByRole("list", { name: "Coordinated plan entries", exact: true })
+    .getByRole("list", { name: "Combined treatment plan entries", exact: true })
     .locator(":scope > li")
     .first();
   const careType = planEntry.getByRole("button", {
@@ -1069,6 +1069,121 @@ test("2026 coordinated plan routes preventive care to the hygiene treatment cata
       exact: true,
     }),
   ).toHaveCount(0);
+});
+
+test("2026 copies dental and hygiene options into one deduplicated combined treatment plan", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(
+    page.getByRole("heading", { name: "Treatment plan", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", {
+      name: "Treatment completed today",
+      exact: true,
+    }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", {
+      name: "Combined treatment plan",
+      exact: true,
+    }),
+  ).toHaveCount(1);
+
+  await page
+    .getByRole("button", { name: "Add treatment option", exact: true })
+    .click();
+  const dentalOption = page
+    .getByRole("list", {
+      name: "Dental treatment options discussed entries",
+      exact: true,
+    })
+    .locator(":scope > li")
+    .first();
+  const dentalType = dentalOption.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await dentalType.focus();
+  await page
+    .getByRole("option", {
+      name: "Filling (Direct Restoration) Starter",
+      exact: true,
+    })
+    .click();
+  await dentalOption
+    .getByRole("textbox", { name: "Tooth/area", exact: true })
+    .fill("14");
+
+  await page
+    .getByRole("button", {
+      name: "Add hygiene treatment option",
+      exact: true,
+    })
+    .click();
+  const hygieneOption = page
+    .getByRole("list", {
+      name: "Hygiene treatment options discussed entries",
+      exact: true,
+    })
+    .locator(":scope > li")
+    .first();
+  const hygieneType = hygieneOption.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await hygieneType.focus();
+  await page
+    .getByRole("option", {
+      name: "Periodontal therapy Starter",
+      exact: true,
+    })
+    .click();
+  await hygieneOption
+    .getByRole("textbox", { name: "Tooth/area", exact: true })
+    .fill("Q2, Q3");
+
+  const addToPlan = page.getByRole("button", {
+    name: "Add options above to combined treatment plan",
+    exact: true,
+  });
+  await addToPlan.click();
+  const planEntries = page
+    .getByRole("list", { name: "Combined treatment plan entries", exact: true })
+    .locator(":scope > li");
+  await expect(planEntries).toHaveCount(2);
+  await expect(
+    planEntries.nth(0).getByRole("button", { name: "Care type", exact: true }),
+  ).toContainText("Restorative");
+  await expect(
+    planEntries.nth(1).getByRole("button", { name: "Care type", exact: true }),
+  ).toContainText("Preventive");
+  await expect(
+    planEntries.nth(0).getByRole("combobox", {
+      name: "Treatment type",
+      exact: true,
+    }),
+  ).toHaveValue("Filling (Direct Restoration)");
+  await expect(
+    planEntries.nth(1).getByRole("combobox", {
+      name: "Treatment type",
+      exact: true,
+    }),
+  ).toHaveValue("Periodontal therapy");
+
+  await addToPlan.click();
+  await expect(planEntries).toHaveCount(2);
+  const summary = page.locator("#adult-hygiene-summary");
+  await expect(summary).toContainText("Dental Treatment Options Discussed:");
+  await expect(summary).toContainText("Hygiene Treatment Options Discussed:");
+  await expect(summary).toContainText(
+    "[Restorative] Filling (Direct Restoration) — 14",
+  );
+  await expect(summary).toContainText(
+    "[Preventive] Periodontal therapy — Q2, Q3",
+  );
 });
 
 test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({

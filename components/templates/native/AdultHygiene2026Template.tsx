@@ -241,6 +241,7 @@ const adultHygieneDraftArrayItemShapes = {
     timeAdministered: "",
   },
   treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+  hygieneTreatmentOptions: { id: "", treatmentType: "", toothArea: "" },
   treatmentPlan: { id: "", treatmentType: "", toothArea: "" },
 } as const;
 
@@ -3194,6 +3195,9 @@ export function AdultHygiene2026Template({
         toothAreas: [...entry.toothAreas],
       })),
       treatmentOptions: fixture.treatmentOptions.map((entry) => ({ ...entry })),
+      hygieneTreatmentOptions: fixture.hygieneTreatmentOptions.map((entry) => ({
+        ...entry,
+      })),
       treatmentPlan: fixture.treatmentPlan.map((entry) => ({ ...entry })),
     });
     setPatientIdError("");
@@ -3381,6 +3385,45 @@ export function AdultHygiene2026Template({
       toothArea: "",
       careType,
     };
+  }
+
+  function addDiscussedOptionsToCombinedPlan() {
+    const normalize = (value: string) =>
+      value.normalize("NFKC").trim().toLocaleLowerCase("en-CA");
+    const identity = (
+      entry: AdultHygiene2026Form["treatmentPlan"][number],
+      careType: "preventive" | "restorative" | "other",
+    ) =>
+      `${careType}|${normalize(entry.treatmentType)}|${normalize(
+        entry.toothArea,
+      )}`;
+    const seen = new Set(
+      form.treatmentPlan
+        .filter((entry) => entry.treatmentType.trim())
+        .map((entry) => identity(entry, entry.careType ?? "other")),
+    );
+    const additions: AdultHygiene2026Form["treatmentPlan"] = [];
+
+    for (const [options, careType] of [
+      [form.treatmentOptions, "restorative"],
+      [form.hygieneTreatmentOptions, "preventive"],
+    ] as const) {
+      for (const entry of options) {
+        if (!entry.treatmentType.trim()) continue;
+        const key = identity(entry, careType);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        additions.push({
+          ...entry,
+          id: createTreatmentRecommendation("plan", careType).id,
+          careType,
+        });
+      }
+    }
+
+    if (additions.length) {
+      updateField("treatmentPlan", [...form.treatmentPlan, ...additions]);
+    }
   }
 
   function resetForm() {
@@ -4395,7 +4438,7 @@ export function AdultHygiene2026Template({
             />
           </Section>
 
-          <Section title="Treatment">
+          <Section title="Treatment plan">
             <TreatmentEntryList
               id="adult-hygiene-treatment-options"
               label="Dental treatment options discussed"
@@ -4404,21 +4447,31 @@ export function AdultHygiene2026Template({
               onAdd={() =>
                 updateField("treatmentOptions", [
                   ...form.treatmentOptions,
-                  createTreatmentRecommendation("option"),
+                  createTreatmentRecommendation("option", "restorative"),
                 ])
               }
               onChange={(value) => updateField("treatmentOptions", value)}
             />
+            <TreatmentEntryList
+              id="adult-hygiene-hygiene-treatment-options"
+              label="Hygiene treatment options discussed"
+              addLabel="Add hygiene treatment option"
+              catalogueKey="hygiene-treatment.items"
+              entries={form.hygieneTreatmentOptions}
+              onAdd={() =>
+                updateField("hygieneTreatmentOptions", [
+                  ...form.hygieneTreatmentOptions,
+                  createTreatmentRecommendation("option", "preventive"),
+                ])
+              }
+              onChange={(value) =>
+                updateField("hygieneTreatmentOptions", value)
+              }
+            />
             <div className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
-              <div>
-                <h3 className="font-semibold">
-                  Coordinated treatment recommendations
-                </h3>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Order preventive and restorative care in the intended
-                  sequence.
-                </p>
-              </div>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Order preventive and restorative care in the intended sequence.
+              </p>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
@@ -4440,32 +4493,19 @@ export function AdultHygiene2026Template({
                   type="button"
                   className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
                   disabled={
-                    !form.treatmentOptions.some((entry) =>
-                      Boolean(entry.treatmentType.trim()),
-                    )
+                    ![
+                      ...form.treatmentOptions,
+                      ...form.hygieneTreatmentOptions,
+                    ].some((entry) => Boolean(entry.treatmentType.trim()))
                   }
-                  onClick={() =>
-                    updateField("treatmentPlan", [
-                      ...form.treatmentPlan,
-                      ...form.treatmentOptions
-                        .filter((entry) => entry.treatmentType.trim())
-                        .map((entry) => ({
-                          ...entry,
-                          id: createTreatmentRecommendation(
-                            "plan",
-                            "restorative",
-                          ).id,
-                          careType: entry.careType ?? "restorative",
-                        })),
-                    ])
-                  }
+                  onClick={addDiscussedOptionsToCombinedPlan}
                 >
-                  Add options above to coordinated plan
+                  Add options above to combined treatment plan
                 </button>
               </div>
               <TreatmentEntryList
                 id="adult-hygiene-treatment-plan"
-                label="Coordinated plan"
+                label="Combined treatment plan"
                 addLabel="Add recommendation"
                 entries={form.treatmentPlan}
                 onAdd={() =>
@@ -4478,6 +4518,9 @@ export function AdultHygiene2026Template({
                 showCareType
               />
             </div>
+          </Section>
+
+          <Section title="Treatment completed today">
             <StructuredTreatmentCompletedList
               entries={form.treatmentCompleted}
               oheRecap={buildOheTreatmentRecap(form)}
@@ -4485,6 +4528,7 @@ export function AdultHygiene2026Template({
               onApplyRecare={applyRecareExam}
               radiographsHref="#adult-hygiene-radiographs"
               onChange={(value) => updateField("treatmentCompleted", value)}
+              showHeading={false}
             />
             <LocalAnesthesiaControl
               value={{

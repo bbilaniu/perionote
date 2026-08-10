@@ -151,6 +151,7 @@ export function TreatmentCompletedList({
   onApplyRecare,
   radiographsHref,
   onChange,
+  showHeading = true,
 }: {
   entries: AdultHygieneTreatmentCompletedEntry[];
   oheRecap?: string;
@@ -158,6 +159,7 @@ export function TreatmentCompletedList({
   onApplyRecare?: () => void;
   radiographsHref?: string;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
+  showHeading?: boolean;
 }) {
   const { findEquivalent, getItems, rememberValue, storageStatus } =
     useCatalogues();
@@ -291,16 +293,27 @@ export function TreatmentCompletedList({
   }
 
   return (
-    <section className="space-y-4" aria-labelledby="completed-care-heading">
-      <div>
-        <h3 id="completed-care-heading" className="font-semibold">
-          Treatment completed today
-        </h3>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+    <section
+      className="space-y-4"
+      aria-labelledby={showHeading ? "completed-care-heading" : undefined}
+      aria-label={showHeading ? undefined : "Treatment completed today controls"}
+    >
+      {showHeading ? (
+        <div>
+          <h3 id="completed-care-heading" className="font-semibold">
+            Treatment completed today
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            Choose completed care by category. Catalogue defaults prefill common
+            quantities and products, while this encounter remains editable.
+          </p>
+        </div>
+      ) : (
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           Choose completed care by category. Catalogue defaults prefill common
           quantities and products, while this encounter remains editable.
         </p>
-      </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <button
           type="button"

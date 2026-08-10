@@ -62,6 +62,7 @@ const catalogueTabGroups: Array<{
       "clinical-exam.additional-occlusal-findings",
     ],
   },
+  {section: "Treatment", title: "Dental treatment", keys: ["dental-treatment.items", "hygiene-treatment.items"]},
   {
     section: "Continuity of care",
     title: "Intervals and next visits",

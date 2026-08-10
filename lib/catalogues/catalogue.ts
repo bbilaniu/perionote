@@ -660,7 +660,7 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
   {
     key: "hygiene-treatment.desensitizer",
     section: "Treatment",
-    title: "Desensitizer",
+    title: "Desensitizing and remineralizing products",
     fieldLabels: ["Desensitizer"],
     seeds: desensitizerSeeds,
     lifecycle: "pilot",

@@ -64,7 +64,13 @@ describe("2026 Adult Hygiene independence", () => {
 
     for (const summary of [complete, hygiene, recare]) {
       expect(summary).toContain("Last Recare Date: 2026-01-15");
-      expect(summary).toContain("Coordinated Treatment Recommendations:");
+      expect(summary).toContain("Dental Treatment Options Discussed:");
+      expect(summary).toContain(
+        "Synthetic restorative consultation — 14",
+      );
+      expect(summary).toContain("Hygiene Treatment Options Discussed:");
+      expect(summary).toContain("Synthetic periodontal therapy — Q2, Q3");
+      expect(summary).toContain("Combined Treatment Plan:");
       expect(summary).toContain("[Preventive] Hygiene maintenance — full mouth");
       expect(summary).toContain(
         "[Restorative] Synthetic restorative treatment — 14",
@@ -113,7 +119,9 @@ describe("2026 Adult Hygiene independence", () => {
       "Plaque:",
       "Moderate caries risk",
       "Oral hygiene compliance:",
-      "Coordinated Treatment Recommendations:",
+      "Dental Treatment Options Discussed:",
+      "Hygiene Treatment Options Discussed:",
+      "Combined Treatment Plan:",
       "Treatment completed today:",
       "Recommended Recare Interval:",
       "Recommended Hygiene Interval:",
@@ -197,6 +205,7 @@ describe("2026 Adult Hygiene independence", () => {
       "toothFindings",
       "odontogramUpToDate",
       "treatmentOptions",
+      "hygieneTreatmentOptions",
       "treatmentPlan",
       "cpapStatus",
       "occlusalSplintStatus",
