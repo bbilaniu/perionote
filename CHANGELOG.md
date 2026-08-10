@@ -1,5 +1,15 @@
 # hygienenote
 
+## 0.9.0
+
+### Minor Changes
+
+- bf24a31: Add a unified 2026 Adult Hygiene encounter with the complete Recare assessment, combined preventive/restorative treatment planning, separate dental and hygiene follow-up, and Complete, Hygiene, and Recare note outputs. Complete notes include each populated dental and hygiene next visit exactly once. Keep dental and hygiene treatment options in separate catalogue-backed lists, output both discussed-option sections, and copy them into one ordered combined treatment plan as restorative and preventive care without duplicating existing recommendations. Split treatment planning from treatment completed today in the encounter UI. Update the 2021 and 2026 templates to use Recare terminology, add periodic examination/recare as a chief concern, improve structured-card collapsing, refine form and EOE/IOE output spacing, provide transparent periodontal and caries decision support, consolidate temporomandibular, lymph-node, OHE, night-guard/occlusal-splint, and per-finding occlusal-location controls with explicit legacy-conflict handling, add optional per-line occlusal-finding output and conditional removable-dentures comments, use native checkbox and radio semantics for persistent choices, and compose completed care from linked radiographs, an explicit recare exam, and structured scaling, polish, and OHE procedure cards. Add structured local-anesthesia documentation for injection, topical, and rinse routes, including catalogue-backed products, an explicit Dyclonine rinse action, totals, timing, and post-anesthetic assessment. Applying Standard Treatment now uses the current completed-care catalogue labels and structured defaults without automatically charting Dyclonine. Applying Standard OHE now prefills a non-destructive flossing and Bass-brushing hygiene goal. Coordinate PPE, Class 5 indicator, and sterilization-code documentation in the encounter header. Replace counted radiograph catalogue labels with reusable radiograph types and encounter-specific image counts, allow custom types with remembered defaults, organize completed-care catalogue entries into exams and diagnostics, instrumentation, product applications, preventive procedures, education, and other care, add a polishing-product catalogue with structured Enamel Pro® Prophy Paste flavour variants, split hygiene and dentist next-visit values into dedicated catalogue tabs, and group recare, hygiene, and next-visit scheduling catalogues under Continuity of care while preserving legacy catalogue imports and drafts.
+
+### Patch Changes
+
+- 0cbb255: Model fluoride varnish, SDF, and desensitizer applications as distinct structured completed-care procedures backed by one typed Desensitizing and remineralizing products catalogue. Remove the `NONE` product and migrate older completed-care preferences and standalone 2026 desensitizer values.
+
 ## 0.8.0
 
 ### Minor Changes
