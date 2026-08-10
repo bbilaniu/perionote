@@ -671,8 +671,16 @@ export function buildAdultHygiene2026Summary(
       index === 0 ? line.replace(/^Extraoral/, "EOE") : line,
     ),
     examLine("TMJ", form.tmjStatus, form.tmjFindings),
-    examLine("Masseter palpation", form.masseterStatus, form.masseterFindings),
-    examLine("TMJ loading test", form.tmjLoadStatus, form.tmjLoadFindings),
+    ...[
+      examLine(
+        "Masseter palpation",
+        form.masseterStatus,
+        form.masseterFindings,
+      ),
+      examLine("TMJ loading test", form.tmjLoadStatus, form.tmjLoadFindings),
+    ]
+      .filter(Boolean)
+      .map((line) => `  - ${line}`),
   ];
   const intraoralExam = [
     ...formatRecareIntraoralLines(form).map((line, index) =>

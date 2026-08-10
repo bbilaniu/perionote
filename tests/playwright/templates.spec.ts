@@ -338,7 +338,7 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
     "IOE:\n  - Tongue: coated.",
   );
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    /TMJ loading test: WNL\.\n\nIOE:/,
+    /  - TMJ loading test: WNL\.\n\nIOE:/,
   );
   await page
     .getByRole("group", { name: "Structured intraoral observations" })

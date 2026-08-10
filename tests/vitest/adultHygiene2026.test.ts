@@ -42,13 +42,30 @@ describe("2026 Adult Hygiene independence", () => {
     expect(summary).toContain(`EOE:
   - TMJ clicking (laterality: Left; status: Asymptomatic; phase: On open).
   Observations: Synthetic extraoral observation.`);
-    expect(summary).toContain("Masseter palpation: WNL.");
+    expect(summary).toContain("  - Masseter palpation: WNL.");
     expect(summary).toContain("Lymph nodes: WNL.");
-    expect(summary).toContain("TMJ loading test: WNL.");
+    expect(summary).toContain("  - TMJ loading test: WNL.");
     expect(summary).toContain(`IOE:
   - Tongue: fissured.
   - Saliva: normal flow.
   Observations: Synthetic intraoral observation.`);
+  });
+
+  it("lists temporomandibular assessment findings as EOE bullet points", () => {
+    const summary = buildAdultHygiene2026Summary({
+      ...createEmptyAdultHygiene2026Form(),
+      extraoralStatus: "wnl",
+      tmjStatus: "wnl",
+      masseterStatus: "findings",
+      masseterFindings: "Tender on the left",
+      tmjLoadStatus: "findings",
+      tmjLoadFindings: "Mild discomfort on loading",
+    });
+
+    expect(summary).toContain(`EOE: WNL.
+TMJ: WNL.
+  - Masseter palpation: Tender on the left.
+  - TMJ loading test: Mild discomfort on loading.`);
   });
 
   it("composes complete, hygiene, and recare notes from one encounter", () => {
