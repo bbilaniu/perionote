@@ -49,6 +49,13 @@ describe("2026 Adult Hygiene independence", () => {
   - Tongue: fissured.
   - Saliva: normal flow.
   Observations: Synthetic intraoral observation.`);
+    expect(summary).toContain(
+      "Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS",
+    );
+    expect(summary).toContain(
+      "Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.",
+    );
+    expect(summary.match(/Periodontal diagnosis:/g)).toHaveLength(1);
   });
 
   it("lists temporomandibular assessment findings as EOE bullet points", () => {
@@ -66,6 +73,34 @@ describe("2026 Adult Hygiene independence", () => {
 TMJ: WNL.
   - Masseter palpation: Tender on the left.
   - TMJ loading test: Mild discomfort on loading.`);
+  });
+
+  it("shows Periodontal diagnosis while a Health or Gingivitis classification is pending", () => {
+    for (const diagnosis of ["health", "gingivitis"] as const) {
+      const form = createEmptyAdultHygiene2026Form();
+      form.periodontalClassification.diagnosis = diagnosis;
+
+      expect(buildAdultHygiene2026Summary(form)).toBe(
+        "Periodontal diagnosis:",
+      );
+    }
+
+    const classified = createEmptyAdultHygiene2026Form();
+    classified.periodontalClassification.diagnosis = "gingivitis";
+    classified.periodontalClassification.gingivalHealth.context =
+      "gingivitis-intact";
+    expect(buildAdultHygiene2026Summary(classified)).toBe(
+      "Periodontal diagnosis: GINGIVITIS - INTACT PERIODONTIUM",
+    );
+
+    const periodontitis = createEmptyAdultHygiene2026Form();
+    periodontitis.periodontalClassification.diagnosis = "periodontitis";
+    periodontitis.periodontalClassification.extent = "molar-incisor";
+    periodontitis.periodontalClassification.stage = "III";
+    periodontitis.periodontalClassification.grade = "B";
+    expect(buildAdultHygiene2026Summary(periodontitis)).toBe(
+      "Periodontal diagnosis: MOLAR/INCISOR PATTERN PERIODONTITIS, Stage III, Grade B.",
+    );
   });
 
   it("composes complete, hygiene, and recare notes from one encounter", () => {

@@ -65,7 +65,7 @@ Intraoral Images: No.`);
   - Bleeding on probing (BOP): 18%.
   - Maximum PPD: 3 mm.`);
     expect(summary).toContain(
-      "Health/Gingivitis: GINGIVITIS - INTACT PERIODONTIUM",
+      "Periodontal diagnosis: GINGIVITIS - INTACT PERIODONTIUM",
     );
     expect(summary).toContain(`OHI Reviewed
 OHI techniques reviewed: Bass brushing; C-shape flossing technique.

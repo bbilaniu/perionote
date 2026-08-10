@@ -1918,7 +1918,7 @@ test("Adult Hygiene charts selected periodontal classifications with optional ov
   await expect(page.getByLabel("Confirm selected stage")).toHaveCount(0);
   await expect(page.getByLabel("Confirm selected grade")).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Patient-specific stage evidence:[\s\S]*interdental CAL 5 mm\.[\s\S]*maximum PPD 6 mm\.[\s\S]*Patient-specific grade evidence:[\s\S]*bone-loss\/age ratio 0\.72\.[\s\S]*Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\./
+    /Patient-specific stage evidence:[\s\S]*interdental CAL 5 mm\.[\s\S]*maximum PPD 6 mm\.[\s\S]*Patient-specific grade evidence:[\s\S]*bone-loss\/age ratio 0\.72\.[\s\S]*Periodontal diagnosis: GENERALIZED PERIODONTITIS, Stage III, Grade B\./
   );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /^(Stage basis|Grade basis|Grade modifiers):/m
@@ -2033,7 +2033,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toContain(
-    "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM"
+    "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM"
   );
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
@@ -2045,7 +2045,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toMatch(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*Health\/Gingivitis override: Clinician-selected health classification\./
+    /Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM[\s\S]*Health\/Gingivitis override: Clinician-selected health classification\./
   );
 });
 

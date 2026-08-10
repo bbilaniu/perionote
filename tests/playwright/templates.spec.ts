@@ -1386,6 +1386,33 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
     "BOP 5% is below the 10% case threshold.",
   );
 
+  const diagnosis = page.getByRole("button", {
+    name: "Periodontal diagnosis category",
+    exact: true,
+  });
+  await diagnosis.click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Periodontal diagnosis:\n\n-ALL PROPER PPE",
+  );
+
+  const healthGingivitisClassification = page.getByRole("button", {
+    name: "Health/Gingivitis classification",
+    exact: true,
+  });
+  await healthGingivitisClassification.click();
+  await page
+    .getByRole("option", {
+      name: "HEALTH - INTACT PERIODONTIUM",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
+  );
+
   const cariesRiskLevel = page.getByRole("button", {
     name: "Caries risk level",
     exact: true,

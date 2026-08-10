@@ -104,8 +104,8 @@ Patient-specific grade evidence:
     - Smoking: non-smoker.
     - Diabetes: no diagnosis of diabetes / normoglycemic.
 
-Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
-Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
+Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
+Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
 Periodontal status: Periodontal disease remission/control.
 Periodontal status comment: Synthetic periodontal status comment.
 
@@ -216,8 +216,10 @@ Date Booked: 2026-11-15`);
     const summary = buildAdultHygiene2021Summary(form);
     expect(summary).toBe(`Patient-specific grade evidence:
   Grade modifiers:
-    - Smoking: smokes 12 cigarettes/day.`);
-    expect(summary).not.toContain("Periodontal diagnosis:");
+    - Smoking: smokes 12 cigarettes/day.
+
+Periodontal diagnosis:`);
+    expect(summary).not.toContain("GINGIVITIS");
   });
 
   it("charts cigarette smoking when cigarettes per day is not entered", () => {
@@ -685,7 +687,7 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     };
 
     expect(buildAdultHygiene2021Summary(form))
-      .toBe(`Periodontal diagnosis: Generalized periodontitis, Stage II, Grade B.
+      .toBe(`Periodontal diagnosis: GENERALIZED PERIODONTITIS, Stage II, Grade B.
 Stage override: Synthetic stage context.
 Grade override: Synthetic grade context.
 
@@ -729,7 +731,7 @@ Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.5.
 
-Periodontal diagnosis: Periodontitis, Stage IV, Grade C.`);
+Periodontal diagnosis: PERIODONTITIS, Stage IV, Grade C.`);
     expect(summary).not.toMatch(/Stage override:|Grade override:/);
   });
 });

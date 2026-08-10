@@ -607,8 +607,25 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM",
+      "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
     );
+  });
+
+  it("shows an empty Periodontal diagnosis field while Health/Gingivitis classification is pending", () => {
+    const classification = createEmptyPeriodontalClassification();
+
+    classification.diagnosis = "health";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis:",
+    );
+
+    classification.diagnosis = "gingivitis";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis:",
+    );
+
+    classification.diagnosis = "";
+    expect(formatHealthGingivitisBlock(classification)).toBe("");
   });
 
   it("keeps ClearDent wording for a selected treated-periodontitis context", () => {
@@ -627,7 +644,7 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT",
+      "Current periodontal condition: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT",
     );
   });
 
@@ -645,7 +662,7 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+      "Periodontal diagnosis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
     );
   });
 
@@ -676,7 +693,7 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification))
-      .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
+      .toBe(`Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM
 Health/Gingivitis override: Clinician-confirmed exception.`);
   });
 
@@ -695,7 +712,7 @@ Health/Gingivitis override: Clinician-confirmed exception.`);
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM",
+      "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
     );
   });
 

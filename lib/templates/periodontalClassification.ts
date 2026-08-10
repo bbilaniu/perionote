@@ -1282,7 +1282,14 @@ export function formatHealthGingivitisBlock(
   classification: PeriodontalClassification,
 ): string {
   const assessment = classification.gingivalHealth;
-  if (!assessment.context) return "";
+  const pendingHealthOrGingivitisClassification =
+    classification.diagnosis === "health" ||
+    classification.diagnosis === "gingivitis";
+  if (!assessment.context) {
+    return pendingHealthOrGingivitisClassification
+      ? "Periodontal diagnosis:"
+      : "";
+  }
   const selectedContext = healthGingivitisContextChoices.find(
     (choice) => choice.value === assessment.context,
   );
@@ -1290,14 +1297,22 @@ export function formatHealthGingivitisBlock(
     selectedContext?.diagnosis === classification.diagnosis &&
     (classification.diagnosis !== "periodontitis" ||
       assessment.periodontium === "reduced-treated-periodontitis");
-  if (!contextIsAvailable) return "";
+  if (!contextIsAvailable) {
+    return pendingHealthOrGingivitisClassification
+      ? "Periodontal diagnosis:"
+      : "";
+  }
   const contextLabel = choiceLabel(
     healthGingivitisContextChoices,
     assessment.context,
   );
   const overrideReason = assessment.overrideReason.trim();
+  const label =
+    classification.diagnosis === "periodontitis"
+      ? "Current periodontal condition"
+      : "Periodontal diagnosis";
   return [
-    `Health/Gingivitis: ${contextLabel}`,
+    `${label}: ${contextLabel}`,
     overrideReason
       ? `Health/Gingivitis override: ${overrideReason}${
           /[.!?]$/.test(overrideReason) ? "" : "."

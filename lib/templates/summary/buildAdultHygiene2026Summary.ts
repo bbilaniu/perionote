@@ -417,12 +417,14 @@ export function formatPeriodontalClassification(
   );
   const diagnosisParts = [
     classification.diagnosis === "periodontitis" && classification.extent
-      ? `${extentLabels[classification.extent]} ${diagnosis.toLocaleLowerCase(
-          "en-CA"
-        )}`
+      ? `${extentLabels[classification.extent]} periodontitis`.toLocaleUpperCase(
+          "en-CA",
+        )
       : classification.diagnosis === "periodontitis" ||
         classification.diagnosis === "other"
-      ? diagnosis
+      ? classification.diagnosis === "periodontitis"
+        ? "PERIODONTITIS"
+        : diagnosis
       : "",
     stageCanBeCharted
       ? `Stage ${classification.stage}`
