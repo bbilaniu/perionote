@@ -251,6 +251,24 @@ describe("2026 Adult Hygiene independence", () => {
     ).toBe(true);
     expect(
       isAdultHygieneDraftForm({
+        ...createEmptyAdultHygiene2026Form(),
+        localAnesthesiaNoContraindication: true,
+        localAnesthesiaEntries: [
+          {
+            id: "dyclonine-rinse",
+            route: "rinse",
+            administrationType: "",
+            toothAreas: ["full mouth"],
+            product: "Dyclonine 1% rinse",
+            amountMl: "5",
+            durationSeconds: "60",
+            timeAdministered: "20:32",
+          },
+        ],
+      }),
+    ).toBe(true);
+    expect(
+      isAdultHygieneDraftForm({
         ...legacyDraft,
         treatmentPlan: [{ id: 42, treatmentType: "Invalid", toothArea: "" }],
       }),

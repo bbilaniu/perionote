@@ -241,6 +241,7 @@ const adultHygieneDraftArrayItemShapes = {
     durationSeconds: "",
     timeAdministered: "",
   },
+  "localAnesthesiaEntries[].toothAreas": "",
   treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
   hygieneTreatmentOptions: { id: "", treatmentType: "", toothArea: "" },
   treatmentPlan: { id: "", treatmentType: "", toothArea: "" },

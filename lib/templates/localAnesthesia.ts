@@ -114,7 +114,7 @@ export function formatLocalAnesthesiaSummary(
       const administrationType = trimmed(entry.administrationType);
       if (!administrationType || !area) continue;
       detailLines.push(
-        `${administrationType} ${area}: ${product} ${amount} ml${administeredAt}`,
+        `${administrationType} — ${area}: ${product} ${amount} ml${administeredAt}`,
       );
     }
     const numericAmount = Number(amount);

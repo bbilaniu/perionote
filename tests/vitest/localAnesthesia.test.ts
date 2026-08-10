@@ -72,4 +72,39 @@ describe("local anesthesia", () => {
   Adequate anesthesia achieved
   Patient tolerated rinse well.`);
   });
+
+  it("separates topical and injection locations with an em dash", () => {
+    expect(
+      formatLocalAnesthesiaSummary({
+        localAnesthesiaNoContraindication: false,
+        localAnesthesiaEntries: [
+          {
+            id: "topical",
+            route: "topical",
+            administrationType: "Sulcular application",
+            toothAreas: ["maxilla"],
+            product:
+              "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+            amountMl: "1.7",
+            durationSeconds: "",
+            timeAdministered: "20:33",
+          },
+          {
+            id: "injection",
+            route: "injection",
+            administrationType: "I/O",
+            toothAreas: ["S2"],
+            product: "Articaine 4% with 1:200K epinephrine",
+            amountMl: "1.8",
+            durationSeconds: "",
+            timeAdministered: "20:32",
+          },
+        ],
+        localAnesthesiaNoAdverseReactions: false,
+        localAnesthesiaAdequateAchieved: false,
+        localAnesthesiaNotes: "",
+      }),
+    ).toContain(`  Sulcular application — maxilla: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 8:33 PM)
+  I/O — S2: Articaine 4% with 1:200K epinephrine 1.8 ml (at 8:32 PM)`);
+  });
 });
