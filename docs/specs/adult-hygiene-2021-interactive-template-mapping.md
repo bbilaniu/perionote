@@ -98,7 +98,7 @@ values listed below. Anesthetic remains unseeded pending redesign:
 | `hygiene-treatment.completed`    | Treatment                  | Treatment completed today: treatment type | `hygiene-treatment`                    | 16 reviewed starters | Structured rows; reusable treatment type plus multi-value Tooth/area |
 | `hygiene-treatment.anesthetic`   | Treatment                  | Anesthetic                                | `hygiene-anaesthetic`                  | None—rework required | Single value                                                         |
 | `hygiene-treatment.desensitizer` | Treatment                  | Desensitizer                              | `desensitizer`                         | 4 complete options   | Single value                                                         |
-| `scheduling.recall-interval`     | Intervals and Next Visit   | Recommended recall interval               | `recommended-recall-interval`          | 3 complete options   | Single value                                                         |
+| `scheduling.recall-interval`     | Intervals and Next Visit   | Recommended recare interval               | `recommended-recall-interval`          | 3 complete options   | Single value                                                         |
 | `scheduling.hygiene-interval`    | Intervals and Next Visit   | Recommended hygiene interval              | `recommended-hygiene-interval`         | 4 complete options   | Single value                                                         |
 | `scheduling.next-visit`          | Intervals and Next Visit   | Next visit                                | `next-visit`                           | 7 complete options   | Single value                                                         |
 
@@ -112,7 +112,7 @@ The exact public starter labels are:
 - **OH aids reviewed/recommended:** `BASS-BRUSHING TECHNIQUE`; `SULCABRUSH`; `SUPERFLOSS`; `FLOSS THREADERS`; `C-SHAPE FLOSSING`; `PROPER TOOTHBRUSHING TECHNIQUE`; `INTERPROXIMAL BRUSH`; `SOFT PICKS`; `PROPER USE OF ELECTRIC TOOTHBRUSH`.
 - **Treatment completed today:** the eight accepted source values plus the eight reviewed issue 68 starters documented in the Treatment section below.
 - **Desensitizer:** `NONE`; `PREVIDENT FL`; `VOCO FL`; `crystal x-pur`.
-- **Recommended recall interval:** `12-month recall`; `6-month recall`; `9-month recall`.
+- **Recommended recare interval:** `12-month recall`; `6-month recall`; `9-month recall`.
 - **Recommended hygiene interval:** `3-month scale`; `4-month scale`; `6-month scale`; `N/A`.
 - **Next visit:** `6 MONTH SCALE`; `12 MONTH RECALL`; `3 MONTH SCALE`; `4 MONTH SCALE`; `6 MONTH RECALL`; `9 MONTH RECALL`; `FOLLOW-UP HYGIENE`.
 
@@ -249,7 +249,7 @@ none is selected by default.
 | Additional OHE topics reviewed        | Bass brushing; C-shape flossing technique; Sulcabrush and interdental brush technique; Caries theory; Caries risk factors; Periodontitis theory; Periodontitis risk factors; Review benefits of Prevident or Opti-Rinse; Importance of maintaining the recommended hygiene interval |
 | Flossing frequency                    | Flossing 1x/day; Flossing 2x/day; Flossing 3x/day; Never flossing; Flossing 1–2x/week; Flossing 3x/week; Seldom flossing                                                                                                                                                            |
 | Brushing frequency                    | Brushing 1x/day; Brushing 2x/day; Brushing 3x/day; Never brushing                                                                                                                                                                                                                   |
-| Recommended recall interval           | 12-month recall; 6-month recall; 9-month recall                                                                                                                                                                                                                                     |
+| Recommended recare interval           | 12-month recall; 6-month recall; 9-month recall                                                                                                                                                                                                                                     |
 | Recommended hygiene interval          | 3-month scale; 4-month scale; 6-month scale; N/A                                                                                                                                                                                                                                    |
 
 Fields that retain an explicit **Other** control accept free text so imported,
@@ -508,11 +508,12 @@ preset IDs. If retained findings exist, confirmation is required before only
 the new assessment is replaced. WNL hides detailed controls and emits exactly:
 
 ```text
-Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted.
+Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted.
 ```
 
 **Apply normal structured observations** establishes that same reviewed WNL
-preset and reveals its ten detailed selections for inspection. While they
+state and sets every selected normal observation's extent to **Generalized**.
+The preset reveals its ten detailed selections for inspection. While they
 remain untouched, the status and generated note remain WNL and use the
 canonical sentence above. Editing any option or annotation changes the status
 to Findings and switches to compact structured output. Existing non-WNL
@@ -542,7 +543,7 @@ JSON import/export.
 | ID   | Source                                                                                  | Proposed control                                                                                                                                     | Classification                                                                         | Generated output                                                                                                                      |
 | ---- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | A23  | `Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]`                              | Catalogue-backed editable text: **Oral hygiene compliance**, plus independent **Oral hygiene compliance comment**                                    | Current value and comment: `patient-specific`; reusable compliance values: `catalogue` | Separate `Oral hygiene compliance: {selected or entered text}` and `Oral hygiene compliance comment: {comment}` lines when documented |
-| A24  | Fixed home-care instruction sentence                                                    | Unchecked checkbox: **Standard home-care instruction reviewed**                                                                                      | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
+| A24  | Fixed home-care instruction sentence                                                    | Unchecked checkbox: **Reviewed brushing and flossing frequency recommendations**                                                                     | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
 | A25  | `OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]`          | Catalogue-backed editable multi-value control: **OH aids reviewed/recommended**                                                                      | Current selections: `patient-specific`; reusable options: `catalogue`                  | `OH Aids Reviewed/Recommended: {selected and entered values}`                                                                         |
 | A26  | `REVIEWED DISEASE PROCESS WITH PATIENT TODAY`                                           | Unchecked checkbox: **Disease process reviewed with patient today**                                                                                  | `appCore`                                                                              | Preserve the source sentence only when checked                                                                                        |
 | A26a | Additive OHE extension                                                                  | Grouped fixed multi-value control: **Additional OHE topics reviewed**                                                                                | `appCore`; no value selected by default                                                | `OHE: {selected topics}` only when at least one topic is selected; paired theory and risk-factor topics are condensed                 |
@@ -573,6 +574,15 @@ topic or OHE note. The topic menu is visually grouped into home-care
 techniques, disease and risk, and prevention and maintenance. It uses fixed
 reviewed choices; non-standard discussion belongs in OHE notes.
 
+The accepted OHE fields now appear in one coordinated education card shared
+with the 2026 template. Applying Standard OHE displays its covered concepts and
+omits those concepts from new additional-topic selections. Legacy drafts that
+already contain covered topics or the disease-process checkbox keep those
+values and their existing output. The card warns that wording may repeat and
+offers an explicit, confirmed action that removes only the covered selections;
+unrelated topics, aids, notes, and goals are preserved. No field key or summary
+wording changes as part of this presentation consolidation.
+
 Issue 68 adds **BASS-BRUSHING TECHNIQUE** to the editable OH-aids starter
 catalogue, plus fixed additional topics for bruxism-guard counselling and
 maintaining a 4-month recall. The standard OHE statement is never inferred or
@@ -584,28 +594,31 @@ the generated note, and a separate clear action removes it.
 | ID  | Source                                                       | Proposed control                                                                                                                                              | Classification                                                                                                        | Generated output                                                                                              |
 | --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | A29 | `Treatment recommended:` and `1) HYGIENE MAINTENANCE`        | Unchecked option: **Hygiene maintenance** plus editable **Other treatment recommended** textarea                                                              | `patient-specific` clinical decision                                                                                  | A `Treatment recommended:` block containing only explicitly selected or entered items                         |
-| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered structured rows containing catalogue-backed editable **Treatment type** and optional multi-value **Tooth/area**, including encounter-only custom text; Dyclonine exposes optional **Time of application/use**; an explicit button adds the reviewed standard rows | Row, Tooth/area, and timing: `patient-specific`; reusable treatment types: `catalogue`; fixed Tooth/area vocabulary: `appCore` | `Treatment completed today: {treatment type}{ — optional comma-separated Tooth/area values}{ — or ; time of application/use: value}` joined with `; ` |
+| A30 | `Treatment completed today: [SELECT/INSERT: RDH: Treatment]` | Ordered procedure cards for structured Scaling, Selective polish, and OHE plus catalogue-backed **Other treatment** rows; Dyclonine exposes optional **Time of application/use**; an explicit button adds the reviewed standard rows | Procedure quantity/details and Tooth/area: `patient-specific`; common procedure defaults and fixed Tooth/area vocabulary: `appCore`; other reusable treatment types: `catalogue` | Structured common procedures use concise quantity, instrumentation, product, and OHE wording; legacy and other rows retain `{treatment type}{ — optional Tooth/area}` formatting |
 | A31 | `Anesthetic: [SELECT/INSERT: HYGIENE ANESTHETIC]`            | Catalogue-backed editable text: **Anesthetic**                                                                                                                | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Anesthetic: {text}`                                                                                          |
 | A32 | `Desensitizer: [SELECT/INSERT: DESENSITIZER]`                | Catalogue-backed editable text: **Desensitizer**                                                                                                              | Current value: `patient-specific`; reusable options: `catalogue`                                                      | `Desensitizer: {text}`                                                                                        |
 
 Hygiene maintenance is an explicit option, not a default or recommendation.
-All eight originally visible Treatment completed values, the eight additional
-issue 68 treatment values, and all four Desensitizer values are approved public
-starter values. Anesthetic remains unseeded and must be reworked before its
-options are reconsidered. Selecting an item records text only and never infers
-dose, amount, safety, appropriateness, or treatment.
+The remaining reviewed Treatment completed catalogue values and all four
+Desensitizer values are approved public starters. Anesthetic remains unseeded
+and must be reworked before its options are reconsidered. Structured procedure
+defaults are visible and editable; no control infers dose, safety,
+appropriateness, or treatment from unrelated findings.
 Tooth/area starts with no selection for every row. Any number of the 13
 approved fixed choices may be selected simultaneously, and custom text may be
 added to the current encounter. Tooth/area is not a catalogue: custom values
 are discarded on reset or reload and cannot become reusable suggestions.
 
-Issue 68 adds reviewed starter values for the selective aesthetic-zone polish,
-FluoriMax varnish, Advantage Arrest silver diamine fluoride, Dyclonine rinse,
-DDS Recall Exam, resin-based sealant application, OHE, and the requested 3U
-Cavitron/hand-instrumentation wording. **Apply standard treatment** appends only
-missing reviewed rows and is idempotent. Dyclonine's optional timing field is
-free text so a clinician can document either a clock time or duration without
-the application inferring one.
+Issue 68 adds reviewed starter values for FluoriMax varnish, Advantage Arrest
+silver diamine fluoride, Dyclonine rinse, Dentist Recare Exam, resin-based
+sealant application, and OHE. Scaling and selective polish are now structured
+procedure cards rather than separate quantity-specific catalogue strings.
+**Apply standard treatment** appends only missing reviewed rows and is
+idempotent. It keeps Dyclonine and FMP, defaults scaling to 3U with Hand and
+Cavitron instrumentation, defaults polish to 1U with EnamelPro Strawberry with
+Fluoride, derives a visible OHE recap, and places FluoriMax varnish after OHE.
+Dyclonine's optional timing field is free text so a clinician can document
+either a clock time or duration without the application inferring one.
 
 ### Appliances and Relevant History
 

@@ -90,6 +90,28 @@ export const healthGingivitisContextChoices = [
   },
 ] as const;
 
+export const reducedPeriodontiumBasisChoices = [
+  "Gingival recession—cause not established",
+  "Suspected toothbrushing-associated traumatic recession",
+  "Previous crown lengthening",
+  "Previous periodontal or mucogingival surgery",
+  "Orthodontic movement-associated recession",
+  "Anatomic/mucogingival factors",
+  "Other local traumatic factor",
+  "Other non-periodontitis attachment loss",
+  "Unknown",
+  "Other",
+] as const;
+
+export function isReducedNonPeriodontitisContext(
+  context: HealthGingivitisContext,
+): boolean {
+  return (
+    context === "health-reduced-non-periodontitis" ||
+    context === "gingivitis-reduced-non-periodontitis"
+  );
+}
+
 export const assessedPresenceChoices = [
   { value: "not-assessed", label: "Not assessed" },
   { value: "absent", label: "Absent" },
@@ -428,6 +450,8 @@ export interface GingivalHealthAssessment {
   ppd4OrGreaterWithBop: AssessedBoolean;
   progressiveDestruction: AssessedBoolean;
   context: HealthGingivitisContext;
+  reducedPeriodontiumBases: string[];
+  reducedPeriodontiumBasisDetails: string;
   overrideReason: string;
 }
 
@@ -455,6 +479,8 @@ export function createEmptyGingivalHealthAssessment(): GingivalHealthAssessment 
     ppd4OrGreaterWithBop: "not-assessed",
     progressiveDestruction: "not-assessed",
     context: "",
+    reducedPeriodontiumBases: [],
+    reducedPeriodontiumBasisDetails: "",
     overrideReason: "",
   };
 }
@@ -477,32 +503,59 @@ export function createEmptyPeriodontalClassification(): PeriodontalClassificatio
   };
 }
 
+export function normalizePeriodontalClassification(
+  value: unknown,
+): PeriodontalClassification {
+  const empty = createEmptyPeriodontalClassification();
+  if (!value || typeof value !== "object" || Array.isArray(value)) return empty;
+  const candidate = value as Record<string, unknown>;
+  const gingivalHealth = candidate.gingivalHealth;
+  const normalizedGingivalHealth =
+    gingivalHealth &&
+    typeof gingivalHealth === "object" &&
+    !Array.isArray(gingivalHealth)
+      ? {
+          ...empty.gingivalHealth,
+          ...gingivalHealth,
+        }
+      : empty.gingivalHealth;
+  return {
+    ...empty,
+    ...candidate,
+    gingivalHealth: normalizedGingivalHealth,
+  } as PeriodontalClassification;
+}
+
 export function copyPeriodontalClassification(
   classification: PeriodontalClassification,
 ): PeriodontalClassification {
+  const normalized = normalizePeriodontalClassification(classification);
   return {
-    ...classification,
-    stageBasis: classification.stageBasis.map((evidence) => ({
+    ...normalized,
+    stageBasis: normalized.stageBasis.map((evidence) => ({
       ...evidence,
       ...(evidence.measurement
         ? { measurement: { ...evidence.measurement } }
         : {}),
     })),
-    gradeBasis: classification.gradeBasis.map((evidence) => ({
+    gradeBasis: normalized.gradeBasis.map((evidence) => ({
       ...evidence,
       ...(evidence.measurement
         ? { measurement: { ...evidence.measurement } }
         : {}),
     })),
-    smoking: { ...classification.smoking },
-    diabetes: { ...classification.diabetes },
+    smoking: { ...normalized.smoking },
+    diabetes: { ...normalized.diabetes },
     gingivalHealth: {
-      ...classification.gingivalHealth,
-      ...(classification.gingivalHealth.bopPercent
-        ? { bopPercent: { ...classification.gingivalHealth.bopPercent } }
+      ...normalized.gingivalHealth,
+      reducedPeriodontiumBases: [
+        ...(normalized.gingivalHealth.reducedPeriodontiumBases ?? []),
+      ],
+      ...(normalized.gingivalHealth.bopPercent
+        ? { bopPercent: { ...normalized.gingivalHealth.bopPercent } }
         : {}),
-      ...(classification.gingivalHealth.maximumPpd
-        ? { maximumPpd: { ...classification.gingivalHealth.maximumPpd } }
+      ...(normalized.gingivalHealth.maximumPpd
+        ? { maximumPpd: { ...normalized.gingivalHealth.maximumPpd } }
         : {}),
     },
   };
@@ -526,6 +579,22 @@ export type GingivalHealthCandidateMissingFieldId =
 export interface GingivalHealthCandidateMissingField {
   id: GingivalHealthCandidateMissingFieldId;
   label: string;
+}
+
+export type PeriodontalDiagnosisCandidateValue = Exclude<
+  PeriodontalDiagnosis,
+  "" | "other"
+>;
+
+export interface PeriodontalDiagnosisPossibility {
+  diagnosis: PeriodontalDiagnosisCandidateValue;
+  reasons: string[];
+}
+
+export interface PeriodontalDiagnosisCandidates {
+  possibilities: PeriodontalDiagnosisPossibility[];
+  missingFields: GingivalHealthCandidateMissingField[];
+  warnings: string[];
 }
 
 const stageRank: Record<Exclude<PeriodontitisStage, "">, number> = {
@@ -573,6 +642,140 @@ function exactMeasurementValue(
   unit: ClinicalUnit,
 ): number | undefined {
   return exactMeasurement({ criterionId: "measurement", measurement }, unit);
+}
+
+/**
+ * Narrows the diagnosis categories that remain compatible with findings
+ * already entered. This is intentionally conservative: incomplete evidence
+ * keeps a category visible unless the documented findings rule it out.
+ */
+export function classifyPeriodontalDiagnosisCandidates(
+  classification: PeriodontalClassification,
+): PeriodontalDiagnosisCandidates {
+  const assessment = classification.gingivalHealth;
+  const bop = exactMeasurementValue(assessment.bopPercent, "percent");
+  const maximumPpd = exactMeasurementValue(assessment.maximumPpd, "mm");
+  const missingFields: GingivalHealthCandidateMissingField[] = [
+    ...(!assessment.periodontium
+      ? [{ id: "periodontal-support", label: "Periodontal support" } as const]
+      : []),
+    ...(bop === undefined
+      ? [{ id: "bop-percentage", label: "BOP percentage" } as const]
+      : []),
+    ...(maximumPpd === undefined
+      ? [{ id: "maximum-ppd", label: "Maximum PPD" } as const]
+      : []),
+    ...(assessment.attachmentLoss === "not-assessed"
+      ? [{ id: "attachment-loss", label: "Probing attachment loss" } as const]
+      : []),
+    ...(assessment.radiographicBoneLoss === "not-assessed"
+      ? [
+          {
+            id: "radiographic-bone-loss",
+            label: "Radiographic bone loss (RBL)",
+          } as const,
+        ]
+      : []),
+  ];
+  if (
+    (bop !== undefined && (bop < 0 || bop > 100)) ||
+    (maximumPpd !== undefined && maximumPpd < 1)
+  ) {
+    return {
+      possibilities: [],
+      missingFields,
+      warnings: [
+        "Entered periodontal measurements are outside supported ranges, so diagnosis categories cannot be suggested.",
+      ],
+    };
+  }
+
+  const treatedPeriodontitisHistory =
+    assessment.periodontium === "reduced-treated-periodontitis";
+  const findingsRuleOutHealthOrGingivitis =
+    treatedPeriodontitisHistory ||
+    assessment.ppd4OrGreaterWithBop === "yes" ||
+    assessment.progressiveDestruction === "yes" ||
+    (maximumPpd !== undefined && maximumPpd > 3);
+  const healthPossible =
+    !findingsRuleOutHealthOrGingivitis && (bop === undefined || bop < 10);
+  const gingivitisPossible =
+    !findingsRuleOutHealthOrGingivitis && (bop === undefined || bop >= 10);
+  const explicitlyNonPeriodontitisSupport =
+    assessment.periodontium === "intact" ||
+    assessment.periodontium === "reduced-non-periodontitis";
+  const attachmentAndBoneLossAbsent =
+    assessment.attachmentLoss === "absent" &&
+    assessment.radiographicBoneLoss === "absent";
+  const periodontitisPossible =
+    treatedPeriodontitisHistory ||
+    (!explicitlyNonPeriodontitisSupport && !attachmentAndBoneLossAbsent);
+
+  const possibilities: PeriodontalDiagnosisPossibility[] = [];
+  if (healthPossible) {
+    possibilities.push({
+      diagnosis: "health",
+      reasons: [
+        ...(bop !== undefined
+          ? [`BOP ${bop}% is below the 10% case threshold.`]
+          : ["BOP has not yet ruled out periodontal health."]),
+        ...(maximumPpd !== undefined
+          ? [`Maximum PPD ${maximumPpd} mm remains within the supported health/gingivitis range.`]
+          : []),
+      ],
+    });
+  }
+  if (gingivitisPossible) {
+    possibilities.push({
+      diagnosis: "gingivitis",
+      reasons: [
+        ...(bop !== undefined
+          ? [`BOP ${bop}% meets the 10% gingivitis case threshold.`]
+          : ["BOP has not yet ruled out gingivitis."]),
+        ...(maximumPpd !== undefined
+          ? [`Maximum PPD ${maximumPpd} mm remains within the supported health/gingivitis range.`]
+          : []),
+      ],
+    });
+  }
+  if (periodontitisPossible) {
+    const positiveReasons = [
+      ...(treatedPeriodontitisHistory
+        ? ["Reduced periodontal support with a treated-periodontitis history is documented."]
+        : []),
+      ...(assessment.attachmentLoss === "present" &&
+      assessment.radiographicBoneLoss === "present"
+        ? ["Attachment loss and radiographic bone loss are documented."]
+        : []),
+      ...(assessment.progressiveDestruction === "yes"
+        ? ["Progressive periodontal destruction is documented."]
+        : []),
+      ...(assessment.ppd4OrGreaterWithBop === "yes"
+        ? ["One or more sites with PPD ≥4 mm and BOP are documented."]
+        : []),
+      ...(maximumPpd !== undefined && maximumPpd > 3
+        ? [`Maximum PPD is ${maximumPpd} mm.`]
+        : []),
+    ];
+    possibilities.push({
+      diagnosis: "periodontitis",
+      reasons: positiveReasons.length
+        ? positiveReasons
+        : [
+            "Periodontitis or a history of periodontitis cannot yet be excluded from the documented information.",
+          ],
+    });
+  }
+
+  return {
+    possibilities,
+    missingFields,
+    warnings: possibilities.length
+      ? []
+      : [
+          "Documented findings do not fit the supported health, gingivitis, or periodontitis/history candidate rules; clinical review is required.",
+        ],
+  };
 }
 
 export function periodontalStageEvidence(
@@ -1132,7 +1335,14 @@ export function formatHealthGingivitisBlock(
   classification: PeriodontalClassification,
 ): string {
   const assessment = classification.gingivalHealth;
-  if (!assessment.context) return "";
+  const pendingHealthOrGingivitisClassification =
+    classification.diagnosis === "health" ||
+    classification.diagnosis === "gingivitis";
+  if (!assessment.context) {
+    return pendingHealthOrGingivitisClassification
+      ? "Periodontal diagnosis:"
+      : "";
+  }
   const selectedContext = healthGingivitisContextChoices.find(
     (choice) => choice.value === assessment.context,
   );
@@ -1140,14 +1350,44 @@ export function formatHealthGingivitisBlock(
     selectedContext?.diagnosis === classification.diagnosis &&
     (classification.diagnosis !== "periodontitis" ||
       assessment.periodontium === "reduced-treated-periodontitis");
-  if (!contextIsAvailable) return "";
+  if (!contextIsAvailable) {
+    return pendingHealthOrGingivitisClassification
+      ? "Periodontal diagnosis:"
+      : "";
+  }
   const contextLabel = choiceLabel(
     healthGingivitisContextChoices,
     assessment.context,
   );
   const overrideReason = assessment.overrideReason.trim();
+  const reducedPeriodontiumBases = isReducedNonPeriodontitisContext(
+    assessment.context,
+  )
+    ? (assessment.reducedPeriodontiumBases ?? [])
+        .map((basis) => basis.trim())
+        .filter(Boolean)
+    : [];
+  const reducedPeriodontiumBasisDetails = isReducedNonPeriodontitisContext(
+    assessment.context,
+  )
+    ? (assessment.reducedPeriodontiumBasisDetails ?? "").trim()
+    : "";
+  const label =
+    classification.diagnosis === "periodontitis"
+      ? "Current periodontal condition"
+      : "Periodontal diagnosis";
   return [
-    `Health/Gingivitis: ${contextLabel}`,
+    `${label}: ${contextLabel}`,
+    reducedPeriodontiumBases.length
+      ? `Basis for reduced periodontium: ${reducedPeriodontiumBases.join(
+          "; ",
+        )}.`
+      : "",
+    reducedPeriodontiumBasisDetails
+      ? `Reduced periodontium details/location: ${reducedPeriodontiumBasisDetails}${
+          /[.!?]$/.test(reducedPeriodontiumBasisDetails) ? "" : "."
+        }`
+      : "",
     overrideReason
       ? `Health/Gingivitis override: ${overrideReason}${
           /[.!?]$/.test(overrideReason) ? "" : "."

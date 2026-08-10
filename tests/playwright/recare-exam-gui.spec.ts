@@ -1,5 +1,11 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { CATALOGUE_STORAGE_KEY } from "@/lib/catalogues/catalogue";
+import { createRecareExtraoralFinding } from "@/lib/templates/extraoralObservationsCatalog";
+import {
+  interactiveDraftStorageKey,
+  interactiveDraftTabStorageKey,
+} from "@/lib/templates/localDrafts";
+import { createEmptyRecareExamForm } from "@/lib/templates/recareExam";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 
@@ -37,100 +43,50 @@ async function toggleIntraoralObservation(
   await control.click();
 }
 
-test("Recare Exam radiographs use the reviewed catalogue and ordered note values", async ({
+test("Recare Exam radiographs use typed defaults and remember custom types", async ({
   page,
 }) => {
   await page.goto(recareExamUrl);
 
-  const radiographs = page.getByRole("combobox", {
-    name: "Radiographs",
+  const radiographs = page.getByRole("group", {
+    name: "Radiographs taken today",
     exact: true,
   });
-  await radiographs.focus();
-  for (const label of [
-    "PAN",
-    "1 BW",
-    "2 BW",
-    "3 BW",
-    "4 BW",
-    "5 BW",
-    "6 BW",
-    "1 PA",
-    "2 PA",
-  ]) {
-    await expect(
-      page.getByRole("option", {
-        name: `${label} Starter`,
-        exact: true,
-      }),
-    ).toBeVisible();
-  }
-  await page
-    .getByRole("button", {
-      name: "Hide 2 PA from suggestions",
-      exact: true,
-    })
-    .click();
-  await expect(radiographs).toBeFocused();
-  await expect(radiographs).toHaveValue("");
+  const bitewings = radiographs.getByRole("checkbox", {
+    name: "Bitewings (BW)",
+    exact: true,
+  });
+  await bitewings.click();
   await expect(
-    page.getByRole("option", { name: "2 PA Starter", exact: true }),
-  ).toHaveCount(0);
-
-  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
-  await multiControl(page, "Radiographs")
-    .getByRole("button", { name: "Show Radiographs suggestions" })
+    radiographs.getByRole("spinbutton", { name: "Number of images" }).first(),
+  ).toHaveValue("4");
+  await radiographs
+    .getByRole("button", { name: "Increase BW images", exact: true })
     .click();
-  await expect(
-    page.getByRole("option", { name: "4 BW Starter", exact: true }),
-  ).toBeVisible();
-  await page.getByRole("option", { name: "4 BW Starter", exact: true }).click();
-  await radiographs.fill("Synthetic supplemental view");
-  await multiControl(page, "Radiographs")
-    .getByRole("button", { name: "Remember and add" })
+  await radiographs
+    .getByRole("checkbox", { name: "Panoramic (PAN)", exact: true })
     .click();
-  await page
-    .getByRole("button", {
-      name: "Move Synthetic supplemental view earlier",
-    })
-    .click();
-  await page
-    .getByRole("button", {
-      name: "Move Synthetic supplemental view earlier",
-    })
-    .click();
-
-  await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view; 4 BW; 4 BW/,
+  await radiographs.getByLabel("Type name", { exact: true }).fill(
+    "Synthetic supplemental view",
   );
-  const selectedRadiographs = page.getByRole("list", {
-    name: "Radiographs selected values",
-  });
-  await expect(selectedRadiographs.locator(":scope > li")).toHaveCount(3);
-  const selectedRadiographRow = selectedRadiographs
-    .locator(":scope > li")
-    .first();
-  await expect(
-    selectedRadiographRow.getByRole("button", {
-      name: "Move Synthetic supplemental view earlier",
-    }),
-  ).toHaveClass(/py-2/);
-  const removeSelectedRadiograph = selectedRadiographRow.getByRole("button", {
-    name: "Remove Synthetic supplemental view",
-  });
-  await expect(removeSelectedRadiograph).toHaveClass(/border-red-300/);
-  await removeSelectedRadiograph.focus();
-  await expect(
-    selectedRadiographRow.getByRole("tooltip").filter({
-      hasText: "Remove this value from the note.",
-    }),
-  ).toBeVisible();
-  await selectedRadiographs
-    .getByRole("button", { name: "Remove 4 BW" })
-    .first()
+  await radiographs.getByLabel("Short code", { exact: true }).fill("SV");
+  await radiographs.getByLabel("Default images", { exact: true }).fill("2");
+  await radiographs
+    .getByRole("button", { name: "Remember and add", exact: true })
     .click();
+
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Radiographs: Synthetic supplemental view; 4 BW/,
+    /Radiographs: 5 BW; PAN; 2 SV/,
+  );
+  await expect(
+    radiographs.getByRole("checkbox", {
+      name: "Synthetic supplemental view (SV)",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await bitewings.click();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Radiographs: PAN; 2 SV/,
   );
 });
 
@@ -163,6 +119,43 @@ test("Recare Exam documents CPAP ownership and conditional use", async ({
   await page.getByRole("option", { name: "No", exact: true }).click();
   await expect(usesCpap).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(/CPAP: No\./);
+});
+
+test("Recare Exam conditionally documents removable-dentures comments", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const status = page.getByRole("button", {
+    name: "Partial/complete removable dentures",
+    exact: true,
+  });
+  const comment = page.getByRole("textbox", {
+    name: "Removable dentures comments",
+    exact: true,
+  });
+  await expect(comment).toHaveCount(0);
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await comment.fill("Upper partial worn during the day");
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Partial\/complete removable dentures: Yes—Upper partial worn during the day\./,
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+  await expect(comment).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Partial\/complete removable dentures: No\./,
+  );
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /Upper partial worn during the day/,
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await expect(comment).toHaveValue("Upper partial worn during the day");
 });
 
 test("Recare Exam aligns Intraoral with the primary exam and conditionally shows structured details", async ({
@@ -508,6 +501,412 @@ test("Recare Exam compacts repeatable dental observations in a disclosure", asyn
   await expect(surface).toHaveCount(0);
 });
 
+test("Recare Exam groups the extraoral clinical exam in structured observations", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  const disclosure = structuredExtraoral.getByRole("button", {
+    name: /Structured extraoral observations/,
+  });
+  await expect(disclosure).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByRole("button", { name: "Extraoral", exact: true }),
+  ).toBeVisible();
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "Extraoral",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  await disclosure.click();
+  await expect(
+    structuredExtraoral.getByRole("heading", {
+      name: "Additional extraoral clinical exam",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  const temporomandibular = structuredExtraoral.getByRole("group", {
+    name: "Temporomandibular assessment",
+    exact: true,
+  });
+  for (const name of [
+    "TMJ",
+    "Masseter palpation",
+    "TMJ loading test",
+  ]) {
+    await expect(
+      temporomandibular.getByRole("button", { name, exact: true }),
+    ).toBeVisible();
+  }
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "Lymph nodes",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  await structuredExtraoral
+    .getByRole("button", {
+      name: "Apply normal extraoral exam",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /b\) Extraoral: WNL\.\nLymph nodes: WNL\.\n\nc\) TMJ: WNL\.\nMasseter palpation: WNL\.\nTMJ loading test: WNL\./,
+  );
+  await expect(disclosure).toContainText("WNL");
+
+  const tmjClickingButton = structuredExtraoral.getByRole("checkbox", {
+    name: "TMJ clicking",
+    exact: true,
+  });
+  await expect(tmjClickingButton).toBeVisible();
+  await expect(tmjClickingButton).not.toBeChecked();
+  const lymphNodes = structuredExtraoral.getByRole("group", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  await expect(
+    lymphNodes.getByRole("checkbox", { name: "Palpable", exact: true }),
+  ).toBeVisible();
+  await tmjClickingButton.click();
+  await expect(tmjClickingButton).toBeChecked();
+  await expect(
+    structuredExtraoral.getByRole("button", {
+      name: "TMJ",
+      exact: true,
+    }),
+  ).toHaveAttribute("data-value", "findings");
+
+  const clicking = structuredExtraoral.getByRole("group", {
+    name: "TMJ clicking",
+    exact: true,
+  });
+  const right = clicking.getByRole("checkbox", { name: "Right", exact: true });
+  const left = clicking.getByRole("checkbox", { name: "Left", exact: true });
+  await expect(right).not.toBeChecked();
+  await right.click();
+  await expect(right).toBeChecked();
+  await left.click();
+  await expect(left).toBeChecked();
+  await expect(right).toBeChecked();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /TMJ clicking \(laterality: Bilateral;/,
+  );
+  const symptomatic = clicking.getByRole("radio", {
+    name: "Symptomatic",
+    exact: true,
+  });
+  const asymptomatic = clicking.getByRole("radio", {
+    name: "Asymptomatic",
+    exact: true,
+  });
+  await symptomatic.click();
+  await expect(symptomatic).toBeChecked();
+  await expect(asymptomatic).not.toBeChecked();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /status: Symptomatic/,
+  );
+  await expect(
+    clicking.getByRole("checkbox", {
+      name: "On open",
+      exact: true,
+    }),
+  ).toBeChecked();
+});
+
+test("Recare Exam coordinates lymph-node status with palpable details", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  await structuredExtraoral
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+  const lymphNodes = structuredExtraoral.getByRole("group", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  const status = lymphNodes.getByRole("button", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  const palpable = lymphNodes.getByRole("checkbox", {
+    name: "Palpable",
+    exact: true,
+  });
+
+  await palpable.click();
+  await expect(status).toHaveAttribute("data-value", "findings");
+  await lymphNodes.getByRole("checkbox", { name: "Left", exact: true }).click();
+  await lymphNodes
+    .getByRole("checkbox", { name: "Submandibular", exact: true })
+    .click();
+  await lymphNodes
+    .getByRole("checkbox", { name: "Slightly enlarged", exact: true })
+    .click();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /palpable lymph nodes \(laterality: Left; location: Submandibular; swelling: Slightly enlarged\)/,
+  );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Set Lymph nodes to WNL and clear the documented lymph-node findings?",
+    );
+    await dialog.dismiss();
+  });
+  await status.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(status).toHaveAttribute("data-value", "findings");
+  await expect(palpable).toBeChecked();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await status.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(status).toHaveAttribute("data-value", "wnl");
+  await expect(palpable).not.toBeChecked();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Lymph nodes: WNL\./,
+  );
+});
+
+test("Recare Exam confirms before a normal TMJ status clears linked clicking", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  await structuredExtraoral
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+
+  const tmjStatus = structuredExtraoral.getByRole("button", {
+    name: "TMJ",
+    exact: true,
+  });
+  const tmjClicking = structuredExtraoral.getByRole("checkbox", {
+    name: "TMJ clicking",
+    exact: true,
+  });
+  await tmjClicking.click();
+  await expect(tmjStatus).toHaveAttribute("data-value", "findings");
+  await expect(tmjClicking).toBeChecked();
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Set TMJ to WNL and clear the documented TMJ findings?",
+    );
+    await dialog.dismiss();
+  });
+  await tmjStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(tmjStatus).toHaveAttribute("data-value", "findings");
+  await expect(tmjClicking).toBeChecked();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await tmjStatus.click();
+  await page.getByRole("option", { name: "WNL", exact: true }).click();
+  await expect(tmjStatus).toHaveAttribute("data-value", "wnl");
+  await expect(tmjClicking).not.toBeChecked();
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /TMJ clicking/,
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(/c\) TMJ: WNL\./);
+});
+
+test("Recare Exam resolves legacy TMJ status and clicking conflicts explicitly", async ({
+  page,
+}) => {
+  const templateId = "recare-exam";
+  const draftId = "legacy-tmj-conflict";
+  const marker = "legacy-tmj-conflict-tab";
+  const now = new Date().toISOString();
+  const draft = {
+    kind: "hygienenote.interactive-draft",
+    schemaVersion: 1,
+    templateId,
+    draftId,
+    savedAt: now,
+    startedAt: now,
+    form: {
+      ...createEmptyRecareExamForm(),
+      patientId: "LEGACY-TMJ",
+      extraoralStatus: "findings",
+      tmjStatus: "wnl",
+      structuredExtraoralFindings: [
+        createRecareExtraoralFinding("eoe.tmj_clicking"),
+      ],
+    },
+  };
+  await page.addInitScript(
+    ({ draft, draftId, marker, markerKey, storageKey, tabKey }) => {
+      window.name = `hygienenote-interactive-draft-tab-v1:${marker}`;
+      window.sessionStorage.setItem(tabKey, draftId);
+      window.sessionStorage.setItem(markerKey, marker);
+      window.localStorage.setItem(storageKey, JSON.stringify(draft));
+    },
+    {
+      draft,
+      draftId,
+      marker,
+      markerKey:
+        "hygienenote.interactive-draft.tab-marker.v1.recare-exam",
+      storageKey: interactiveDraftStorageKey(templateId, draftId),
+      tabKey: interactiveDraftTabStorageKey(templateId),
+    },
+  );
+
+  await page.goto(recareExamUrl);
+  const structuredExtraoral = page.getByRole("group", {
+    name: "Structured extraoral observations",
+    exact: true,
+  });
+  const conflict = structuredExtraoral.getByRole("alert");
+  await expect(conflict).toContainText(
+    "TMJ clicking is documented in this legacy draft",
+  );
+  await conflict
+    .getByRole("button", {
+      name: "Keep clicking and use Findings",
+      exact: true,
+    })
+    .click();
+  await expect(conflict).toHaveCount(0);
+  await expect(
+    structuredExtraoral.getByRole("button", { name: "TMJ", exact: true }),
+  ).toHaveAttribute("data-value", "findings");
+  await expect(page.locator("#recare-summary")).toHaveValue(/TMJ clicking/);
+
+  await page.reload();
+  const restoredConflict = page
+    .getByRole("group", {
+      name: "Structured extraoral observations",
+      exact: true,
+    })
+    .getByRole("alert");
+  await restoredConflict
+    .getByRole("button", { name: "Remove clicking", exact: true })
+    .click();
+  await expect(restoredConflict).toHaveCount(0);
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /TMJ clicking/,
+  );
+});
+
+test("Recare Exam preserves and resolves legacy palpable lymph-node findings", async ({
+  page,
+}) => {
+  const templateId = "recare-exam";
+  const draftId = "legacy-lymph-node-conflict";
+  const marker = "legacy-lymph-node-conflict-tab";
+  const now = new Date().toISOString();
+  const form = {
+    ...createEmptyRecareExamForm(),
+    patientId: "LEGACY-LYMPH",
+    extraoralStatus: "findings" as const,
+    structuredExtraoralFindings: [
+      createRecareExtraoralFinding("eoe.palpable_lymph_nodes"),
+    ],
+  };
+  delete (form as Partial<typeof form>).lymphNodesStatus;
+  delete (form as Partial<typeof form>).lymphNodesFindings;
+  const draft = {
+    kind: "hygienenote.interactive-draft",
+    schemaVersion: 1,
+    templateId,
+    draftId,
+    savedAt: now,
+    startedAt: now,
+    form,
+  };
+  await page.addInitScript(
+    ({ draft, draftId, marker, markerKey, storageKey, tabKey }) => {
+      window.name = `hygienenote-interactive-draft-tab-v1:${marker}`;
+      window.sessionStorage.setItem(tabKey, draftId);
+      window.sessionStorage.setItem(markerKey, marker);
+      window.localStorage.setItem(storageKey, JSON.stringify(draft));
+    },
+    {
+      draft,
+      draftId,
+      marker,
+      markerKey: "hygienenote.interactive-draft.tab-marker.v1.recare-exam",
+      storageKey: interactiveDraftStorageKey(templateId, draftId),
+      tabKey: interactiveDraftTabStorageKey(templateId),
+    },
+  );
+
+  await page.goto(recareExamUrl);
+  const lymphNodes = page.getByRole("group", {
+    name: "Lymph nodes",
+    exact: true,
+  });
+  const conflict = lymphNodes.getByRole("alert");
+  await expect(conflict).toContainText(
+    "Palpable lymph nodes are documented in this legacy draft",
+  );
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /palpable lymph nodes/,
+  );
+  await expect(page.locator("#recare-summary")).not.toHaveValue(
+    /Lymph nodes: WNL/,
+  );
+
+  await conflict
+    .getByRole("button", {
+      name: "Keep palpable finding and use Findings",
+      exact: true,
+    })
+    .click();
+  await expect(conflict).toHaveCount(0);
+  await expect(
+    lymphNodes.getByRole("button", { name: "Lymph nodes", exact: true }),
+  ).toHaveAttribute("data-value", "findings");
+});
+
+test("Recare Exam separates Occlusion & Habits from Clinical Exam", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const clinicalExam = page
+    .getByRole("heading", { name: "Clinical Exam", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  const occlusionAndHabits = page
+    .getByRole("heading", { name: "Occlusion & Habits", exact: true })
+    .locator("xpath=ancestor::section[1]");
+
+  await expect(
+    clinicalExam.getByRole("button", { name: "Extraoral", exact: true }),
+  ).toBeVisible();
+  await expect(
+    clinicalExam.getByRole("button", { name: "Intraoral", exact: true }),
+  ).toBeVisible();
+  await expect(clinicalExam.getByLabel("Oral habits", { exact: true })).toHaveCount(0);
+  await expect(
+    occlusionAndHabits.getByLabel("Oral habits", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    occlusionAndHabits.getByRole("combobox", {
+      name: "Right molar occlusion",
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
 test("Recare Exam applies reviewed normal intraoral observations with compact output", async ({
   page,
 }) => {
@@ -621,6 +1020,87 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   await expect(freeText).toHaveCount(0);
   await expect(normalFlow).toHaveCount(0);
   await expect(page.locator("#recare-summary")).not.toHaveValue(/Intraoral:/);
+});
+
+test("Recare Exam IOE quick findings apply the corresponding structured presets", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+
+  const structuredIntraoral = page.getByRole("group", {
+    name: "Structured intraoral observations",
+    exact: true,
+  });
+  await structuredIntraoral
+    .getByRole("button", { name: /Structured intraoral observations/ })
+    .click();
+
+  for (const label of [
+    "Coated tongue",
+    "Fissured tongue",
+    "Scalloped tongue",
+    "Bilateral linea alba",
+    "Palatine torus at midline",
+    "Bilateral mandibular tori",
+  ]) {
+    const preset = structuredIntraoral.getByRole("checkbox", {
+      name: label,
+      exact: true,
+    });
+    await preset.click();
+    await expect(preset).toBeChecked();
+  }
+
+  await expect(
+    intraoralObservationCard(structuredIntraoral, "Tongue", "Coated"),
+  ).toBeVisible();
+  await expect(
+    intraoralObservationCard(structuredIntraoral, "Tongue", "Fissured"),
+  ).toBeVisible();
+  await expect(
+    intraoralObservationCard(
+      structuredIntraoral,
+      "Tongue",
+      "Scalloped edges",
+    ),
+  ).toBeVisible();
+
+  const lineaAlba = intraoralObservationCard(
+    structuredIntraoral,
+    "Buccal mucosa",
+    "Linea alba",
+  );
+  await expect(
+    lineaAlba.getByRole("button", {
+      name: "Linea alba laterality",
+      exact: true,
+    }),
+  ).toContainText("Bilateral");
+
+  const mandibularTori = intraoralObservationCard(
+    structuredIntraoral,
+    "Floor of mouth",
+    "Mandibular tori",
+  );
+  await expect(
+    mandibularTori.getByRole("button", {
+      name: "Mandibular tori laterality",
+      exact: true,
+    }),
+  ).toContainText("Bilateral");
+
+  const palatineTorus = intraoralObservationCard(
+    structuredIntraoral,
+    "Palate (hard/soft)",
+    "Torus palatinus",
+  );
+  await expect(
+    palatineTorus.getByLabel("Torus palatinus location", { exact: true }),
+  ).toHaveValue("Midline");
+
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Intraoral:\n  - Buccal mucosa: linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured; scalloped lateral borders\.\n  - Floor of mouth: mandibular tori \(location: Bilateral\)\.\n  - Palate \(hard\/soft\): torus palatinus \(location: Midline\)\./,
+  );
 });
 
 test("Recare Exam preserves intraoral findings when destructive actions are cancelled and isolates accepted WNL", async ({
@@ -846,9 +1326,19 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   await page
     .getByRole("option", { name: "Crossbite Starter", exact: true })
     .click();
-  await page.getByLabel("Posterior", { exact: true }).check();
-  await page.getByLabel("Left", { exact: true }).check();
-  await page
+  const selectedFindings = page.getByRole("list", {
+    name: "Additional occlusal findings selected values",
+  });
+  const crossbite = selectedFindings
+    .getByRole("listitem")
+    .filter({ hasText: "Crossbite" });
+  const crossbiteLocation = crossbite.getByRole("group", {
+    name: "Crossbite location",
+    exact: true,
+  });
+  await crossbiteLocation.getByLabel("Posterior", { exact: true }).check();
+  await crossbiteLocation.getByLabel("Left", { exact: true }).check();
+  await crossbiteLocation
     .getByLabel("Tooth/area or region", { exact: true })
     .fill("tooth 16");
   await expect(page.locator("#recare-summary")).toHaveValue(
@@ -873,9 +1363,6 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     "Synthetic edge-to-edge relationship",
   );
 
-  const selectedFindings = page.getByRole("list", {
-    name: "Additional occlusal findings selected values",
-  });
   await selectedFindings
     .getByRole("button", {
       name: "Move Synthetic edge-to-edge relationship earlier",
@@ -884,6 +1371,15 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     .click();
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Additional occlusal findings: Synthetic edge-to-edge relationship; Crossbite \(location: Posterior, Left, tooth 16\)\.$/,
+  );
+  await page
+    .getByRole("checkbox", {
+      name: "List each additional occlusal finding on a separate line in the note",
+      exact: true,
+    })
+    .check();
+  await expect(page.locator("#recare-summary")).toHaveValue(
+    /Additional occlusal findings:\n  - Synthetic edge-to-edge relationship\.\n  - Crossbite \(location: Posterior, Left, tooth 16\)\./,
   );
 
   await additionalFindings.fill("Synthetic functional shift");

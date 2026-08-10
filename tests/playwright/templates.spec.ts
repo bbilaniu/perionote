@@ -56,19 +56,19 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   ).toBeVisible();
   await expect(
     page
-      .getByRole("group", { name: "Card opens" })
-      .getByRole("button", { name: "Interactive", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("radiogroup", { name: "Card opens" })
+      .getByRole("radio", { name: "Interactive", exact: true }),
+  ).toBeChecked();
   await expect(
     page
-      .getByRole("group", { name: "Card opens" })
-      .getByRole("button", { name: "Original", exact: true }),
-  ).toHaveAttribute("aria-pressed", "false");
+      .getByRole("radiogroup", { name: "Card opens" })
+      .getByRole("radio", { name: "Original", exact: true }),
+  ).not.toBeChecked();
   await expect(
     page
-      .getByRole("group", { name: "Show templates" })
-      .getByRole("button", { name: "All", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("radiogroup", { name: "Show templates" })
+      .getByRole("radio", { name: "All", exact: true }),
+  ).toBeChecked();
 
   const recareCard = page
     .getByRole("article")
@@ -91,14 +91,14 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   ).toHaveAttribute("href", "/templates/clinic/local-anesthetic/");
 
   await page
-    .getByRole("group", { name: "Card opens" })
-    .getByRole("button", { name: "Original", exact: true })
+    .getByRole("radiogroup", { name: "Card opens" })
+    .getByRole("radio", { name: "Original", exact: true })
     .click();
   await expect(
     page
-      .getByRole("group", { name: "Card opens" })
-      .getByRole("button", { name: "Original", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+      .getByRole("radiogroup", { name: "Card opens" })
+      .getByRole("radio", { name: "Original", exact: true }),
+  ).toBeChecked();
   await expect(
     recareCard.getByRole("link", { name: "Open original Recare Exam" }),
   ).toHaveAttribute("href", "/templates/clinic/recare-exam/");
@@ -140,8 +140,8 @@ test("clinical template cards follow the selected default destination", async ({
 
   await page.goto("/templates/clinic");
   await page
-    .getByRole("group", { name: "Card opens" })
-    .getByRole("button", { name: "Original", exact: true })
+    .getByRole("radiogroup", { name: "Card opens" })
+    .getByRole("radio", { name: "Original", exact: true })
     .click();
   const recareCard = page
     .getByRole("article")
@@ -170,19 +170,19 @@ test("clinical template catalogue can show only interactive versions", async ({
 }) => {
   await page.goto("/templates/clinic");
 
-  const showTemplates = page.getByRole("group", { name: "Show templates" });
-  await showTemplates
-    .getByRole("button", { name: "Interactive only", exact: true })
-    .click();
+  const showTemplates = page.getByRole("radiogroup", { name: "Show templates" });
+  const interactiveOnly = showTemplates.getByRole("radio", {
+    name: "Interactive only",
+    exact: true,
+  });
+  await interactiveOnly.click();
 
-  await expect(
-    showTemplates.getByRole("button", {
-      name: "Interactive only",
-      exact: true,
-    }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(interactiveOnly).toBeChecked();
   await expect(
     page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article").filter({ hasText: "2026 Adult Hygiene" }),
   ).toBeVisible();
   await expect(
     page.getByRole("article").filter({ hasText: "Recare Exam" }),
@@ -192,14 +192,1326 @@ test("clinical template catalogue can show only interactive versions", async ({
   ).toHaveCount(0);
   await expect(
     page.getByRole("link", { name: "View original template" }),
-  ).toHaveCount(2);
+  ).toHaveCount(4);
 
   await showTemplates
-    .getByRole("button", { name: "All", exact: true })
+    .getByRole("radio", { name: "All", exact: true })
     .click();
   await expect(
     page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
   ).toBeVisible();
+});
+
+test("2026 Adult Hygiene uses its own route and draft storage", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(
+    page.getByRole("heading", { name: "2026 Adult Hygiene", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", {
+      name: "Original 2026 Adult Hygiene template",
+    }),
+  ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2026/");
+
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-2026");
+  await page.locator("#adult-hygiene-rdh").fill("Independent RDH");
+  await page.getByRole("button", { name: "Copy complete note" }).click();
+
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Object.keys(window.localStorage).some((key) =>
+          key.startsWith(
+            "hygienenote.interactive-draft.v1.adult-hygiene-2026.",
+          ),
+        ),
+      ),
+    )
+    .toBe(true);
+  expect(
+    await page.evaluate(() =>
+      Object.keys(window.localStorage).some((key) =>
+        key.startsWith(
+          "hygienenote.interactive-draft.v1.adult-hygiene-2021.",
+        ),
+      ),
+    ),
+  ).toBe(false);
+});
+
+test("2026 Adult Hygiene merges night guard into the occlusal splint control", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const splint = page.getByRole("button", {
+    name: "Has an occlusal splint (night guard)",
+    exact: true,
+  });
+  await expect(splint).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Has a night guard", exact: true }),
+  ).toHaveCount(0);
+
+  await splint.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  const usesSplint = page.getByRole("button", {
+    name: "Uses the occlusal splint (night guard)",
+    exact: true,
+  });
+  await usesSplint.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Occlusal splint (night guard): Yes; uses.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Night guard:",
+  );
+});
+
+test("2026 Adult Hygiene documents EOE and IOE findings", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(page.getByRole("heading", { name: "EOE" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /Structured extraoral observations/ })
+    .click();
+  const temporomandibular = page.getByRole("group", {
+    name: "Temporomandibular assessment",
+    exact: true,
+  });
+  for (const name of [
+    "TMJ",
+    "Masseter palpation",
+    "TMJ loading test",
+  ]) {
+    await expect(
+      temporomandibular.getByRole("button", { name, exact: true }),
+    ).toBeVisible();
+  }
+  await expect(
+    temporomandibular.getByRole("checkbox", {
+      name: "TMJ clicking",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: "Additional extraoral clinical exam",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Apply normal extraoral exam" })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "EOE: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "TMJ: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Lymph nodes: WNL.",
+  );
+  await page
+    .getByRole("group", { name: "Structured extraoral observations" })
+    .getByRole("button", { name: "Collapse observations" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /Structured extraoral observations/ }),
+  ).toHaveAttribute("aria-expanded", "false");
+
+  await expect(page.getByRole("heading", { name: "IOE" })).toBeVisible();
+  await page
+    .getByRole("button", { name: /Structured intraoral observations/ })
+    .click();
+  await page.getByRole("checkbox", { name: "Coated tongue" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "IOE:\n  - Tongue: coated.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    /  - TMJ loading test: WNL\.\n\nIOE:/,
+  );
+  await page
+    .getByRole("group", { name: "Structured intraoral observations" })
+    .getByRole("button", { name: "Collapse observations" })
+    .click();
+  await expect(
+    page.getByRole("button", { name: /Structured intraoral observations/ }),
+  ).toHaveAttribute("aria-expanded", "false");
+
+  await expect(page.getByRole("heading", { name: "Records" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Occlusion and Habits" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Teeth and Odontogram" }),
+  ).toBeVisible();
+  const sectionTitles = await page.locator("main h2").allTextContents();
+  const occlusionIndex = sectionTitles.indexOf("Occlusion and Habits");
+  expect(sectionTitles.slice(occlusionIndex, occlusionIndex + 3)).toEqual([
+    "Occlusion and Habits",
+    "Teeth and Odontogram",
+    "Appliances and Relevant History",
+  ]);
+
+  const output = page.getByRole("group", { name: "Note output" });
+  const completeOutput = output.getByRole("radio", {
+    name: "Complete",
+    exact: true,
+  });
+  const hygieneOutput = output.getByRole("radio", {
+    name: "Hygiene",
+    exact: true,
+  });
+  await expect(completeOutput).toBeChecked();
+  await hygieneOutput.click();
+  await expect(hygieneOutput).toBeChecked();
+  await expect(completeOutput).not.toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "EOE:",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "IOE:",
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy hygiene note" }),
+  ).toBeVisible();
+
+  await output.getByRole("radio", { name: "Recare" }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "EOE: WNL.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "IOE:\n  - Tongue: coated.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy recare note" }),
+  ).toBeVisible();
+
+  await page.locator("#adult-hygiene-patient-id").fill("TEST-OUTPUTS");
+  await page.locator("#adult-hygiene-rdh").fill("Output RDH");
+  await page.getByRole("button", { name: "Copy recare note" }).click();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.toContain(
+    "EOE: WNL.",
+  );
+
+  await output.getByRole("radio", { name: "Hygiene" }).click();
+  await page.getByRole("button", { name: "Copy hygiene note" }).click();
+  await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.not.toContain(
+    "EOE:",
+  );
+});
+
+test("2026 Adult Hygiene conditionally documents removable-dentures comments", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const status = page.getByRole("button", {
+    name: "Partial/complete removable dentures",
+    exact: true,
+  });
+  const comment = page.getByRole("textbox", {
+    name: "Removable dentures comments",
+    exact: true,
+  });
+  await expect(comment).toHaveCount(0);
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await comment.fill("Lower complete denture used routinely");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Partial/complete removable dentures: Yes—Lower complete denture used routinely.",
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "No", exact: true }).click();
+  await expect(comment).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Partial/complete removable dentures: No.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Lower complete denture used routinely",
+  );
+
+  await status.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await expect(comment).toHaveValue("Lower complete denture used routinely");
+});
+
+test("2026 Adult Hygiene keeps each occlusal location editor with its finding", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const input = page.getByRole("combobox", {
+    name: "Additional occlusal findings",
+    exact: true,
+  });
+  await input.focus();
+  await page
+    .getByRole("option", { name: "Spacing Starter", exact: true })
+    .click();
+  await input.fill("Crowd");
+  await page
+    .getByRole("option", { name: "Crowding Starter", exact: true })
+    .click();
+
+  const selected = page.getByRole("list", {
+    name: "Additional occlusal findings selected values",
+  });
+  const spacing = selected
+    .getByRole("listitem")
+    .filter({ hasText: "Spacing" });
+  const crowding = selected
+    .getByRole("listitem")
+    .filter({ hasText: "Crowding" });
+  const spacingLocation = spacing.getByRole("group", {
+    name: "Spacing location",
+    exact: true,
+  });
+  const crowdingLocation = crowding.getByRole("group", {
+    name: "Crowding location",
+    exact: true,
+  });
+
+  await spacingLocation
+    .getByRole("checkbox", { name: "Anterior", exact: true })
+    .check();
+  await expect(
+    spacingLocation.getByRole("checkbox", {
+      name: "Anterior",
+      exact: true,
+    }),
+  ).toBeChecked();
+  await expect(
+    crowdingLocation.getByRole("checkbox", {
+      name: "Anterior",
+      exact: true,
+    }),
+  ).not.toBeChecked();
+
+  await page
+    .getByRole("checkbox", {
+      name: "List each additional occlusal finding on a separate line in the note",
+      exact: true,
+    })
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    `Additional occlusal findings:
+  - Spacing (location: Anterior).
+  - Crowding.`,
+  );
+});
+
+test("2026 Adult Hygiene coordinates standard and additional OHE controls", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const education = page.getByRole("group", {
+    name: "Education provided today",
+    exact: true,
+  });
+  await education
+    .getByRole("checkbox", {
+      name: "Reviewed brushing and flossing frequency recommendations",
+      exact: true,
+    })
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY",
+  );
+
+  const automaticGoal =
+    "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
+  const hygieneGoal = education.getByRole("textbox", {
+    name: "Hygiene goal",
+    exact: true,
+  });
+  await expect(hygieneGoal).toHaveValue("");
+
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(hygieneGoal).toHaveValue(automaticGoal);
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    `Hygiene goal: ${automaticGoal}`,
+  );
+  await expect(
+    education.getByText("Included in Standard OHE", { exact: true }),
+  ).toBeVisible();
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  const topics = page.getByRole("dialog", {
+    name: "Additional OHE topics reviewed options",
+    exact: true,
+  });
+  await expect(topics.getByText("Bass brushing", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    topics.getByText("Sulcabrush and interdental brush technique", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await topics.getByRole("button", { name: "Done", exact: true }).click();
+
+  await education
+    .getByRole("button", { name: "Clear standard OHE", exact: true })
+    .click();
+  await expect(hygieneGoal).toHaveValue("");
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog", {
+        name: "Additional OHE topics reviewed options",
+        exact: true,
+      })
+      .getByText("Bass brushing", { exact: true }),
+  ).toBeVisible();
+
+  await page
+    .getByRole("dialog", {
+      name: "Additional OHE topics reviewed options",
+      exact: true,
+    })
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+  await hygieneGoal.fill("Customized hygiene goal.");
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(hygieneGoal).toHaveValue("Customized hygiene goal.");
+  await education
+    .getByRole("button", { name: "Clear standard OHE", exact: true })
+    .click();
+  await expect(hygieneGoal).toHaveValue("Customized hygiene goal.");
+});
+
+test("2026 Adult Hygiene coordinates sterilization documentation", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const section = page
+    .getByRole("heading", {
+      name: "Consent, Medical History, and Sterilization",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  const class5 = section.getByRole("checkbox", {
+    name: "Class 5 indicators checked",
+    exact: true,
+  });
+  const ppe = section.getByRole("checkbox", {
+    name: "Standard PPE statement applies",
+    exact: true,
+  });
+  const codes = section.getByRole("textbox", {
+    name: "Sterilization codes",
+    exact: true,
+  });
+
+  await expect(class5).toBeChecked();
+  await expect(ppe).toBeChecked();
+  await expect(codes).toBeVisible();
+  await codes.fill("STERI-001");
+  await class5.click();
+  await expect(class5).toBeChecked();
+  await ppe.click();
+  await expect(ppe).toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Sterilization Codes Scanned: STERI-001",
+  );
+});
+
+test("2026 Adult Hygiene separates hygiene and dentist next-visit catalogues", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const hygieneVisit = page.getByRole("combobox", {
+    name: "Next hygiene visit",
+    exact: true,
+  });
+  await hygieneVisit.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP HYGIENE Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP DENTIST CARE Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await hygieneVisit.press("Escape");
+
+  const dentalVisit = page.getByRole("combobox", {
+    name: "Next dental visit",
+    exact: true,
+  });
+  await dentalVisit.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP DENTIST CARE Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "FOLLOW-UP HYGIENE Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+});
+
+test("2026 Adult Hygiene links radiograph quantities and a recare exam to completed care", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const radiographs = page.getByRole("group", {
+    name: "Radiographs taken today",
+    exact: true,
+  });
+  const bitewings = radiographs.getByRole("checkbox", {
+    name: "Bitewings (BW)",
+    exact: true,
+  });
+  await expect(bitewings).not.toBeChecked();
+  await bitewings.click();
+  await expect(bitewings).toBeChecked();
+  const bwQuantity = radiographs.getByRole("spinbutton", {
+    name: "Number of images",
+    exact: true,
+  }).first();
+  await expect(bwQuantity).toHaveValue("4");
+  await radiographs
+    .getByRole("button", { name: "Increase BW images", exact: true })
+    .click();
+  await radiographs
+    .getByRole("checkbox", { name: "Periapicals (PA)", exact: true })
+    .click();
+  await radiographs
+    .getByRole("checkbox", { name: "Panoramic (PAN)", exact: true })
+    .click();
+  await radiographs
+    .getByLabel("Type name", { exact: true })
+    .fill("Occlusal view");
+  await radiographs.getByLabel("Short code", { exact: true }).fill("OCC");
+  await radiographs
+    .getByLabel("Default images", { exact: true })
+    .fill("2");
+  await radiographs
+    .getByRole("button", { name: "Remember and add", exact: true })
+    .click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Radiographs: 5 BW; 3 PA; PAN; 2 OCC",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: 5 BW; 3 PA; PAN; 2 OCC",
+  );
+
+  await page
+    .getByRole("button", { name: "Apply recare exam", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Apply recare exam", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: 5 BW; 3 PA; PAN; 2 OCC; Dentist Recare Exam",
+  );
+  await expect(
+    page
+      .getByRole("list", { name: "Treatment completed today entries" })
+      .locator(":scope > li"),
+  ).toHaveCount(5);
+
+  await bitewings.click();
+  await expect(bitewings).not.toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "5 BW",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: 3 PA; PAN; 2 OCC; Dentist Recare Exam",
+  );
+});
+
+test("2026 Adult Hygiene standard treatment uses structured procedure controls", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const education = page.getByRole("group", {
+    name: "Education provided today",
+    exact: true,
+  });
+  await education
+    .getByRole("checkbox", {
+      name: "Reviewed brushing and flossing frequency recommendations",
+      exact: true,
+    })
+    .check();
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+
+  const completed = page.getByRole("list", {
+    name: "Treatment completed today entries",
+  });
+  await expect(completed.locator(":scope > li")).toHaveCount(5);
+  const scaling = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", { name: "Scaling", exact: true }),
+  });
+  await expect(
+    scaling.getByRole("spinbutton", { name: "Scaling units", exact: true }),
+  ).toHaveValue("3");
+  const hand = scaling.getByRole("checkbox", {
+    name: "Hand instrumentation",
+    exact: true,
+  });
+  await expect(hand).toBeChecked();
+  const power = scaling.getByRole("checkbox", {
+    name: "Power instrumentation",
+    exact: true,
+  });
+  await expect(power).toBeChecked();
+  await expect(
+    scaling.getByRole("combobox", { name: "Power device", exact: true }),
+  ).toHaveValue("Cavitron");
+
+  await scaling
+    .getByRole("spinbutton", { name: "Scaling units", exact: true })
+    .fill("2");
+  await power.click();
+  await expect(power).not.toBeChecked();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Full mouth scaling with hand instrumentation (2U Scale)",
+  );
+
+  const polish = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", { name: "Selective polish", exact: true }),
+  });
+  await expect(
+    polish.getByRole("spinbutton", { name: "Polish units", exact: true }),
+  ).toHaveValue("1");
+  const polishProduct = polish.getByRole("combobox", {
+    name: "Polish product",
+    exact: true,
+  });
+  await expect(polishProduct).toHaveValue(
+    "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+  );
+  await polishProduct.focus();
+  await page
+    .getByRole("option", {
+      name: /Enamel Pro® Prophy Paste with Fluoride \(Raspberry\) Starter/,
+    })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Selective polish with Enamel Pro® Prophy Paste with Fluoride (Raspberry) (1U Polish)",
+  );
+
+  const ohe = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", {
+      name: "Oral hygiene education",
+      exact: true,
+    }),
+  });
+  const recap = ohe.getByRole("textbox", {
+    name: "Treatment-line recap",
+    exact: true,
+  });
+  await expect(recap).toHaveValue(
+    "Bass brushing at least twice daily; C-shape flossing at least daily; benefits of fluoride",
+  );
+  await expect(recap).toHaveAttribute("readonly", "");
+  await ohe
+    .getByRole("button", { name: "Customize recap", exact: true })
+    .click();
+  await recap.fill("Customized OHE recap");
+  await education.locator("#adult-hygiene-ohe-notes").fill("New education note");
+  await expect(recap).toHaveValue("Customized OHE recap");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "OHE on proper home care (Customized OHE recap)",
+  );
+
+  const fluoride = completed.locator(":scope > li").filter({
+    has: page.getByRole("heading", {
+      name: "Fluoride varnish application",
+      exact: true,
+    }),
+  });
+  await expect(
+    fluoride.getByRole("combobox", {
+      name: "Fluoride varnish product",
+      exact: true,
+    }),
+  ).toHaveValue("Oral Science Inc. FluoriMax 2.5% NaF Varnish");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth",
+  );
+});
+
+test("2026 Adult Hygiene filters structured SDF and desensitizer products", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(page.locator("#adult-hygiene-desensitizer")).toHaveCount(0);
+  const completedCare = page.getByRole("region", {
+    name: "Treatment completed today controls",
+    exact: true,
+  });
+  await completedCare
+    .getByRole("button", { name: "Add completed care", exact: true })
+    .click();
+  await completedCare
+    .getByRole("button", { name: "SDF application", exact: true })
+    .click();
+  await completedCare
+    .getByRole("button", { name: "Desensitizer application", exact: true })
+    .click();
+
+  const entries = page
+    .getByRole("list", { name: "Treatment completed today entries", exact: true })
+    .locator(":scope > li");
+  const sdf = entries.filter({
+    has: page.getByRole("heading", { name: "SDF application", exact: true }),
+  });
+  const sdfProduct = sdf.getByRole("combobox", {
+    name: "SDF product",
+    exact: true,
+  });
+  await expect(sdfProduct).toHaveValue(
+    "Advantage Arrest® Silver Diamine Fluoride 38%",
+  );
+  await sdfProduct.focus();
+  await expect(
+    page.getByRole("option", {
+      name: /Advantage Arrest® Silver Diamine Fluoride 38% Starter/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: /FluoriMax.*Starter/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("option", { name: /X-PUR.*Starter/ }),
+  ).toHaveCount(0);
+
+  const desensitizer = entries.filter({
+    has: page.getByRole("heading", {
+      name: "Desensitizer application",
+      exact: true,
+    }),
+  });
+  const desensitizingProduct = desensitizer.getByRole("combobox", {
+    name: "Desensitizing product",
+    exact: true,
+  });
+  await desensitizingProduct.focus();
+  await expect(
+    page.getByRole("option", {
+      name: /X-PUR® Crystal.*Starter/,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: /Advantage Arrest.*Starter/ }),
+  ).toHaveCount(0);
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Advantage Arrest® Silver Diamine Fluoride 38% application",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals) application",
+  );
+});
+
+test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  const noContraindications = localAnesthesia.getByRole("checkbox", {
+    name: "No C/I to LA",
+    exact: true,
+  });
+  await expect(noContraindications).not.toBeChecked();
+
+  await localAnesthesia
+    .getByRole("button", { name: "Apply Dyclonine rinse", exact: true })
+    .click();
+  const entry = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+  await expect(entry).toHaveCount(1);
+  await expect(
+    entry.getByRole("button", { name: "Route", exact: true }),
+  ).toHaveAttribute("data-value", "rinse");
+  await expect(
+    entry.getByRole("button", {
+      name: "Anesthetic product",
+      exact: true,
+    }),
+  ).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.dyclonine-rinse",
+  );
+  await expect(
+    entry.getByRole("spinbutton", { name: "Amount (mL)", exact: true }),
+  ).toHaveValue("5");
+  await expect(
+    entry.getByRole("spinbutton", {
+      name: "Duration (s)",
+      exact: true,
+    }),
+  ).toHaveValue("60");
+  await expect(
+    entry.getByRole("button", { name: "Tooth/area", exact: true }),
+  ).toContainText("full mouth");
+  const routeTop = await entry
+    .getByRole("button", { name: "Route", exact: true })
+    .evaluate((element) => element.getBoundingClientRect().top);
+  const toothAreaTop = await entry
+    .getByRole("button", { name: "Tooth/area", exact: true })
+    .evaluate((element) => element.getBoundingClientRect().top);
+  expect(Math.abs(routeTop - toothAreaTop)).toBeLessThanOrEqual(1);
+  await expect(
+    localAnesthesia.getByText(
+      "Confirm No C/I to LA and complete the post-anesthetic assessment before finishing the note.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds",
+  );
+
+  await noContraindications.check();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "No adverse reactions noted", exact: true })
+    .check();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "Adequate anesthesia achieved", exact: true })
+    .check();
+  await expect(
+    page.locator("#adult-hygiene-summary"),
+  ).toContainText("Local anesthetic administered: No C/I to LA");
+
+  await page
+    .getByRole("button", { name: "Apply standard treatment", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Treatment completed today: FMP — full mouth",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Dyclonine 1% rinse 5 ml — full mouth",
+  );
+
+  await page
+    .getByRole("group", { name: "Note output", exact: true })
+    .getByRole("radio", { name: "Recare", exact: true })
+    .check();
+  await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
+    "Local anesthetic administered:",
+  );
+});
+
+test("2026 Local Anesthesia uses styled pointer-selectable dropdowns", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  await localAnesthesia
+    .getByRole("button", { name: "Add topical entry", exact: true })
+    .click();
+  const entry = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+
+  await expect(entry.locator("select")).toHaveCount(0);
+  const applicationType = entry.getByRole("button", {
+    name: "Application type",
+    exact: true,
+  });
+  await applicationType.click();
+  await entry
+    .getByRole("option", { name: "Sulcular application", exact: true })
+    .click();
+  await expect(applicationType).toHaveAttribute(
+    "data-value",
+    "Sulcular application",
+  );
+
+  const product = entry.getByRole("button", {
+    name: "Anesthetic product",
+    exact: true,
+  });
+  await product.click();
+  await entry
+    .getByRole("option", {
+      name: "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+      exact: true,
+    })
+    .click();
+  await expect(product).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.oraqix",
+  );
+});
+
+test("2026 Local Anesthesia limits preset Tooth/area choices by route", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  const entries = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+
+  for (const route of ["injection", "topical", "rinse"] as const) {
+    await localAnesthesia
+      .getByRole("button", { name: `Add ${route} entry`, exact: true })
+      .click();
+  }
+
+  const expectedChoices = [
+    ["Q1", "Q2", "Q4", "Q3", "S1", "S2", "S3", "S6", "S5", "S4"],
+    [
+      "full mouth",
+      "maxilla",
+      "mandible",
+      "Q1",
+      "Q2",
+      "Q4",
+      "Q3",
+      "S1",
+      "S2",
+      "S3",
+      "S6",
+      "S5",
+      "S4",
+    ],
+    ["full mouth"],
+  ];
+
+  for (const [index, choices] of expectedChoices.entries()) {
+    const entry = entries.nth(index);
+    await entry
+      .getByRole("button", { name: "Tooth/area", exact: true })
+      .click();
+    const standardChoices = entry.getByRole("group", {
+      name: "Standard Tooth/area choices",
+      exact: true,
+    });
+    await expect(standardChoices.locator("label")).toHaveText(choices);
+    await expect(
+      entry.getByRole("textbox", {
+        name: "Search or add custom Tooth/area",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await entry.getByRole("button", { name: "Done", exact: true }).click();
+  }
+});
+
+test("2026 combined treatment plan routes preventive care to the hygiene treatment catalogue", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await page
+    .getByRole("button", { name: "Add recommendation", exact: true })
+    .click();
+  const planEntry = page
+    .getByRole("list", { name: "Combined treatment plan entries", exact: true })
+    .locator(":scope > li")
+    .first();
+  const careType = planEntry.getByRole("button", {
+    name: "Care type",
+    exact: true,
+  });
+  const treatmentType = planEntry.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+
+  await careType.click();
+  await page.getByRole("option", { name: "Preventive", exact: true }).click();
+  await treatmentType.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "Hygiene maintenance Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "Periodontal therapy Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "Filling (Direct Restoration) Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+
+  await careType.click();
+  await page
+    .getByRole("option", { name: "Restorative", exact: true })
+    .click();
+  await treatmentType.focus();
+  await expect(
+    page.getByRole("option", {
+      name: "Filling (Direct Restoration) Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("option", {
+      name: "Hygiene maintenance Starter",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+});
+
+test("2026 copies dental and hygiene options into one deduplicated combined treatment plan", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await expect(
+    page.getByRole("heading", { name: "Treatment plan", exact: true }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", {
+      name: "Treatment completed today",
+      exact: true,
+    }),
+  ).toHaveCount(1);
+  await expect(
+    page.getByRole("heading", {
+      name: "Combined treatment plan",
+      exact: true,
+    }),
+  ).toHaveCount(1);
+
+  await page
+    .getByRole("button", { name: "Add treatment option", exact: true })
+    .click();
+  const dentalOption = page
+    .getByRole("list", {
+      name: "Dental treatment options discussed entries",
+      exact: true,
+    })
+    .locator(":scope > li")
+    .first();
+  const dentalType = dentalOption.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await dentalType.focus();
+  await page
+    .getByRole("option", {
+      name: "Filling (Direct Restoration) Starter",
+      exact: true,
+    })
+    .click();
+  await dentalOption
+    .getByRole("textbox", { name: "Tooth/area", exact: true })
+    .fill("14");
+
+  await page
+    .getByRole("button", {
+      name: "Add hygiene treatment option",
+      exact: true,
+    })
+    .click();
+  const hygieneOption = page
+    .getByRole("list", {
+      name: "Hygiene treatment options discussed entries",
+      exact: true,
+    })
+    .locator(":scope > li")
+    .first();
+  const hygieneType = hygieneOption.getByRole("combobox", {
+    name: "Treatment type",
+    exact: true,
+  });
+  await hygieneType.focus();
+  await page
+    .getByRole("option", {
+      name: "Periodontal therapy Starter",
+      exact: true,
+    })
+    .click();
+  await hygieneOption
+    .getByRole("textbox", { name: "Tooth/area", exact: true })
+    .fill("Q2, Q3");
+
+  const addToPlan = page.getByRole("button", {
+    name: "Add options above to combined treatment plan",
+    exact: true,
+  });
+  await addToPlan.click();
+  const planEntries = page
+    .getByRole("list", { name: "Combined treatment plan entries", exact: true })
+    .locator(":scope > li");
+  await expect(planEntries).toHaveCount(2);
+  await expect(
+    planEntries.nth(0).getByRole("button", { name: "Care type", exact: true }),
+  ).toContainText("Restorative");
+  await expect(
+    planEntries.nth(1).getByRole("button", { name: "Care type", exact: true }),
+  ).toContainText("Preventive");
+  await expect(
+    planEntries.nth(0).getByRole("combobox", {
+      name: "Treatment type",
+      exact: true,
+    }),
+  ).toHaveValue("Filling (Direct Restoration)");
+  await expect(
+    planEntries.nth(1).getByRole("combobox", {
+      name: "Treatment type",
+      exact: true,
+    }),
+  ).toHaveValue("Periodontal therapy");
+
+  await addToPlan.click();
+  await expect(planEntries).toHaveCount(2);
+  const summary = page.locator("#adult-hygiene-summary");
+  await expect(summary).toContainText("Dental Treatment Options Discussed:");
+  await expect(summary).toContainText("Hygiene Treatment Options Discussed:");
+  await expect(summary).toContainText(
+    "[Restorative] Filling (Direct Restoration) — 14",
+  );
+  await expect(summary).toContainText(
+    "[Preventive] Periodontal therapy — Q2, Q3",
+  );
+});
+
+test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const currentCondition = page.getByRole("region", {
+    name: "Current clinical condition",
+  });
+  await expect(
+    currentCondition.getByRole("heading", {
+      name: "Possible diagnosis categories",
+    }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Periodontal health", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Gingivitis", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Periodontitis / history of periodontitis", {
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(currentCondition).toContainText(
+    "No diagnosis is selected or changed by these suggestions.",
+  );
+
+  await page
+    .getByRole("button", { name: /Structured periodontal observations/ })
+    .click();
+  await page.locator("#adult-hygiene-periodontium").click();
+  await page
+    .getByRole("option", { name: "Intact periodontal support", exact: true })
+    .click();
+  await page.locator("#adult-hygiene-bop-percent").fill("5");
+  await page.locator("#adult-hygiene-maximum-ppd").fill("3");
+  await page.locator("#adult-hygiene-attachment-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+  await page.locator("#adult-hygiene-radiographic-bone-loss").click();
+  await page.getByRole("option", { name: "Absent", exact: true }).click();
+
+  await expect(
+    currentCondition.getByText("Periodontal health", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentCondition.getByText("Gingivitis", { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    currentCondition.getByText("Periodontitis / history of periodontitis", {
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(currentCondition).toContainText(
+    "BOP 5% is below the 10% case threshold.",
+  );
+
+  const diagnosis = page.getByRole("button", {
+    name: "Periodontal diagnosis category",
+    exact: true,
+  });
+  await diagnosis.click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Periodontal diagnosis:\n\n-ALL PROPER PPE",
+  );
+
+  const healthGingivitisClassification = page.getByRole("button", {
+    name: "Health/Gingivitis classification",
+    exact: true,
+  });
+  await healthGingivitisClassification.click();
+  await page
+    .getByRole("option", {
+      name: "HEALTH - INTACT PERIODONTIUM",
+      exact: true,
+    })
+    .click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
+  );
+
+  const cariesRiskLevel = page.getByRole("button", {
+    name: "Caries risk level",
+    exact: true,
+  });
+  const factors = page.getByRole("combobox", {
+    name: "Caries risk factors",
+    exact: true,
+  });
+  await factors.focus();
+  await page
+    .getByRole("option", { name: /High frequency of sugar intake Starter/ })
+    .click();
+
+  await expect(
+    page.getByRole("heading", { name: "Suggested caries risk level" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Suggested caries risk level" })
+      .locator("xpath=.."),
+  ).toContainText("High");
+  await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
+  await page
+    .getByRole("button", { name: "Apply caries risk suggestion" })
+    .click();
+  await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
+});
+
+test("2026 Adult Hygiene documents the basis for a reduced non-periodontitis periodontium", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  await page
+    .getByRole("button", {
+      name: "Periodontal diagnosis category",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("option", { name: "Periodontal health", exact: true })
+    .click();
+
+  const classification = page.getByRole("button", {
+    name: "Health/Gingivitis classification",
+    exact: true,
+  });
+  await classification.click();
+  await page
+    .getByRole("option", {
+      name: "HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+      exact: true,
+    })
+    .click();
+
+  const basis = page.getByRole("button", {
+    name: "Basis for reduced periodontium",
+    exact: true,
+  });
+  await expect(basis).toBeVisible();
+  await basis.click();
+  const basisOptions = page.getByRole("dialog", {
+    name: "Basis for reduced periodontium options",
+    exact: true,
+  });
+  await basisOptions
+    .getByText("Previous crown lengthening", { exact: true })
+    .click();
+  await basisOptions.getByText("Other", { exact: true }).click();
+  await basisOptions
+    .getByRole("button", { name: "Done", exact: true })
+    .click();
+
+  const details = page.getByLabel("Other basis details / location", {
+    exact: true,
+  });
+  await details.fill("Localized to teeth 31–33");
+  const summary = page.locator("#adult-hygiene-summary");
+  await expect(summary).toContainText(
+    "Periodontal diagnosis: HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+  );
+  await expect(summary).toContainText(
+    "Basis for reduced periodontium: Previous crown lengthening; Other.",
+  );
+  await expect(summary).toContainText(
+    "Reduced periodontium details/location: Localized to teeth 31–33.",
+  );
+
+  await classification.click();
+  await page
+    .getByRole("option", {
+      name: "HEALTH - INTACT PERIODONTIUM",
+      exact: true,
+    })
+    .click();
+  await expect(basis).toHaveCount(0);
+  await expect(summary).not.toContainText("Basis for reduced periodontium:");
+  await expect(summary).not.toContainText(
+    "Reduced periodontium details/location:",
+  );
 });
 
 test("recare exam blocks copying until Patient ID and a provider are entered", async ({
@@ -329,7 +1641,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
     page.getByRole("button", { name: "Caries risk level", exact: true }),
   ).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Occlusal splint: Yes; uses\./,
+    /Occlusal splint \(night guard\): Yes; uses\./,
   );
   await expect(page.locator("#recare-summary")).toHaveValue(
     /Molar occlusion—right: Synthetic Class I\.\nMolar occlusion—left: N\/A\./,
@@ -457,6 +1769,52 @@ test("imported webform preview renders summary panel and updated EOE/IOE section
   await expect(page.getByText("IOE observations")).toBeVisible();
 });
 
+test("Very short template combines side buttons as bilateral and keeps symptom status single-choice", async ({
+  page,
+}) => {
+  await page.goto("/templates/very-short-template");
+
+  const eoeIoeSection = page.locator("#template-section-eoeIoe");
+  await eoeIoeSection
+    .getByRole("button", { name: "Expand", exact: true })
+    .click();
+  await eoeIoeSection
+    .getByRole("button", { name: "TMJ clicking", exact: true })
+    .click();
+
+  const laterality = eoeIoeSection.getByRole("group", {
+    name: "Laterality",
+    exact: true,
+  }).first();
+  const left = laterality.getByRole("checkbox", { name: "Left", exact: true });
+  const right = laterality.getByRole("checkbox", { name: "Right", exact: true });
+  await left.click();
+  await expect(left).toBeChecked();
+  await right.click();
+  await expect(right).toBeChecked();
+  await expect(left).toBeChecked();
+  await expect(page.locator("textarea[readonly]")).toHaveValue(
+    /EOE: bilateral tmj clicking/,
+  );
+
+  const status = eoeIoeSection.getByRole("group", {
+    name: "Status",
+    exact: true,
+  });
+  const symptomatic = status.getByRole("radio", {
+    name: "Symptomatic",
+    exact: true,
+  });
+  const asymptomatic = status.getByRole("radio", {
+    name: "Asymptomatic",
+    exact: true,
+  });
+  await symptomatic.click();
+  await asymptomatic.click();
+  await expect(symptomatic).not.toBeChecked();
+  await expect(asymptomatic).toBeChecked();
+});
+
 test("OHE section can select all topics with one click", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
@@ -502,7 +1860,7 @@ test("last vitals reading can be removed and re-added", async ({ page }) => {
 test("local anesthesia entry time can be cleared and reset", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
-  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
   const entry = page.locator("#local-anesthesia-entry-0");
@@ -528,7 +1886,7 @@ test("very short template local anesthesia product list filters by route", async
 
   await page.goto("/templates/very-short-template");
   await page.getByRole("button", { name: "Expand all sections" }).click();
-  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add injection entry" }).click();
 
   const injectionEntry = page.locator("#local-anesthesia-entry-0");
@@ -558,14 +1916,14 @@ test("local anesthesia assessment is emphasized when activity is documented with
 }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
 
-  await page.getByRole("button", { name: "No C/I to LA" }).click();
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
   await page.getByRole("button", { name: "Add topical entry" }).click();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "No adverse reactions noted" }).click();
+  await page.getByRole("checkbox", { name: "No adverse reactions noted" }).click();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
@@ -636,7 +1994,7 @@ test("combined instrumentation control exposes device and area selections", asyn
     "#template-section-treatmentDoneToday-content",
   );
   await treatmentSection
-    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .getByRole("checkbox", { name: "Hand and Power Instrumentation" })
     .click();
   await expect(
     page.getByText("Instrumentation area (today)", { exact: true }),
@@ -644,8 +2002,8 @@ test("combined instrumentation control exposes device and area selections", asyn
   await expect(
     page.getByText("Power instrumentation device (today)", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Piezo" }).click();
-  await page.getByRole("button", { name: "Q1" }).click();
+  await page.getByRole("checkbox", { name: "Piezo" }).click();
+  await page.getByRole("checkbox", { name: "Q1" }).click();
 
   const summary = await page.locator("textarea[readonly]").inputValue();
   expect(summary).toContain("Q1 Hand and Power Instrumentation (Piezo)");
@@ -659,10 +2017,10 @@ test("short and very short templates include Full mouth instrumentation area", a
     "#template-section-treatmentDoneToday-content",
   );
   await shortTreatmentSection
-    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .getByRole("checkbox", { name: "Hand and Power Instrumentation" })
     .click();
   await expect(
-    shortTreatmentSection.getByRole("button", {
+    shortTreatmentSection.getByRole("checkbox", {
       name: "Full mouth",
       exact: true,
     }),
@@ -674,10 +2032,10 @@ test("short and very short templates include Full mouth instrumentation area", a
     "#template-section-treatmentDoneToday-content",
   );
   await veryShortTreatmentSection
-    .getByRole("button", { name: "Hand and Power Instrumentation" })
+    .getByRole("checkbox", { name: "Hand and Power Instrumentation" })
     .click();
   await expect(
-    veryShortTreatmentSection.getByRole("button", {
+    veryShortTreatmentSection.getByRole("checkbox", {
       name: "Full mouth",
       exact: true,
     }),

@@ -11,7 +11,7 @@ export const CLEARDENT_CATALOGUE_CROSSWALK = Object.freeze({
   "hygiene-treatment": "hygiene-treatment.completed",
   "hygiene-anaesthetic": "hygiene-treatment.anesthetic",
   desensitizer: "hygiene-treatment.desensitizer",
-  "next-visit": "scheduling.next-visit",
+  "next-visit": "scheduling.hygiene-next-visit",
 });
 
 function isRecord(value) {

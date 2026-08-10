@@ -22,42 +22,62 @@ import {
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
+import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
-import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
+import {
+  ExamFinding,
+  LymphNodesAssessmentControl,
+  OcclusalFindingLocations,
+  StructuredExtraoralObservations,
+  StructuredIntraoralFindings,
+  TeethAssessment,
+  TmjAssessmentControl,
+  TreatmentEntryList,
+} from "@/components/templates/native/RecareExamTemplate";
 import {
   type AdultHygieneTreatmentCompletedEntry,
-  type AdultHygiene2021Form,
+  type AdultHygiene2026Output,
+  type AdultHygiene2026Form,
   type CariesRiskLevel,
   brushingFrequencyChoices,
-  createEmptyAdultHygiene2021Form,
+  createEmptyAdultHygiene2026Form,
   diseaseAndRiskOheTopicChoices,
   flossingFrequencyChoices,
-  hasRequiredAdultHygiene2021Fields,
+  hasRequiredAdultHygiene2026Fields,
   homeCareOheTopicChoices,
   oheTopicChoices,
   preventionAndMaintenanceOheTopicChoices,
+  resolveOcclusalSplintState,
   standardHygieneGoal,
   standardOheStatement,
-} from "@/lib/templates/adultHygiene2021";
+} from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
+import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  migrateLegacyDesensitizerToTreatmentCompleted,
+  recareExamTreatmentPreset,
   syncDerivedOheTreatmentDetails,
+  syncRadiographTreatmentEntries,
   treatmentCompletedEntryIdentity,
 } from "@/lib/templates/adultHygieneTreatment";
 import type {
   DocumentationStatus,
+  ExamStatus,
   PremedicationStatus,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
-import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import { createRecareNormalStructuredIntraoralFindings } from "@/lib/templates/recareIntraoralCatalog";
+import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import {
   applyGingivitisObservationPreset,
@@ -77,6 +97,7 @@ import {
   choiceLabel,
   classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
+  classifyPeriodontalDiagnosisCandidates,
   deepPocketBopChoices,
   formatDiabetesModifier,
   formatPeriodontalEvidence,
@@ -171,11 +192,29 @@ const stageEvidenceGroups = [
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
 const adultHygieneDiscardWarning =
-  "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
-const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
+  "Clear all entered 2026 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const adultHygieneDraftExemplar = createEmptyAdultHygiene2026Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
   patientChiefConcern: "",
+  radiographs: "",
+  structuredExtraoralFindings: {
+    optionId: "",
+    laterality: "",
+    statuses: [],
+    phases: [],
+    locations: [],
+    swelling: [],
+  },
+  "structuredExtraoralFindings[].statuses": "",
+  "structuredExtraoralFindings[].phases": "",
+  "structuredExtraoralFindings[].locations": "",
+  "structuredExtraoralFindings[].swelling": "",
+  structuredIntraoralFindings: { optionId: "", structureId: "" },
+  additionalOcclusalFindings: { id: "", finding: "", locations: [] },
+  "additionalOcclusalFindings[].locations": "",
+  toothFindings: { id: "", optionId: "", toothAreas: [] },
+  "toothFindings[].toothAreas": "",
   plaqueAreas: "",
   stainAreas: "",
   calculusAreas: "",
@@ -196,9 +235,23 @@ const adultHygieneDraftArrayItemShapes = {
   oheTopicsReviewed: "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
   "treatmentCompleted[].toothAreas": "",
+  localAnesthesiaEntries: {
+    id: "",
+    route: "injection",
+    administrationType: "",
+    toothAreas: [],
+    product: "",
+    amountMl: "",
+    durationSeconds: "",
+    timeAdministered: "",
+  },
+  "localAnesthesiaEntries[].toothAreas": "",
+  treatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+  hygieneTreatmentOptions: { id: "", treatmentType: "", toothArea: "" },
+  treatmentPlan: { id: "", treatmentType: "", toothArea: "" },
 } as const;
 
-function isEmptyAdultHygieneDraft(form: AdultHygiene2021Form): boolean {
+function isEmptyAdultHygieneDraft(form: AdultHygiene2026Form): boolean {
   return (
     JSON.stringify({
       ...form,
@@ -207,14 +260,13 @@ function isEmptyAdultHygieneDraft(form: AdultHygiene2021Form): boolean {
       rda: "",
       class5IndicatorStatus: "not-documented",
       ppeStatementApplies: false,
-    }) ===
-    emptyAdultHygieneDraft
+    }) === emptyAdultHygieneDraft
   );
 }
 
-function isAdultHygieneDraftForm(
+export function isAdultHygieneDraftForm(
   value: unknown,
-): value is AdultHygiene2021Form {
+): value is AdultHygiene2026Form {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const candidate = value as Record<string, unknown>;
   const gingivalDescription = candidate.gingivalDescription;
@@ -653,6 +705,7 @@ function TextField({
   error,
   inputRef,
   type = "text",
+  inputMode,
   readOnly,
   placeholder,
 }: {
@@ -664,6 +717,7 @@ function TextField({
   error?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
   type?: "text" | "date";
+  inputMode?: "decimal";
   readOnly?: boolean;
   placeholder?: string;
 }) {
@@ -691,6 +745,7 @@ function TextField({
           id={id}
           className={inputClass}
           type={type}
+          inputMode={inputMode}
           value={value}
           readOnly={readOnly}
           placeholder={placeholder}
@@ -1024,6 +1079,7 @@ export function PeriodontalClassificationControl({
 }) {
   const candidate = classifyPeriodontalCandidate(value);
   const gingivalHealthCandidate = classifyGingivalHealthCandidate(value);
+  const diagnosisCandidates = classifyPeriodontalDiagnosisCandidates(value);
   const stageEvidence = periodontalStageEvidence(value);
   const stageReasons = stageEvidence
     .filter((evidence) =>
@@ -1994,6 +2050,14 @@ export function PeriodontalClassificationControl({
                 </div>
               </div>
             </ObservationDisclosure>
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              onClick={() => setStructuredObservationsOpen(false)}
+            >
+              Collapse observations
+              <DropdownChevron open />
+            </button>
           </div>
         ) : null}
       </fieldset>
@@ -2041,6 +2105,75 @@ export function PeriodontalClassificationControl({
           />
         </div>
       </section>
+
+      {!hasAssessedDiagnosis ? (
+        <section
+          className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700"
+          aria-labelledby="periodontal-current-condition-heading"
+        >
+          <h3
+            id="periodontal-current-condition-heading"
+            className="font-semibold"
+          >
+            Current clinical condition
+          </h3>
+          <div className="border-l-4 border-amber-500 pl-4">
+            <h4 className="font-semibold">Possible diagnosis categories</h4>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              Based only on findings documented so far. No diagnosis is selected
+              or changed by these suggestions.
+            </p>
+            {diagnosisCandidates.possibilities.length ? (
+              <ul className="mt-3 space-y-3">
+                {diagnosisCandidates.possibilities.map((possibility) => (
+                  <li key={possibility.diagnosis}>
+                    <p className="font-medium">
+                      {choiceLabel(
+                        periodontalDiagnosisChoices,
+                        possibility.diagnosis,
+                      )}
+                    </p>
+                    <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                      {possibility.reasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm">No category suggestion available.</p>
+            )}
+            {diagnosisCandidates.missingFields.length ? (
+              <details className="mt-3 text-sm text-slate-700 dark:text-slate-300">
+                <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
+                  Information that may narrow the possibilities
+                </summary>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {diagnosisCandidates.missingFields.map((field) => (
+                    <li key={field.id}>
+                      <button
+                        type="button"
+                        className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                        onClick={() => navigateToMissingField(field.id)}
+                      >
+                        {field.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+            {diagnosisCandidates.warnings.length ? (
+              <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                {diagnosisCandidates.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {hasAssessedDiagnosis &&
       (showGingivalContextWorkflow || isPeriodontitisDiagnosis) ? (
@@ -2097,12 +2230,8 @@ export function PeriodontalClassificationControl({
                       update({
                         ...(candidate.stage ? { stage: candidate.stage } : {}),
                         ...(candidate.grade ? { grade: candidate.grade } : {}),
-                        ...(candidate.stage
-                          ? { stageOverrideReason: "" }
-                          : {}),
-                        ...(candidate.grade
-                          ? { gradeOverrideReason: "" }
-                          : {}),
+                        ...(candidate.stage ? { stageOverrideReason: "" } : {}),
+                        ...(candidate.grade ? { gradeOverrideReason: "" } : {}),
                       })
                     }
                   >
@@ -2203,21 +2332,17 @@ export function PeriodontalClassificationControl({
                         More information is needed to calculate a suggestion:
                       </p>
                       <ul className="mt-1 list-disc space-y-1 pl-5">
-                        {gingivalHealthCandidate.missingFields.map(
-                          (field) => (
-                            <li key={field.id}>
-                              <button
-                                type="button"
-                                className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
-                                onClick={() =>
-                                  navigateToMissingField(field.id)
-                                }
-                              >
-                                {field.label}
-                              </button>
-                            </li>
-                          ),
-                        )}
+                        {gingivalHealthCandidate.missingFields.map((field) => (
+                          <li key={field.id}>
+                            <button
+                              type="button"
+                              className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                              onClick={() => navigateToMissingField(field.id)}
+                            >
+                              {field.label}
+                            </button>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   ) : null}
@@ -2688,6 +2813,14 @@ function GingivalDescriptionControl({
                 </fieldset>
               );
             })}
+            <button
+              type="button"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              onClick={() => setStructuredObservationsOpen(false)}
+            >
+              Collapse observations
+              <DropdownChevron open />
+            </button>
           </div>
         ) : null}
       </fieldset>
@@ -2849,14 +2982,14 @@ async function writeClipboard(value: string): Promise<boolean> {
   return copied;
 }
 
-export function AdultHygiene2021Template({
+export function AdultHygiene2026Template({
   fixture,
 }: {
-  fixture: AdultHygiene2021Form;
+  fixture: AdultHygiene2026Form;
   summary: string;
 }) {
-  const [form, setForm] = useState<AdultHygiene2021Form>(() => ({
-    ...createEmptyAdultHygiene2021Form(),
+  const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
+    ...createEmptyAdultHygiene2026Form(),
     class5IndicatorStatus: "yes",
     ppeStatementApplies: true,
   }));
@@ -2864,30 +2997,34 @@ export function AdultHygiene2021Template({
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
+  const [outputMode, setOutputMode] =
+    useState<AdultHygiene2026Output>("complete");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
   const providerDefaultsAppliedRef = useRef(false);
-  const {
-    providerDefaultsStorageStatus,
-    getProviderDefault,
-    getItems,
-  } = useCatalogues();
+  const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
+    useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
-    templateId: "adult-hygiene-2021",
+    templateId: "adult-hygiene-2026",
     form,
     startedAt,
     isEmpty: isEmptyAdultHygieneDraft,
     isValidForm: isAdultHygieneDraftForm,
     onRestore: (draft) => {
-      const emptyForm = createEmptyAdultHygiene2021Form();
+      const emptyForm = createEmptyAdultHygiene2026Form();
       setForm({
         ...emptyForm,
         ...draft.form,
         periodontalClassification: normalizePeriodontalClassification(
           draft.form.periodontalClassification,
         ),
+        treatmentCompleted: migrateLegacyDesensitizerToTreatmentCompleted(
+          draft.form.treatmentCompleted ?? [],
+          draft.form.desensitizer ?? "",
+        ),
+        desensitizer: "",
         gingivalDescription: copyGingivalDescriptionAssessment(
           draft.form.gingivalDescription,
         ),
@@ -2899,13 +3036,12 @@ export function AdultHygiene2021Template({
     },
   });
 
-  function createNewFormWithProviderDefaults(): AdultHygiene2021Form {
+  function createNewFormWithProviderDefaults(): AdultHygiene2026Form {
     return {
-      ...createEmptyAdultHygiene2021Form(),
+      ...createEmptyAdultHygiene2026Form(),
       class5IndicatorStatus: "yes",
       ppeStatementApplies: true,
-      dentist:
-        getProviderDefault("visit-team.dentist")?.label ?? "",
+      dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
       rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
       rda: getProviderDefault("visit-team.rda")?.label ?? "",
     };
@@ -2927,10 +3063,8 @@ export function AdultHygiene2021Template({
         current.dentist ||
         getProviderDefault("visit-team.dentist")?.label ||
         "",
-      rdh:
-        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda:
-        current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+      rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
     }));
   }, [
     getProviderDefault,
@@ -2950,8 +3084,7 @@ export function AdultHygiene2021Template({
     }
     setForm((current) =>
       !current.mieleCodes.trim() ||
-      (current.class5IndicatorStatus === "yes" &&
-        current.ppeStatementApplies)
+      (current.class5IndicatorStatus === "yes" && current.ppeStatementApplies)
         ? current
         : {
             ...current,
@@ -2959,11 +3092,7 @@ export function AdultHygiene2021Template({
             ppeStatementApplies: true,
           },
     );
-  }, [
-    form.class5IndicatorStatus,
-    form.mieleCodes,
-    form.ppeStatementApplies,
-  ]);
+  }, [form.class5IndicatorStatus, form.mieleCodes, form.ppeStatementApplies]);
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -2974,17 +3103,30 @@ export function AdultHygiene2021Template({
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
   }, []);
 
-  const summary = useMemo(
-    () =>
-      buildAdultHygiene2021Summary(form, {
+  const summaries = useMemo(
+    () => ({
+      complete: buildAdultHygiene2026Summary(form, {
         ...(startedAt ? { startedAt } : {}),
+        output: "complete",
       }),
+      hygiene: buildAdultHygiene2026Summary(form, {
+        ...(startedAt ? { startedAt } : {}),
+        output: "hygiene",
+      }),
+      recare: buildAdultHygiene2026Summary(form, {
+        ...(startedAt ? { startedAt } : {}),
+        output: "recare",
+      }),
+    }),
     [form, startedAt],
   );
+  const summary = summaries[outputMode];
+  const cariesRiskSuggestion = suggestAdultCariesRisk(form.cariesRiskFactors);
+  const occlusalSplintState = resolveOcclusalSplintState(form);
 
-  function updateField<TKey extends keyof AdultHygiene2021Form>(
+  function updateField<TKey extends keyof AdultHygiene2026Form>(
     key: TKey,
-    value: AdultHygiene2021Form[TKey],
+    value: AdultHygiene2026Form[TKey],
   ) {
     setForm((current) => ({ ...current, [key]: value }));
     setCopyMessage("");
@@ -2999,7 +3141,7 @@ export function AdultHygiene2021Template({
     }
   }
 
-  async function copyNote() {
+  async function copyNote(mode: AdultHygiene2026Output = outputMode) {
     const draftSaveResult = localDraft.saveNow();
     const missingPatientId = !form.patientId.trim();
     const missingProvider = ![form.dentist, form.rdh, form.rda].some((value) =>
@@ -3013,7 +3155,7 @@ export function AdultHygiene2021Template({
     if (
       missingPatientId ||
       missingProvider ||
-      !hasRequiredAdultHygiene2021Fields(form)
+      !hasRequiredAdultHygiene2026Fields(form)
     ) {
       requestAnimationFrame(() => {
         const invalidField = missingPatientId
@@ -3023,12 +3165,18 @@ export function AdultHygiene2021Template({
       });
       return;
     }
-    const copied = await writeClipboard(summary);
+    const copied = await writeClipboard(summaries[mode]);
+    const outputLabel =
+      mode === "complete"
+        ? "Complete"
+        : mode === "hygiene"
+        ? "Hygiene"
+        : "Recare";
     setCopyMessage(
       copied
         ? draftSaveResult === "failed"
-          ? "Note copied, but the local draft could not be saved."
-          : "Note copied."
+          ? `${outputLabel} note copied, but the local draft could not be saved.`
+          : `${outputLabel} note copied.`
         : "The note could not be copied. Select the preview and copy it manually.",
     );
   }
@@ -3085,6 +3233,32 @@ export function AdultHygiene2021Template({
       },
       psrPocketing: [...fixture.psrPocketing],
       patientChiefConcern: [...fixture.patientChiefConcern],
+      radiographs: [...fixture.radiographs],
+      structuredExtraoralFindings: (
+        fixture.structuredExtraoralFindings ?? []
+      ).map((finding) => ({
+        ...finding,
+        statuses: [...(finding.statuses ?? [])],
+        phases: [...(finding.phases ?? [])],
+        locations: [...(finding.locations ?? [])],
+        swelling: [...(finding.swelling ?? [])],
+      })),
+      structuredIntraoralFindings: (
+        fixture.structuredIntraoralFindings ?? []
+      ).map((finding) => ({
+        ...finding,
+        locations: [...(finding.locations ?? [])],
+      })),
+      additionalOcclusalFindings: (
+        fixture.additionalOcclusalFindings ?? []
+      ).map((finding) => ({
+        ...finding,
+        locations: [...finding.locations],
+      })),
+      toothFindings: (fixture.toothFindings ?? []).map((finding) => ({
+        ...finding,
+        toothAreas: [...finding.toothAreas],
+      })),
       plaqueAreas: [...(fixture.plaqueAreas ?? [])],
       stainAreas: [...(fixture.stainAreas ?? [])],
       calculusAreas: [...(fixture.calculusAreas ?? [])],
@@ -3096,10 +3270,240 @@ export function AdultHygiene2021Template({
         ...entry,
         toothAreas: [...entry.toothAreas],
       })),
+      localAnesthesiaEntries: fixture.localAnesthesiaEntries.map((entry) => ({
+        ...entry,
+        toothAreas: [...entry.toothAreas],
+      })),
+      treatmentOptions: fixture.treatmentOptions.map((entry) => ({ ...entry })),
+      hygieneTreatmentOptions: fixture.hygieneTreatmentOptions.map((entry) => ({
+        ...entry,
+      })),
+      treatmentPlan: fixture.treatmentPlan.map((entry) => ({ ...entry })),
     });
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("Synthetic demo data loaded.");
+  }
+
+  function hasExtraoralDocumentation() {
+    return (
+      [
+        form.extraoralStatus,
+        form.tmjStatus,
+        form.lymphNodesStatus,
+        form.masseterStatus,
+        form.tmjLoadStatus,
+      ].some((status) => status !== "not-assessed") ||
+      [
+        form.extraoralFindings,
+        form.tmjFindings,
+        form.lymphNodesFindings,
+        form.masseterFindings,
+        form.tmjLoadFindings,
+      ].some((value) => Boolean(value.trim())) ||
+      Boolean(form.structuredExtraoralFindings?.length)
+    );
+  }
+
+  function changeExtraoralStatus(value: ExamStatus) {
+    const hasFindings =
+      Boolean(form.extraoralFindings.trim()) ||
+      Boolean(form.structuredExtraoralFindings?.length);
+    if (value === "wnl" && hasFindings) {
+      if (
+        !window.confirm(
+          "Mark Extraoral WNL and clear all entered extraoral findings?",
+        )
+      )
+        return;
+      setForm((current) => ({
+        ...current,
+        extraoralStatus: "wnl",
+        extraoralFindings: "",
+        structuredExtraoralFindings: [],
+      }));
+      setCopyMessage("");
+      return;
+    }
+    updateField("extraoralStatus", value);
+  }
+
+  function applyNormalStructuredExtraoral() {
+    if (
+      hasExtraoralDocumentation() &&
+      !window.confirm("Replace all entered extraoral exam findings with WNL?")
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      extraoralStatus: "wnl",
+      extraoralFindings: "",
+      structuredExtraoralFindings: [],
+      tmjStatus: "wnl",
+      tmjFindings: "",
+      lymphNodesStatus: "wnl",
+      lymphNodesFindings: "",
+      masseterStatus: "wnl",
+      masseterFindings: "",
+      tmjLoadStatus: "wnl",
+      tmjLoadFindings: "",
+    }));
+    setCopyMessage("");
+  }
+
+  function clearExtraoralObservations() {
+    if (
+      hasExtraoralDocumentation() &&
+      !window.confirm(
+        "Clear all entered extraoral observations and return the extraoral clinical exam to Not assessed?",
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      extraoralStatus: "not-assessed",
+      extraoralFindings: "",
+      structuredExtraoralFindings: [],
+      tmjStatus: "not-assessed",
+      tmjFindings: "",
+      lymphNodesStatus: "not-assessed",
+      lymphNodesFindings: "",
+      masseterStatus: "not-assessed",
+      masseterFindings: "",
+      tmjLoadStatus: "not-assessed",
+      tmjLoadFindings: "",
+    }));
+    setCopyMessage("");
+  }
+
+  function changeIntraoralStatus(value: ExamStatus) {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (value === "wnl" && hasFindings) {
+      if (
+        !window.confirm(
+          "Mark Intraoral WNL and clear all entered intraoral findings?",
+        )
+      )
+        return;
+      setForm((current) => ({
+        ...current,
+        intraoralStatus: "wnl",
+        intraoralFindings: "",
+        structuredIntraoralFindings: [],
+      }));
+      setCopyMessage("");
+      return;
+    }
+    updateField("intraoralStatus", value);
+  }
+
+  function applyNormalStructuredIntraoral() {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (
+      hasFindings &&
+      !window.confirm(
+        "Replace all entered intraoral findings with the reviewed normal structured observations?",
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      intraoralStatus: "findings",
+      intraoralFindings: "",
+      structuredIntraoralFindings:
+        createRecareNormalStructuredIntraoralFindings(),
+    }));
+    setCopyMessage("");
+  }
+
+  function clearIntraoralObservations() {
+    const hasFindings =
+      Boolean(form.intraoralFindings.trim()) ||
+      Boolean(form.structuredIntraoralFindings?.length);
+    if (
+      hasFindings &&
+      !window.confirm(
+        "Clear all entered intraoral observations and return Intraoral to Not assessed?",
+      )
+    )
+      return;
+    setForm((current) => ({
+      ...current,
+      intraoralStatus: "not-assessed",
+      intraoralFindings: "",
+      structuredIntraoralFindings: [],
+    }));
+    setCopyMessage("");
+  }
+
+  function changeAdditionalOcclusalValues(values: string[]) {
+    const existing = [...(form.additionalOcclusalFindings ?? [])];
+    const next = values.map((finding, index) => {
+      const sameIndex = existing[index];
+      if (sameIndex?.finding === finding) return sameIndex;
+      const matchIndex = existing.findIndex(
+        (entry) => entry.finding === finding,
+      );
+      if (matchIndex >= 0) return existing.splice(matchIndex, 1)[0];
+      return { id: `occlusal-${Date.now()}-${index}`, finding, locations: [] };
+    });
+    updateField("additionalOcclusalFindings", next);
+  }
+
+  function createTreatmentRecommendation(
+    kind: "option" | "plan",
+    careType: "preventive" | "restorative" | "other" = "other",
+  ) {
+    treatmentEntrySequence.current += 1;
+    return {
+      id: `${kind}-${Date.now()}-${treatmentEntrySequence.current}`,
+      treatmentType: "",
+      toothArea: "",
+      careType,
+    };
+  }
+
+  function addDiscussedOptionsToCombinedPlan() {
+    const normalize = (value: string) =>
+      value.normalize("NFKC").trim().toLocaleLowerCase("en-CA");
+    const identity = (
+      entry: AdultHygiene2026Form["treatmentPlan"][number],
+      careType: "preventive" | "restorative" | "other",
+    ) =>
+      `${careType}|${normalize(entry.treatmentType)}|${normalize(
+        entry.toothArea,
+      )}`;
+    const seen = new Set(
+      form.treatmentPlan
+        .filter((entry) => entry.treatmentType.trim())
+        .map((entry) => identity(entry, entry.careType ?? "other")),
+    );
+    const additions: AdultHygiene2026Form["treatmentPlan"] = [];
+
+    for (const [options, careType] of [
+      [form.treatmentOptions, "restorative"],
+      [form.hygieneTreatmentOptions, "preventive"],
+    ] as const) {
+      for (const entry of options) {
+        if (!entry.treatmentType.trim()) continue;
+        const key = identity(entry, careType);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        additions.push({
+          ...entry,
+          id: createTreatmentRecommendation("plan", careType).id,
+          careType,
+        });
+      }
+    }
+
+    if (additions.length) {
+      updateField("treatmentPlan", [...form.treatmentPlan, ...additions]);
+    }
   }
 
   function resetForm() {
@@ -3110,6 +3514,7 @@ export function AdultHygiene2021Template({
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
+    setOutputMode("complete");
     patientIdRef.current?.focus();
   }
 
@@ -3142,6 +3547,30 @@ export function AdultHygiene2021Template({
     }
   }
 
+  function applyRecareExam() {
+    if (
+      form.treatmentCompleted.some(
+        (entry) =>
+          treatmentCompletedEntryIdentity(entry) === "procedure:recare-exam",
+      )
+    ) {
+      return;
+    }
+    const entry = {
+      ...createTreatmentCompletedEntry(),
+      ...recareExamTreatmentPreset,
+      toothAreas: [...recareExamTreatmentPreset.toothAreas],
+    };
+    const radiographCount = form.treatmentCompleted.filter(
+      (candidate) => candidate.procedureSource === "radiographs",
+    ).length;
+    updateField("treatmentCompleted", [
+      ...form.treatmentCompleted.slice(0, radiographCount),
+      entry,
+      ...form.treatmentCompleted.slice(radiographCount),
+    ]);
+  }
+
   return (
     <div className="space-y-6">
       <form
@@ -3158,13 +3587,13 @@ export function AdultHygiene2021Template({
               Pilot interactive conversion
             </p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              2021 Adult Hygiene
+              2026 Adult Hygiene
             </h1>
             <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured Adult Hygiene note.
-              Encounter values are kept in a temporary local recovery draft.
-              Deliberately remembered catalogue suggestions also stay only in
-              this browser profile.
+              Complete one encounter and copy a Complete, Hygiene, or Recare
+              note. Encounter values are kept in a temporary local recovery
+              draft. Deliberately remembered catalogue suggestions also stay
+              only in this browser profile.
             </p>
           </header>
 
@@ -3360,6 +3789,43 @@ export function AdultHygiene2021Template({
             </div>
           </Section>
 
+          <Section title="Records">
+            <RadiographsTakenControl
+              values={form.radiographs}
+              onChange={(radiographs) => {
+                setForm((current) => ({
+                  ...current,
+                  radiographs,
+                  treatmentCompleted: syncRadiographTreatmentEntries(
+                    current.treatmentCompleted,
+                    radiographs,
+                  ),
+                }));
+                setCopyMessage("");
+              }}
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FixedChoiceListbox
+                id="adult-hygiene-intraoral-photos-status"
+                label="Intraoral photos"
+                value={form.intraoralPhotosStatus}
+                options={documentationStatusOptions}
+                onChange={(value) =>
+                  updateField("intraoralPhotosStatus", value)
+                }
+              />
+              <TextField
+                id="adult-hygiene-intraoral-photos-details"
+                label="Intraoral photos details"
+                value={form.intraoralPhotosDetails}
+                onChange={(value) =>
+                  updateField("intraoralPhotosDetails", value)
+                }
+                placeholder="Optional details"
+              />
+            </div>
+          </Section>
+
           <Section title="Patient Concerns and Hygiene Findings">
             <CatalogueMultiCombobox
               id="adult-hygiene-chief-concern"
@@ -3435,6 +3901,437 @@ export function AdultHygiene2021Template({
             />
           </Section>
 
+          <Section title="EOE">
+            <ExamFinding
+              id="adult-hygiene-extraoral"
+              label="Extraoral"
+              status={form.extraoralStatus}
+              findings={form.extraoralFindings}
+              onStatusChange={changeExtraoralStatus}
+              onFindingsChange={(value) => {
+                updateField("extraoralFindings", value);
+                if (value.trim()) updateField("extraoralStatus", "findings");
+              }}
+            />
+            <StructuredExtraoralObservations
+              idPrefix="adult-hygiene"
+              status={form.extraoralStatus}
+              additionalStatuses={[
+                form.tmjStatus,
+                form.lymphNodesStatus,
+                form.masseterStatus,
+                form.tmjLoadStatus,
+              ]}
+              values={form.structuredExtraoralFindings ?? []}
+              onApplyNormal={applyNormalStructuredExtraoral}
+              onClear={clearExtraoralObservations}
+              clearDisabled={!hasExtraoralDocumentation()}
+              onChange={(values) => {
+                updateField("structuredExtraoralFindings", values);
+                if (values.length) updateField("extraoralStatus", "findings");
+              }}
+              linkedStatusByOptionId={{
+                "eoe.tmj_clicking": form.tmjStatus,
+                "eoe.palpable_lymph_nodes": form.lymphNodesStatus,
+              }}
+            >
+              <TmjAssessmentControl
+                idPrefix="adult-hygiene"
+                status={form.tmjStatus}
+                findings={form.tmjFindings}
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
+                }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
+              >
+                <ExamFinding
+                  id="adult-hygiene-masseter"
+                  label="Masseter palpation"
+                  status={form.masseterStatus}
+                  findings={form.masseterFindings}
+                  onStatusChange={(value) =>
+                    updateField("masseterStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("masseterFindings", value)
+                  }
+                />
+                <ExamFinding
+                  id="adult-hygiene-tmj-load"
+                  label="TMJ loading test"
+                  status={form.tmjLoadStatus}
+                  findings={form.tmjLoadFindings}
+                  onStatusChange={(value) =>
+                    updateField("tmjLoadStatus", value)
+                  }
+                  onFindingsChange={(value) =>
+                    updateField("tmjLoadFindings", value)
+                  }
+                />
+              </TmjAssessmentControl>
+              <LymphNodesAssessmentControl
+                idPrefix="adult-hygiene"
+                status={form.lymphNodesStatus}
+                findings={form.lymphNodesFindings}
+                structuredExtraoralFindings={
+                  form.structuredExtraoralFindings ?? []
+                }
+                onChange={(patch) => {
+                  setForm((current) => ({
+                    ...current,
+                    ...patch,
+                    ...(patch.lymphNodesStatus === "findings" ||
+                    patch.structuredExtraoralFindings?.length
+                      ? { extraoralStatus: "findings" as const }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
+              />
+            </StructuredExtraoralObservations>
+          </Section>
+
+          <Section title="IOE">
+            <ExamFinding
+              id="adult-hygiene-intraoral"
+              label="Intraoral"
+              status={form.intraoralStatus}
+              findings={form.intraoralFindings}
+              onStatusChange={changeIntraoralStatus}
+              onFindingsChange={(value) => {
+                updateField("intraoralFindings", value);
+                if (value.trim()) updateField("intraoralStatus", "findings");
+              }}
+            />
+            <StructuredIntraoralFindings
+              idPrefix="adult-hygiene"
+              status={form.intraoralStatus}
+              values={form.structuredIntraoralFindings ?? []}
+              onApplyNormal={applyNormalStructuredIntraoral}
+              onClear={clearIntraoralObservations}
+              clearDisabled={
+                form.intraoralStatus === "not-assessed" &&
+                !form.intraoralFindings.trim() &&
+                !form.structuredIntraoralFindings?.length
+              }
+              onChange={(values) => {
+                updateField("structuredIntraoralFindings", values);
+                if (values.length) updateField("intraoralStatus", "findings");
+              }}
+            />
+          </Section>
+
+          <Section title="Occlusion and Habits">
+            <TextField
+              id="adult-hygiene-oral-habits"
+              label="Oral habits"
+              value={form.oralHabits}
+              onChange={(value) => updateField("oralHabits", value)}
+            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
+                <CatalogueCombobox
+                  id="adult-hygiene-right-molar-occlusion"
+                  label="Right molar occlusion"
+                  catalogueKey="clinical-exam.molar-occlusion"
+                  value={form.rightMolarOcclusion}
+                  onChange={(value) =>
+                    updateField("rightMolarOcclusion", value)
+                  }
+                  disabled={form.rightMolarOcclusionNotApplicable}
+                />
+                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 sm:mt-6">
+                  <input
+                    id="adult-hygiene-right-molar-na"
+                    type="checkbox"
+                    className={checkboxClass}
+                    checked={form.rightMolarOcclusionNotApplicable}
+                    onChange={(event) => {
+                      updateField(
+                        "rightMolarOcclusionNotApplicable",
+                        event.target.checked,
+                      );
+                      if (event.target.checked) {
+                        updateField("rightMolarOcclusion", "");
+                      }
+                    }}
+                  />
+                  N/A
+                </label>
+              </div>
+              <div className="grid items-start gap-3 sm:grid-cols-[1fr_auto]">
+                <CatalogueCombobox
+                  id="adult-hygiene-left-molar-occlusion"
+                  label="Left molar occlusion"
+                  catalogueKey="clinical-exam.molar-occlusion"
+                  value={form.leftMolarOcclusion}
+                  onChange={(value) => updateField("leftMolarOcclusion", value)}
+                  disabled={form.leftMolarOcclusionNotApplicable}
+                />
+                <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 sm:mt-6">
+                  <input
+                    id="adult-hygiene-left-molar-na"
+                    type="checkbox"
+                    className={checkboxClass}
+                    checked={form.leftMolarOcclusionNotApplicable}
+                    onChange={(event) => {
+                      updateField(
+                        "leftMolarOcclusionNotApplicable",
+                        event.target.checked,
+                      );
+                      if (event.target.checked) {
+                        updateField("leftMolarOcclusion", "");
+                      }
+                    }}
+                  />
+                  N/A
+                </label>
+              </div>
+            </div>
+            <div className="grid items-start gap-4 md:grid-cols-[1fr_auto]">
+              <CatalogueCombobox
+                id="adult-hygiene-skeletal-occlusion"
+                label="Skeletal occlusion"
+                catalogueKey="clinical-exam.skeletal-occlusion"
+                value={form.skeletalOcclusion}
+                onChange={(value) => updateField("skeletalOcclusion", value)}
+                disabled={form.skeletalOcclusionNotApplicable}
+              />
+              <label className="flex min-h-10 items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 md:mt-6">
+                <input
+                  id="adult-hygiene-skeletal-na"
+                  type="checkbox"
+                  className={checkboxClass}
+                  checked={form.skeletalOcclusionNotApplicable}
+                  onChange={(event) => {
+                    updateField(
+                      "skeletalOcclusionNotApplicable",
+                      event.target.checked,
+                    );
+                    if (event.target.checked) {
+                      updateField("skeletalOcclusion", "");
+                    }
+                  }}
+                />
+                N/A
+              </label>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <TextField
+                id="adult-hygiene-overjet"
+                label="Overjet (mm)"
+                value={form.overjetMm}
+                onChange={(value) => updateField("overjetMm", value)}
+                inputMode="decimal"
+              />
+              <TextField
+                id="adult-hygiene-overbite-percent"
+                label="Overbite (%)"
+                value={form.overbitePercent}
+                onChange={(value) => updateField("overbitePercent", value)}
+                inputMode="decimal"
+              />
+              <TextField
+                id="adult-hygiene-overbite-mm"
+                label="Overbite (mm)"
+                value={form.overbiteMm ?? ""}
+                onChange={(value) => updateField("overbiteMm", value)}
+                inputMode="decimal"
+              />
+            </div>
+            <div className="space-y-3">
+              <CatalogueMultiCombobox
+                id="adult-hygiene-additional-occlusal-findings"
+                label="Additional occlusal findings"
+                catalogueKey="clinical-exam.additional-occlusal-findings"
+                values={(form.additionalOcclusalFindings ?? []).map(
+                  (entry) => entry.finding,
+                )}
+                onChange={changeAdditionalOcclusalValues}
+                roomySelectionActions
+                renderSelectedDetails={(_, index) => {
+                  const entry = (form.additionalOcclusalFindings ?? [])[index];
+                  return entry ? (
+                    <OcclusalFindingLocations
+                      idPrefix="adult-hygiene"
+                      entry={entry}
+                      onChange={(updated) =>
+                        updateField(
+                          "additionalOcclusalFindings",
+                          (form.additionalOcclusalFindings ?? []).map((item) =>
+                            item.id === entry.id ? updated : item,
+                          ),
+                        )
+                      }
+                    />
+                  ) : null;
+                }}
+              />
+              <CheckboxField
+                id="adult-hygiene-additional-occlusal-findings-list-format"
+                label="List each additional occlusal finding on a separate line in the note"
+                checked={form.listAdditionalOcclusalFindings}
+                onChange={(value) =>
+                  updateField("listAdditionalOcclusalFindings", value)
+                }
+              />
+            </div>
+          </Section>
+
+          <Section title="Teeth and Odontogram">
+            <TeethAssessment
+              idPrefix="adult-hygiene"
+              form={form}
+              onChange={(patch) => {
+                setForm((current) => ({ ...current, ...patch }));
+                setCopyMessage("");
+              }}
+            />
+            <CheckboxField
+              id="adult-hygiene-odontogram-up-to-date"
+              label="Odontogram up to date"
+              checked={form.odontogramUpToDate}
+              onChange={(value) => updateField("odontogramUpToDate", value)}
+            />
+          </Section>
+
+          <Section title="Appliances and Relevant History">
+            <div className="grid gap-4 md:grid-cols-2">
+              <FixedChoiceListbox
+                id="adult-hygiene-cpap"
+                label="Has a CPAP"
+                value={form.cpapStatus}
+                options={documentationStatusOptions}
+                onChange={(value) => {
+                  updateField("cpapStatus", value);
+                  if (value !== "yes") {
+                    updateField("cpapUseStatus", "not-documented");
+                  }
+                }}
+              />
+              {form.cpapStatus === "yes" ? (
+                <FixedChoiceListbox
+                  id="adult-hygiene-cpap-use"
+                  label="Uses the CPAP"
+                  value={form.cpapUseStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => updateField("cpapUseStatus", value)}
+                />
+              ) : null}
+              <FixedChoiceListbox
+                id="adult-hygiene-occlusal-splint"
+                label="Has an occlusal splint (night guard)"
+                value={occlusalSplintState.status}
+                options={documentationStatusOptions}
+                onChange={(value) => {
+                  setForm((current) => ({
+                    ...current,
+                    occlusalSplintStatus: value,
+                    nightGuardStatus: value,
+                    ...(value !== "yes"
+                      ? {
+                          occlusalSplintUseStatus: "not-documented" as const,
+                          nightGuardUseStatus: "not-documented" as const,
+                        }
+                      : {}),
+                  }));
+                  setCopyMessage("");
+                }}
+              />
+              {occlusalSplintState.status === "yes" ? (
+                <FixedChoiceListbox
+                  id="adult-hygiene-occlusal-splint-use"
+                  label="Uses the occlusal splint (night guard)"
+                  value={occlusalSplintState.useStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => {
+                    setForm((current) => ({
+                      ...current,
+                      occlusalSplintUseStatus: value,
+                      nightGuardUseStatus: value,
+                    }));
+                    setCopyMessage("");
+                  }}
+                />
+              ) : null}
+              <FixedChoiceListbox
+                id="adult-hygiene-orthodontics"
+                label="Orthodontic history"
+                value={form.orthodonticHistoryStatus}
+                options={documentationStatusOptions}
+                onChange={(value) =>
+                  updateField("orthodonticHistoryStatus", value)
+                }
+              />
+              <FixedChoiceListbox<RetainerStatus>
+                id="adult-hygiene-retainers"
+                label="Retainers"
+                value={form.retainerStatus}
+                options={[
+                  { value: "not-documented", label: "Not documented" },
+                  { value: "none", label: "None" },
+                  { value: "fixed", label: "Fixed" },
+                  { value: "removable", label: "Removable" },
+                  {
+                    value: "fixed-and-removable",
+                    label: "Fixed and removable",
+                  },
+                ]}
+                onChange={(value) => updateField("retainerStatus", value)}
+              />
+              <FixedChoiceListbox
+                id="adult-hygiene-removable-dentures"
+                label="Partial/complete removable dentures"
+                value={form.removableDenturesStatus}
+                options={documentationStatusOptions}
+                onChange={(value) =>
+                  updateField("removableDenturesStatus", value)
+                }
+              />
+              {form.removableDenturesStatus === "yes" ? (
+                <div className="md:col-span-2">
+                  <TextareaField
+                    id="adult-hygiene-removable-dentures-comment"
+                    label="Removable dentures comments"
+                    value={form.removableDenturesComment}
+                    onChange={(value) =>
+                      updateField("removableDenturesComment", value)
+                    }
+                  />
+                </div>
+              ) : null}
+            </div>
+            <TextareaField
+              id="adult-hygiene-improvement-request"
+              label="What would the patient like to improve about their smile or teeth?"
+              value={form.improvementRequest}
+              onChange={(value) => updateField("improvementRequest", value)}
+            />
+            <TextareaField
+              id="adult-hygiene-recare-comments"
+              label="Additional recare comments"
+              value={form.recareAdditionalComments}
+              onChange={(value) =>
+                updateField("recareAdditionalComments", value)
+              }
+            />
+            <TextareaField
+              id="adult-hygiene-additional-notes"
+              label="Additional notes"
+              value={form.additionalNotes}
+              onChange={(value) => updateField("additionalNotes", value)}
+            />
+          </Section>
+
           <Section title="Periodontal Assessment">
             <fieldset>
               <legend className="font-semibold">PSR/Pocketing</legend>
@@ -3454,7 +4351,7 @@ export function AdultHygiene2021Template({
                       onChange={(nextValue) => {
                         const next = [
                           ...form.psrPocketing,
-                        ] as AdultHygiene2021Form["psrPocketing"];
+                        ] as AdultHygiene2026Form["psrPocketing"];
                         next[index] = nextValue;
                         updateField("psrPocketing", next);
                       }}
@@ -3506,6 +4403,47 @@ export function AdultHygiene2021Template({
                   onChange={(value) => updateField("cariesRiskFactors", value)}
                   roomySelectionActions
                 />
+              </div>
+              <div className="border-l-4 border-sky-600 pl-4 md:col-span-2">
+                <h3 className="font-semibold">Suggested caries risk level</h3>
+                <p className="mt-1 text-sm">
+                  {cariesRiskSuggestion.level || "Not available"}
+                </p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+                  Based only on the risk factors documented above. The selected
+                  risk level is not changed automatically.
+                </p>
+                {cariesRiskSuggestion.reasons.length ? (
+                  <details className="mt-2 text-sm text-slate-700 dark:text-slate-300">
+                    <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
+                      Why this was suggested
+                    </summary>
+                    <ul className="mt-2 list-disc space-y-1 pl-5">
+                      {cariesRiskSuggestion.reasons.map((reason) => (
+                        <li key={reason}>{reason}</li>
+                      ))}
+                    </ul>
+                  </details>
+                ) : null}
+                {cariesRiskSuggestion.warnings.length ? (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
+                    {cariesRiskSuggestion.warnings.map((warning) => (
+                      <li key={warning}>{warning}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                {cariesRiskSuggestion.level &&
+                form.cariesRiskLevel !== cariesRiskSuggestion.level ? (
+                  <button
+                    type="button"
+                    className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
+                    onClick={() =>
+                      updateField("cariesRiskLevel", cariesRiskSuggestion.level)
+                    }
+                  >
+                    Apply caries risk suggestion
+                  </button>
+                ) : null}
               </div>
               <div className="md:col-span-2">
                 <TextareaField
@@ -3580,120 +4518,116 @@ export function AdultHygiene2021Template({
             />
           </Section>
 
-          <Section title="Treatment">
-            <fieldset className="space-y-3">
-              <legend className="font-semibold">Treatment recommended</legend>
-              <CheckboxField
-                id="adult-hygiene-treatment-recommended-maintenance"
-                label="Hygiene maintenance"
-                checked={form.treatmentRecommendedHygieneMaintenance}
-                onChange={(value) =>
-                  updateField("treatmentRecommendedHygieneMaintenance", value)
+          <Section title="Treatment plan">
+            <TreatmentEntryList
+              id="adult-hygiene-treatment-options"
+              label="Dental treatment options discussed"
+              addLabel="Add treatment option"
+              entries={form.treatmentOptions}
+              onAdd={() =>
+                updateField("treatmentOptions", [
+                  ...form.treatmentOptions,
+                  createTreatmentRecommendation("option", "restorative"),
+                ])
+              }
+              onChange={(value) => updateField("treatmentOptions", value)}
+            />
+            <TreatmentEntryList
+              id="adult-hygiene-hygiene-treatment-options"
+              label="Hygiene treatment options discussed"
+              addLabel="Add hygiene treatment option"
+              catalogueKey="hygiene-treatment.items"
+              entries={form.hygieneTreatmentOptions}
+              onAdd={() =>
+                updateField("hygieneTreatmentOptions", [
+                  ...form.hygieneTreatmentOptions,
+                  createTreatmentRecommendation("option", "preventive"),
+                ])
+              }
+              onChange={(value) =>
+                updateField("hygieneTreatmentOptions", value)
+              }
+            />
+            <div className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Order preventive and restorative care in the intended sequence.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
+                  onClick={() =>
+                    updateField("treatmentPlan", [
+                      ...form.treatmentPlan,
+                      {
+                        ...createTreatmentRecommendation("plan", "preventive"),
+                        treatmentType: "Hygiene maintenance",
+                        toothArea: "full mouth",
+                      },
+                    ])
+                  }
+                >
+                  Add hygiene maintenance
+                </button>
+                <button
+                  type="button"
+                  className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+                  disabled={
+                    ![
+                      ...form.treatmentOptions,
+                      ...form.hygieneTreatmentOptions,
+                    ].some((entry) => Boolean(entry.treatmentType.trim()))
+                  }
+                  onClick={addDiscussedOptionsToCombinedPlan}
+                >
+                  Add options above to combined treatment plan
+                </button>
+              </div>
+              <TreatmentEntryList
+                id="adult-hygiene-treatment-plan"
+                label="Combined treatment plan"
+                addLabel="Add recommendation"
+                entries={form.treatmentPlan}
+                onAdd={() =>
+                  updateField("treatmentPlan", [
+                    ...form.treatmentPlan,
+                    createTreatmentRecommendation("plan"),
+                  ])
                 }
+                onChange={(value) => updateField("treatmentPlan", value)}
+                showCareType
               />
-              <TextareaField
-                id="adult-hygiene-other-treatment-recommended"
-                label="Other treatment recommended"
-                value={form.otherTreatmentRecommended}
-                onChange={(value) =>
-                  updateField("otherTreatmentRecommended", value)
-                }
-                placeholder="Enter one item per line"
-              />
-            </fieldset>
+            </div>
+          </Section>
+
+          <Section title="Treatment completed today">
             <StructuredTreatmentCompletedList
               entries={form.treatmentCompleted}
               oheRecap={buildOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
+              onApplyRecare={applyRecareExam}
+              radiographsHref="#adult-hygiene-radiographs"
               onChange={(value) => updateField("treatmentCompleted", value)}
+              showHeading={false}
             />
-            <CatalogueCombobox
-              id="adult-hygiene-anesthetic"
-              label="Anesthetic"
-              catalogueKey="hygiene-treatment.anesthetic"
-              value={form.anesthetic}
-              onChange={(value) => updateField("anesthetic", value)}
-            />
-            <CatalogueCombobox
-              id="adult-hygiene-desensitizer"
-              label="Desensitizer"
-              catalogueKey="hygiene-treatment.desensitizer"
-              value={form.desensitizer}
-              onChange={(value) => updateField("desensitizer", value)}
-              suggestionFilter={(item) => {
-                const metadata =
-                  isDesensitizingRemineralizingProductMetadata(item.metadata)
-                    ? item.metadata
-                    : undefined;
-                return !metadata || metadata.productType === "desensitizer";
+            <LocalAnesthesiaControl
+              value={{
+                localAnesthesiaNoContraindication:
+                  form.localAnesthesiaNoContraindication,
+                localAnesthesiaEntries: form.localAnesthesiaEntries,
+                localAnesthesiaNoAdverseReactions:
+                  form.localAnesthesiaNoAdverseReactions,
+                localAnesthesiaAdequateAchieved:
+                  form.localAnesthesiaAdequateAchieved,
+                localAnesthesiaNotes: form.localAnesthesiaNotes,
               }}
-              rememberMetadata={{
-                kind: "desensitizing-remineralizing-product",
-                productType: "desensitizer",
-              }}
+              onChange={(localAnesthesia) =>
+                setForm((current) => ({ ...current, ...localAnesthesia }))
+              }
             />
           </Section>
 
-          <Section title="Appliances and Relevant History">
-            <div className="grid gap-4 md:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-night-guard"
-                label="Has a night guard"
-                value={form.nightGuardStatus}
-                options={documentationStatusOptions}
-                onChange={(value) => {
-                  updateField("nightGuardStatus", value);
-                  if (value !== "yes") {
-                    updateField("nightGuardUseStatus", "not-documented");
-                  }
-                }}
-              />
-              {form.nightGuardStatus === "yes" ? (
-                <FixedChoiceListbox
-                  id="adult-hygiene-night-guard-use"
-                  label="Uses the night guard"
-                  value={form.nightGuardUseStatus}
-                  options={documentationStatusOptions}
-                  onChange={(value) =>
-                    updateField("nightGuardUseStatus", value)
-                  }
-                />
-              ) : null}
-              <FixedChoiceListbox
-                id="adult-hygiene-orthodontics"
-                label="Orthodontic history"
-                value={form.orthodonticHistoryStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("orthodonticHistoryStatus", value)
-                }
-              />
-              <FixedChoiceListbox<RetainerStatus>
-                id="adult-hygiene-retainers"
-                label="Retainers"
-                value={form.retainerStatus}
-                options={[
-                  { value: "not-documented", label: "Not documented" },
-                  { value: "none", label: "None" },
-                  { value: "fixed", label: "Fixed" },
-                  { value: "removable", label: "Removable" },
-                  {
-                    value: "fixed-and-removable",
-                    label: "Fixed and removable",
-                  },
-                ]}
-                onChange={(value) => updateField("retainerStatus", value)}
-              />
-            </div>
-            <TextareaField
-              id="adult-hygiene-additional-notes"
-              label="Additional notes"
-              value={form.additionalNotes}
-              onChange={(value) => updateField("additionalNotes", value)}
-            />
-          </Section>
-
-          <Section title="Intervals and Next Visit">
+          <Section title="Intervals and Follow-up">
             <div className="grid gap-3 md:grid-cols-2">
               <CatalogueCombobox
                 id="adult-hygiene-recall-interval"
@@ -3733,16 +4667,32 @@ export function AdultHygiene2021Template({
             <div className="grid gap-4 md:grid-cols-2">
               <CatalogueCombobox
                 id="adult-hygiene-next-visit"
-                label="Next visit"
+                label="Next hygiene visit"
                 catalogueKey="scheduling.hygiene-next-visit"
                 value={form.nextVisit}
                 onChange={(value) => updateField("nextVisit", value)}
               />
               <TextField
                 id="adult-hygiene-date-booked"
-                label="Date booked"
+                label="Hygiene date booked"
                 value={form.dateBooked}
                 onChange={(value) => updateField("dateBooked", value)}
+                type="date"
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <CatalogueCombobox
+                id="adult-hygiene-dental-next-visit"
+                label="Next dental visit"
+                catalogueKey="scheduling.dentist-next-visit"
+                value={form.dentalNextVisit}
+                onChange={(value) => updateField("dentalNextVisit", value)}
+              />
+              <TextField
+                id="adult-hygiene-dental-date-booked"
+                label="Dental date booked"
+                value={form.dentalDateBooked}
+                onChange={(value) => updateField("dentalDateBooked", value)}
                 type="date"
               />
             </div>
@@ -3755,8 +4705,34 @@ export function AdultHygiene2021Template({
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               The visible preview is copied unchanged.
             </p>
+            <fieldset className="mt-4 space-y-2">
+              <legend className="text-sm font-semibold">Note output</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["complete", "Complete"],
+                    ["hygiene", "Hygiene"],
+                    ["recare", "Recare"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <NativeChoiceControl
+                    key={value}
+                    type="radio"
+                    name="adult-hygiene-note-output"
+                    checked={outputMode === value}
+                    className="px-2"
+                    onChange={() => {
+                      setOutputMode(value);
+                      setCopyMessage("");
+                    }}
+                  >
+                    {label}
+                  </NativeChoiceControl>
+                ))}
+              </div>
+            </fieldset>
             <label className="sr-only" htmlFor="adult-hygiene-summary">
-              Generated 2021 Adult Hygiene note
+              Generated 2026 {outputMode} note
             </label>
             <textarea
               id="adult-hygiene-summary"
@@ -3771,7 +4747,7 @@ export function AdultHygiene2021Template({
                 className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
                 disabled={!startedAt}
               >
-                Copy note
+                Copy {outputMode} note
               </button>
               <button
                 type="button"

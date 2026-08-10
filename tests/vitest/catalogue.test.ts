@@ -72,22 +72,19 @@ describe("local catalogues", () => {
     ).toBe(true);
     expect(
       getCatalogueDefinitionsForBuild("production").some(
-        (definition) => definition.key === "recare-treatment.items",
+        (definition) => definition.key === "dental-treatment.items",
       ),
     ).toBe(true);
     expect(
       getCatalogueDefinitionsForBuild("production").some(
-        (definition) =>
-          definition.key === "clinical-exam.caries-risk-factors",
+        (definition) => definition.key === "clinical-exam.caries-risk-factors",
       ),
     ).toBe(true);
   });
 
   it("defines the approved public seeds without seeding provider catalogues", () => {
     const emptyState = createEmptyCatalogueState();
-    expect(
-      listCatalogueItems(emptyState, "visit-team.dentist"),
-    ).toEqual([]);
+    expect(listCatalogueItems(emptyState, "visit-team.dentist")).toEqual([]);
     expect(listCatalogueItems(emptyState, "visit-team.rda")).toEqual([]);
     expect(listCatalogueItems(emptyState, "visit-team.rdh")).toEqual([]);
     expect(
@@ -96,6 +93,7 @@ describe("local catalogues", () => {
       ),
     ).toEqual([
       "Nothing",
+      "Patient presents for periodic examination/recare",
       "Sore gums upon brushing/flossing",
       "Dissatisfaction with the appearance of teeth due to yellowing/stain",
       "Food catches between teeth",
@@ -103,22 +101,20 @@ describe("local catalogues", () => {
     ]);
 
     expect(
-      listCatalogueItems(
-        emptyState,
-        "clinical-exam.molar-occlusion",
-      ).map((item) => item.label),
+      listCatalogueItems(emptyState, "clinical-exam.molar-occlusion").map(
+        (item) => item.label,
+      ),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
     expect(
-      listCatalogueItems(
-        emptyState,
-        "clinical-exam.skeletal-occlusion",
-      ).map((item) => item.label),
+      listCatalogueItems(emptyState, "clinical-exam.skeletal-occlusion").map(
+        (item) => item.label,
+      ),
     ).toEqual(["Cl I", "Cl II", "Cl III"]);
     expect(
       listCatalogueItems(
         emptyState,
         "clinical-exam.additional-occlusal-findings",
-    ).map((item) => item.label),
+      ).map((item) => item.label),
     ).toEqual([
       "Crowding",
       "Spacing",
@@ -132,22 +128,20 @@ describe("local catalogues", () => {
       listCatalogueItems(emptyState, "imaging.radiographs").map(
         (item) => item.label,
       ),
+    ).toEqual(["Bitewings", "Periapicals", "Panoramic"]);
+    expect(
+      listCatalogueItems(emptyState, "imaging.radiographs").map(
+        (item) => item.metadata,
+      ),
     ).toEqual([
-      "PAN",
-      "1 BW",
-      "2 BW",
-      "3 BW",
-      "4 BW",
-      "5 BW",
-      "6 BW",
-      "1 PA",
-      "2 PA",
+      { kind: "radiograph", code: "BW", defaultQuantity: 4 },
+      { kind: "radiograph", code: "PA", defaultQuantity: 3 },
+      { kind: "radiograph", code: "PAN", defaultQuantity: 1 },
     ]);
     expect(
-      listCatalogueItems(
-        emptyState,
-        "clinical-exam.caries-risk-factors",
-      ).map((item) => item.label),
+      listCatalogueItems(emptyState, "clinical-exam.caries-risk-factors").map(
+        (item) => item.label,
+      ),
     ).toEqual([
       "High frequency of sugar intake",
       "Inadequate oral hygiene",
@@ -179,10 +173,9 @@ describe("local catalogues", () => {
       "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT",
     ]);
     expect(
-      listCatalogueItems(
-        emptyState,
-        "periodontal.health-gingivitis",
-      ).map((item) => item.label),
+      listCatalogueItems(emptyState, "periodontal.health-gingivitis").map(
+        (item) => item.label,
+      ),
     ).toEqual([
       "HEALTH INTACT PERIODONTAL SUPPORT",
       "GINGIVITIS INTACT PERIODONTAL SUPPORT",
@@ -193,14 +186,7 @@ describe("local catalogues", () => {
       listCatalogueItems(emptyState, "oral-hygiene.compliance").map(
         (item) => item.label,
       ),
-    ).toEqual([
-      "Poor",
-      "Fair",
-      "Good",
-      "Excellent",
-      "Poor–fair",
-      "Fair–good",
-    ]);
+    ).toEqual(["Poor", "Fair", "Good", "Excellent", "Poor–fair", "Fair–good"]);
     expect(
       listCatalogueItems(emptyState, "oral-hygiene.aids-reviewed").map(
         (item) => item.label,
@@ -221,33 +207,114 @@ describe("local catalogues", () => {
         (item) => item.label,
       ),
     ).toEqual([
-      "1U scale (cavitron and hand instrumentation)",
-      "2U scale (cavitron and hand instrumentation)",
-      "3U scale (cavitron and hand instrumentation)",
-      "4U scale (cavitron and hand instrumentation)",
+      "Radiographs",
       "FMP",
-      "1U polish - Selective polish of aesthetic zone as per patient's request",
-      "FluoriMax 2.5% NaF Varnish application",
-      "Advantage Arrest® Silver Diamine Fluoride 38% application",
-      "Dyclonine 1% rinse 5 ml",
-      "DDS Recall Exam",
+      "Dentist Recare Exam",
+      "Scaling",
+      "Selective polish",
+      "Fluoride varnish application",
+      "SDF application",
+      "Desensitizer application",
       "Sealant application, resin-based material",
       "OHE",
-      "Crystal X-PUR",
     ]);
     expect(
-      listCatalogueItems(emptyState, "recare-treatment.items").map(
+      listCatalogueItems(
+        emptyState,
+        "hygiene-treatment.polishing-products",
+      ).map((item) => item.label),
+    ).toEqual([
+      "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
+      "Enamel Pro® Prophy Paste with Fluoride (Mint)",
+      "Enamel Pro® Prophy Paste with Fluoride (Raspberry)",
+      "Enamel Pro® Prophy Paste with Fluoride (Vanilla Mint)",
+    ]);
+    expect(
+      listCatalogueItems(
+        emptyState,
+        "hygiene-treatment.polishing-products",
+      ).find((item) => item.label.includes("(Raspberry)"))?.metadata,
+    ).toEqual({
+      kind: "polishing-product",
+      productName: "Enamel Pro® Prophy Paste",
+      flavour: "Raspberry",
+      containsFluoride: true,
+    });
+    expect(
+      listCatalogueItems(emptyState, "dental-treatment.items").map(
         (item) => item.label,
       ),
-    ).toEqual(["Hygiene maintenance"]);
+    ).toEqual([
+      "Filling (Direct Restoration)",
+      "Root Canals (Endodontic Therapy)",
+      "Crown (Indirect Restoration)",
+      "Bridge (Indirect Restoration)",
+      "Denture (Removable Prosthesis)",
+    ]);
     expect(
-      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic"),
-    ).toEqual([]);
+      listCatalogueItems(emptyState, "hygiene-treatment.items").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Periodontal therapy", "Hygiene maintenance"]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "Articaine 4% with 1:200K epinephrine",
+      "Lidocaine 2% with 1:100K epinephrine",
+      "Mepivacaine 3% without epinephrine",
+      "Benzocaine 20% paste",
+      "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+      "Dyclonine 1% rinse",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.anesthetic").find(
+        (item) => item.label === "Dyclonine 1% rinse",
+      )?.metadata,
+    ).toEqual({
+      kind: "local-anesthetic",
+      route: "rinse",
+      defaultAmountMl: 5,
+      defaultDurationSeconds: 60,
+    });
     expect(
       listCatalogueItems(emptyState, "hygiene-treatment.desensitizer").map(
         (item) => item.label,
       ),
-    ).toEqual(["NONE", "PREVIDENT FL", "VOCO FL", "crystal x-pur"]);
+    ).toEqual([
+      "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
+      "Colgate® PreviDent® Varnish (5% NaF)",
+      "VOCO GmbH Profluoride® Varnish (5% NaF)",
+      "Advantage Arrest® Silver Diamine Fluoride 38%",
+      "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "hygiene-treatment.desensitizer").map(
+        (item) => item.metadata,
+      ),
+    ).toEqual([
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "fluoride-varnish",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "fluoride-varnish",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "fluoride-varnish",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "silver-diamine-fluoride",
+      },
+      {
+        kind: "desensitizing-remineralizing-product",
+        productType: "desensitizer",
+      },
+    ]);
     expect(
       listCatalogueItems(emptyState, "scheduling.recall-interval").map(
         (item) => item.label,
@@ -257,44 +324,39 @@ describe("local catalogues", () => {
       listCatalogueItems(emptyState, "scheduling.hygiene-interval").map(
         (item) => item.label,
       ),
-    ).toEqual([
-      "3-month scale",
-      "4-month scale",
-      "6-month scale",
-      "N/A",
-    ]);
+    ).toEqual(["3-month scale", "4-month scale", "6-month scale", "N/A"]);
     expect(
-      listCatalogueItems(emptyState, "scheduling.next-visit").map(
+      listCatalogueItems(emptyState, "scheduling.hygiene-next-visit").map(
         (item) => item.label,
       ),
     ).toEqual([
-      "6 MONTH SCALE",
-      "12 MONTH RECALL",
+      "FOLLOW-UP HYGIENE",
       "3 MONTH SCALE",
       "4 MONTH SCALE",
+      "6 MONTH SCALE",
+    ]);
+    expect(
+      listCatalogueItems(emptyState, "scheduling.dentist-next-visit").map(
+        (item) => item.label,
+      ),
+    ).toEqual([
+      "FOLLOW-UP DENTIST CARE",
+      "12 MONTH RECALL",
       "6 MONTH RECALL",
       "9 MONTH RECALL",
-      "FOLLOW-UP HYGIENE",
     ]);
 
     const molarDefinition = CATALOGUE_DEFINITIONS.find(
-      (definition) =>
-        definition.key === "clinical-exam.molar-occlusion",
+      (definition) => definition.key === "clinical-exam.molar-occlusion",
     );
     expect(molarDefinition?.fieldLabels).toEqual([
       "Left molar occlusion",
       "Right molar occlusion",
     ]);
     expect(
-      listCatalogueItems(
-        emptyState,
-        "clinical-exam.molar-occlusion",
-      )[0].id,
+      listCatalogueItems(emptyState, "clinical-exam.molar-occlusion")[0].id,
     ).not.toBe(
-      listCatalogueItems(
-        emptyState,
-        "clinical-exam.skeletal-occlusion",
-      )[0].id,
+      listCatalogueItems(emptyState, "clinical-exam.skeletal-occlusion")[0].id,
     );
   });
 
@@ -335,10 +397,115 @@ describe("local catalogues", () => {
         sortOrder: 2,
       },
       {
-        seedId: "seed.hygiene-treatment.completed.fluorimax-varnish",
+        seedId: "seed.hygiene-treatment.desensitizer.fluorimax-varnish",
         hidden: false,
         favorite: false,
         sortOrder: 6,
+      },
+    ]);
+  });
+
+  it("migrates counted radiograph seed preferences to typed radiograph entries", () => {
+    const migrated = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [],
+      seedPreferences: [
+        {
+          seedId: "seed.imaging.radiographs.4-bw",
+          hidden: false,
+          favorite: true,
+          sortOrder: 4,
+        },
+        {
+          seedId: "seed.imaging.radiographs.1-bw",
+          hidden: false,
+          favorite: false,
+          sortOrder: 1,
+        },
+        {
+          seedId: "seed.imaging.radiographs.pan",
+          hidden: true,
+          favorite: false,
+          sortOrder: 0,
+        },
+      ],
+    });
+
+    expect(migrated.seedPreferences).toEqual([
+      {
+        seedId: "seed.imaging.radiographs.bitewings",
+        hidden: false,
+        favorite: false,
+        sortOrder: 1,
+      },
+      {
+        seedId: "seed.imaging.radiographs.panoramic",
+        hidden: true,
+        favorite: false,
+        sortOrder: 0,
+      },
+    ]);
+  });
+
+  it("splits legacy next-visit catalogue values without losing custom items", () => {
+    const migrated = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [
+        {
+          id: "legacy-hygiene-visit",
+          catalogueKey: "scheduling.next-visit",
+          label: "4 MONTH SCALE",
+          hidden: false,
+          favorite: true,
+          sortOrder: 1,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+        {
+          id: "legacy-custom-visit",
+          catalogueKey: "scheduling.next-visit",
+          label: "CUSTOM FOLLOW-UP",
+          hidden: false,
+          favorite: false,
+          sortOrder: 7,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+      ],
+      seedPreferences: [
+        {
+          seedId: "seed.scheduling.next-visit.6-mrc",
+          hidden: true,
+          favorite: false,
+          sortOrder: 4,
+        },
+      ],
+    });
+
+    expect(migrated.seedPreferences).toEqual([
+      {
+        seedId: "seed.scheduling.dentist-next-visit.6-mrc",
+        hidden: true,
+        favorite: false,
+        sortOrder: 4,
+      },
+      {
+        seedId: "seed.scheduling.hygiene-next-visit.4-mos-scale",
+        hidden: false,
+        favorite: true,
+        sortOrder: 1,
+      },
+    ]);
+    expect(migrated.userItems).toMatchObject([
+      {
+        id: "legacy-custom-visit",
+        catalogueKey: "scheduling.hygiene-next-visit",
+        label: "CUSTOM FOLLOW-UP",
+      },
+      {
+        id: "legacy-custom-visit.dentist-next-visit",
+        catalogueKey: "scheduling.dentist-next-visit",
+        label: "CUSTOM FOLLOW-UP",
       },
     ]);
   });
@@ -419,10 +586,7 @@ describe("local catalogues", () => {
 
   it("favorites and reorders suggestions without changing their labels", () => {
     const state = createEmptyCatalogueState();
-    const seeds = listCatalogueItems(
-      state,
-      "clinical-exam.molar-occlusion",
-    );
+    const seeds = listCatalogueItems(state, "clinical-exam.molar-occlusion");
     const favorited = setCatalogueItemFavorite(
       state,
       seeds[2].id,
@@ -430,10 +594,7 @@ describe("local catalogues", () => {
       true,
     );
     expect(
-      listCatalogueItems(
-        favorited,
-        "clinical-exam.molar-occlusion",
-      )[0].label,
+      listCatalogueItems(favorited, "clinical-exam.molar-occlusion")[0].label,
     ).toBe("Cl III");
 
     const reordered = moveCatalogueItem(
@@ -443,25 +604,16 @@ describe("local catalogues", () => {
       "up",
     );
     expect(
-      listCatalogueItems(
-        reordered,
-        "clinical-exam.molar-occlusion",
-      ).map((item) => item.label),
+      listCatalogueItems(reordered, "clinical-exam.molar-occlusion").map(
+        (item) => item.label,
+      ),
     ).toEqual(["Cl I", "Cl III", "Cl II"]);
   });
 
   it("moves hidden values by list position and unhides them when favorited", () => {
     const state = createEmptyCatalogueState();
-    const seeds = listCatalogueItems(
-      state,
-      "clinical-exam.molar-occlusion",
-    );
-    const hidden = setCatalogueItemHidden(
-      state,
-      seeds[1].id,
-      "seed",
-      true,
-    );
+    const seeds = listCatalogueItems(state, "clinical-exam.molar-occlusion");
+    const hidden = setCatalogueItemHidden(state, seeds[1].id, "seed", true);
     const moved = moveCatalogueItem(
       hidden,
       "clinical-exam.molar-occlusion",
@@ -555,10 +707,90 @@ describe("local catalogues", () => {
     expect(parsed.catalogueState).toEqual(state);
   });
 
-  it("rejects malformed, duplicate, future, and oversized imports", () => {
-    expect(() => parseCatalogueExport("{")).toThrow(
-      "not valid JSON",
+  it("round-trips typed metadata while accepting legacy items without it", () => {
+    const typed = rememberCatalogueValue(
+      createEmptyCatalogueState(),
+      "imaging.radiographs",
+      "Occlusal view",
+      {
+        id: "radiograph-occ",
+        now: new Date("2026-07-25T20:00:00.000Z"),
+        metadata: {
+          kind: "radiograph",
+          code: "OCC",
+          defaultQuantity: 2,
+        },
+      },
+    ).state;
+    const parsed = parseCatalogueExport(
+      serializeCatalogueExport(typed, new Date("2026-07-25T20:30:00.000Z")),
     );
+    expect(parsed.catalogueState.userItems[0].metadata).toEqual({
+      kind: "radiograph",
+      code: "OCC",
+      defaultQuantity: 2,
+    });
+    expect(() =>
+      rememberCatalogueValue(
+        typed,
+        "imaging.radiographs",
+        "Second occlusal view",
+        {
+          id: "radiograph-occ-duplicate",
+          metadata: {
+            kind: "radiograph",
+            code: "OCC",
+            defaultQuantity: 1,
+          },
+        },
+      ),
+    ).toThrow("already used by Occlusal view");
+
+    const preventiveProduct = rememberCatalogueValue(
+      createEmptyCatalogueState(),
+      "hygiene-treatment.desensitizer",
+      "Custom SDF product",
+      {
+        id: "custom-sdf-product",
+        metadata: {
+          kind: "desensitizing-remineralizing-product",
+          productType: "silver-diamine-fluoride",
+        },
+      },
+    ).state;
+    expect(
+      parseCatalogueExport(
+        serializeCatalogueExport(
+          preventiveProduct,
+          new Date("2026-07-25T20:30:00.000Z"),
+        ),
+      ).catalogueState.userItems[0].metadata,
+    ).toEqual({
+      kind: "desensitizing-remineralizing-product",
+      productType: "silver-diamine-fluoride",
+    });
+
+    const legacy = parseCatalogueState({
+      schemaVersion: 1,
+      userItems: [
+        {
+          id: "legacy-care",
+          catalogueKey: "hygiene-treatment.completed",
+          label: "Legacy completed care",
+          hidden: false,
+          favorite: false,
+          sortOrder: 0,
+          createdAt: "2026-07-25T18:00:00.000Z",
+          updatedAt: "2026-07-25T18:00:00.000Z",
+        },
+      ],
+      seedPreferences: [],
+    });
+    expect(legacy.userItems[0]).not.toHaveProperty("metadata");
+  });
+
+  it("rejects malformed, duplicate, future, and oversized imports", () => {
+    expect(() => parseCatalogueExport("{")).toThrow("not valid JSON");
     expect(() =>
       parseCatalogueExport(
         JSON.stringify({
@@ -627,21 +859,14 @@ describe("local catalogues", () => {
       ),
     ).toEqual(["Local Dentist"]);
     expect(
-      listCatalogueItems(merged, "visit-team.rdh").map(
-        (item) => item.label,
-      ),
+      listCatalogueItems(merged, "visit-team.rdh").map((item) => item.label),
     ).toEqual(["Imported RDH"]);
   });
 
   it("rejects invalid local values without changing the prior state", () => {
     const state = createEmptyCatalogueState();
     expect(() =>
-      remember(
-        state,
-        "visit-team.dentist",
-        "   ",
-        "dentist-1",
-      ),
+      remember(state, "visit-team.dentist", "   ", "dentist-1"),
     ).toThrow(CatalogueValidationError);
     expect(state).toEqual(createEmptyCatalogueState());
   });

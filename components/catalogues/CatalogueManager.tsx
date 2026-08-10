@@ -13,11 +13,19 @@ import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import {
   CATALOGUE_SECTIONS,
+  COMPLETED_CARE_CATEGORIES,
+  COMPLETED_CARE_CATEGORY_LABELS,
   MAX_CATALOGUE_IMPORT_BYTES,
   CatalogueDefinition,
   CatalogueImportPreview,
   CatalogueItem,
   CatalogueKey,
+  isCompletedCareCatalogueMetadata,
+  isPolishingProductCatalogueMetadata,
+  isRadiographCatalogueMetadata,
+  type CatalogueItemMetadata,
+  type CompletedCareCategory,
+  type CompletedCareProcedure,
   StoredCatalogueStateV1,
   formatCatalogueExportFilename,
   getCatalogueDefinitionsForBuild,
@@ -51,6 +59,31 @@ const catalogueTabGroups: Array<{
     keys: [
       "clinical-exam.molar-occlusion",
       "clinical-exam.skeletal-occlusion",
+      "clinical-exam.additional-occlusal-findings",
+    ],
+  },
+  {
+    section: "Treatment",
+    title: "Dental treatment",
+    keys: ["dental-treatment.items", "hygiene-treatment.items"],
+  },
+  {
+    section: "Treatment",
+    title: "Treatment Products",
+    keys: [
+      "hygiene-treatment.desensitizer",
+      "hygiene-treatment.polishing-products",
+      "hygiene-treatment.anesthetic",
+    ],
+  },
+  {
+    section: "Continuity of care",
+    title: "Intervals and next visits",
+    keys: [
+      "scheduling.recall-interval",
+      "scheduling.hygiene-interval",
+      "scheduling.hygiene-next-visit",
+      "scheduling.dentist-next-visit",
     ],
   },
 ];
@@ -114,6 +147,20 @@ function CatalogueItemRow({
     clearProviderDefault,
   } = useCatalogues();
   const [draftLabel, setDraftLabel] = useState(item.label);
+  const [draftRadiographCode, setDraftRadiographCode] = useState(
+    isRadiographCatalogueMetadata(item.metadata) ? item.metadata.code : "",
+  );
+  const [draftRadiographQuantity, setDraftRadiographQuantity] = useState(
+    isRadiographCatalogueMetadata(item.metadata)
+      ? String(item.metadata.defaultQuantity)
+      : "1",
+  );
+  const [draftCareCategory, setDraftCareCategory] =
+    useState<CompletedCareCategory>(
+      isCompletedCareCatalogueMetadata(item.metadata)
+        ? item.metadata.category
+        : "other",
+    );
   const [message, setMessage] = useState("");
   const providerCatalogueKey = isProviderCatalogueKey(definition.key)
     ? definition.key
@@ -125,7 +172,68 @@ function CatalogueItemRow({
 
   useEffect(() => {
     setDraftLabel(item.label);
-  }, [item.label]);
+    setDraftRadiographCode(
+      isRadiographCatalogueMetadata(item.metadata) ? item.metadata.code : "",
+    );
+    setDraftRadiographQuantity(
+      isRadiographCatalogueMetadata(item.metadata)
+        ? String(item.metadata.defaultQuantity)
+        : "1",
+    );
+    setDraftCareCategory(
+      isCompletedCareCatalogueMetadata(item.metadata)
+        ? item.metadata.category
+        : "other",
+    );
+  }, [item.label, item.metadata]);
+
+  function draftMetadata(): CatalogueItemMetadata | undefined {
+    if (definition.key === "imaging.radiographs") {
+      if (!draftRadiographCode.trim()) return undefined;
+      return {
+        kind: "radiograph",
+        code: draftRadiographCode.trim().toUpperCase(),
+        defaultQuantity: Number(draftRadiographQuantity),
+      };
+    }
+    if (definition.key === "hygiene-treatment.completed") {
+      const existing = isCompletedCareCatalogueMetadata(item.metadata)
+        ? item.metadata
+        : undefined;
+      const procedure: CompletedCareProcedure =
+        existing?.procedure === "scaling" ||
+        existing?.procedure === "polish" ||
+        existing?.procedure === "recare-exam" ||
+        existing?.procedure === "fmp" ||
+        existing?.procedure === "ohe" ||
+        existing?.procedure === "radiographs"
+          ? existing.procedure
+          : draftCareCategory === "product-application"
+            ? "product-application"
+            : draftCareCategory === "preventive-procedure"
+              ? "preventive-procedure"
+              : "other";
+      return {
+        kind: "completed-care",
+        category: draftCareCategory,
+        procedure,
+        ...(existing?.defaultQuantity === undefined
+          ? {}
+          : { defaultQuantity: existing.defaultQuantity }),
+        ...(existing?.defaultProduct === undefined
+          ? {}
+          : { defaultProduct: existing.defaultProduct }),
+        ...(existing?.defaultToothAreas === undefined
+          ? {}
+          : { defaultToothAreas: [...existing.defaultToothAreas] }),
+      };
+    }
+    return undefined;
+  }
+
+  const pendingMetadata = draftMetadata();
+  const metadataChanged =
+    JSON.stringify(pendingMetadata) !== JSON.stringify(item.metadata);
 
   function run(action: () => void, successMessage: string) {
     try {
@@ -152,7 +260,8 @@ function CatalogueItemRow({
       <div className="flex flex-col gap-3 xl:flex-row xl:items-start">
         <div className="min-w-0 flex-1">
           {item.owner === "user" ? (
-            <div className="flex gap-2">
+            <div className="space-y-3">
+              <div className="flex gap-2">
               <label className="sr-only" htmlFor={`catalogue-item-${item.id}`}>
                 Edit {definition.title} value
               </label>
@@ -165,17 +274,86 @@ function CatalogueItemRow({
               <CatalogueActionButton
                 tooltip="Save the edited text for this catalogue value."
                 disabled={
-                  draftLabel.trim() === item.label || storageStatus !== "ready"
+                  (draftLabel.trim() === item.label && !metadataChanged) ||
+                  storageStatus !== "ready" ||
+                  (definition.key === "imaging.radiographs" &&
+                    (!draftRadiographCode.trim() || !draftRadiographQuantity))
                 }
                 onClick={() =>
                   run(
-                    () => updateItem(item.id, draftLabel),
+                    () => updateItem(item.id, draftLabel, pendingMetadata),
                     `${draftLabel.trim()} updated.`,
                   )
                 }
               >
                 Save
               </CatalogueActionButton>
+              </div>
+              {definition.key === "imaging.radiographs" ? (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <div>
+                    <label
+                      className="text-xs font-medium"
+                      htmlFor={`catalogue-item-${item.id}-code`}
+                    >
+                      Short code
+                    </label>
+                    <input
+                      id={`catalogue-item-${item.id}-code`}
+                      className={`${inputClass} mt-1`}
+                      value={draftRadiographCode}
+                      onChange={(event) =>
+                        setDraftRadiographCode(event.target.value)
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="text-xs font-medium"
+                      htmlFor={`catalogue-item-${item.id}-quantity`}
+                    >
+                      Default images
+                    </label>
+                    <input
+                      id={`catalogue-item-${item.id}-quantity`}
+                      type="number"
+                      min={1}
+                      step={1}
+                      className={`${inputClass} mt-1`}
+                      value={draftRadiographQuantity}
+                      onChange={(event) =>
+                        setDraftRadiographQuantity(event.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
+              {definition.key === "hygiene-treatment.completed" ? (
+                <div>
+                  <label
+                    className="text-xs font-medium"
+                    htmlFor={`catalogue-item-${item.id}-category`}
+                  >
+                    Category
+                  </label>
+                  <select
+                    id={`catalogue-item-${item.id}-category`}
+                    className={`${inputClass} mt-1`}
+                    value={draftCareCategory}
+                    onChange={(event) =>
+                      setDraftCareCategory(
+                        event.target.value as CompletedCareCategory,
+                      )
+                    }
+                  >
+                    {COMPLETED_CARE_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {COMPLETED_CARE_CATEGORY_LABELS[category]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="font-medium">{item.label}</p>
@@ -189,6 +367,23 @@ function CatalogueItemRow({
             {item.favorite ? <span>Favorite</span> : null}
             {isDefaultProvider ? <span>Default for new notes</span> : null}
             {item.hidden ? <span>Hidden</span> : null}
+            {isRadiographCatalogueMetadata(item.metadata) ? (
+              <span>
+                Code {item.metadata.code}; default {item.metadata.defaultQuantity}{" "}
+                image{item.metadata.defaultQuantity === 1 ? "" : "s"}
+              </span>
+            ) : null}
+            {isCompletedCareCatalogueMetadata(item.metadata) ? (
+              <span>
+                {COMPLETED_CARE_CATEGORY_LABELS[item.metadata.category]}
+              </span>
+            ) : null}
+            {isPolishingProductCatalogueMetadata(item.metadata) ? (
+              <span>
+                {item.metadata.productName}; {item.metadata.flavour}
+                {item.metadata.containsFluoride ? "; with fluoride" : ""}
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -333,12 +528,36 @@ function CatalogueCard({
 }) {
   const { storageStatus, getItems, rememberValue } = useCatalogues();
   const [newValue, setNewValue] = useState("");
+  const [newRadiographCode, setNewRadiographCode] = useState("");
+  const [newRadiographQuantity, setNewRadiographQuantity] = useState("1");
+  const [newCareCategory, setNewCareCategory] =
+    useState<CompletedCareCategory>("other");
   const [message, setMessage] = useState("");
   const items = getItems(definition.key, { includeHidden: true });
 
   function addValue() {
     try {
-      const result = rememberValue(definition.key, newValue);
+      let metadata: CatalogueItemMetadata | undefined;
+      if (definition.key === "imaging.radiographs") {
+        metadata = {
+          kind: "radiograph",
+          code: newRadiographCode.trim().toUpperCase(),
+          defaultQuantity: Number(newRadiographQuantity),
+        };
+      } else if (definition.key === "hygiene-treatment.completed") {
+        const procedure: CompletedCareProcedure =
+          newCareCategory === "product-application"
+            ? "product-application"
+            : newCareCategory === "preventive-procedure"
+              ? "preventive-procedure"
+              : "other";
+        metadata = {
+          kind: "completed-care",
+          category: newCareCategory,
+          procedure,
+        };
+      }
+      const result = rememberValue(definition.key, newValue, metadata);
       setMessage(
         result === "reactivated"
           ? `${newValue.trim()} unhidden.`
@@ -347,6 +566,8 @@ function CatalogueCard({
           : `${newValue.trim()} added.`,
       );
       setNewValue("");
+      setNewRadiographCode("");
+      setNewRadiographQuantity("1");
     } catch (addError) {
       setMessage(
         addError instanceof Error
@@ -365,7 +586,15 @@ function CatalogueCard({
         Applies to: {definition.fieldLabels.join(", ")}
       </p>
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+      <div
+        className={`mt-4 grid gap-2 ${
+          definition.key === "imaging.radiographs"
+            ? "sm:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(8rem,1fr)_auto]"
+            : definition.key === "hygiene-treatment.completed"
+              ? "sm:grid-cols-[minmax(0,2fr)_minmax(12rem,1fr)_auto]"
+              : "sm:grid-cols-[minmax(0,1fr)_auto]"
+        }`}
+      >
         <div className="flex-1">
           <label
             className="text-sm font-medium"
@@ -386,10 +615,77 @@ function CatalogueCard({
             }}
           />
         </div>
+        {definition.key === "imaging.radiographs" ? (
+          <>
+            <div>
+              <label
+                className="text-sm font-medium"
+                htmlFor={`add-${definition.key}-code`}
+              >
+                Short code
+              </label>
+              <input
+                id={`add-${definition.key}-code`}
+                className={`${inputClass} mt-1`}
+                value={newRadiographCode}
+                placeholder="e.g. OCC"
+                onChange={(event) => setNewRadiographCode(event.target.value)}
+              />
+            </div>
+            <div>
+              <label
+                className="text-sm font-medium"
+                htmlFor={`add-${definition.key}-quantity`}
+              >
+                Default images
+              </label>
+              <input
+                id={`add-${definition.key}-quantity`}
+                type="number"
+                min={1}
+                step={1}
+                className={`${inputClass} mt-1`}
+                value={newRadiographQuantity}
+                onChange={(event) =>
+                  setNewRadiographQuantity(event.target.value)
+                }
+              />
+            </div>
+          </>
+        ) : null}
+        {definition.key === "hygiene-treatment.completed" ? (
+          <div>
+            <label
+              className="text-sm font-medium"
+              htmlFor={`add-${definition.key}-category`}
+            >
+              Category
+            </label>
+            <select
+              id={`add-${definition.key}-category`}
+              className={`${inputClass} mt-1`}
+              value={newCareCategory}
+              onChange={(event) =>
+                setNewCareCategory(event.target.value as CompletedCareCategory)
+              }
+            >
+              {COMPLETED_CARE_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {COMPLETED_CARE_CATEGORY_LABELS[category]}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
         <button
           type="button"
           className={`${primaryButtonClass} sm:self-end`}
-          disabled={!newValue.trim() || storageStatus !== "ready"}
+          disabled={
+            !newValue.trim() ||
+            storageStatus !== "ready" ||
+            (definition.key === "imaging.radiographs" &&
+              (!newRadiographCode.trim() || !newRadiographQuantity))
+          }
           onClick={addValue}
         >
           Add local value

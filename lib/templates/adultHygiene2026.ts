@@ -1,6 +1,12 @@
 import type {
   DocumentationStatus,
+  ExamStatus,
   PremedicationStatus,
+  RecareExtraoralFinding,
+  RecareIntraoralFinding,
+  RecareOcclusalFinding,
+  RecareToothFinding,
+  RecareTreatmentEntry,
   RetainerStatus,
 } from "@/lib/templates/recareExam";
 import {
@@ -12,11 +18,41 @@ import {
   type PeriodontalClassification,
 } from "@/lib/templates/periodontalClassification";
 import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
+import {
+  createEmptyLocalAnesthesiaValue,
+  type LocalAnesthesiaEntry,
+} from "@/lib/templates/localAnesthesia";
 
 export {
   standardTreatmentCompletedPreset,
   type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygieneTreatment";
+
+export function resolveOcclusalSplintState(
+  form: Pick<
+    AdultHygiene2026Form,
+    | "occlusalSplintStatus"
+    | "occlusalSplintUseStatus"
+    | "nightGuardStatus"
+    | "nightGuardUseStatus"
+  >,
+): {
+  status: DocumentationStatus;
+  useStatus: DocumentationStatus;
+} {
+  const canonicalStatus =
+    form.occlusalSplintStatus ?? "not-documented";
+  if (canonicalStatus !== "not-documented") {
+    return {
+      status: canonicalStatus,
+      useStatus: form.occlusalSplintUseStatus ?? "not-documented",
+    };
+  }
+  return {
+    status: form.nightGuardStatus ?? "not-documented",
+    useStatus: form.nightGuardUseStatus ?? "not-documented",
+  };
+}
 
 export const plaqueChoices = [
   "None",
@@ -159,13 +195,15 @@ export function orderTreatmentToothAreas(values: string[]) {
 
 export type CariesRiskLevel = "" | "Low" | "Moderate" | "High";
 
+export type AdultHygiene2026Output = "complete" | "hygiene" | "recare";
+
 export const standardOheStatement =
   "Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%";
 
 export const standardHygieneGoal =
   "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
-export interface AdultHygiene2021Form {
+export interface AdultHygiene2026Form {
   patientId: string;
   noteLastRecallDate: string;
   dentist: string;
@@ -183,6 +221,39 @@ export interface AdultHygiene2021Form {
   patientChiefConcern: string[];
   listChiefConcerns: boolean;
   hygieneAreaOfConcern: string;
+  radiographs: string[];
+  intraoralPhotosStatus: DocumentationStatus;
+  intraoralPhotosDetails: string;
+  extraoralStatus: ExamStatus;
+  extraoralFindings: string;
+  structuredExtraoralFindings?: RecareExtraoralFinding[];
+  tmjStatus: ExamStatus;
+  tmjFindings: string;
+  lymphNodesStatus: ExamStatus;
+  lymphNodesFindings: string;
+  masseterStatus: ExamStatus;
+  masseterFindings: string;
+  tmjLoadStatus: ExamStatus;
+  tmjLoadFindings: string;
+  intraoralStatus: ExamStatus;
+  intraoralFindings: string;
+  structuredIntraoralFindings?: RecareIntraoralFinding[];
+  oralHabits: string;
+  rightMolarOcclusion: string;
+  rightMolarOcclusionNotApplicable: boolean;
+  leftMolarOcclusion: string;
+  leftMolarOcclusionNotApplicable: boolean;
+  skeletalOcclusion: string;
+  skeletalOcclusionNotApplicable: boolean;
+  overjetMm: string;
+  overbitePercent: string;
+  overbiteMm?: string;
+  additionalOcclusalFindings?: RecareOcclusalFinding[];
+  listAdditionalOcclusalFindings: boolean;
+  teethStatus?: ExamStatus;
+  toothFindings?: RecareToothFinding[];
+  additionalToothFindings?: string;
+  odontogramUpToDate: boolean;
   plaqueChoice: string;
   plaqueAreas: string[];
   plaqueComment: string;
@@ -216,13 +287,28 @@ export interface AdultHygiene2021Form {
   hygieneGoal: string;
   treatmentRecommendedHygieneMaintenance: boolean;
   otherTreatmentRecommended: string;
+  treatmentOptions: RecareTreatmentEntry[];
+  hygieneTreatmentOptions: RecareTreatmentEntry[];
+  treatmentPlan: RecareTreatmentEntry[];
   treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
-  anesthetic: string;
+  localAnesthesiaNoContraindication: boolean;
+  localAnesthesiaEntries: LocalAnesthesiaEntry[];
+  localAnesthesiaNoAdverseReactions: boolean;
+  localAnesthesiaAdequateAchieved: boolean;
+  localAnesthesiaNotes: string;
   desensitizer: string;
   nightGuardStatus: DocumentationStatus;
   nightGuardUseStatus: DocumentationStatus;
+  cpapStatus: DocumentationStatus;
+  cpapUseStatus: DocumentationStatus;
+  occlusalSplintStatus: DocumentationStatus;
+  occlusalSplintUseStatus: DocumentationStatus;
   orthodonticHistoryStatus: DocumentationStatus;
   retainerStatus: RetainerStatus;
+  removableDenturesStatus: DocumentationStatus;
+  removableDenturesComment: string;
+  improvementRequest: string;
+  recareAdditionalComments: string;
   additionalNotes: string;
   ppeStatementApplies: boolean;
   recallInterval: string;
@@ -231,9 +317,11 @@ export interface AdultHygiene2021Form {
   hygieneIntervalComments: string;
   nextVisit: string;
   dateBooked: string;
+  dentalNextVisit: string;
+  dentalDateBooked: string;
 }
 
-export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
+export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
   return {
     patientId: "",
     noteLastRecallDate: "",
@@ -252,6 +340,39 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     patientChiefConcern: [],
     listChiefConcerns: false,
     hygieneAreaOfConcern: "",
+    radiographs: [],
+    intraoralPhotosStatus: "not-documented",
+    intraoralPhotosDetails: "",
+    extraoralStatus: "not-assessed",
+    extraoralFindings: "",
+    structuredExtraoralFindings: [],
+    tmjStatus: "not-assessed",
+    tmjFindings: "",
+    lymphNodesStatus: "not-assessed",
+    lymphNodesFindings: "",
+    masseterStatus: "not-assessed",
+    masseterFindings: "",
+    tmjLoadStatus: "not-assessed",
+    tmjLoadFindings: "",
+    intraoralStatus: "not-assessed",
+    intraoralFindings: "",
+    structuredIntraoralFindings: [],
+    oralHabits: "",
+    rightMolarOcclusion: "",
+    rightMolarOcclusionNotApplicable: false,
+    leftMolarOcclusion: "",
+    leftMolarOcclusionNotApplicable: false,
+    skeletalOcclusion: "",
+    skeletalOcclusionNotApplicable: false,
+    overjetMm: "",
+    overbitePercent: "",
+    overbiteMm: "",
+    additionalOcclusalFindings: [],
+    listAdditionalOcclusalFindings: false,
+    teethStatus: "not-assessed",
+    toothFindings: [],
+    additionalToothFindings: "",
+    odontogramUpToDate: false,
     plaqueChoice: "",
     plaqueAreas: [],
     plaqueComment: "",
@@ -285,13 +406,24 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     hygieneGoal: "",
     treatmentRecommendedHygieneMaintenance: false,
     otherTreatmentRecommended: "",
+    treatmentOptions: [],
+    hygieneTreatmentOptions: [],
+    treatmentPlan: [],
     treatmentCompleted: [],
-    anesthetic: "",
+    ...createEmptyLocalAnesthesiaValue(),
     desensitizer: "",
     nightGuardStatus: "not-documented",
     nightGuardUseStatus: "not-documented",
+    cpapStatus: "not-documented",
+    cpapUseStatus: "not-documented",
+    occlusalSplintStatus: "not-documented",
+    occlusalSplintUseStatus: "not-documented",
     orthodonticHistoryStatus: "not-documented",
     retainerStatus: "not-documented",
+    removableDenturesStatus: "not-documented",
+    removableDenturesComment: "",
+    improvementRequest: "",
+    recareAdditionalComments: "",
     additionalNotes: "",
     ppeStatementApplies: false,
     recallInterval: "",
@@ -300,11 +432,13 @@ export function createEmptyAdultHygiene2021Form(): AdultHygiene2021Form {
     hygieneIntervalComments: "",
     nextVisit: "",
     dateBooked: "",
+    dentalNextVisit: "",
+    dentalDateBooked: "",
   };
 }
 
-export function hasRequiredAdultHygiene2021Fields(
-  form: AdultHygiene2021Form
+export function hasRequiredAdultHygiene2026Fields(
+  form: AdultHygiene2026Form
 ): boolean {
   return (
     Boolean(form.patientId.trim()) &&

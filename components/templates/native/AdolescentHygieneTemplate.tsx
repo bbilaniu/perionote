@@ -40,7 +40,10 @@ import {
   type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygiene2021";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
-import { copyPeriodontalClassification } from "@/lib/templates/periodontalClassification";
+import {
+  copyPeriodontalClassification,
+  normalizePeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
 import {
   buildAdolescentHygieneSummary,
   formatAdolescentHygieneLocalTimestamp,
@@ -56,6 +59,7 @@ const emptyAdolescentDraft = JSON.stringify(adolescentDraftExemplar);
 const adolescentDraftArrayItemShapes = {
   "periodontalClassification.stageBasis": { criterionId: "" },
   "periodontalClassification.gradeBasis": { criterionId: "" },
+  "periodontalClassification.gingivalHealth.reducedPeriodontiumBases": "",
   plaqueAreas: "",
   calculusAreas: "",
   ohiTechniques: "",
@@ -93,7 +97,13 @@ function isEmptyAdolescentDraft(form: AdolescentHygieneForm): boolean {
 function isAdolescentDraftForm(value: unknown): value is AdolescentHygieneForm {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   return matchesDraftShape(
-    { ...adolescentDraftExemplar, ...value },
+    {
+      ...adolescentDraftExemplar,
+      ...value,
+      periodontalClassification: normalizePeriodontalClassification(
+        (value as Record<string, unknown>).periodontalClassification,
+      ),
+    },
     adolescentDraftExemplar,
     adolescentDraftArrayItemShapes,
   );
@@ -317,7 +327,13 @@ export function AdolescentHygieneTemplate({
     isEmpty: isEmptyAdolescentDraft,
     isValidForm: isAdolescentDraftForm,
     onRestore: (draft) => {
-      setForm({ ...createEmptyAdolescentHygieneForm(), ...draft.form });
+      setForm({
+        ...createEmptyAdolescentHygieneForm(),
+        ...draft.form,
+        periodontalClassification: normalizePeriodontalClassification(
+          draft.form.periodontalClassification,
+        ),
+      });
       setStartedAt(new Date(draft.startedAt));
       setPatientIdError("");
       setProviderError("");
@@ -469,9 +485,6 @@ export function AdolescentHygieneTemplate({
       id: `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`,
       treatmentType: source?.treatmentType ?? "",
       toothAreas: [...(source?.toothAreas ?? [])],
-      ...(source?.applicationTime
-        ? { applicationTime: source.applicationTime }
-        : {}),
     };
   }
 
@@ -944,7 +957,7 @@ export function AdolescentHygieneTemplate({
               <CatalogueCombobox
                 id="adolescent-next-visit"
                 label="Next visit"
-                catalogueKey="scheduling.next-visit"
+                catalogueKey="scheduling.hygiene-next-visit"
                 value={form.nextVisit}
                 onChange={(value) => updateField("nextVisit", value)}
               />

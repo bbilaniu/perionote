@@ -2,10 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   classifyGingivalHealthCandidate,
   classifyPeriodontalCandidate,
+  classifyPeriodontalDiagnosisCandidates,
+  copyPeriodontalClassification,
   createEmptyPeriodontalClassification,
   formatHealthGingivitisBlock,
   formatPeriodontalEvidence,
   isPeriodontalStatusCompatibleWithContext,
+  normalizePeriodontalClassification,
   type GingivalHealthAssessment,
   type HealthGingivitisContext,
   type PeriodontalDiagnosis,
@@ -21,6 +24,83 @@ function periodontitis(
     ...patch,
   };
 }
+
+describe("classifyPeriodontalDiagnosisCandidates", () => {
+  it("keeps all supported categories possible when no evidence is entered", () => {
+    const result = classifyPeriodontalDiagnosisCandidates(
+      createEmptyPeriodontalClassification(),
+    );
+
+    expect(result.possibilities.map(({ diagnosis }) => diagnosis)).toEqual([
+      "health",
+      "gingivitis",
+      "periodontitis",
+    ]);
+    expect(result.missingFields.map(({ id }) => id)).toEqual([
+      "periodontal-support",
+      "bop-percentage",
+      "maximum-ppd",
+      "attachment-loss",
+      "radiographic-bone-loss",
+    ]);
+  });
+
+  it("narrows an intact periodontium with BOP below 10% to health", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "intact",
+      bopPercent: { operator: "eq", value: 5, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+      attachmentLoss: "absent",
+      radiographicBoneLoss: "absent",
+    };
+
+    expect(
+      classifyPeriodontalDiagnosisCandidates(classification).possibilities.map(
+        ({ diagnosis }) => diagnosis,
+      ),
+    ).toEqual(["health"]);
+  });
+
+  it("narrows an intact periodontium with BOP at least 10% to gingivitis", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "intact",
+      bopPercent: { operator: "eq", value: 20, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 3, unit: "mm" },
+      attachmentLoss: "absent",
+      radiographicBoneLoss: "absent",
+    };
+
+    expect(
+      classifyPeriodontalDiagnosisCandidates(classification).possibilities.map(
+        ({ diagnosis }) => diagnosis,
+      ),
+    ).toEqual(["gingivitis"]);
+  });
+
+  it("keeps treated-periodontitis findings in the periodontitis/history category", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      periodontium: "reduced-treated-periodontitis",
+      bopPercent: { operator: "eq", value: 5, unit: "percent" },
+      maximumPpd: { operator: "eq", value: 4, unit: "mm" },
+      attachmentLoss: "present",
+      radiographicBoneLoss: "present",
+    };
+
+    const result = classifyPeriodontalDiagnosisCandidates(classification);
+    expect(result.possibilities.map(({ diagnosis }) => diagnosis)).toEqual([
+      "periodontitis",
+    ]);
+    expect(result.possibilities[0].reasons).toContainEqual(
+      expect.stringContaining("treated-periodontitis history"),
+    );
+  });
+});
 
 describe("classifyPeriodontalCandidate", () => {
   it("uses the highest applicable stage across severity and complexity", () => {
@@ -529,8 +609,25 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM",
+      "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
     );
+  });
+
+  it("shows an empty Periodontal diagnosis field while Health/Gingivitis classification is pending", () => {
+    const classification = createEmptyPeriodontalClassification();
+
+    classification.diagnosis = "health";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis:",
+    );
+
+    classification.diagnosis = "gingivitis";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis:",
+    );
+
+    classification.diagnosis = "";
+    expect(formatHealthGingivitisBlock(classification)).toBe("");
   });
 
   it("keeps ClearDent wording for a selected treated-periodontitis context", () => {
@@ -549,7 +646,7 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT",
+      "Current periodontal condition: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT",
     );
   });
 
@@ -567,8 +664,58 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
+      "Periodontal diagnosis: GINGIVITIS - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT",
     );
+  });
+
+  it("documents the basis and optional location for a reduced non-periodontitis periodontium", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "health";
+    classification.gingivalHealth = {
+      ...classification.gingivalHealth,
+      context: "health-reduced-non-periodontitis",
+      reducedPeriodontiumBases: [
+        "Previous crown lengthening",
+        "Orthodontic movement-associated recession",
+      ],
+      reducedPeriodontiumBasisDetails: "Localized to mandibular incisors",
+    };
+
+    expect(formatHealthGingivitisBlock(classification))
+      .toBe(`Periodontal diagnosis: HEALTH - REDUCED PERIODONTIUM, NON-PERIODONTITIS PATIENT
+Basis for reduced periodontium: Previous crown lengthening; Orthodontic movement-associated recession.
+Reduced periodontium details/location: Localized to mandibular incisors.`);
+
+    const copied = copyPeriodontalClassification(classification);
+    expect(copied).toEqual(classification);
+    expect(copied.gingivalHealth.reducedPeriodontiumBases).not.toBe(
+      classification.gingivalHealth.reducedPeriodontiumBases,
+    );
+
+    classification.gingivalHealth.context = "health-intact";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
+    );
+  });
+
+  it("adds empty reduced-periodontium fields to legacy classifications", () => {
+    const legacy = createEmptyPeriodontalClassification() as unknown as Record<
+      string,
+      unknown
+    >;
+    const gingivalHealth = {
+      ...(legacy.gingivalHealth as Record<string, unknown>),
+    };
+    delete gingivalHealth.reducedPeriodontiumBases;
+    delete gingivalHealth.reducedPeriodontiumBasisDetails;
+    legacy.gingivalHealth = gingivalHealth;
+
+    expect(
+      normalizePeriodontalClassification(legacy).gingivalHealth,
+    ).toMatchObject({
+      reducedPeriodontiumBases: [],
+      reducedPeriodontiumBasisDetails: "",
+    });
   });
 
   it("omits a selected treated context when periodontal support is incompatible", () => {
@@ -598,7 +745,7 @@ describe("Health/Gingivitis classification", () => {
     };
 
     expect(formatHealthGingivitisBlock(classification))
-      .toBe(`Health/Gingivitis: HEALTH - INTACT PERIODONTIUM
+      .toBe(`Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM
 Health/Gingivitis override: Clinician-confirmed exception.`);
   });
 
@@ -617,7 +764,7 @@ Health/Gingivitis override: Clinician-confirmed exception.`);
     };
 
     expect(formatHealthGingivitisBlock(classification)).toBe(
-      "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM",
+      "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM",
     );
   });
 

@@ -5,6 +5,8 @@ import {
 } from "@/lib/templates/localDrafts";
 
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
+const adultHygiene2026Url =
+  "/templates/clinic/adult-hygiene-2026/interactive";
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 
 type SyntheticDraftSummary = {
@@ -77,6 +79,46 @@ test("Adult Hygiene autosaves after ten seconds and restores its tab after reloa
     "Synthetic autosave A",
   );
   await expect(page.locator("#adult-hygiene-rdh")).toHaveValue("Synthetic RDH");
+  await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
+});
+
+test("2026 Adult Hygiene restores local anesthesia with a Tooth/area after reload", async ({
+  page,
+}) => {
+  await page.goto(adultHygiene2026Url);
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+
+  await localAnesthesia
+    .getByRole("button", { name: "Apply Dyclonine rinse", exact: true })
+    .click();
+
+  const reloadDialogPromise = page.waitForEvent("dialog");
+  const reloadPromise = page.reload();
+  const reloadDialog = await reloadDialogPromise;
+  expect(reloadDialog.type()).toBe("beforeunload");
+  await reloadDialog.accept();
+  await reloadPromise;
+
+  const restoredEntry = page
+    .getByRole("group", { name: "Local anesthesia", exact: true })
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+  await expect(restoredEntry).toHaveCount(1);
+  await expect(
+    restoredEntry.getByRole("button", {
+      name: "Anesthetic product",
+      exact: true,
+    }),
+  ).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.dyclonine-rinse",
+  );
+  await expect(
+    restoredEntry.getByRole("button", { name: "Tooth/area", exact: true }),
+  ).toContainText("full mouth");
   await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 });
 

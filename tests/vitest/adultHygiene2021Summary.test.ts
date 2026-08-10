@@ -3,15 +3,16 @@ import {
   bleedingChoices,
   calculusChoices,
   createEmptyAdultHygiene2021Form,
-  dyclonineRinseTreatment,
   hasRequiredAdultHygiene2021Fields,
-  isDyclonineRinseTreatment,
   plaqueChoices,
   standardOheStatement,
   standardTreatmentCompletedPreset,
 } from "@/lib/templates/adultHygiene2021";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
-import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
+import {
+  applyPatientChiefConcernSelectionRules,
+  patientChiefConcernSeedValues,
+} from "@/lib/templates/patientChiefConcern";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import {
   applyGingivitisObservationPreset,
@@ -53,10 +54,10 @@ PATIENT ID: TEST-AH-1001
 DENTIST: Dr. Example
 RDA:
 RDH: Example RDH
-Last Recall Date: 2026-01-15
+Last Recare Date: 2026-01-15
 
 Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
-Miele Sterilization Codes Scanned: SYNTH-AH-001
+Sterilization Codes Scanned: SYNTH-AH-001
 
 Informed verbal consent given by PATIENT for treatment today.
 Medical history reviewed: Synthetic history reviewed with no changes.
@@ -103,8 +104,8 @@ Patient-specific grade evidence:
     - Smoking: non-smoker.
     - Diabetes: no diagnosis of diabetes / normoglycemic.
 
-Health/Gingivitis: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
-Periodontal diagnosis: Localized periodontitis, Stage II, Grade B.
+Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
+Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
 Periodontal status: Periodontal disease remission/control.
 Periodontal status comment: Synthetic periodontal status comment.
 
@@ -130,7 +131,7 @@ Retainers: Fixed.
 Additional Notes: Synthetic demonstration data only.
 
 -ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
-Recommended Recall Interval: 6-month recall.
+Recommended Recare Interval: 6-month recall.
 Recommended Hygiene Interval: 4-month scale.
 Next visit: Synthetic hygiene follow-up.
 Date Booked: 2026-11-15`);
@@ -155,7 +156,7 @@ Date Booked: 2026-11-15`);
     );
   });
 
-  it("charts status for any assessed periodontal diagnosis without carrying stage or grade", () => {
+  it("omits periodontitis status for a non-periodontitis diagnosis", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -167,12 +168,8 @@ Date Booked: 2026-11-15`);
     };
 
     const summary = buildAdultHygiene2021Summary(form);
-    expect(summary).toContain(
-      "Periodontal status: Periodontal disease stability."
-    );
-    expect(summary).toContain(
-      "Periodontal status comment: Clinician-confirmed current status."
-    );
+    expect(summary).not.toContain("Periodontal status:");
+    expect(summary).not.toContain("Periodontal status comment:");
     expect(summary).not.toMatch(/Stage II|Grade B/);
   });
 
@@ -215,8 +212,10 @@ Date Booked: 2026-11-15`);
     const summary = buildAdultHygiene2021Summary(form);
     expect(summary).toBe(`Patient-specific grade evidence:
   Grade modifiers:
-    - Smoking: smokes 12 cigarettes/day.`);
-    expect(summary).not.toContain("Periodontal diagnosis:");
+    - Smoking: smokes 12 cigarettes/day.
+
+Periodontal diagnosis:`);
+    expect(summary).not.toContain("GINGIVITIS");
   });
 
   it("charts cigarette smoking when cigarettes per day is not entered", () => {
@@ -307,8 +306,13 @@ Patient-specific grade evidence:
     expect(
       form.gingivalDescription.findings.map(({ optionId }) => optionId)
     ).toHaveLength(10);
+    expect(
+      form.gingivalDescription.findings.every(
+        ({ extent }) => extent === "generalized",
+      ),
+    ).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Gingival Description: Gingiva coral pink, firm and resilient, with knife-edged margins, papillae filling the embrasures, appropriate stippling of attached gingiva, and no recession or overgrowth noted."
+      "Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted."
     );
   });
 
@@ -541,6 +545,13 @@ Bleeding: Localized mild — areas: mandible.`);
     ).toEqual(["Sore gums upon brushing/flossing"]);
   });
 
+  it("offers periodic examination or recare as a chief concern", () => {
+    expect(patientChiefConcernSeedValues).toContainEqual([
+      "periodic-examination-recare",
+      "Patient presents for periodic examination/recare",
+    ]);
+  });
+
   it("can list chief concerns on separate note lines", () => {
     const form = {
       ...createEmptyAdultHygiene2021Form(),
@@ -633,23 +644,21 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     );
   });
 
-  it("formats the standard treatment preset and optional Dyclonine application time", () => {
+  it("formats the standard treatment preset without local anesthesia", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.treatmentCompleted = [
       ...standardTreatmentCompletedPreset.map((entry, index) => ({
+        ...entry,
         id: `standard-${index}`,
-        treatmentType: entry.treatmentType,
         toothAreas: [...entry.toothAreas],
-        ...(isDyclonineRinseTreatment(entry.treatmentType)
-          ? { applicationTime: "60 seconds" }
-          : {}),
+        instrumentation: entry.instrumentation
+          ? [...entry.instrumentation]
+          : undefined,
       })),
     ];
 
-    expect(dyclonineRinseTreatment).toBe("Dyclonine 1% rinse 5 ml");
-    expect(isDyclonineRinseTreatment("Dyclonine rinse 5 ml")).toBe(true);
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application/use: 60 seconds; FMP — full mouth; 3U scale (Cavitron and hand instrumentation) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2.5% NaF Varnish application — full mouth; OHE",
+      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth",
     );
   });
 
@@ -674,15 +683,15 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     };
 
     expect(buildAdultHygiene2021Summary(form))
-      .toBe(`Periodontal diagnosis: Generalized periodontitis, Stage II, Grade B.
+      .toBe(`Periodontal diagnosis: GENERALIZED PERIODONTITIS, Stage II, Grade B.
 Stage override: Synthetic stage context.
 Grade override: Synthetic grade context.
 
 Oral hygiene compliance: Good.
 Oral hygiene compliance comment: Synthetic compliance context.
 
-Recommended Recall Interval: 6-month recall.
-Recommended recall interval comments: Synthetic recall context.
+Recommended Recare Interval: 6-month recall.
+Recommended recare interval comments: Synthetic recall context.
 Recommended Hygiene Interval: 4-month scale.
 Recommended hygiene interval comments: Synthetic hygiene context.`);
   });
@@ -718,7 +727,7 @@ Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.5.
 
-Periodontal diagnosis: Periodontitis, Stage IV, Grade C.`);
+Periodontal diagnosis: PERIODONTITIS, Stage IV, Grade C.`);
     expect(summary).not.toMatch(/Stage override:|Grade override:/);
   });
 });

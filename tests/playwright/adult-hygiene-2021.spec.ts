@@ -16,7 +16,7 @@ test("Adult Hygiene pilot pill matches the amber pilot notice", async ({
 }) => {
   await page.goto("/templates/clinic");
   const pilotPills = page.getByText("Interactive · pilot", { exact: true });
-  await expect(pilotPills).toHaveCount(2);
+  await expect(pilotPills).toHaveCount(3);
   await expect(pilotPills.first()).toHaveClass(/bg-amber-100/);
   await expect(pilotPills.first()).toHaveClass(/text-amber-900/);
 });
@@ -167,6 +167,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
       .evaluateAll((controls) => controls.map((control) => control.id))
   ).resolves.toEqual([
     "adult-hygiene-class5",
+    "adult-hygiene-ppe",
     "adult-hygiene-miele-codes",
     "adult-hygiene-consent-patient",
     "adult-hygiene-consent-parent",
@@ -174,6 +175,24 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     "adult-hygiene-medical-history",
     "adult-hygiene-premedication",
   ]);
+  await expect(
+    consentHistorySection.getByRole("checkbox", {
+      name: "Class 5 indicators checked",
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    consentHistorySection.getByRole("checkbox", {
+      name: "Standard PPE statement applies",
+      exact: true,
+    })
+  ).toBeChecked();
+  await expect(
+    consentHistorySection.getByRole("textbox", {
+      name: "Sterilization codes",
+      exact: true,
+    })
+  ).toBeVisible();
 
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
   await page.getByRole("button", { name: "Copy note" }).click();
@@ -322,7 +341,7 @@ test("Adult Hygiene demo output survives reload and reset preserves its draft", 
     /Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Recommended Recall Interval: 6-month recall\./
+    /Recommended Recare Interval: 6-month recall\./
   );
   await expect(
     page.getByRole("heading", { name: "Caries Risk Assessment", exact: true })
@@ -736,7 +755,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await expect(gingivalStatus).toContainText("WNL");
   await expect(positionObservations).not.toContainText("Gingival recession");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+    /Gingival Description: Generalized Gingiva coral pink,[\s\S]*Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted\./
   );
 
   page.once("dialog", async (dialog) => {
@@ -763,8 +782,27 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   });
   await expect(colorObservations).toContainText("Coral pink");
   await expect(positionObservations).toContainText("No overgrowth");
+  for (const option of [
+    "Coral pink",
+    "Knife-edged margins",
+    "Flat against the teeth",
+    "Papillae fill embrasures",
+    "Firm",
+    "Resilient",
+    "Stippled attached gingiva",
+    "Smooth marginal gingiva",
+    "No recession",
+    "No overgrowth",
+  ]) {
+    await expect(
+      structuredGingival.getByRole("button", {
+        name: `${option} extent`,
+        exact: true,
+      }),
+    ).toContainText("Generalized");
+  }
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description: Gingiva coral pink,[\s\S]*no recession or overgrowth noted\./
+    /Gingival Description: Generalized Gingiva coral pink, Generalized firm and resilient, Generalized with knife-edged margins, Generalized papillae filling the embrasures, Generalized appropriate stippling of attached gingiva, and no recession or overgrowth noted\./
   );
 
   await positionObservations.click();
@@ -781,7 +819,7 @@ test("Adult Hygiene adds explicit gingival findings and WNL", async ({
   await expect(customFindings).toBeVisible();
   await customFindings.fill("Custom gingival observation");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Gingival Description:\n  - Color: coral pink\.[\s\S]*  - Position \/ Size: no recession\.\n  Observations: Custom gingival observation\./
+    /Gingival Description:\n  - Color: coral pink \(extent: generalized\)\.[\s\S]*  - Position \/ Size: no recession \(extent: generalized\)\.\n  Observations: Custom gingival observation\./
   );
 });
 
@@ -1031,6 +1069,43 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
   ).toBeVisible();
+  const periodontitisClassificationHeading = page.locator(
+    "#periodontal-stage-grade-heading"
+  );
+  const currentClinicalConditionHeading = page.locator(
+    "#periodontal-current-condition-heading"
+  );
+  await expect(currentClinicalConditionHeading).toBeVisible();
+  expect(
+    await periodontitisClassificationHeading.evaluate(
+      (classificationHeading, currentConditionHeadingId) => {
+        const currentConditionHeading = document.getElementById(
+          currentConditionHeadingId
+        );
+        return Boolean(
+          currentConditionHeading &&
+            (classificationHeading.compareDocumentPosition(
+              currentConditionHeading
+            ) &
+              Node.DOCUMENT_POSITION_FOLLOWING)
+        );
+      },
+      "periodontal-current-condition-heading"
+    )
+  ).toBe(true);
+  const currentClinicalConditionSection = currentClinicalConditionHeading.locator(
+    "xpath=ancestor::section[1]"
+  );
+  await expect(
+    currentClinicalConditionSection.getByLabel("Current periodontal status", {
+      exact: true,
+    })
+  ).toBeVisible();
+  await expect(
+    currentClinicalConditionSection.getByLabel("Periodontal status comment", {
+      exact: true,
+    })
+  ).toBeVisible();
 
   await page
     .getByRole("button", { name: /Structured periodontal observations/ })
@@ -1102,7 +1177,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .getByLabel("Periodontal status comment")
     .fill("Stable on current maintenance interval");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
+    /Current periodontal condition: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
   );
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
@@ -1111,15 +1186,12 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .click();
   await expect(
     page.getByLabel("Current periodontal status", { exact: true })
-  ).toBeVisible();
-  await expect(
-    page.locator("#adult-hygiene-periodontal-status")
-  ).toHaveAttribute("data-value", "stable");
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
-  ).toHaveValue("Stable on current maintenance interval");
-  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
+  ).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Periodontal status:/
   );
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
@@ -1127,20 +1199,20 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .click();
   await expect(
     page.getByLabel("Current periodontal status", { exact: true })
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
-  ).toHaveValue("Stable on current maintenance interval");
+  ).toHaveCount(0);
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
     .getByRole("option", { name: "Other periodontal condition", exact: true })
     .click();
   await expect(
     page.getByLabel("Current periodontal status", { exact: true })
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
-  ).toHaveValue("Stable on current maintenance interval");
+  ).toHaveCount(0);
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
     .getByRole("option", { name: "Not assessed", exact: true })
@@ -1408,7 +1480,7 @@ test("Adult Hygiene applies the reviewed gingivitis observation preset", async (
   );
 });
 
-test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine timing", async ({
+test("Adult Hygiene applies standard OHE and treatment presets without local anesthesia", async ({
   page,
 }) => {
   await page.goto(adultHygieneUrl);
@@ -1438,21 +1510,87 @@ test("Adult Hygiene applies standard OHE and treatment presets with Dyclonine ti
   const completedRows = page
     .getByRole("list", { name: "Treatment completed today entries" })
     .locator(":scope > li");
-  await expect(completedRows).toHaveCount(6);
-  const dyclonineRow = completedRows.first();
-  const applicationTime = dyclonineRow.getByRole("textbox", {
-    name: "Time of application/use",
-    exact: true,
-  });
-  await expect(applicationTime).toBeVisible();
-  await applicationTime.fill("60 seconds");
+  await expect(completedRows).toHaveCount(5);
   await page
     .getByRole("button", { name: "Apply standard treatment", exact: true })
     .click();
-  await expect(completedRows).toHaveCount(6);
+  await expect(completedRows).toHaveCount(5);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: Dyclonine 1% rinse 5 ml — full mouth; time of application\/use: 60 seconds; FMP — full mouth; 3U scale \(Cavitron and hand instrumentation\) — full mouth; 1U polish - Selective polish of aesthetic zone as per patient's request; FluoriMax 2\.5% NaF Varnish application — full mouth; OHE/,
+    /Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\); Selective polish with Enamel Pro® Prophy Paste with Fluoride \(Strawberry\) \(1U Polish\); OHE on proper home care \(Bass brushing; C-shape flossing technique; benefits of fluoride\); Oral Science Inc\. FluoriMax 2\.5% NaF Varnish application — full mouth/,
   );
+});
+
+test("Adult Hygiene preserves overlapping legacy OHE until explicit cleanup", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+
+  const education = page.getByRole("group", {
+    name: "Education provided today",
+    exact: true,
+  });
+  await education
+    .getByRole("checkbox", {
+      name: "Disease process reviewed with patient today",
+      exact: true,
+    })
+    .check();
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  const topics = page.getByRole("dialog", {
+    name: "Additional OHE topics reviewed options",
+    exact: true,
+  });
+  await topics.getByText("Bass brushing", { exact: true }).click();
+  await topics
+    .getByText("Sulcabrush and interdental brush technique", { exact: true })
+    .click();
+  await topics.getByRole("button", { name: "Done", exact: true }).click();
+
+  await education
+    .getByRole("button", { name: "Apply standard OHE", exact: true })
+    .click();
+  await expect(
+    education.getByText("Included in Standard OHE", { exact: true }),
+  ).toBeVisible();
+  const compatibilityAlert = education.getByRole("alert");
+  await expect(compatibilityAlert).toContainText(
+    "preserved for compatibility",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /REVIEWED DISEASE PROCESS WITH PATIENT TODAY[\s\S]*Patient's diagnoses and risk factors were explained to them\.[\s\S]*OHE: Bass brushing; Sulcabrush and interdental brush technique\./,
+  );
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await compatibilityAlert
+    .getByRole("button", { name: "Remove covered selections", exact: true })
+    .click();
+  await expect(compatibilityAlert).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /REVIEWED DISEASE PROCESS|Bass brushing/,
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /Patient's diagnoses and risk factors were explained to them\.[\s\S]*OHE: Sulcabrush and interdental brush technique\./,
+  );
+
+  await education
+    .getByRole("button", {
+      name: "Additional OHE topics reviewed",
+      exact: true,
+    })
+    .click();
+  await expect(
+    page
+      .getByRole("dialog", {
+        name: "Additional OHE topics reviewed options",
+        exact: true,
+      })
+      .getByText("Bass brushing", { exact: true }),
+  ).toHaveCount(0);
 });
 
 test("Adult Hygiene catalogue values and encounter recovery draft persist independently", async ({
@@ -1497,23 +1635,24 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   }
 
   await page
-    .getByRole("button", { name: "Add treatment completed", exact: true })
+    .getByRole("button", { name: "Add completed care", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Advantage Arrest® Silver Diamine Fluoride 38% application",
+      exact: true,
+    })
     .click();
   const completedValues = page.getByRole("list", {
     name: "Treatment completed today entries",
   });
   const completedRow = completedValues.locator(":scope > li").first();
-  const treatmentCompleted = completedRow.getByRole("combobox", {
-    name: "Treatment type",
-    exact: true,
-  });
-  await treatmentCompleted.focus();
-  await page
-    .getByRole("option", {
-      name: "1U scale (cavitron and hand instrumentation) Starter",
+  await expect(
+    completedRow.getByRole("heading", {
+      name: "Product applications",
       exact: true,
-    })
-    .click();
+    }),
+  ).toBeVisible();
 
   await completedRow.getByText("Select Tooth/area", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {
@@ -1603,7 +1742,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
     })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Treatment completed today: 1U scale \(cavitron and hand instrumentation\) — Q2, Q3, teeth 14–16/
+    /Treatment completed today: Advantage Arrest® Silver Diamine Fluoride 38% application — Q2, Q3, teeth 14–16/
   );
   await completedRow.getByRole("button", { name: "Done", exact: true }).click();
   await expect(toothAreaOptions).toBeHidden();
@@ -1813,7 +1952,7 @@ test("Adult Hygiene charts selected periodontal classifications with optional ov
   await expect(page.getByLabel("Confirm selected stage")).toHaveCount(0);
   await expect(page.getByLabel("Confirm selected grade")).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Patient-specific stage evidence:[\s\S]*interdental CAL 5 mm\.[\s\S]*maximum PPD 6 mm\.[\s\S]*Patient-specific grade evidence:[\s\S]*bone-loss\/age ratio 0\.72\.[\s\S]*Periodontal diagnosis: Generalized periodontitis, Stage III, Grade B\./
+    /Patient-specific stage evidence:[\s\S]*interdental CAL 5 mm\.[\s\S]*maximum PPD 6 mm\.[\s\S]*Patient-specific grade evidence:[\s\S]*bone-loss\/age ratio 0\.72\.[\s\S]*Periodontal diagnosis: GENERALIZED PERIODONTITIS, Stage III, Grade B\./
   );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /^(Stage basis|Grade basis|Grade modifiers):/m
@@ -1928,7 +2067,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toContain(
-    "Health/Gingivitis: HEALTH - INTACT PERIODONTIUM"
+    "Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM"
   );
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
@@ -1940,7 +2079,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   await expect(
     page.evaluate(() => navigator.clipboard.readText())
   ).resolves.toMatch(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM[\s\S]*Health\/Gingivitis override: Clinician-selected health classification\./
+    /Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM[\s\S]*Health\/Gingivitis override: Clinician-selected health classification\./
   );
 });
 
@@ -1985,11 +2124,19 @@ test("Adult Hygiene accepts exact or categorical RBL stage evidence", async ({
 
   await expect(rblExtent).toContainText("Middle third or beyond");
   await expect(page.getByText(/Stage III; Grade B/)).toBeVisible();
-  await page.getByText("Why this was suggested", { exact: true }).click();
+  const classification = page
+    .getByRole("heading", {
+      name: "Periodontitis classification",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  await classification
+    .getByText("Why this was suggested", { exact: true })
+    .click();
   await expect(
-    page.getByText(
+    classification.getByText(
       /radiographic bone loss \(RBL\) extends to the middle third of the root or beyond/
-    )
+    ),
   ).toBeVisible();
 });
 
@@ -2158,10 +2305,10 @@ test("Adult Hygiene keeps compliance and interval comments independent", async (
     .getByLabel("Oral hygiene compliance", { exact: true })
     .fill("Good");
   await page
-    .getByLabel("Recommended recall interval comments", { exact: true })
+    .getByLabel("Recommended recare interval comments", { exact: true })
     .fill("Synthetic recall context");
   await page
-    .getByLabel("Recommended recall interval", { exact: true })
+    .getByLabel("Recommended recare interval", { exact: true })
     .fill("6-month recall");
   await page
     .getByLabel("Recommended hygiene interval comments", { exact: true })
@@ -2171,6 +2318,6 @@ test("Adult Hygiene keeps compliance and interval comments independent", async (
     .fill("4-month scale");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recall Interval: 6-month recall\.[\s\S]*Recommended recall interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
+    /Oral hygiene compliance: Good\.[\s\S]*Oral hygiene compliance comment: Synthetic compliance context\.[\s\S]*Recommended Recare Interval: 6-month recall\.[\s\S]*Recommended recare interval comments: Synthetic recall context\.[\s\S]*Recommended Hygiene Interval: 4-month scale\.[\s\S]*Recommended hygiene interval comments: Synthetic hygiene context\./
   );
 });

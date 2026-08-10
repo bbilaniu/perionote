@@ -64,6 +64,9 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   const skeletalTab = occlusionGroup.getByRole("tab", {
     name: /Skeletal occlusion/,
   });
+  const additionalFindingsTab = occlusionGroup.getByRole("tab", {
+    name: /Additional occlusal findings/,
+  });
   await expect(molarTab).toHaveAttribute("aria-selected", "true");
   await expect(molarTab).toContainText("3");
   await skeletalTab.click();
@@ -75,6 +78,51 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   await expect(
     occlusionGroup.locator(
       '[data-catalogue-key="clinical-exam.skeletal-occlusion"]',
+    ),
+  ).toBeVisible();
+  await skeletalTab.press("ArrowRight");
+  await expect(additionalFindingsTab).toBeFocused();
+  await expect(additionalFindingsTab).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(
+    occlusionGroup.locator(
+      '[data-catalogue-key="clinical-exam.additional-occlusal-findings"]',
+    ),
+  ).toBeVisible();
+
+  await expect(
+    page.getByRole("heading", { name: "Continuity of care", exact: true }),
+  ).toBeVisible();
+  const continuityGroup = page.getByRole("region", {
+    name: "Intervals and next visits catalogues",
+  });
+  const recareTab = continuityGroup.getByRole("tab", {
+    name: /Recommended recare interval/,
+  });
+  const hygieneTab = continuityGroup.getByRole("tab", {
+    name: /Recommended hygiene interval/,
+  });
+  const hygieneNextVisitTab = continuityGroup.getByRole("tab", {
+    name: /Next hygiene visit/,
+  });
+  const dentistNextVisitTab = continuityGroup.getByRole("tab", {
+    name: /Next dentist visit/,
+  });
+  await expect(recareTab).toHaveAttribute("aria-selected", "true");
+  await hygieneTab.click();
+  await expect(hygieneTab).toHaveAttribute("aria-selected", "true");
+  await hygieneNextVisitTab.click();
+  await expect(
+    continuityGroup.locator(
+      '[data-catalogue-key="scheduling.hygiene-next-visit"]',
+    ),
+  ).toBeVisible();
+  await dentistNextVisitTab.click();
+  await expect(
+    continuityGroup.locator(
+      '[data-catalogue-key="scheduling.dentist-next-visit"]',
     ),
   ).toBeVisible();
 });

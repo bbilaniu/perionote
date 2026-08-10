@@ -5,8 +5,15 @@ import {
   type FixedChoiceMultiComboboxGroup,
 } from "@/components/forms/FixedChoiceMultiCombobox";
 import { treatmentToothAreaChoices } from "@/lib/templates/adultHygiene2021";
+import { localAnesthesiaLocationChoices } from "@/lib/templates/localAnesthesia";
 
-export type ClinicalLocationPreset = "finding" | "gingival" | "treatment";
+export type ClinicalLocationPreset =
+  | "finding"
+  | "gingival"
+  | "treatment"
+  | "local-anesthesia-injection"
+  | "local-anesthesia-topical"
+  | "local-anesthesia-rinse";
 
 export const localizedFindingAreaChoices = [
   "maxilla",
@@ -57,6 +64,26 @@ const treatmentChoiceGroups = [
     label: "Sextants",
     choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
     columns: 3,
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const localAnesthesiaInjectionChoiceGroups = [
+  {
+    label: "Quadrants",
+    choices: ["Q1", "Q2", "Q4", "Q3"],
+    columns: 2,
+  },
+  {
+    label: "Sextants",
+    choices: ["S1", "S2", "S3", "S6", "S5", "S4"],
+    columns: 3,
+  },
+] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
+
+const localAnesthesiaRinseChoiceGroups = [
+  {
+    choices: ["full mouth"],
+    columns: 1,
   },
 ] as const satisfies readonly FixedChoiceMultiComboboxGroup[];
 
@@ -120,18 +147,29 @@ export function ClinicalLocationMultiCombobox({
   values: string[];
   onChange: (values: string[]) => void;
 }) {
-  const choices =
-    preset === "treatment"
-      ? treatmentToothAreaChoices
-      : preset === "finding"
-        ? localizedFindingAreaChoices
-        : gingivalLocationChoices;
-  const choiceGroups =
-    preset === "treatment"
-      ? treatmentChoiceGroups
-      : preset === "finding"
-        ? localizedFindingChoiceGroups
-        : gingivalChoiceGroups;
+  const choicesByPreset = {
+    treatment: treatmentToothAreaChoices,
+    finding: localizedFindingAreaChoices,
+    gingival: gingivalLocationChoices,
+    "local-anesthesia-injection": localAnesthesiaLocationChoices.injection,
+    "local-anesthesia-topical": localAnesthesiaLocationChoices.topical,
+    "local-anesthesia-rinse": localAnesthesiaLocationChoices.rinse,
+  } as const satisfies Record<ClinicalLocationPreset, readonly string[]>;
+  const choiceGroupsByPreset = {
+    treatment: treatmentChoiceGroups,
+    finding: localizedFindingChoiceGroups,
+    gingival: gingivalChoiceGroups,
+    "local-anesthesia-injection": localAnesthesiaInjectionChoiceGroups,
+    "local-anesthesia-topical": treatmentChoiceGroups,
+    "local-anesthesia-rinse": localAnesthesiaRinseChoiceGroups,
+  } as const satisfies Record<
+    ClinicalLocationPreset,
+    readonly FixedChoiceMultiComboboxGroup[]
+  >;
+  const choices = choicesByPreset[preset];
+  const choiceGroups = choiceGroupsByPreset[preset];
+  const usesToothAreaLanguage =
+    preset === "treatment" || preset.startsWith("local-anesthesia-");
 
   return (
     <FixedChoiceMultiCombobox
@@ -142,7 +180,7 @@ export function ClinicalLocationMultiCombobox({
       values={values}
       onChange={onChange}
       customPlaceholder={
-        preset === "treatment"
+        usesToothAreaLanguage
           ? "Search or add a Tooth/area"
           : preset === "finding"
             ? "Search or add an area"

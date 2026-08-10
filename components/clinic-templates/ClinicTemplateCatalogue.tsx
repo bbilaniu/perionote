@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { type MouseEvent, type ReactNode, useState } from "react";
 import { FullPageLink } from "@/components/FullPageLink";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
 export type ClinicTemplateCatalogueItem = {
@@ -84,7 +85,7 @@ export function ClinicTemplateCatalogue({
               Show templates
             </p>
             <div
-              role="group"
+              role="radiogroup"
               aria-label="Show templates"
               className="grid grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
             >
@@ -95,6 +96,7 @@ export function ClinicTemplateCatalogue({
                 return (
                   <SegmentButton
                     key={visibility}
+                    name="clinic-template-visibility"
                     selected={selected}
                     onClick={() => setTemplateVisibility(visibility)}
                   >
@@ -109,7 +111,7 @@ export function ClinicTemplateCatalogue({
               Card opens
             </p>
             <div
-              role="group"
+              role="radiogroup"
               aria-label="Card opens"
               className="grid grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
             >
@@ -121,6 +123,7 @@ export function ClinicTemplateCatalogue({
                 return (
                   <SegmentButton
                     key={destination}
+                    name="clinic-template-destination"
                     selected={selected}
                     onClick={() => setDefaultDestination(destination)}
                   >
@@ -212,27 +215,26 @@ export function ClinicTemplateCatalogue({
 }
 
 function SegmentButton({
+  name,
   selected,
   onClick,
   children,
 }: {
+  name: string;
   selected: boolean;
   onClick: () => void;
   children: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      className={`rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 ${
-        selected
-          ? "bg-chart-accent text-white shadow-sm"
-          : "text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-slate-800"
-      }`}
-      onClick={onClick}
+    <NativeChoiceControl
+      type="radio"
+      name={name}
+      checked={selected}
+      className="rounded-md px-4 py-2"
+      onChange={onClick}
     >
       {children}
-    </button>
+    </NativeChoiceControl>
   );
 }
 

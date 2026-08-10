@@ -36,6 +36,8 @@ export const adolescentHygieneFixture: AdolescentHygieneForm = {
       ppd4OrGreaterWithBop: "no",
       progressiveDestruction: "no",
       context: "gingivitis-intact",
+      reducedPeriodontiumBases: [],
+      reducedPeriodontiumBasisDetails: "",
       overrideReason: "",
     },
   },

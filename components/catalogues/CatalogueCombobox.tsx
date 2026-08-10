@@ -9,6 +9,8 @@ import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { HideCatalogueSuggestionIcon } from "@/components/catalogues/HideCatalogueSuggestionIcon";
 import { EditableCombobox } from "@/components/forms/EditableCombobox";
 import {
+  type CatalogueItem,
+  type CatalogueItemMetadata,
   type CatalogueKey,
   normalizeCatalogueLabel,
 } from "@/lib/catalogues/catalogue";
@@ -33,6 +35,9 @@ export function CatalogueCombobox({
   rememberActionLabel = "Remember this value",
   unhideActionLabel = "Unhide this value",
   roomyActions = false,
+  showAllSuggestionsWhenSelected = false,
+  suggestionFilter,
+  rememberMetadata,
 }: {
   id: string;
   label: string;
@@ -45,6 +50,9 @@ export function CatalogueCombobox({
   rememberActionLabel?: string;
   unhideActionLabel?: string;
   roomyActions?: boolean;
+  showAllSuggestionsWhenSelected?: boolean;
+  suggestionFilter?: (item: CatalogueItem) => boolean;
+  rememberMetadata?: CatalogueItemMetadata;
 }) {
   const {
     storageStatus,
@@ -59,17 +67,26 @@ export function CatalogueCombobox({
   } = useCatalogues();
   const [statusMessage, setStatusMessage] = useState("");
 
+  const equivalent = findEquivalent(catalogueKey, value);
   const suggestions = useMemo(() => {
     const query = normalizeCatalogueLabel(value);
-    const allItems = getItems(catalogueKey);
-    return query
+    const allItems = getItems(catalogueKey).filter(
+      (item) => !suggestionFilter || suggestionFilter(item),
+    );
+    return query && !(showAllSuggestionsWhenSelected && equivalent)
       ? allItems.filter((item) =>
           normalizeCatalogueLabel(item.label).includes(query),
         )
       : allItems;
-  }, [catalogueKey, getItems, value]);
+  }, [
+    catalogueKey,
+    equivalent,
+    getItems,
+    showAllSuggestionsWhenSelected,
+    suggestionFilter,
+    value,
+  ]);
 
-  const equivalent = findEquivalent(catalogueKey, value);
   const canRemember = Boolean(value.trim()) && !equivalent;
   const canUnhide = Boolean(value.trim()) && equivalent?.hidden;
   const providerCatalogueKey = isProviderCatalogueKey(catalogueKey)
@@ -92,7 +109,7 @@ export function CatalogueCombobox({
 
   function handleRemember() {
     try {
-      const result = rememberValue(catalogueKey, value);
+      const result = rememberValue(catalogueKey, value, rememberMetadata);
       setStatusMessage(
         result === "reactivated"
           ? `${value.trim()} unhidden in this browser's catalogue.`

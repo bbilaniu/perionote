@@ -1,6 +1,16 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useState } from "react";
+import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
+import {
+  extraoralLateralityToSides,
+  extraoralLymphNodeLocationOptions,
+  extraoralLymphNodeSwellingOptions,
+  extraoralSideOptions,
+  extraoralSidesToLaterality,
+  extraoralTmjClickingPhaseOptions,
+  extraoralTmjClickingStatusOptions,
+} from "@/lib/templates/extraoralObservationsCatalog";
 
 function cx(...parts) {
   return parts.filter(Boolean).join(" ");
@@ -19,15 +29,7 @@ function Card({ className, ...props }) {
 }
 
 function CardHeader({ className, ...props }) {
-  return (
-    <div
-      className={cx(
-        "space-y-1.5 p-6",
-        className,
-      )}
-      {...props}
-    />
-  );
+  return <div className={cx("space-y-1.5 p-6", className)} {...props} />;
 }
 
 function CardTitle({ className, ...props }) {
@@ -398,10 +400,10 @@ const VISIT_CARE_SELECT_CORE_OPTIONS = [
   OHE_REINFORCED_OPTION,
   REVIEWED_HOMECARE_OPTION,
 ];
-const TMJ_CLICKING_STATUS_OPTIONS = ["Symptomatic", "Asymptomatic"];
-const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = ["On open", "On close"];
-const LYMPH_NODE_LOCATION_OPTIONS = ["Submandibular", "Sublingual"];
-const LYMPH_NODE_SWELLING_OPTIONS = ["Slightly enlarged", "Very swollen"];
+const TMJ_CLICKING_STATUS_OPTIONS = extraoralTmjClickingStatusOptions;
+const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = extraoralTmjClickingPhaseOptions;
+const LYMPH_NODE_LOCATION_OPTIONS = extraoralLymphNodeLocationOptions;
+const LYMPH_NODE_SWELLING_OPTIONS = extraoralLymphNodeSwellingOptions;
 const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
   "I/O",
   "M/I",
@@ -424,10 +426,12 @@ const LOCAL_ANESTHETIC_INJECTION_PRODUCT_OPTIONS = [
 const LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS = [
   "Benzocaine 20% paste",
   "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+  "Dyclonine 1% solution",
 ];
 const LOCAL_ANESTHETIC_DEFAULT_AMOUNTS_BY_PRODUCT = {
   "Benzocaine 20% paste": "0.5",
   "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%": "1.7",
+  "Dyclonine 1% solution": "0.5",
 };
 const QUADRANT_OPTIONS = ["Q1", "Q2", "Q3", "Q4"];
 const ARCH_ROW_LABELS = ["Upper", "Lower"];
@@ -466,7 +470,7 @@ const CARIES_RISK_FACTOR_OPTIONS = [
   "History of caries in the last 36 months",
   "Symptomatically driven dental visits",
 ];
-const CLICK_LATERALITY_OPTIONS = ["Bilateral", "Left", "Right"];
+const CLICK_LATERALITY_OPTIONS = extraoralSideOptions;
 const PALATINE_TORUS_OPTIONS = ["Slight", "Prominent"];
 const IOE_FINDING_OPTIONS = [
   "Coated tongue",
@@ -685,11 +689,7 @@ export function buildDemoForm(fixture) {
     enabled: true,
     amount: "Heavy",
     extent: "Generalized",
-    locations: [
-      "Sextant 1",
-      "Sextant 5",
-      "Sextant 6",
-    ],
+    locations: ["Sextant 1", "Sextant 5", "Sextant 6"],
     types: [],
     distributions: ["Facial", "At gingival margin"],
     details: "",
@@ -900,7 +900,9 @@ export function buildSummaryText(form, selectedFindings) {
     const segments = [];
 
     if (systolic != null && diastolic != null) {
-      segments.push(`BP: ${formatNumber(systolic)}/${formatNumber(diastolic)} mmHg`);
+      segments.push(
+        `BP: ${formatNumber(systolic)}/${formatNumber(diastolic)} mmHg`,
+      );
     }
     if (heartRate != null) {
       segments.push(`HR: ${formatNumber(heartRate)} bpm`);
@@ -926,7 +928,9 @@ export function buildSummaryText(form, selectedFindings) {
 
     const average = (values) =>
       values.length
-        ? Math.round(values.reduce((total, value) => total + value, 0) / values.length)
+        ? Math.round(
+            values.reduce((total, value) => total + value, 0) / values.length,
+          )
         : null;
     const averageSystolic = average(systolicValues);
     const averageDiastolic = average(diastolicValues);
@@ -935,12 +939,16 @@ export function buildSummaryText(form, selectedFindings) {
 
     if (averageSystolic != null && averageDiastolic != null) {
       segments.push(
-        `Average BP: ${formatNumber(averageSystolic)}/${formatNumber(averageDiastolic)} mmHg`,
+        `Average BP: ${formatNumber(averageSystolic)}/${formatNumber(
+          averageDiastolic,
+        )} mmHg`,
       );
     }
     if (averageHeartRate != null) {
       segments.push(
-        `${segments.length ? "HR" : "Average HR"}: ${formatNumber(averageHeartRate)} bpm`,
+        `${segments.length ? "HR" : "Average HR"}: ${formatNumber(
+          averageHeartRate,
+        )} bpm`,
       );
     }
 
@@ -984,7 +992,9 @@ export function buildSummaryText(form, selectedFindings) {
   };
   const getSelectedDispositionLines = () =>
     Array.isArray(form.disposition)
-      ? form.disposition.map((entry) => formatDispositionLine(entry)).filter(Boolean)
+      ? form.disposition
+          .map((entry) => formatDispositionLine(entry))
+          .filter(Boolean)
       : [];
   const normalizeObservation = (value, withinNormalLimits) => {
     let normalized = cleanSentence(value);
@@ -1033,7 +1043,11 @@ export function buildSummaryText(form, selectedFindings) {
         parseNumeric(reading.heartRate) != null,
     ).length;
 
-    if (!medicalHistoryNoChange && !medicalHistory && !formattedReadings.length) {
+    if (
+      !medicalHistoryNoChange &&
+      !medicalHistory &&
+      !formattedReadings.length
+    ) {
       return "";
     }
 
@@ -1061,13 +1075,19 @@ export function buildSummaryText(form, selectedFindings) {
     if (form.asymptomaticClickOnOpeningClosing) {
       const laterality = clean(form.asymptomaticClickLaterality).toLowerCase();
       const status = form.tmjClickingStatus.length
-        ? form.tmjClickingStatus.map((item) => clean(item).toLowerCase()).join("/")
+        ? form.tmjClickingStatus
+            .map((item) => clean(item).toLowerCase())
+            .join("/")
         : "asymptomatic";
       const phase = form.tmjClickingPhase.length
-        ? form.tmjClickingPhase.map((item) => clean(item).toLowerCase()).join("/")
+        ? form.tmjClickingPhase
+            .map((item) => clean(item).toLowerCase())
+            .join("/")
         : "on open";
       findings.push(
-        `${laterality ? `${laterality} ` : ""}tmj clicking (${status}, ${phase})`,
+        `${
+          laterality ? `${laterality} ` : ""
+        }tmj clicking (${status}, ${phase})`,
       );
     }
 
@@ -1077,15 +1097,30 @@ export function buildSummaryText(form, selectedFindings) {
         segments.push(clean(form.palpableLymphNodeLaterality).toLowerCase());
       }
       if (form.palpableLymphNodeLocation.length) {
-        segments.push(form.palpableLymphNodeLocation.map((item) => clean(item).toLowerCase()).join("/"));
+        segments.push(
+          form.palpableLymphNodeLocation
+            .map((item) => clean(item).toLowerCase())
+            .join("/"),
+        );
       }
       if (form.palpableLymphNodeSwelling.length) {
-        segments.push(form.palpableLymphNodeSwelling.map((item) => clean(item).toLowerCase()).join("/"));
+        segments.push(
+          form.palpableLymphNodeSwelling
+            .map((item) => clean(item).toLowerCase())
+            .join("/"),
+        );
       }
-      findings.push(`palpable lymph nodes${segments.length ? ` (${segments.join(", ")})` : ""}`);
+      findings.push(
+        `palpable lymph nodes${
+          segments.length ? ` (${segments.join(", ")})` : ""
+        }`,
+      );
     }
 
-    const observation = normalizeObservation(form.eoe, form.eoeWithinNormalLimits);
+    const observation = normalizeObservation(
+      form.eoe,
+      form.eoeWithinNormalLimits,
+    );
     if (observation) findings.push(observation);
     if (form.eoeWithinNormalLimits && !findings.length) {
       findings.push("within normal limits");
@@ -1109,13 +1144,18 @@ export function buildSummaryText(form, selectedFindings) {
     }
 
     if (form.bilateralMandibularTori) {
-      const prominence = clean(form.bilateralMandibularToriProminence).toLowerCase();
+      const prominence = clean(
+        form.bilateralMandibularToriProminence,
+      ).toLowerCase();
       findings.push(
         `${prominence ? `${prominence} ` : ""}bilateral mandibular tori`,
       );
     }
 
-    const observation = normalizeObservation(form.ioe, form.ioeWithinNormalLimits);
+    const observation = normalizeObservation(
+      form.ioe,
+      form.ioeWithinNormalLimits,
+    );
     if (observation) findings.push(observation);
     if (form.ioeWithinNormalLimits && !findings.length) {
       findings.push("within normal limits");
@@ -1130,7 +1170,9 @@ export function buildSummaryText(form, selectedFindings) {
     }
 
     if (item.locations.length) {
-      return ` on ${item.locations.map((location) => location.toLowerCase()).join(", ")}`;
+      return ` on ${item.locations
+        .map((location) => location.toLowerCase())
+        .join(", ")}`;
     }
 
     return "";
@@ -1172,7 +1214,9 @@ export function buildSummaryText(form, selectedFindings) {
       ["Color", "Consistency", "Surface Texture"].includes(items[0].section)
     ) {
       phrases.push(
-        `${formatFindingDescriptor(generalized[0])} with ${formatFindingDescriptor(localized[0])}`,
+        `${formatFindingDescriptor(
+          generalized[0],
+        )} with ${formatFindingDescriptor(localized[0])}`,
       );
       return phrases;
     }
@@ -1199,7 +1243,9 @@ export function buildSummaryText(form, selectedFindings) {
     const phrases = [];
 
     sectionOrder.forEach((section) => {
-      const sectionItems = selectedFindings.filter((item) => item.section === section);
+      const sectionItems = selectedFindings.filter(
+        (item) => item.section === section,
+      );
       phrases.push(...combineFindingsBySection(sectionItems));
     });
 
@@ -1246,7 +1292,8 @@ export function buildSummaryText(form, selectedFindings) {
     return `${label}: ${parts.join(" ")}`;
   };
   const formatPeriodontalDiagnosis = () => {
-    const isPeriodontitis = form.periodontalStatusDiseaseType === "Periodontitis";
+    const isPeriodontitis =
+      form.periodontalStatusDiseaseType === "Periodontitis";
     const parts = [
       form.periodontalStatusActivity,
       isPeriodontitis
@@ -1343,16 +1390,17 @@ export function buildSummaryText(form, selectedFindings) {
         return;
       }
 
-      const mappedTopic = {
-        "Bass brushing": "bass brushing",
-        "C-shape flossing technique": "c-shaped flossing",
-        "Sulcabrush and interdental brush technique":
-          "sulcabrush and interdental brush technique",
-        "Review benefits of Prevident or Opti-Rinse":
-          "review benefits of Prevident or Opti-Rinse",
-        "Importance of maintaining a 4-month hygiene interval":
-          "importance of maintaining a 4-month hygiene interval",
-      }[topic] ?? lowerFirst(topic);
+      const mappedTopic =
+        {
+          "Bass brushing": "bass brushing",
+          "C-shape flossing technique": "c-shaped flossing",
+          "Sulcabrush and interdental brush technique":
+            "sulcabrush and interdental brush technique",
+          "Review benefits of Prevident or Opti-Rinse":
+            "review benefits of Prevident or Opti-Rinse",
+          "Importance of maintaining a 4-month hygiene interval":
+            "importance of maintaining a 4-month hygiene interval",
+        }[topic] ?? lowerFirst(topic);
 
       result.push(mappedTopic);
       seen.add(topic);
@@ -1413,7 +1461,8 @@ export function buildSummaryText(form, selectedFindings) {
     }
     const totals = new Map();
     form.localAnesthesiaEntries.forEach((entry) => {
-      const route = clean(entry.route) || (clean(entry.injectionType) ? "Injection" : "");
+      const route =
+        clean(entry.route) || (clean(entry.injectionType) ? "Injection" : "");
       const injectionType = clean(entry.injectionType);
       const applicationType = clean(entry.applicationType);
       const quadrant = clean(entry.quadrant);
@@ -1427,11 +1476,15 @@ export function buildSummaryText(form, selectedFindings) {
       const time = clean(entry.timeAdministered);
       if (route === "Injection") {
         detailLines.push(
-          `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
+          `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${
+            time ? ` (at ${formatClockTime(time)})` : ""
+          }`,
         );
       } else if (route === "Topical") {
         detailLines.push(
-          `${applicationType} ${quadrant}: ${product} ${amountMlRaw} ml${time ? ` (at ${formatClockTime(time)})` : ""}`,
+          `${applicationType} ${quadrant}: ${product} ${amountMlRaw} ml${
+            time ? ` (at ${formatClockTime(time)})` : ""
+          }`,
         );
       }
 
@@ -1517,9 +1570,10 @@ export function buildSummaryText(form, selectedFindings) {
 
     if (!selectedDispositionLines.length) return "";
 
-    return ["Continuity of Care", ...selectedDispositionLines.map(indentLine)].join(
-      "\n",
-    );
+    return [
+      "Continuity of Care",
+      ...selectedDispositionLines.map(indentLine),
+    ].join("\n");
   };
 
   const blocks = [
@@ -1688,7 +1742,9 @@ function getDentalRegionGroups(options) {
 
   return {
     groups,
-    remainingOptions: options.filter((option) => !recognizedOptions.has(option)),
+    remainingOptions: options.filter(
+      (option) => !recognizedOptions.has(option),
+    ),
   };
 }
 
@@ -1697,6 +1753,7 @@ function DentalRegionGrid({
   rows,
   selected,
   onChange,
+  groupName,
   singleSelect = false,
 }) {
   const selectedSet = new Set(selected);
@@ -1725,29 +1782,27 @@ function DentalRegionGrid({
                 const isActive = selectedSet.has(option);
 
                 return (
-                  <Button
+                  <NativeChoiceControl
                     key={option}
-                    type="button"
-                    variant={isActive ? "default" : "outline"}
-                    className="h-14 rounded-2xl px-3 text-base font-semibold"
-                    aria-pressed={isActive}
-                    aria-label={option}
-                    onClick={() => {
-                      if (singleSelect) {
-                        onChange(isActive ? [] : [option]);
-                        return;
-                      }
-
-                      if (isActive) {
-                        onChange(selected.filter((item) => item !== option));
-                        return;
-                      }
-
-                      onChange([...selected, option]);
+                    type={singleSelect ? "radio" : "checkbox"}
+                    name={singleSelect ? groupName : undefined}
+                    checked={isActive}
+                    ariaLabel={option}
+                    className="h-14 rounded-2xl px-3 text-base"
+                    onChange={(checked) => {
+                      onChange(
+                        checked
+                          ? singleSelect
+                            ? [option]
+                            : [...selected, option]
+                          : singleSelect
+                          ? selected
+                          : selected.filter((item) => item !== option),
+                      );
                     }}
                   >
                     {getDentalRegionButtonLabel(option)}
-                  </Button>
+                  </NativeChoiceControl>
                 );
               })}
             </div>
@@ -1770,11 +1825,12 @@ function MultiToggle({
 }) {
   const { groups: dentalRegionGroups, remainingOptions } =
     getDentalRegionGroups(options);
+  const groupName = useId();
   const selectedSet = new Set(selected);
   const allSelected = options.length > 0 && selected.length === options.length;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" role="group" aria-label={label}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Label className="text-sm font-medium">{label}</Label>
         {showSelectAll ? (
@@ -1804,6 +1860,7 @@ function MultiToggle({
               rows={group.rows}
               selected={selected}
               onChange={onChange}
+              groupName={groupName}
               singleSelect={singleSelect}
             />
           ))}
@@ -1820,26 +1877,26 @@ function MultiToggle({
             {remainingOptions.map((option) => {
               const isActive = selectedSet.has(option);
               return (
-                <Button
+                <NativeChoiceControl
                   key={option}
-                  type="button"
-                  variant={isActive ? "default" : "outline"}
+                  type={singleSelect ? "radio" : "checkbox"}
+                  name={singleSelect ? groupName : undefined}
+                  checked={isActive}
                   className="rounded-2xl"
-                  onClick={() => {
-                    if (singleSelect) {
-                      onChange(isActive ? [] : [option]);
-                      return;
-                    }
-
-                    if (isActive) {
-                      onChange(selected.filter((item) => item !== option));
-                    } else {
-                      onChange([...selected, option]);
-                    }
+                  onChange={(checked) => {
+                    onChange(
+                      checked
+                        ? singleSelect
+                          ? [option]
+                          : [...selected, option]
+                        : singleSelect
+                        ? selected
+                        : selected.filter((item) => item !== option),
+                    );
                   }}
                 >
                   {option}
-                </Button>
+                </NativeChoiceControl>
               );
             })}
           </div>
@@ -2065,7 +2122,9 @@ function DepositsCard({
           />
           <div className="space-y-1">
             <Label
-              htmlFor={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+              htmlFor={`deposit-${title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")}`}
               className="cursor-pointer text-lg font-semibold leading-tight"
             >
               {title}
@@ -2275,10 +2334,11 @@ export function GingivalDescriptionWebformImportedTemplate({
   const setLocalAnesthesiaEntryTimeToCurrent = (entryIndex) => {
     setForm((current) => ({
       ...current,
-      localAnesthesiaEntries: current.localAnesthesiaEntries.map((row, rowIndex) =>
-        rowIndex === entryIndex
-          ? { ...row, timeAdministered: getCurrentTimeString() }
-          : row,
+      localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+        (row, rowIndex) =>
+          rowIndex === entryIndex
+            ? { ...row, timeAdministered: getCurrentTimeString() }
+            : row,
       ),
     }));
   };
@@ -2297,8 +2357,9 @@ export function GingivalDescriptionWebformImportedTemplate({
   const updateLocalAnesthesiaEntry = (entryIndex, patch) => {
     setForm((current) => ({
       ...current,
-      localAnesthesiaEntries: current.localAnesthesiaEntries.map((row, rowIndex) =>
-        rowIndex === entryIndex ? { ...row, ...patch } : row,
+      localAnesthesiaEntries: current.localAnesthesiaEntries.map(
+        (row, rowIndex) =>
+          rowIndex === entryIndex ? { ...row, ...patch } : row,
       ),
     }));
   };
@@ -2369,7 +2430,8 @@ export function GingivalDescriptionWebformImportedTemplate({
   const nextAppointmentHasHandInstrumentation = form.nextAppointment.includes(
     HAND_POWER_INSTRUMENTATION_OPTION,
   );
-  const nextAppointmentHasAnyInstrumentation = nextAppointmentHasHandInstrumentation;
+  const nextAppointmentHasAnyInstrumentation =
+    nextAppointmentHasHandInstrumentation;
   const hasLocalAnesthesiaActivity = form.localAnesthesiaEntries.length > 0;
   const isLocalAnesthesiaAssessmentIncomplete =
     !form.localAnesthesiaNoAdverseReactions &&
@@ -2455,11 +2517,14 @@ export function GingivalDescriptionWebformImportedTemplate({
               <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                 <p>Teeth: {item.toothNumbers || "—"}</p>
                 <p>
-                  Location: {item.locations.length ? item.locations.join(", ") : "—"}
+                  Location:{" "}
+                  {item.locations.length ? item.locations.join(", ") : "—"}
                 </p>
                 <p>
                   Distribution:{" "}
-                  {item.distributions.length ? item.distributions.join(", ") : "—"}
+                  {item.distributions.length
+                    ? item.distributions.join(", ")
+                    : "—"}
                 </p>
                 {item.notes ? <p>Notes: {item.notes}</p> : null}
               </div>
@@ -2487,12 +2552,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                 <p>Amount: {item.amount || "—"}</p>
                 <p>Extent: {item.extent || "—"}</p>
                 <p>
-                  Location: {item.locations.length ? item.locations.join(", ") : "—"}
+                  Location:{" "}
+                  {item.locations.length ? item.locations.join(", ") : "—"}
                 </p>
                 <p>Type: {item.types.length ? item.types.join(", ") : "—"}</p>
                 <p>
                   Distribution:{" "}
-                  {item.distributions.length ? item.distributions.join(", ") : "—"}
+                  {item.distributions.length
+                    ? item.distributions.join(", ")
+                    : "—"}
                 </p>
                 {item.details ? <p>Notes: {item.details}</p> : null}
               </div>
@@ -2573,7 +2641,9 @@ export function GingivalDescriptionWebformImportedTemplate({
           id={`summary-tabpanel-${summaryTab}`}
           aria-labelledby={`summary-tab-${summaryTab}`}
         >
-          {summaryTab === "plain-text" ? plainTextSummaryContent : tagsSummaryContent}
+          {summaryTab === "plain-text"
+            ? plainTextSummaryContent
+            : tagsSummaryContent}
         </div>
       </CardContent>
     </Card>
@@ -2590,93 +2660,98 @@ export function GingivalDescriptionWebformImportedTemplate({
         )}
       >
         <div className="min-w-0 space-y-6">
-        <Card className="rounded-3xl shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl md:text-3xl">
-              {title}
-            </CardTitle>
-            <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
-              {description}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {isVeryShort ? (
-              <div className="space-y-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
-                <div className="flex flex-wrap gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-2xl px-3 py-1.5 text-xs"
-                    onClick={() => setAllSectionsOpen(true)}
-                  >
-                    Expand all sections
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-2xl px-3 py-1.5 text-xs"
-                    onClick={() => setAllSectionsOpen(false)}
-                  >
-                    Collapse all sections
-                  </Button>
-                </div>
-                <div className="space-y-2">
-                  <Label>Quick jump</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
-                      <Button
-                        key={sectionKey}
-                        type="button"
-                        variant="outline"
-                        className="rounded-2xl px-3 py-1.5 text-xs"
-                        onClick={() => jumpToSection(sectionKey)}
-                      >
-                        {label}
-                      </Button>
-                    ))}
+          <Card className="rounded-3xl shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl md:text-3xl">{title}</CardTitle>
+              <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
+                {description}
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {isVeryShort ? (
+                <div className="space-y-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-2xl px-3 py-1.5 text-xs"
+                      onClick={() => setAllSectionsOpen(true)}
+                    >
+                      Expand all sections
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="rounded-2xl px-3 py-1.5 text-xs"
+                      onClick={() => setAllSectionsOpen(false)}
+                    >
+                      Collapse all sections
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Quick jump</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
+                        <Button
+                          key={sectionKey}
+                          type="button"
+                          variant="outline"
+                          className="rounded-2xl px-3 py-1.5 text-xs"
+                          onClick={() => jumpToSection(sectionKey)}
+                        >
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              ) : null}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="exam-date">Date</Label>
+                  <Input
+                    id="exam-date"
+                    type="date"
+                    className="rounded-xl"
+                    value={form.date}
+                    onChange={(e) =>
+                      setForm((current) => ({
+                        ...current,
+                        date: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="provider-name">Provider Name</Label>
+                  <Input
+                    id="provider-name"
+                    className="rounded-xl"
+                    placeholder="e.g. Dr. Example"
+                    value={form.providerName}
+                    onChange={(e) =>
+                      setForm((current) => ({
+                        ...current,
+                        providerName: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
               </div>
-            ) : null}
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="exam-date">Date</Label>
-                <Input
-                  id="exam-date"
-                  type="date"
-                  className="rounded-xl"
-                  value={form.date}
-                  onChange={(e) =>
-                    setForm((current) => ({ ...current, date: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="provider-name">Provider Name</Label>
-                <Input
-                  id="provider-name"
-                  className="rounded-xl"
-                  placeholder="e.g. Dr. Example"
-                  value={form.providerName}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      providerName: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
 
-            <Separator />
+              <Separator />
 
-            <SectionCard
-              id={getSectionId("historyAndExam")}
-              title="History and Exam"
-              open={!isVeryShort || openSections.historyAndExam}
-              onToggle={isVeryShort ? () => toggleSection("historyAndExam") : undefined}
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("historyAndExam")}
+                title="History and Exam"
+                open={!isVeryShort || openSections.historyAndExam}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("historyAndExam")
+                    : undefined
+                }
+                contentClassName="space-y-4"
+              >
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="patient-concerns">Patient concerns</Label>
@@ -2687,7 +2762,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                         onCheckedChange={(next) =>
                           setForm((current) => ({
                             ...current,
-                            patientPresentsForHygieneNoOtherConcerns: Boolean(next),
+                            patientPresentsForHygieneNoOtherConcerns:
+                              Boolean(next),
                           }))
                         }
                       />
@@ -2798,7 +2874,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`vitals-heart-rate-${readingIndex}`}>
+                            <Label
+                              htmlFor={`vitals-heart-rate-${readingIndex}`}
+                            >
                               Heart Rate
                             </Label>
                             <Input
@@ -2815,7 +2893,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`vitals-time-${readingIndex}`}>Time</Label>
+                            <Label htmlFor={`vitals-time-${readingIndex}`}>
+                              Time
+                            </Label>
                             <Input
                               id={`vitals-time-${readingIndex}`}
                               type="time"
@@ -2833,7 +2913,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                             type="button"
                             variant="outline"
                             className="rounded-xl px-3 py-2 text-xs"
-                            onClick={() => setVitalsReadingTimeToCurrent(readingIndex)}
+                            onClick={() =>
+                              setVitalsReadingTimeToCurrent(readingIndex)
+                            }
                           >
                             Set to now
                           </Button>
@@ -2841,7 +2923,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                             type="button"
                             variant="outline"
                             className="rounded-xl px-3 py-2 text-xs"
-                            onClick={() => updateVitalsReading(readingIndex, { time: "" })}
+                            onClick={() =>
+                              updateVitalsReading(readingIndex, { time: "" })
+                            }
                           >
                             Clear time
                           </Button>
@@ -2860,15 +2944,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     </Button>
                   </div>
                 </div>
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("eoeIoe")}
-              title="EOE / IOE"
-              open={!isVeryShort || openSections.eoeIoe}
-              onToggle={isVeryShort ? () => toggleSection("eoeIoe") : undefined}
-              contentClassName="space-y-6"
-            >
+              <SectionCard
+                id={getSectionId("eoeIoe")}
+                title="EOE / IOE"
+                open={!isVeryShort || openSections.eoeIoe}
+                onToggle={
+                  isVeryShort ? () => toggleSection("eoeIoe") : undefined
+                }
+                contentClassName="space-y-6"
+              >
                 <div className="space-y-4 rounded-3xl border border-slate-200 p-4 dark:border-slate-700">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -2926,28 +3012,20 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                       {form.asymptomaticClickOnOpeningClosing ? (
                         <div className="space-y-2">
-                          <Label>Laterality</Label>
-                          <Select
-                            value={form.asymptomaticClickLaterality}
-                            onValueChange={(asymptomaticClickLaterality) =>
+                          <MultiToggle
+                            label="Laterality"
+                            options={CLICK_LATERALITY_OPTIONS}
+                            selected={extraoralLateralityToSides(
+                              form.asymptomaticClickLaterality,
+                            )}
+                            onChange={(sides) =>
                               setForm((current) => ({
                                 ...current,
-                                asymptomaticClickLaterality,
+                                asymptomaticClickLaterality:
+                                  extraoralSidesToLaterality(sides),
                               }))
                             }
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select laterality" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">None selected</SelectItem>
-                              {CLICK_LATERALITY_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          />
                           <MultiToggle
                             label="Status"
                             options={TMJ_CLICKING_STATUS_OPTIONS}
@@ -2958,6 +3036,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                                 tmjClickingStatus,
                               }))
                             }
+                            singleSelect
                           />
                           <MultiToggle
                             label="On open / close"
@@ -3004,30 +3083,20 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                       {form.asymptomaticLymphNodes ? (
                         <div className="space-y-2">
-                          <Label>Laterality</Label>
-                          <Select
-                            value={form.palpableLymphNodeLaterality}
-                            onValueChange={(
-                              palpableLymphNodeLaterality,
-                            ) =>
+                          <MultiToggle
+                            label="Laterality"
+                            options={CLICK_LATERALITY_OPTIONS}
+                            selected={extraoralLateralityToSides(
+                              form.palpableLymphNodeLaterality,
+                            )}
+                            onChange={(sides) =>
                               setForm((current) => ({
                                 ...current,
-                                palpableLymphNodeLaterality,
+                                palpableLymphNodeLaterality:
+                                  extraoralSidesToLaterality(sides),
                               }))
                             }
-                          >
-                            <SelectTrigger className="rounded-xl">
-                              <SelectValue placeholder="Select laterality" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">None selected</SelectItem>
-                              {CLICK_LATERALITY_OPTIONS.map((option) => (
-                                <SelectItem key={option} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          />
                           <MultiToggle
                             label="Location"
                             options={LYMPH_NODE_LOCATION_OPTIONS}
@@ -3213,18 +3282,24 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }
                   />
                 </div>
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("gingivalDescription")}
-              title="Gingival Description"
-              open={!isVeryShort || openSections.gingivalDescription}
-              onToggle={
-                isVeryShort ? () => toggleSection("gingivalDescription") : undefined
-              }
-              contentClassName="space-y-6"
-            >
-                <div className={isVeryShort ? "space-y-6" : "grid gap-6 xl:grid-cols-2"}>
+              <SectionCard
+                id={getSectionId("gingivalDescription")}
+                title="Gingival Description"
+                open={!isVeryShort || openSections.gingivalDescription}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("gingivalDescription")
+                    : undefined
+                }
+                contentClassName="space-y-6"
+              >
+                <div
+                  className={
+                    isVeryShort ? "space-y-6" : "grid gap-6 xl:grid-cols-2"
+                  }
+                >
                   {Object.entries(FIELD_OPTIONS).map(
                     ([sectionKey, options]) => (
                       <Card
@@ -3267,15 +3342,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     ),
                   )}
                 </div>
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("deposits")}
-              title="Calculus and Biofilm Deposits"
-              open={!isVeryShort || openSections.deposits}
-              onToggle={isVeryShort ? () => toggleSection("deposits") : undefined}
-              contentClassName="grid gap-4 lg:grid-cols-3"
-            >
+              <SectionCard
+                id={getSectionId("deposits")}
+                title="Calculus and Biofilm Deposits"
+                open={!isVeryShort || openSections.deposits}
+                onToggle={
+                  isVeryShort ? () => toggleSection("deposits") : undefined
+                }
+                contentClassName="grid gap-4 lg:grid-cols-3"
+              >
                 <div className={cx(form.plaque.enabled && "lg:col-span-3")}>
                   <DepositsCard
                     title="Plaque"
@@ -3298,7 +3375,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                     placeholder="Describe supragingival/subgingival calculus and affected sites."
                   />
                 </div>
-                <div className={cx(form.extrinsicStain.enabled && "lg:col-span-3")}>
+                <div
+                  className={cx(form.extrinsicStain.enabled && "lg:col-span-3")}
+                >
                   <DepositsCard
                     title="Extrinsic Stain"
                     value={form.extrinsicStain}
@@ -3308,17 +3387,19 @@ export function GingivalDescriptionWebformImportedTemplate({
                     placeholder="Describe generalized or localized stain and specific teeth/surfaces."
                   />
                 </div>
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("periodontalStatus")}
-              title="Periodontal Status"
-              open={!isVeryShort || openSections.periodontalStatus}
-              onToggle={
-                isVeryShort ? () => toggleSection("periodontalStatus") : undefined
-              }
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("periodontalStatus")}
+                title="Periodontal Status"
+                open={!isVeryShort || openSections.periodontalStatus}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("periodontalStatus")
+                    : undefined
+                }
+                contentClassName="space-y-4"
+              >
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Activity status</Label>
@@ -3443,15 +3524,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("cariesRisk")}
-              title="Caries Risk"
-              open={!isVeryShort || openSections.cariesRisk}
-              onToggle={isVeryShort ? () => toggleSection("cariesRisk") : undefined}
-              contentClassName="grid gap-4 md:grid-cols-2"
-            >
+              <SectionCard
+                id={getSectionId("cariesRisk")}
+                title="Caries Risk"
+                open={!isVeryShort || openSections.cariesRisk}
+                onToggle={
+                  isVeryShort ? () => toggleSection("cariesRisk") : undefined
+                }
+                contentClassName="grid gap-4 md:grid-cols-2"
+              >
                 <div className="space-y-2">
                   <Label>Caries risk level</Label>
                   <Select
@@ -3492,15 +3575,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, cariesRiskNotes }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("ohe")}
-              title="Oral Health Education (OHE)"
-              open={!isVeryShort || openSections.ohe}
-              onToggle={isVeryShort ? () => toggleSection("ohe") : undefined}
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("ohe")}
+                title="Oral Health Education (OHE)"
+                open={!isVeryShort || openSections.ohe}
+                onToggle={isVeryShort ? () => toggleSection("ohe") : undefined}
+                contentClassName="space-y-4"
+              >
                 <MultiToggle
                   label="OHE topics"
                   options={OHE_TOPIC_OPTIONS}
@@ -3520,17 +3603,19 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, oheNotes }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("recommendations")}
-              title="Recommendations"
-              open={!isVeryShort || openSections.recommendations}
-              onToggle={
-                isVeryShort ? () => toggleSection("recommendations") : undefined
-              }
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("recommendations")}
+                title="Recommendations"
+                open={!isVeryShort || openSections.recommendations}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("recommendations")
+                    : undefined
+                }
+                contentClassName="space-y-4"
+              >
                 <MultiToggle
                   label="Recommendations"
                   options={RECOMMENDATION_OPTIONS}
@@ -3548,17 +3633,19 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, recommendationsNotes }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("treatmentDoneToday")}
-              title="Treatment Done Today"
-              open={!isVeryShort || openSections.treatmentDoneToday}
-              onToggle={
-                isVeryShort ? () => toggleSection("treatmentDoneToday") : undefined
-              }
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("treatmentDoneToday")}
+                title="Treatment Done Today"
+                open={!isVeryShort || openSections.treatmentDoneToday}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("treatmentDoneToday")
+                    : undefined
+                }
+                contentClassName="space-y-4"
+              >
                 <MultiToggle
                   label="Completed today"
                   options={VISIT_CARE_OPTIONS}
@@ -3581,7 +3668,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                           ? current.treatmentDoneTodayInstrumentationDevices
                           : [],
                       treatmentDoneTodayInstrumentationAreas:
-                        treatmentDoneToday.includes(HAND_POWER_INSTRUMENTATION_OPTION)
+                        treatmentDoneToday.includes(
+                          HAND_POWER_INSTRUMENTATION_OPTION,
+                        )
                           ? current.treatmentDoneTodayInstrumentationAreas
                           : [],
                     }))
@@ -3629,15 +3718,19 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("nextAppointment")}
-              title="Next Appointment"
-              open={!isVeryShort || openSections.nextAppointment}
-              onToggle={isVeryShort ? () => toggleSection("nextAppointment") : undefined}
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("nextAppointment")}
+                title="Next Appointment"
+                open={!isVeryShort || openSections.nextAppointment}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("nextAppointment")
+                    : undefined
+                }
+                contentClassName="space-y-4"
+              >
                 <div className="flex flex-wrap gap-3">
                   <Button
                     type="button"
@@ -3679,7 +3772,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                           ? current.nextAppointmentInstrumentationDevices
                           : [],
                       nextAppointmentInstrumentationAreas:
-                        nextAppointment.includes(HAND_POWER_INSTRUMENTATION_OPTION)
+                        nextAppointment.includes(
+                          HAND_POWER_INSTRUMENTATION_OPTION,
+                        )
                           ? current.nextAppointmentInstrumentationAreas
                           : [],
                     }))
@@ -3724,23 +3819,30 @@ export function GingivalDescriptionWebformImportedTemplate({
                     setForm((current) => ({ ...current, nextAppointmentNotes }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("localAnesthesia")}
-              title="Local Anesthesia"
-              open={!isVeryShort || openSections.localAnesthesia}
-              onToggle={isVeryShort ? () => toggleSection("localAnesthesia") : undefined}
-              contentClassName="space-y-4"
-            >
+              <SectionCard
+                id={getSectionId("localAnesthesia")}
+                title="Local Anesthesia"
+                open={!isVeryShort || openSections.localAnesthesia}
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("localAnesthesia")
+                    : undefined
+                }
+                contentClassName="space-y-4"
+              >
                 <MultiToggle
                   label="Local anesthesia toggles"
                   options={["No C/I to LA"]}
                   selected={[
-                    form.localAnesthesiaNoContraindication ? "No C/I to LA" : "",
+                    form.localAnesthesiaNoContraindication
+                      ? "No C/I to LA"
+                      : "",
                   ].filter(Boolean)}
                   onChange={(selected) => {
-                    const hasNoContraindication = selected.includes("No C/I to LA");
+                    const hasNoContraindication =
+                      selected.includes("No C/I to LA");
 
                     setForm((current) => ({
                       ...current,
@@ -3779,9 +3881,10 @@ export function GingivalDescriptionWebformImportedTemplate({
                             onClick={() =>
                               setForm((current) => ({
                                 ...current,
-                                localAnesthesiaEntries: current.localAnesthesiaEntries.filter(
-                                  (_, entryIndex) => entryIndex !== index,
-                                ),
+                                localAnesthesiaEntries:
+                                  current.localAnesthesiaEntries.filter(
+                                    (_, entryIndex) => entryIndex !== index,
+                                  ),
                               }))
                             }
                           >
@@ -3800,9 +3903,13 @@ export function GingivalDescriptionWebformImportedTemplate({
                                 updateLocalAnesthesiaEntry(index, {
                                   route,
                                   injectionType:
-                                    route === "Injection" ? entry.injectionType : "",
+                                    route === "Injection"
+                                      ? entry.injectionType
+                                      : "",
                                   applicationType:
-                                    route === "Topical" ? entry.applicationType : "",
+                                    route === "Topical"
+                                      ? entry.applicationType
+                                      : "",
                                   anestheticProduct: productOptions.includes(
                                     entry.anestheticProduct,
                                   )
@@ -3817,11 +3924,13 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="">None selected</SelectItem>
-                                {LOCAL_ANESTHESIA_ROUTE_OPTIONS.map((option) => (
-                                  <SelectItem key={option} value={option}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
+                                {LOCAL_ANESTHESIA_ROUTE_OPTIONS.map(
+                                  (option) => (
+                                    <SelectItem key={option} value={option}>
+                                      {option}
+                                    </SelectItem>
+                                  ),
+                                )}
                               </SelectContent>
                             </Select>
                           </div>
@@ -3917,7 +4026,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="">None selected</SelectItem>
-                                {getLocalAnestheticProductOptions(entry.route).map((option) => (
+                                {getLocalAnestheticProductOptions(
+                                  entry.route,
+                                ).map((option) => (
                                   <SelectItem key={option} value={option}>
                                     {option}
                                   </SelectItem>
@@ -4031,7 +4142,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                         </div>
                         {shouldHighlightLocalAnesthesiaAssessment ? (
                           <p className="text-sm text-slate-700 dark:text-slate-300">
-                            Complete the post-anesthetic assessment before finishing the note.
+                            Complete the post-anesthetic assessment before
+                            finishing the note.
                           </p>
                         ) : null}
                       </div>
@@ -4052,9 +4164,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                         onChange={(selected) =>
                           setForm((current) => ({
                             ...current,
-                            localAnesthesiaNoAdverseReactions: selected.includes(
-                              "No adverse reactions noted",
-                            ),
+                            localAnesthesiaNoAdverseReactions:
+                              selected.includes("No adverse reactions noted"),
                             localAnesthesiaAdequateAchieved: selected.includes(
                               "Adequate anesthesia achieved",
                             ),
@@ -4076,98 +4187,103 @@ export function GingivalDescriptionWebformImportedTemplate({
                     </div>
                   </div>
                 ) : null}
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("disposition")}
-              title="Continuity of Care"
-              open={!isVeryShort || openSections.disposition}
-              onToggle={isVeryShort ? () => toggleSection("disposition") : undefined}
-              contentClassName="space-y-2"
-            >
+              <SectionCard
+                id={getSectionId("disposition")}
+                title="Continuity of Care"
+                open={!isVeryShort || openSections.disposition}
+                onToggle={
+                  isVeryShort ? () => toggleSection("disposition") : undefined
+                }
+                contentClassName="space-y-2"
+              >
                 <Label>Hygiene follow-up interval</Label>
                 <div className="space-y-4">
                   {Array.isArray(form.disposition)
                     ? form.disposition.map((entry) => {
-                    if (typeof entry === "string") return null;
+                        if (typeof entry === "string") return null;
 
-                    const optionId = `disposition-${entry.key}`;
-                    const intervalId = `${optionId}-interval`;
-                    return (
-                      <div
-                        key={entry.key}
-                        className={cx(
-                          "space-y-3 rounded-2xl border p-4 transition-colors",
-                          entry.enabled
-                            ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
-                            : "border-slate-200 dark:border-slate-700",
-                        )}
-                      >
-                        <div className="flex items-center gap-3">
-                          <Checkbox
-                            id={optionId}
-                            checked={entry.enabled}
-                            onCheckedChange={(next) =>
-                              setDispositionEntry(entry.key, {
-                                enabled: Boolean(next),
-                              })
-                            }
-                          />
-                          <Label htmlFor={optionId}>{entry.label}</Label>
-                        </div>
-                        <div className="grid gap-3 md:grid-cols-2 md:pl-8">
-                          <div className="space-y-2">
-                            <Label htmlFor={intervalId}>Interval</Label>
-                            <Input
-                              id={intervalId}
-                              className="rounded-xl"
-                              placeholder="e.g. 4-6"
-                              value={entry.interval}
-                              onChange={(e) =>
-                                setDispositionEntry(entry.key, {
-                                  interval: e.target.value,
-                                })
-                              }
-                            />
+                        const optionId = `disposition-${entry.key}`;
+                        const intervalId = `${optionId}-interval`;
+                        return (
+                          <div
+                            key={entry.key}
+                            className={cx(
+                              "space-y-3 rounded-2xl border p-4 transition-colors",
+                              entry.enabled
+                                ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+                                : "border-slate-200 dark:border-slate-700",
+                            )}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Checkbox
+                                id={optionId}
+                                checked={entry.enabled}
+                                onCheckedChange={(next) =>
+                                  setDispositionEntry(entry.key, {
+                                    enabled: Boolean(next),
+                                  })
+                                }
+                              />
+                              <Label htmlFor={optionId}>{entry.label}</Label>
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-2 md:pl-8">
+                              <div className="space-y-2">
+                                <Label htmlFor={intervalId}>Interval</Label>
+                                <Input
+                                  id={intervalId}
+                                  className="rounded-xl"
+                                  placeholder="e.g. 4-6"
+                                  value={entry.interval}
+                                  onChange={(e) =>
+                                    setDispositionEntry(entry.key, {
+                                      interval: e.target.value,
+                                    })
+                                  }
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Unit</Label>
+                                <Select
+                                  value={entry.unit}
+                                  onValueChange={(unit) =>
+                                    setDispositionEntry(entry.key, { unit })
+                                  }
+                                >
+                                  <SelectTrigger className="rounded-xl">
+                                    <SelectValue placeholder="Select unit" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {DISPOSITION_UNIT_OPTIONS.map((unit) => (
+                                      <SelectItem key={unit} value={unit}>
+                                        {unit.charAt(0).toUpperCase() +
+                                          unit.slice(1)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            <Label>Unit</Label>
-                            <Select
-                              value={entry.unit}
-                              onValueChange={(unit) =>
-                                setDispositionEntry(entry.key, { unit })
-                              }
-                            >
-                              <SelectTrigger className="rounded-xl">
-                                <SelectValue placeholder="Select unit" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {DISPOSITION_UNIT_OPTIONS.map((unit) => (
-                                  <SelectItem key={unit} value={unit}>
-                                    {unit.charAt(0).toUpperCase() + unit.slice(1)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
+                        );
+                      })
                     : null}
                 </div>
-            </SectionCard>
+              </SectionCard>
 
-            <SectionCard
-              id={getSectionId("additionalClinicalDocumentation")}
-              title="Additional Clinical Documentation"
-              open={!isVeryShort || openSections.additionalClinicalDocumentation}
-              onToggle={
-                isVeryShort
-                  ? () => toggleSection("additionalClinicalDocumentation")
-                  : undefined
-              }
-            >
+              <SectionCard
+                id={getSectionId("additionalClinicalDocumentation")}
+                title="Additional Clinical Documentation"
+                open={
+                  !isVeryShort || openSections.additionalClinicalDocumentation
+                }
+                onToggle={
+                  isVeryShort
+                    ? () => toggleSection("additionalClinicalDocumentation")
+                    : undefined
+                }
+              >
                 <SectionTextarea
                   id="other-clinical-findings"
                   label="Other clinical findings"
@@ -4180,11 +4296,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                     }))
                   }
                 />
-            </SectionCard>
+              </SectionCard>
 
-            {!isVeryShort ? actionButtons : null}
-          </CardContent>
-        </Card>
+              {!isVeryShort ? actionButtons : null}
+            </CardContent>
+          </Card>
         </div>
         {isVeryShort ? (
           <div className="space-y-6 2xl:sticky 2xl:top-6">{summaryPanel}</div>

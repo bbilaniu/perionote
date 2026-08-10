@@ -218,9 +218,15 @@ export function FixedChoiceListbox<TValue extends string>({
                       ? "bg-sky-100 text-sky-950 dark:bg-sky-900 dark:text-sky-50"
                       : "hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
-                  onPointerDown={(event) => event.preventDefault()}
+                  onPointerDown={(event) => {
+                    if (!event.isPrimary || event.button !== 0) return;
+                    event.preventDefault();
+                    selectOption(index);
+                  }}
                   onPointerEnter={() => setActiveIndex(index)}
-                  onClick={() => selectOption(index)}
+                  onClick={(event) => {
+                    if (event.detail === 0) selectOption(index);
+                  }}
                 >
                   <span>{option.label}</span>
                   {selected ? (
