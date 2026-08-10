@@ -1,11 +1,11 @@
 "use client";
 
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
+import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { isLocalAnestheticCatalogueMetadata } from "@/lib/catalogues/catalogue";
 import {
-  localAnesthesiaAreas,
   localAnesthesiaInjectionTypes,
   localAnesthesiaTopicalApplicationTypes,
   type LocalAnesthesiaEntry,
@@ -35,7 +35,7 @@ function newEntry(route: LocalAnesthesiaRoute): LocalAnesthesiaEntry {
     }`,
     route,
     administrationType: "",
-    area: route === "rinse" ? "full mouth" : "",
+    toothAreas: route === "rinse" ? ["full mouth"] : [],
     product: "",
     amountMl: route === "injection" ? "1.8" : "",
     durationSeconds: "",
@@ -196,7 +196,8 @@ export function LocalAnesthesiaControl({
                         updateEntry(entry.id, {
                           route,
                           administrationType: "",
-                          area: route === "rinse" ? "full mouth" : "",
+                          toothAreas:
+                            route === "rinse" ? ["full mouth"] : [],
                           product: "",
                           catalogueItemId: undefined,
                           amountMl: route === "injection" ? "1.8" : "",
@@ -250,23 +251,17 @@ export function LocalAnesthesiaControl({
                     </label>
                   )}
 
-                  <label className="text-sm font-medium lg:col-span-3">
-                    Area
-                    <select
-                      className={`mt-1 ${inputClass}`}
-                      value={entry.area}
-                      onChange={(event) =>
-                        updateEntry(entry.id, { area: event.target.value })
+                  <div className="text-sm lg:col-span-3">
+                    <ClinicalLocationMultiCombobox
+                      id={`local-anesthesia-${entry.id}-tooth-area`}
+                      label="Tooth/area"
+                      preset={`local-anesthesia-${entry.route}`}
+                      values={entry.toothAreas}
+                      onChange={(toothAreas) =>
+                        updateEntry(entry.id, { toothAreas })
                       }
-                    >
-                      <option value="">None selected</option>
-                      {localAnesthesiaAreas.map((area) => (
-                        <option key={area} value={area}>
-                          {area}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                    />
+                  </div>
 
                   <label className="text-sm font-medium md:col-span-2 lg:col-span-3">
                     Anesthetic product

@@ -219,7 +219,7 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
       id: "fixture-local-anesthesia-1",
       route: "rinse",
       administrationType: "",
-      area: "full mouth",
+      toothAreas: ["full mouth"],
       product: "Dyclonine 1% rinse",
       catalogueItemId:
         "seed.hygiene-treatment.anesthetic.dyclonine-rinse",

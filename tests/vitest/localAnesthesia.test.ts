@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createEmptyLocalAnesthesiaValue,
   formatLocalAnesthesiaSummary,
+  localAnesthesiaLocationChoices,
 } from "@/lib/templates/localAnesthesia";
 
 describe("local anesthesia", () => {
@@ -11,6 +12,37 @@ describe("local anesthesia", () => {
 
     expect(value.localAnesthesiaNoContraindication).toBe(false);
     expect(formatLocalAnesthesiaSummary(value)).toBe("");
+  });
+
+  it("defines route-specific preset locations", () => {
+    expect(localAnesthesiaLocationChoices.injection).toEqual([
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+    ]);
+    expect(localAnesthesiaLocationChoices.topical).toEqual([
+      "full mouth",
+      "maxilla",
+      "mandible",
+      "Q1",
+      "Q2",
+      "Q3",
+      "Q4",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+    ]);
+    expect(localAnesthesiaLocationChoices.rinse).toEqual(["full mouth"]);
   });
 
   it("formats a Dyclonine rinse with timing, duration, total, and assessment", () => {
@@ -22,7 +54,7 @@ describe("local anesthesia", () => {
             id: "rinse",
             route: "rinse",
             administrationType: "",
-            area: "full mouth",
+            toothAreas: ["full mouth"],
             product: "Dyclonine 1% rinse",
             amountMl: "5",
             durationSeconds: "60",

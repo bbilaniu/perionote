@@ -234,7 +234,7 @@ const adultHygieneDraftArrayItemShapes = {
     id: "",
     route: "injection",
     administrationType: "",
-    area: "",
+    toothAreas: [],
     product: "",
     amountMl: "",
     durationSeconds: "",
@@ -253,8 +253,7 @@ function isEmptyAdultHygieneDraft(form: AdultHygiene2026Form): boolean {
       rda: "",
       class5IndicatorStatus: "not-documented",
       ppeStatementApplies: false,
-    }) ===
-    emptyAdultHygieneDraft
+    }) === emptyAdultHygieneDraft
   );
 }
 
@@ -2099,8 +2098,8 @@ export function PeriodontalClassificationControl({
           <div className="border-l-4 border-amber-500 pl-4">
             <h4 className="font-semibold">Possible diagnosis categories</h4>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Based only on findings documented so far. No diagnosis is
-              selected or changed by these suggestions.
+              Based only on findings documented so far. No diagnosis is selected
+              or changed by these suggestions.
             </p>
             {diagnosisCandidates.possibilities.length ? (
               <ul className="mt-3 space-y-3">
@@ -3008,8 +3007,7 @@ export function AdultHygiene2026Template({
     }
     setForm((current) =>
       !current.mieleCodes.trim() ||
-      (current.class5IndicatorStatus === "yes" &&
-        current.ppeStatementApplies)
+      (current.class5IndicatorStatus === "yes" && current.ppeStatementApplies)
         ? current
         : {
             ...current,
@@ -3017,11 +3015,7 @@ export function AdultHygiene2026Template({
             ppeStatementApplies: true,
           },
     );
-  }, [
-    form.class5IndicatorStatus,
-    form.mieleCodes,
-    form.ppeStatementApplies,
-  ]);
+  }, [form.class5IndicatorStatus, form.mieleCodes, form.ppeStatementApplies]);
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -3197,6 +3191,7 @@ export function AdultHygiene2026Template({
       })),
       localAnesthesiaEntries: fixture.localAnesthesiaEntries.map((entry) => ({
         ...entry,
+        toothAreas: [...entry.toothAreas],
       })),
       treatmentOptions: fixture.treatmentOptions.map((entry) => ({ ...entry })),
       treatmentPlan: fixture.treatmentPlan.map((entry) => ({ ...entry })),
@@ -3432,7 +3427,8 @@ export function AdultHygiene2026Template({
   function applyRecareExam() {
     if (
       form.treatmentCompleted.some(
-        (entry) => treatmentCompletedEntryIdentity(entry) === "procedure:recare-exam",
+        (entry) =>
+          treatmentCompletedEntryIdentity(entry) === "procedure:recare-exam",
       )
     ) {
       return;
@@ -4402,7 +4398,7 @@ export function AdultHygiene2026Template({
           <Section title="Treatment">
             <TreatmentEntryList
               id="adult-hygiene-treatment-options"
-              label="Treatment options discussed"
+              label="Dental treatment options discussed"
               addLabel="Add treatment option"
               entries={form.treatmentOptions}
               onAdd={() =>
@@ -4426,7 +4422,7 @@ export function AdultHygiene2026Template({
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className={`${buttonClass} border border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800`}
+                  className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
                   onClick={() =>
                     updateField("treatmentPlan", [
                       ...form.treatmentPlan,
@@ -4464,7 +4460,7 @@ export function AdultHygiene2026Template({
                     ])
                   }
                 >
-                  Add options to coordinated plan
+                  Add options above to coordinated plan
                 </button>
               </div>
               <TreatmentEntryList

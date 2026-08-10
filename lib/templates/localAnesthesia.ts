@@ -4,7 +4,7 @@ export interface LocalAnesthesiaEntry {
   id: string;
   route: LocalAnesthesiaRoute;
   administrationType: string;
-  area: string;
+  toothAreas: string[];
   product: string;
   catalogueItemId?: string;
   amountMl: string;
@@ -35,13 +35,36 @@ export const localAnesthesiaTopicalApplicationTypes = [
   "Sulcular application",
 ] as const;
 
-export const localAnesthesiaAreas = [
-  "Q1",
-  "Q2",
-  "Q3",
-  "Q4",
-  "full mouth",
-] as const;
+export const localAnesthesiaLocationChoices = {
+  injection: [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+  ],
+  topical: [
+    "full mouth",
+    "maxilla",
+    "mandible",
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+  ],
+  rinse: ["full mouth"],
+} as const satisfies Record<LocalAnesthesiaRoute, readonly string[]>;
 
 export function createEmptyLocalAnesthesiaValue(): LocalAnesthesiaValue {
   return {
@@ -75,7 +98,8 @@ export function formatLocalAnesthesiaSummary(
   for (const entry of value.localAnesthesiaEntries) {
     const product = trimmed(entry.product);
     const amount = trimmed(entry.amountMl);
-    const area = trimmed(entry.area);
+    const toothAreas = entry.toothAreas.map(trimmed).filter(Boolean);
+    const area = toothAreas.join(", ");
     if (!product || !amount) continue;
     const time = trimmed(entry.timeAdministered);
     const administeredAt = time ? ` (at ${formatClockTime(time)})` : "";

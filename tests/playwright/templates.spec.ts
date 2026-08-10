@@ -896,10 +896,20 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
   ).toHaveValue("5");
   await expect(
     entry.getByRole("spinbutton", {
-      name: "Duration (seconds)",
+      name: "Duration (s)",
       exact: true,
     }),
   ).toHaveValue("60");
+  await expect(
+    entry.getByRole("button", { name: "Tooth/area", exact: true }),
+  ).toContainText("full mouth");
+  const routeTop = await entry
+    .getByRole("combobox", { name: "Route", exact: true })
+    .evaluate((element) => element.getBoundingClientRect().top);
+  const toothAreaTop = await entry
+    .getByRole("button", { name: "Tooth/area", exact: true })
+    .evaluate((element) => element.getBoundingClientRect().top);
+  expect(Math.abs(routeTop - toothAreaTop)).toBeLessThanOrEqual(1);
   await expect(
     localAnesthesia.getByText(
       "Confirm No C/I to LA and complete the post-anesthetic assessment before finishing the note.",
@@ -938,6 +948,65 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
   await expect(page.locator("#adult-hygiene-summary")).not.toContainText(
     "Local anesthetic administered:",
   );
+});
+
+test("2026 Local Anesthesia limits preset Tooth/area choices by route", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  const entries = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+
+  for (const route of ["injection", "topical", "rinse"] as const) {
+    await localAnesthesia
+      .getByRole("button", { name: `Add ${route} entry`, exact: true })
+      .click();
+  }
+
+  const expectedChoices = [
+    ["Q1", "Q2", "Q4", "Q3", "S1", "S2", "S3", "S6", "S5", "S4"],
+    [
+      "full mouth",
+      "maxilla",
+      "mandible",
+      "Q1",
+      "Q2",
+      "Q4",
+      "Q3",
+      "S1",
+      "S2",
+      "S3",
+      "S6",
+      "S5",
+      "S4",
+    ],
+    ["full mouth"],
+  ];
+
+  for (const [index, choices] of expectedChoices.entries()) {
+    const entry = entries.nth(index);
+    await entry
+      .getByRole("button", { name: "Tooth/area", exact: true })
+      .click();
+    const standardChoices = entry.getByRole("group", {
+      name: "Standard Tooth/area choices",
+      exact: true,
+    });
+    await expect(standardChoices.locator("label")).toHaveText(choices);
+    await expect(
+      entry.getByRole("textbox", {
+        name: "Search or add custom Tooth/area",
+        exact: true,
+      }),
+    ).toBeVisible();
+    await entry.getByRole("button", { name: "Done", exact: true }).click();
+  }
 });
 
 test("2026 Adult Hygiene offers transparent periodontal and caries suggestions", async ({

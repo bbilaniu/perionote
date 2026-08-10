@@ -56,7 +56,7 @@ export function FixedChoiceMultiCombobox({
   values,
   onChange,
   customPlaceholder = "Search or add a value",
-  customHelpText = "Custom entries apply to this note only.",
+  customHelpText = "",
   showSelectedChips = true,
   allowCustomValues = true,
 }: {
