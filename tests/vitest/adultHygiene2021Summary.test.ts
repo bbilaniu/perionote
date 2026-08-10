@@ -156,7 +156,7 @@ Date Booked: 2026-11-15`);
     );
   });
 
-  it("charts status for any assessed periodontal diagnosis without carrying stage or grade", () => {
+  it("omits periodontitis status for a non-periodontitis diagnosis", () => {
     const form = createEmptyAdultHygiene2021Form();
     form.periodontalClassification = {
       ...form.periodontalClassification,
@@ -168,12 +168,8 @@ Date Booked: 2026-11-15`);
     };
 
     const summary = buildAdultHygiene2021Summary(form);
-    expect(summary).toContain(
-      "Periodontal status: Periodontal disease stability."
-    );
-    expect(summary).toContain(
-      "Periodontal status comment: Clinician-confirmed current status."
-    );
+    expect(summary).not.toContain("Periodontal status:");
+    expect(summary).not.toContain("Periodontal status comment:");
     expect(summary).not.toMatch(/Stage II|Grade B/);
   });
 

@@ -407,7 +407,7 @@ export function formatPeriodontalClassification(
       classification.grade,
   );
   const statusCanBeCharted = Boolean(
-    classification.diagnosis &&
+    classification.diagnosis === "periodontitis" &&
       classification.status &&
       isPeriodontalStatusCompatibleWithContext(
         classification.status,

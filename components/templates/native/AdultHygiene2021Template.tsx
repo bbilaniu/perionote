@@ -2025,9 +2025,10 @@ export function PeriodontalClassificationControl({
                   ? {
                       stage: "",
                       grade: "",
+                      status: "",
+                      statusComment: "",
                     }
                   : {}),
-                ...(!diagnosis ? { status: "", statusComment: "" } : {}),
               })
             }
           />
@@ -2300,26 +2301,28 @@ export function PeriodontalClassificationControl({
             </section>
           ) : null}
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <FixedChoiceListbox
-              id="adult-hygiene-periodontal-status"
-              label="Current periodontal status"
-              value={displayedPeriodontalStatus}
-              options={compatiblePeriodontalStatusChoices}
-              onChange={(status) =>
-                update({
-                  status,
-                  ...(!status ? { statusComment: "" } : {}),
-                })
-              }
-            />
-            <TextField
-              id="adult-hygiene-periodontal-status-comment"
-              label="Periodontal status comment"
-              value={value.statusComment}
-              onChange={(statusComment) => update({ statusComment })}
-            />
-          </div>
+          {isPeriodontitisDiagnosis ? (
+            <div className="grid gap-3 md:grid-cols-2">
+              <FixedChoiceListbox
+                id="adult-hygiene-periodontal-status"
+                label="Current periodontal status"
+                value={displayedPeriodontalStatus}
+                options={compatiblePeriodontalStatusChoices}
+                onChange={(status) =>
+                  update({
+                    status,
+                    ...(!status ? { statusComment: "" } : {}),
+                  })
+                }
+              />
+              <TextField
+                id="adult-hygiene-periodontal-status-comment"
+                label="Periodontal status comment"
+                value={value.statusComment}
+                onChange={(statusComment) => update({ statusComment })}
+              />
+            </div>
+          ) : null}
         </fieldset>
       ) : null}
     </div>

@@ -103,6 +103,20 @@ TMJ: WNL.
     );
   });
 
+  it("omits stale periodontitis status for a non-periodontitis diagnosis", () => {
+    const form = createEmptyAdultHygiene2026Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "gingivitis",
+      status: "stable",
+      statusComment: "Legacy status that no longer applies",
+    };
+
+    const summary = buildAdultHygiene2026Summary(form);
+    expect(summary).not.toContain("Periodontal status:");
+    expect(summary).not.toContain("Periodontal status comment:");
+  });
+
   it("composes complete, hygiene, and recare notes from one encounter", () => {
     const complete = buildAdultHygiene2026Summary(adultHygiene2026Fixture, {
       output: "complete",

@@ -1140,7 +1140,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .getByLabel("Periodontal status comment")
     .fill("Stable on current maintenance interval");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
+    /Current periodontal condition: HEALTH - SUCCESSFULLY TREATED, STABLE PERIODONTITIS PATIENT[\s\S]*Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
   );
 
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
@@ -1149,15 +1149,12 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .click();
   await expect(
     page.getByLabel("Current periodontal status", { exact: true })
-  ).toBeVisible();
-  await expect(
-    page.locator("#adult-hygiene-periodontal-status")
-  ).toHaveAttribute("data-value", "stable");
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
-  ).toHaveValue("Stable on current maintenance interval");
-  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal status: Periodontal disease stability\.[\s\S]*Periodontal status comment: Stable on current maintenance interval\./
+  ).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
+    /Periodontal status:/
   );
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
@@ -1165,20 +1162,20 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     .click();
   await expect(
     page.getByLabel("Current periodontal status", { exact: true })
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
-  ).toHaveValue("Stable on current maintenance interval");
+  ).toHaveCount(0);
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
     .getByRole("option", { name: "Other periodontal condition", exact: true })
     .click();
   await expect(
     page.getByLabel("Current periodontal status", { exact: true })
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByLabel("Periodontal status comment", { exact: true })
-  ).toHaveValue("Stable on current maintenance interval");
+  ).toHaveCount(0);
   await page.locator("#adult-hygiene-periodontal-diagnosis").click();
   await page
     .getByRole("option", { name: "Not assessed", exact: true })
