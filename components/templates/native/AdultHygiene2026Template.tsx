@@ -206,6 +206,26 @@ const stageEvidenceGroups = [
 ] as const;
 const adultHygieneDiscardWarning =
   "Clear all entered 2026 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const adolescentHygieneDiscardWarning =
+  "Clear all entered 2026 Adolescent Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+
+export type Hygiene2026Variant = "adult" | "adolescent";
+
+const outputChoicesByVariant = {
+  adult: [
+    ["complete", "Complete"],
+    ["hygiene", "Hygiene"],
+    ["recare", "Recare"],
+  ],
+  adolescent: [
+    ["complete", "Combined"],
+    ["recare", "Dentist"],
+    ["hygiene", "Hygienist"],
+  ],
+} as const satisfies Record<
+  Hygiene2026Variant,
+  readonly (readonly [AdultHygiene2026Output, string])[]
+>;
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2026Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
@@ -3015,7 +3035,18 @@ async function writeClipboard(value: string): Promise<boolean> {
 export function AdultHygiene2026Template({
   fixture,
   presentation,
-}: InteractiveTemplateProps<AdultHygiene2026Form>) {
+  variant = "adult",
+}: InteractiveTemplateProps<AdultHygiene2026Form> & {
+  variant?: Hygiene2026Variant;
+}) {
+  const isAdolescent = variant === "adolescent";
+  const templateId = isAdolescent
+    ? "adolescent-hygiene-2026"
+    : "adult-hygiene-2026";
+  const discardWarning = isAdolescent
+    ? adolescentHygieneDiscardWarning
+    : adultHygieneDiscardWarning;
+  const outputChoices = outputChoicesByVariant[variant];
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
     class5IndicatorStatus: "yes",
@@ -3035,7 +3066,7 @@ export function AdultHygiene2026Template({
     useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
-    templateId: "adult-hygiene-2026",
+    templateId,
     form,
     startedAt,
     isEmpty: isEmptyAdultHygieneDraft,
@@ -3126,11 +3157,11 @@ export function AdultHygiene2026Template({
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adultHygieneDiscardWarning;
+      event.returnValue = discardWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, []);
+  }, [discardWarning]);
 
   const summaries = useMemo(
     () => ({
@@ -3150,6 +3181,8 @@ export function AdultHygiene2026Template({
     [form, startedAt],
   );
   const summary = summaries[outputMode];
+  const selectedOutputLabel =
+    outputChoices.find(([value]) => value === outputMode)?.[1] ?? "Note";
   const cariesRiskSuggestion = suggestAdultCariesRisk(form.cariesRiskFactors);
   const occlusalSplintState = resolveOcclusalSplintState(form);
 
@@ -3224,11 +3257,7 @@ export function AdultHygiene2026Template({
     }
     const copied = await writeClipboard(summaries[mode]);
     const outputLabel =
-      mode === "complete"
-        ? "Complete"
-        : mode === "hygiene"
-        ? "Hygiene"
-        : "Recare";
+      outputChoices.find(([value]) => value === mode)?.[1] ?? "Note";
     setCopyMessage(
       copied
         ? draftSaveResult === "failed"
@@ -3564,7 +3593,7 @@ export function AdultHygiene2026Template({
   }
 
   function resetForm() {
-    if (!window.confirm(adultHygieneDiscardWarning)) return;
+    if (!window.confirm(discardWarning)) return;
     localDraft.beginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
@@ -3627,6 +3656,41 @@ export function AdultHygiene2026Template({
       ...form.treatmentCompleted.slice(radiographCount),
     ]);
   }
+
+  const recordsControls = (
+    <>
+      <RadiographsTakenControl
+        values={form.radiographs}
+        onChange={(radiographs) => {
+          setForm((current) => ({
+            ...current,
+            radiographs,
+            treatmentCompleted: syncRadiographTreatmentEntries(
+              current.treatmentCompleted,
+              radiographs,
+            ),
+          }));
+          setCopyMessage("");
+        }}
+      />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <FixedChoiceListbox
+          id="adult-hygiene-intraoral-photos-status"
+          label="Intraoral photos"
+          value={form.intraoralPhotosStatus}
+          options={documentationStatusOptions}
+          onChange={(value) => updateField("intraoralPhotosStatus", value)}
+        />
+        <TextField
+          id="adult-hygiene-intraoral-photos-details"
+          label="Intraoral photos details"
+          value={form.intraoralPhotosDetails}
+          onChange={(value) => updateField("intraoralPhotosDetails", value)}
+          placeholder="Optional details"
+        />
+      </div>
+    </>
+  );
 
   return (
     <div className="space-y-6">
@@ -3929,42 +3993,9 @@ export function AdultHygiene2026Template({
             </fieldset>
           </Section>
 
-          <Section title="Records">
-            <RadiographsTakenControl
-              values={form.radiographs}
-              onChange={(radiographs) => {
-                setForm((current) => ({
-                  ...current,
-                  radiographs,
-                  treatmentCompleted: syncRadiographTreatmentEntries(
-                    current.treatmentCompleted,
-                    radiographs,
-                  ),
-                }));
-                setCopyMessage("");
-              }}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-intraoral-photos-status"
-                label="Intraoral photos"
-                value={form.intraoralPhotosStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("intraoralPhotosStatus", value)
-                }
-              />
-              <TextField
-                id="adult-hygiene-intraoral-photos-details"
-                label="Intraoral photos details"
-                value={form.intraoralPhotosDetails}
-                onChange={(value) =>
-                  updateField("intraoralPhotosDetails", value)
-                }
-                placeholder="Optional details"
-              />
-            </div>
-          </Section>
+          {!isAdolescent ? (
+            <Section title="Records">{recordsControls}</Section>
+          ) : null}
 
           <Section title="Patient Concerns and Hygiene Findings">
             <CatalogueMultiCombobox
@@ -3989,6 +4020,7 @@ export function AdultHygiene2026Template({
               checked={form.listChiefConcerns}
               onChange={(value) => updateField("listChiefConcerns", value)}
             />
+            {isAdolescent ? recordsControls : null}
             <TextareaField
               id="adult-hygiene-area-of-concern"
               label="Hygiene area of concern"
@@ -4767,6 +4799,34 @@ export function AdultHygiene2026Template({
             />
           </Section>
 
+          {isAdolescent ? (
+            <Section title="Communication with Parent or Legal Guardian">
+              <div className="grid gap-4 md:grid-cols-2">
+                <FixedChoiceListbox
+                  id="adolescent-hygiene-2026-guardian-communication"
+                  label="Information relayed"
+                  value={
+                    form.guardianCommunicationStatus ?? "not-documented"
+                  }
+                  options={documentationStatusOptions}
+                  onChange={(value) =>
+                    updateField("guardianCommunicationStatus", value)
+                  }
+                />
+                {form.guardianCommunicationStatus === "yes" ? (
+                  <TextField
+                    id="adolescent-hygiene-2026-guardian-communication-details"
+                    label="Communication details"
+                    value={form.guardianCommunicationDetails ?? ""}
+                    onChange={(value) =>
+                      updateField("guardianCommunicationDetails", value)
+                    }
+                  />
+                ) : null}
+              </div>
+            </Section>
+          ) : null}
+
           <Section title="Intervals and Follow-up">
             <div className="grid gap-3 md:grid-cols-2">
               <CatalogueCombobox
@@ -4848,17 +4908,11 @@ export function AdultHygiene2026Template({
             <fieldset className="mt-4 space-y-2">
               <legend className="text-sm font-semibold">Note output</legend>
               <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    ["complete", "Complete"],
-                    ["hygiene", "Hygiene"],
-                    ["recare", "Recare"],
-                  ] as const
-                ).map(([value, label]) => (
+                {outputChoices.map(([value, label]) => (
                   <NativeChoiceControl
                     key={value}
                     type="radio"
-                    name="adult-hygiene-note-output"
+                    name={`${templateId}-note-output`}
                     checked={outputMode === value}
                     className="px-2"
                     onChange={() => {
@@ -4872,7 +4926,7 @@ export function AdultHygiene2026Template({
               </div>
             </fieldset>
             <label className="sr-only" htmlFor="adult-hygiene-summary">
-              Generated 2026 {outputMode} note
+              Generated 2026 {selectedOutputLabel.toLowerCase()} note
             </label>
             <textarea
               id="adult-hygiene-summary"
@@ -4887,7 +4941,7 @@ export function AdultHygiene2026Template({
                 className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
                 disabled={!startedAt}
               >
-                Copy {outputMode} note
+                Copy {selectedOutputLabel.toLowerCase()} note
               </button>
               <button
                 type="button"
