@@ -59,6 +59,8 @@ export function FixedChoiceMultiCombobox({
   customHelpText = "",
   showSelectedChips = true,
   allowCustomValues = true,
+  emptyLabel,
+  truncateTrigger = false,
 }: {
   id: string;
   label: string;
@@ -70,6 +72,8 @@ export function FixedChoiceMultiCombobox({
   customHelpText?: string;
   showSelectedChips?: boolean;
   allowCustomValues?: boolean;
+  emptyLabel?: string;
+  truncateTrigger?: boolean;
 }) {
   const generatedId = useId();
   const menuId = `${id}-${generatedId}-menu`;
@@ -137,7 +141,7 @@ export function FixedChoiceMultiCombobox({
 
   const triggerText = selectedValues.length
     ? selectedValues.join(", ")
-    : `Select ${label}`;
+    : emptyLabel ?? `Select ${label}`;
 
   function openMenu() {
     setOpen(true);
@@ -266,7 +270,15 @@ export function FixedChoiceMultiCombobox({
             }
           }}
         >
-          <span className="block whitespace-normal pr-1">{triggerText}</span>
+          <span
+            className={
+              truncateTrigger
+                ? "block truncate pr-1"
+                : "block whitespace-normal pr-1"
+            }
+          >
+            {triggerText}
+          </span>
           <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
             <DropdownChevron open={open} />
           </span>

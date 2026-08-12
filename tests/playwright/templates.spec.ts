@@ -1181,6 +1181,17 @@ test("2026 Local Anesthesia limits preset Tooth/area choices by route", async ({
       .click();
   }
 
+  for (const index of [0, 1]) {
+    const toothArea = entries.nth(index).getByRole("button", {
+      name: "Tooth/area",
+      exact: true,
+    });
+    await expect(toothArea).toHaveText("None selected");
+    const toothAreaText = toothArea.locator("span").first();
+    await expect(toothAreaText).toHaveCSS("white-space", "nowrap");
+    await expect(toothAreaText).toHaveCSS("text-overflow", "ellipsis");
+  }
+
   const expectedChoices = [
     ["Q1", "Q2", "Q4", "Q3", "S1", "S2", "S3", "S6", "S5", "S4"],
     [

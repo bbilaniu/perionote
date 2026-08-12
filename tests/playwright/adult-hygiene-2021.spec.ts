@@ -1654,7 +1654,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
     }),
   ).toBeVisible();
 
-  await completedRow.getByText("Select Tooth/area", { exact: true }).click();
+  await completedRow.getByText("None selected", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {
     name: "Standard Tooth/area choices",
     exact: true,
