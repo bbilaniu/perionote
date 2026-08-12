@@ -312,6 +312,8 @@ export interface AdultHygiene2026Form {
   improvementRequest: string;
   recareAdditionalComments: string;
   additionalNotes: string;
+  guardianCommunicationStatus?: DocumentationStatus;
+  guardianCommunicationDetails?: string;
   ppeStatementApplies: boolean;
   recallInterval: string;
   recallIntervalComments: string;
@@ -428,6 +430,8 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     improvementRequest: "",
     recareAdditionalComments: "",
     additionalNotes: "",
+    guardianCommunicationStatus: "not-documented",
+    guardianCommunicationDetails: "",
     ppeStatementApplies: false,
     recallInterval: "",
     recallIntervalComments: "",

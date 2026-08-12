@@ -8,6 +8,15 @@ export const interactiveDraftTemplates = {
       { role: "RDA", field: "rda" },
     ],
   },
+  "adolescent-hygiene-2026": {
+    label: "2026 Adolescent Hygiene",
+    href: "/templates/clinic/adolescent-hygiene-2026/interactive",
+    professionalFields: [
+      { role: "Dentist", field: "dentist" },
+      { role: "RDH", field: "rdh" },
+      { role: "RDA", field: "rda" },
+    ],
+  },
   "adult-hygiene-2021": {
     label: "2021 Adult Hygiene",
     href: "/templates/clinic/adult-hygiene-2021/interactive",
