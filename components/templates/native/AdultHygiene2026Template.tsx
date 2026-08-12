@@ -25,6 +25,7 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
@@ -61,6 +62,7 @@ import {
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
@@ -2984,10 +2986,8 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function AdultHygiene2026Template({
   fixture,
-}: {
-  fixture: AdultHygiene2026Form;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<AdultHygiene2026Form>) {
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
     class5IndicatorStatus: "yes",
@@ -3582,20 +3582,7 @@ export function AdultHygiene2026Template({
         }}
       >
         <div className="space-y-6">
-          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Pilot interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              2026 Adult Hygiene
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete one encounter and copy a Complete, Hygiene, or Recare
-              note. Encounter values are kept in a temporary local recovery
-              draft. Deliberately remembered catalogue suggestions also stay
-              only in this browser profile.
-            </p>
-          </header>
+          <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}

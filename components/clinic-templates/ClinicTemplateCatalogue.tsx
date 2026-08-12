@@ -4,6 +4,7 @@ import Link from "next/link";
 import { type MouseEvent, type ReactNode, useState } from "react";
 import { FullPageLink } from "@/components/FullPageLink";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
+import { lifecyclePresentation } from "@/lib/templates/lifecyclePresentation";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
 export type ClinicTemplateCatalogueItem = {
@@ -295,11 +296,8 @@ function ClinicTemplateCard({
         </h4>
         {template.interactiveLifecycle ? (
           <span
-            className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${
-              template.interactiveLifecycle === "draft"
-                ? "bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200"
-                : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-            }`}
+            className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${lifecyclePresentation[template.interactiveLifecycle].badgeClassName}`}
+            data-template-lifecycle-badge={template.interactiveLifecycle}
           >
             Interactive · {template.interactiveLifecycle}
           </span>

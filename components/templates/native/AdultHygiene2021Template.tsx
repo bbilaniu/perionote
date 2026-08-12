@@ -24,6 +24,7 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
@@ -59,6 +60,7 @@ import type {
 } from "@/lib/templates/recareExam";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   applyGingivitisObservationPreset,
   copyGingivalDescriptionAssessment,
@@ -2851,10 +2853,8 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function AdultHygiene2021Template({
   fixture,
-}: {
-  fixture: AdultHygiene2021Form;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<AdultHygiene2021Form>) {
   const [form, setForm] = useState<AdultHygiene2021Form>(() => ({
     ...createEmptyAdultHygiene2021Form(),
     class5IndicatorStatus: "yes",
@@ -3153,20 +3153,7 @@ export function AdultHygiene2021Template({
         }}
       >
         <div className="space-y-6">
-          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Pilot interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              2021 Adult Hygiene
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured Adult Hygiene note.
-              Encounter values are kept in a temporary local recovery draft.
-              Deliberately remembered catalogue suggestions also stay only in
-              this browser profile.
-            </p>
-          </header>
+          <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}

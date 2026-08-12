@@ -9,6 +9,18 @@ export interface TemplateProvenance {
   clinicalReviewDate: string;
 }
 
+export interface TemplatePresentation {
+  title: string;
+  description: string;
+  lifecycle: TemplateLifecycleStatus;
+}
+
+export interface InteractiveTemplateProps<TFixture> {
+  fixture: TFixture;
+  summary: string;
+  presentation: TemplatePresentation;
+}
+
 export interface TemplateDefinition<TFixture = unknown> {
   slug: string;
   title: string;

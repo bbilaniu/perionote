@@ -21,6 +21,7 @@ import {
   PeriodontalClassificationControl,
   TreatmentCompletedList,
 } from "@/components/templates/native/AdultHygiene2021Template";
+import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import type {
@@ -48,6 +49,7 @@ import {
   buildAdolescentHygieneSummary,
   formatAdolescentHygieneLocalTimestamp,
 } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 const buttonClass =
@@ -303,10 +305,8 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function AdolescentHygieneTemplate({
   fixture,
-}: {
-  fixture: AdolescentHygieneForm;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<AdolescentHygieneForm>) {
   const [form, setForm] = useState<AdolescentHygieneForm>(() =>
     createEmptyAdolescentHygieneForm(),
   );
@@ -531,19 +531,7 @@ export function AdolescentHygieneTemplate({
         }}
       >
         <div className="space-y-6">
-          <header className="rounded-2xl border border-violet-300 bg-violet-50 p-5 dark:border-violet-800 dark:bg-violet-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-violet-800 dark:text-violet-300">
-              Draft interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              12–17 Years Old Hygiene Template
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured adolescent hygiene note.
-              This draft preserves the ClearDent workflow and includes optional
-              Dentist and treatment-completed fields from the August 6 request.
-            </p>
-          </header>
+          <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}

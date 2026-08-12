@@ -48,6 +48,7 @@ import {
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
@@ -69,6 +70,7 @@ import {
   recareExtraoralOptions,
 } from "@/lib/templates/extraoralObservationsCatalog";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
@@ -1958,10 +1960,8 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function RecareExamTemplate({
   fixture,
-}: {
-  fixture: RecareExamForm;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<RecareExamForm>) {
   const [form, setForm] = useState<RecareExamForm>(() =>
     createEmptyRecareExamForm(),
   );
@@ -2336,18 +2336,7 @@ export function RecareExamTemplate({
         }}
       >
         <div className="space-y-6">
-          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Pilot interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              Recare Exam
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured Recare Exam note. Entered
-              values are kept in a temporary local recovery draft.
-            </p>
-          </header>
+          <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}

@@ -7,6 +7,7 @@ import {
   getClinicConversionBySourceSlug,
 } from "@/components/clinic-templates/conversionRegistry";
 import { getClinicTemplateBySlug } from "@/lib/clinic-templates/registry";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 export function generateStaticParams() {
   return clinicConversionSourceSlugs.map((clinicTemplateSlug) => ({
@@ -43,10 +44,8 @@ export default async function ClinicConversionPage({
     notFound();
   }
 
-  const ConversionComponent = conversion.component as ComponentType<{
-    fixture: unknown;
-    summary: string;
-  }>;
+  const ConversionComponent =
+    conversion.component as ComponentType<InteractiveTemplateProps<unknown>>;
 
   return (
     <section className="space-y-5">
@@ -59,6 +58,11 @@ export default async function ClinicConversionPage({
       <ConversionComponent
         fixture={conversion.fixture}
         summary={conversion.summary}
+        presentation={{
+          title: conversion.title,
+          description: conversion.headerDescription,
+          lifecycle: conversion.lifecycle,
+        }}
       />
     </section>
   );

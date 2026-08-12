@@ -11,13 +11,20 @@ import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdult
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { buildAdolescentHygieneSummary } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
 import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
+import type { ComponentType } from "react";
 import type {
+  InteractiveTemplateProps,
   TemplateDefinition,
   TemplateProvenance,
 } from "@/lib/templates/types";
 
-type ClinicConversionDefinition<TFixture> = TemplateDefinition<TFixture> & {
+type ClinicConversionDefinition<TFixture> = Omit<
+  TemplateDefinition<TFixture>,
+  "component"
+> & {
   provenance: TemplateProvenance;
+  headerDescription: string;
+  component: ComponentType<InteractiveTemplateProps<TFixture>>;
 };
 
 function defineClinicConversion<TFixture>(
@@ -30,10 +37,11 @@ const allClinicConversions = [
   defineClinicConversion({
     slug: "adolescent-hygiene",
     title: "12–17 Years Old Hygiene Template",
-    description:
-      "Draft interactive conversion of the clinic adolescent hygiene note.",
+    description: "Interactive conversion of the clinic adolescent hygiene note.",
+    headerDescription:
+      "Complete the form and copy a structured adolescent hygiene note. The conversion preserves the ClearDent workflow and includes optional Dentist and treatment-completed fields from the August 6 request.",
     kind: "native",
-    lifecycle: "draft",
+    lifecycle: "pilot",
     provenance: {
       sourceClinicTemplateSlug: "adolescent-hygiene",
       sourceRevision: "7d3d21c",
@@ -48,7 +56,9 @@ const allClinicConversions = [
     slug: "adult-hygiene-2021",
     title: "2021 Adult Hygiene",
     description:
-      "Pilot interactive conversion of the clinic 2021 Adult Hygiene note.",
+      "Interactive conversion of the clinic 2021 Adult Hygiene note.",
+    headerDescription:
+      "Complete the form and copy a structured Adult Hygiene note. Encounter values are kept in a temporary local recovery draft. Deliberately remembered catalogue suggestions also stay only in this browser profile.",
     kind: "native",
     lifecycle: "pilot",
     provenance: {
@@ -66,6 +76,8 @@ const allClinicConversions = [
     title: "2026 Adult Hygiene",
     description:
       "Unified adult encounter with Complete, Hygiene, and Recare outputs.",
+    headerDescription:
+      "Complete one encounter and copy a Complete, Hygiene, or Recare note. Encounter values are kept in a temporary local recovery draft. Deliberately remembered catalogue suggestions also stay only in this browser profile.",
     kind: "native",
     lifecycle: "pilot",
     provenance: {
@@ -81,8 +93,9 @@ const allClinicConversions = [
   defineClinicConversion({
     slug: "recare-exam",
     title: "Recare Exam",
-    description:
-      "Pilot interactive conversion of the clinic Recare Exam note.",
+    description: "Interactive conversion of the clinic Recare Exam note.",
+    headerDescription:
+      "Complete the form and copy a structured Recare Exam note. Entered values are kept in a temporary local recovery draft.",
     kind: "native",
     lifecycle: "pilot",
     provenance: {

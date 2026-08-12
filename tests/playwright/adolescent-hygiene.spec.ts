@@ -3,25 +3,32 @@ import { expect, test } from "@playwright/test";
 const sourceUrl = "/templates/clinic/adolescent-hygiene";
 const interactiveUrl = `${sourceUrl}/interactive`;
 
-test("adolescent source links to its draft interactive conversion", async ({
+test("adolescent source and interactive header share lifecycle metadata", async ({
   page,
 }) => {
   await page.goto(sourceUrl);
 
   const interactiveLink = page.getByRole("link", {
-    name: "Open interactive version · draft",
+    name: /Open interactive version · (draft|pilot|ready)/,
   });
   await expect(interactiveLink).toHaveAttribute("href", `${interactiveUrl}/`);
+  const interactiveLinkText = await interactiveLink.textContent();
+  const lifecycle = interactiveLinkText?.match(/· (draft|pilot|ready)$/)?.[1];
+  if (!lifecycle) {
+    throw new Error("Interactive link did not expose a recognized lifecycle");
+  }
+
   await interactiveLink.click();
 
   await expect(page).toHaveURL(new RegExp(`${interactiveUrl}/?$`));
-  const draftLabel = page.getByText("Draft interactive conversion", {
-    exact: true,
-  });
-  await expect(draftLabel).toHaveClass(/text-violet-800/);
-  const draftBanner = draftLabel.locator("xpath=ancestor::header[1]");
-  await expect(draftBanner).toHaveClass(/border-violet-300/);
-  await expect(draftBanner).toHaveClass(/bg-violet-50/);
+  const lifecycleHeader = page.locator("header[data-template-lifecycle]");
+  await expect(lifecycleHeader).toHaveAttribute(
+    "data-template-lifecycle",
+    lifecycle,
+  );
+  await expect(lifecycleHeader).toContainText(
+    `${lifecycle[0].toUpperCase()}${lifecycle.slice(1)} interactive conversion`,
+  );
 });
 
 test("adolescent synthetic demo generates and copies the mapped note", async ({

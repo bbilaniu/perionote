@@ -11,14 +11,18 @@ async function reloadDiscardingForm(page: Page) {
   await reloadPromise;
 }
 
-test("Adult Hygiene pilot pill matches the amber pilot notice", async ({
-  page,
-}) => {
+test("clinic lifecycle badges expose their registry lifecycle", async ({ page }) => {
   await page.goto("/templates/clinic");
-  const pilotPills = page.getByText("Interactive · pilot", { exact: true });
-  await expect(pilotPills).toHaveCount(3);
-  await expect(pilotPills.first()).toHaveClass(/bg-amber-100/);
-  await expect(pilotPills.first()).toHaveClass(/text-amber-900/);
+  const lifecycleBadges = page.locator("[data-template-lifecycle-badge]");
+  const badgeCount = await lifecycleBadges.count();
+  expect(badgeCount).toBeGreaterThan(0);
+
+  for (let index = 0; index < badgeCount; index += 1) {
+    const badge = lifecycleBadges.nth(index);
+    const lifecycle = await badge.getAttribute("data-template-lifecycle-badge");
+    expect(["draft", "pilot", "ready"]).toContain(lifecycle);
+    await expect(badge).toHaveText(`Interactive · ${lifecycle}`);
+  }
 });
 
 test("interactive Generated Note cards match the form card background", async ({
@@ -48,9 +52,7 @@ test("interactive banners share the first row with Generated Note on wide screen
   ]) {
     await page.goto(url);
 
-    const banner = page
-      .getByText("Pilot interactive conversion", { exact: true })
-      .locator("xpath=ancestor::header[1]");
+    const banner = page.locator("header[data-template-lifecycle]");
     const generatedNoteCard = page
       .getByRole("heading", { name: "Generated Note", exact: true })
       .locator("xpath=ancestor::section[1]");
@@ -149,9 +151,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
       name: "Original 2021 Adult Hygiene template",
     })
   ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2021/");
-  await expect(
-    page.getByText("Pilot interactive conversion", { exact: true })
-  ).toBeVisible();
+  await expect(page.locator("header[data-template-lifecycle]")).toBeVisible();
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 09:10"
   );

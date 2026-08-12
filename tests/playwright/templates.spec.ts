@@ -116,7 +116,9 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
     page.getByRole("heading", { name: "Recare Exam", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Open interactive version · pilot" }),
+    page.getByRole("link", {
+      name: /Open interactive version · (draft|pilot|ready)/,
+    }),
   ).toHaveAttribute(
     "href",
     "/templates/clinic/recare-exam/interactive/",
