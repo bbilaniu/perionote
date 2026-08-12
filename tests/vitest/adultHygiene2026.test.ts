@@ -134,10 +134,11 @@ TMJ: WNL.
 
     const classified = createEmptyAdultHygiene2026Form();
     classified.periodontalClassification.diagnosis = "gingivitis";
+    classified.periodontalClassification.extent = "generalized";
     classified.periodontalClassification.gingivalHealth.context =
       "gingivitis-intact";
     expect(buildAdultHygiene2026Summary(classified)).toBe(
-      "Periodontal diagnosis: GINGIVITIS - INTACT PERIODONTIUM",
+      "Periodontal diagnosis: GENERALIZED GINGIVITIS - INTACT PERIODONTIUM",
     );
 
     const periodontitis = createEmptyAdultHygiene2026Form();
