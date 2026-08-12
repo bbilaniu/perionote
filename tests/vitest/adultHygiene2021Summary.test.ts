@@ -49,7 +49,7 @@ Bleeding: None.`);
       startedAt: new Date(2026, 6, 25, 14, 5, 6),
     });
 
-    expect(summary).toBe(`----- July 25, 2026 2:05:06 PM -----
+    expect(summary).toBe(`----- July 25, 2026 14:05 -----
 PATIENT ID: TEST-AH-1001
 DENTIST: Dr. Example
 RDA:

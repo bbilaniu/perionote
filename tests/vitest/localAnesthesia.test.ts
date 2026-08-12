@@ -66,7 +66,7 @@ describe("local anesthesia", () => {
         localAnesthesiaNotes: "Patient tolerated rinse well.",
       }),
     ).toBe(`Local anesthetic administered: No C/I to LA
-  Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds (at 9:24 AM)
+  Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds (at 09:24)
   Total: Dyclonine 1% rinse 5.0 ml
   No adverse reactions noted
   Adequate anesthesia achieved
@@ -104,7 +104,7 @@ describe("local anesthesia", () => {
         localAnesthesiaAdequateAchieved: false,
         localAnesthesiaNotes: "",
       }),
-    ).toContain(`  Sulcular application — maxilla: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 8:33 PM)
-  I/O — S2: Articaine 4% with 1:200K epinephrine 1.8 ml (at 8:32 PM)`);
+    ).toContain(`  Sulcular application — maxilla: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 20:33)
+  I/O — S2: Articaine 4% with 1:200K epinephrine 1.8 ml (at 20:32)`);
   });
 });

@@ -40,6 +40,11 @@ import {
   gingivalDescriptionCatalog,
   type GingivalDescriptionAssessment,
 } from "@/lib/templates/gingivalDescriptionCatalog";
+import {
+  formatAverageVitalsReading,
+  formatVitalsReading,
+  hasValidVitalsMeasurement,
+} from "@/lib/templates/vitalsReadings";
 
 type BuildAdultHygiene2026SummaryOptions = {
   startedAt?: Date;
@@ -635,6 +640,15 @@ export function buildAdultHygiene2026Summary(
   const consentAndHistory = [
     consentLine,
     labelledLine("Medical history reviewed", form.medicalHistoryReview),
+    ...form.vitalsReadings
+      .map((reading, index) => {
+        const line = formatVitalsReading(reading);
+        return line ? `Vitals reading ${index + 1}: ${line}` : "";
+      })
+      .filter(Boolean),
+    form.vitalsReadings.filter(hasValidVitalsMeasurement).length > 1
+      ? formatAverageVitalsReading(form.vitalsReadings)
+      : "",
     form.premedicationStatus === "not-required"
       ? "Premedication Required: No."
       : form.premedicationStatus === "required"

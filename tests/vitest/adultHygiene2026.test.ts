@@ -75,6 +75,53 @@ TMJ: WNL.
   - TMJ loading test: Mild discomfort on loading.`);
   });
 
+  it("lists repeatable vitals readings and averages valid measurements", () => {
+    const summary = buildAdultHygiene2026Summary({
+      ...createEmptyAdultHygiene2026Form(),
+      vitalsReadings: [
+        {
+          systolic: "142",
+          diastolic: "88",
+          heartRate: "78",
+          time: "09:05",
+        },
+        {
+          systolic: "136",
+          diastolic: "84",
+          heartRate: "74",
+          time: "",
+        },
+      ],
+    });
+
+    expect(summary).toContain(
+      "Vitals reading 1: BP: 142/88 mmHg, HR: 78 bpm (at 09:05)",
+    );
+    expect(summary).toContain(
+      "Vitals reading 2: BP: 136/84 mmHg, HR: 74 bpm",
+    );
+    expect(summary).toContain("Average BP: 139/86 mmHg, HR: 76 bpm");
+
+    const oneValidReading = buildAdultHygiene2026Summary({
+      ...createEmptyAdultHygiene2026Form(),
+      vitalsReadings: [
+        {
+          systolic: "118",
+          diastolic: "76",
+          heartRate: "72",
+          time: "",
+        },
+        {
+          systolic: "not-a-number",
+          diastolic: "",
+          heartRate: "",
+          time: "",
+        },
+      ],
+    });
+    expect(oneValidReading).not.toContain("Average BP:");
+  });
+
   it("shows Periodontal diagnosis while a Health or Gingivitis classification is pending", () => {
     for (const diagnosis of ["health", "gingivitis"] as const) {
       const form = createEmptyAdultHygiene2026Form();
@@ -274,6 +321,7 @@ TMJ: WNL.
       ...createEmptyAdultHygiene2026Form(),
     } as Record<string, unknown>;
     for (const field of [
+      "vitalsReadings",
       "radiographs",
       "intraoralPhotosStatus",
       "intraoralPhotosDetails",

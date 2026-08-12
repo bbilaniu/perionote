@@ -218,7 +218,7 @@ describe("buildSummaryText", () => {
       [
         "Medical history update:",
         "   Med/dent history updated. No new contraindications reported.",
-        "   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
+        "   BP: 118/76 mmHg, HR: 72 bpm (at 09:15)",
       ].join("\n"),
     );
   });
@@ -257,8 +257,8 @@ describe("buildSummaryText", () => {
 
     const summary = buildSummaryText(form, []);
 
-    expect(summary).toContain("   BP: 142/88 mmHg, HR: 78 bpm (at 9:05 AM)");
-    expect(summary).toContain("   BP: 136/84 mmHg, HR: 74 bpm (at 9:15 AM)");
+    expect(summary).toContain("   BP: 142/88 mmHg, HR: 78 bpm (at 09:05)");
+    expect(summary).toContain("   BP: 136/84 mmHg, HR: 74 bpm (at 09:15)");
     expect(summary).toContain("   Average BP: 139/86 mmHg, HR: 76 bpm");
   });
 
@@ -306,10 +306,10 @@ describe("buildSummaryText", () => {
 
     expect(summary).toContain("Local anesthetic administered: No C/I to LA");
     expect(summary).toContain(
-      "   Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 9:24 AM)",
+      "   Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 09:24)",
     );
     expect(summary).toContain(
-      "   IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
+      "   IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 09:25)",
     );
     expect(summary).toContain(
       "   Total: Benzocaine 20% paste 0.5 ml",

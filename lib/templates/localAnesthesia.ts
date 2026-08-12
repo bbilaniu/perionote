@@ -1,3 +1,5 @@
+import { formatTime24Value } from "@/lib/templates/date";
+
 export type LocalAnesthesiaRoute = "injection" | "topical" | "rinse";
 
 export interface LocalAnesthesiaEntry {
@@ -80,15 +82,6 @@ function trimmed(value: string): string {
   return value.trim();
 }
 
-function formatClockTime(value: string): string {
-  const match = value.match(/^(\d{2}):(\d{2})$/);
-  if (!match) return value;
-  const hour = Number(match[1]);
-  const minute = match[2];
-  if (hour > 23) return value;
-  return `${hour % 12 || 12}:${minute} ${hour < 12 ? "AM" : "PM"}`;
-}
-
 export function formatLocalAnesthesiaSummary(
   value: LocalAnesthesiaValue,
 ): string {
@@ -101,8 +94,8 @@ export function formatLocalAnesthesiaSummary(
     const toothAreas = entry.toothAreas.map(trimmed).filter(Boolean);
     const area = toothAreas.join(", ");
     if (!product || !amount) continue;
-    const time = trimmed(entry.timeAdministered);
-    const administeredAt = time ? ` (at ${formatClockTime(time)})` : "";
+    const time = formatTime24Value(entry.timeAdministered);
+    const administeredAt = time ? ` (at ${time})` : "";
     if (entry.route === "rinse") {
       const duration = trimmed(entry.durationSeconds);
       detailLines.push(

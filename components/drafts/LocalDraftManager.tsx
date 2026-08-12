@@ -36,15 +36,18 @@ import {
 const dateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
   dateStyle: "medium",
   timeStyle: "short",
+  hourCycle: "h23",
 });
 const timeFormatter = new Intl.DateTimeFormat("en-CA", {
   timeStyle: "short",
+  hourCycle: "h23",
 });
 const expiryFormatter = new Intl.DateTimeFormat("en-CA", {
   month: "short",
   day: "numeric",
-  hour: "numeric",
+  hour: "2-digit",
   minute: "2-digit",
+  hourCycle: "h23",
 });
 
 const sortOptions: { key: DraftSortKey; label: string }[] = [

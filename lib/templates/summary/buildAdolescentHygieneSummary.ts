@@ -12,6 +12,7 @@ import {
   formatPeriodontalAssessmentFindings,
   formatPeriodontalClassification,
 } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import { formatLocalTime24 } from "@/lib/templates/date";
 
 type BuildAdolescentHygieneSummaryOptions = {
   startedAt?: Date;
@@ -93,12 +94,7 @@ export function formatAdolescentHygieneNoteHeader(date: Date): string {
     "November",
     "December",
   ];
-  const hour24 = date.getHours();
-  const hour12 = hour24 % 12 || 12;
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-  const meridiem = hour24 >= 12 ? "PM" : "AM";
-  return `----- ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${hour12}:${minutes}:${seconds} ${meridiem} -----`;
+  return `----- ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${formatLocalTime24(date)} -----`;
 }
 
 export function buildAdolescentHygieneSummary(

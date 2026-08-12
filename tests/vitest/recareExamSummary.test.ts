@@ -110,7 +110,7 @@ describe("buildRecareExamSummary", () => {
       startedAt,
     });
 
-    expect(summary).toBe(`----- July 25, 2026 1:45:12 PM -----
+    expect(summary).toBe(`----- July 25, 2026 13:45 -----
 PATIENT ID: TEST-1001
 DENTIST: Dr. Example
 RDA:
@@ -669,11 +669,11 @@ ODONTOGRAM UP TO DATE`);
       "2026-01-02 03:04"
     );
     expect(formatNoteHeaderLocalTimestamp(new Date(2026, 0, 2, 3, 4, 5))).toBe(
-      "----- January 2, 2026 3:04:05 AM -----"
+      "----- January 2, 2026 03:04 -----"
     );
     expect(
       formatNoteHeaderLocalTimestamp(new Date(2026, 6, 24, 10, 21, 44))
-    ).toBe("----- July 24, 2026 10:21:44 AM -----");
+    ).toBe("----- July 24, 2026 10:21 -----");
   });
 
   it("preserves legacy intraoral output and formats Slice 2 findings safely", () => {

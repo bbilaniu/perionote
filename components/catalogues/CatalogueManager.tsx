@@ -1164,7 +1164,11 @@ export function CatalogueManager() {
             <h3 className="font-semibold">Import preview</h3>
             <p className="mt-1 text-sm">
               {pendingImport.fileName}, exported{" "}
-              {new Date(pendingImport.exportedAt).toLocaleString()}
+              {new Intl.DateTimeFormat("en-CA", {
+                dateStyle: "medium",
+                timeStyle: "short",
+                hourCycle: "h23",
+              }).format(new Date(pendingImport.exportedAt))}
             </p>
             <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
               <li>

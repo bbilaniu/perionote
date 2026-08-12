@@ -646,6 +646,51 @@ test("2026 Adult Hygiene coordinates sterilization documentation", async ({
   );
 });
 
+test("2026 Adult Hygiene records repeatable vitals in consent and history", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const section = page
+    .getByRole("heading", {
+      name: "Consent, Medical History, and Sterilization",
+      exact: true,
+    })
+    .locator("xpath=ancestor::section[1]");
+  await expect(section.getByLabel("Systolic")).toHaveCount(0);
+  await section.getByRole("button", { name: "Add reading" }).click();
+  await expect(section.getByLabel("Time")).not.toHaveValue("");
+  const timeInput = section.getByLabel("Time");
+  const setToNow = section.getByRole("button", { name: "Set to now" });
+  await expect(setToNow).toHaveCSS("font-size", "12px");
+  expect((await setToNow.boundingBox())?.height).toBe(
+    (await timeInput.boundingBox())?.height,
+  );
+  await section.getByLabel("Systolic").fill("142");
+  await section.getByLabel("Diastolic").fill("88");
+  await section.getByLabel("Heart Rate").fill("78");
+  await section.getByLabel("Time").fill("09:05");
+  await section.getByRole("button", { name: "Add reading" }).click();
+
+  await section.getByLabel("Systolic").nth(1).fill("136");
+  await section.getByLabel("Diastolic").nth(1).fill("84");
+  await section.getByLabel("Heart Rate").nth(1).fill("74");
+  await section.getByRole("button", { name: "Clear time" }).nth(1).click();
+
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Vitals reading 1: BP: 142/88 mmHg, HR: 78 bpm (at 09:05)",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Vitals reading 2: BP: 136/84 mmHg, HR: 74 bpm",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Average BP: 139/86 mmHg, HR: 76 bpm",
+  );
+
+  await section.getByRole("button", { name: "Remove" }).nth(1).click();
+  await expect(section.getByText("Vitals Entry 2")).toHaveCount(0);
+});
+
 test("2026 Adult Hygiene separates hygiene and dentist next-visit catalogues", async ({
   page,
 }) => {
@@ -1001,6 +1046,28 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
   await expect(
     entry.getByRole("button", { name: "Tooth/area", exact: true }),
   ).toContainText("full mouth");
+  await expect(
+    entry.getByRole("button", { name: "Set to now", exact: true }),
+  ).toHaveCSS("font-size", "12px");
+  await expect(
+    entry.getByRole("button", { name: "Clear time", exact: true }),
+  ).toHaveCSS("font-size", "12px");
+  for (const [width, alignedControls] of [
+    [837, ["Anesthetic product", "Amount (mL)"]],
+    [1047, ["Route", "Duration (s)", "Tooth/area", "Anesthetic product"]],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    const controlTops = await Promise.all(
+      alignedControls.map(async (name) => {
+        const control =
+          name === "Amount (mL)" || name === "Duration (s)"
+            ? entry.getByRole("spinbutton", { name, exact: true })
+            : entry.getByRole("button", { name, exact: true });
+        return (await control.boundingBox())?.y;
+      }),
+    );
+    expect(new Set(controlTops).size).toBe(1);
+  }
   const routeTop = await entry
     .getByRole("button", { name: "Route", exact: true })
     .evaluate((element) => element.getBoundingClientRect().top);
@@ -1556,7 +1623,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
   expect(copiedNote).toBe(visiblePreview);
   expect(copiedNote).toMatch(
-    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\n/,
+    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{2}:\d{2} -----\n/,
   );
   expect(copiedNote).toMatch(
     /\nPATIENT ID: TEST-3003\nDENTIST:\nRDA:\nRDH: Example RDH$/,
@@ -1695,7 +1762,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
     .inputValue();
   expect(resetStartedAt).not.toBe(reloadedStartedAt);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{1,2}:\d{2}:\d{2} [AP]M -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
+    /^----- [A-Z][a-z]+ \d{1,2}, \d{4} \d{2}:\d{2} -----\nPATIENT ID:\nDENTIST:\nRDA:\nRDH:$/,
   );
 
   await page.clock.setSystemTime(new Date(2026, 6, 25, 11, 40));
@@ -1946,7 +2013,7 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "Patient concerns: Sensitivity around lower anterior and occasional bleeding while flossing.",
   );
   expect(summary).toContain(
-    "Medical history update:\n   Med/dent history updated. No new contraindications reported.\n   BP: 118/76 mmHg, HR: 72 bpm (at 9:15 AM)",
+    "Medical history update:\n   Med/dent history updated. No new contraindications reported.\n   BP: 118/76 mmHg, HR: 72 bpm (at 09:15)",
   );
   expect(summary).toContain("Date: 2026-03-09");
   expect(summary).toContain("Provider: Dr. Example");
@@ -1972,10 +2039,10 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "Treatments completed today: Med/dent history update, EOE/IOE, OHE reinforced, Reviewed homecare, Gingival assessments, Calculus index, Caries risk, Nutrition score, Periodontal risk assessment, Spot probing, Full mouth probing, Q1, Q2, Q3, Q4, Full mouth, Maxilla, Mandible Hand and Power Instrumentation (Piezo), Ipana 5% NaF varnish application",
   );
   expect(summary).toContain(
-    "IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 9:25 AM)",
+    "IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 09:25)",
   );
   expect(summary).toContain(
-    "Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 9:24 AM)",
+    "Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 09:24)",
   );
   expect(summary).toContain(
     "Total: Benzocaine 20% paste 0.5 ml",

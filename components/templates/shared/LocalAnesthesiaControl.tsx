@@ -5,7 +5,9 @@ import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocati
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
+import { Time24Input } from "@/components/forms/Time24Input";
 import { isLocalAnestheticCatalogueMetadata } from "@/lib/catalogues/catalogue";
+import { getCurrentTimeString } from "@/lib/templates/date";
 import {
   localAnesthesiaInjectionTypes,
   localAnesthesiaTopicalApplicationTypes,
@@ -18,6 +20,8 @@ const dyclonineCatalogueItemId =
   "seed.hygiene-treatment.anesthetic.dyclonine-rinse";
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const timeActionButtonClass =
+  "inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-3 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 const inputClass = formControlClass();
 const routeOptions: ReadonlyArray<{
   value: LocalAnesthesiaRoute;
@@ -29,10 +33,7 @@ const routeOptions: ReadonlyArray<{
 ];
 
 function currentTime(): string {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes(),
-  ).padStart(2, "0")}`;
+  return getCurrentTimeString();
 }
 
 function newEntry(route: LocalAnesthesiaRoute): LocalAnesthesiaEntry {
@@ -147,13 +148,25 @@ export function LocalAnesthesiaControl({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={buttonClass} onClick={() => addEntry("injection")}>
+        <button
+          type="button"
+          className={buttonClass}
+          onClick={() => addEntry("injection")}
+        >
           Add injection entry
         </button>
-        <button type="button" className={buttonClass} onClick={() => addEntry("topical")}>
+        <button
+          type="button"
+          className={buttonClass}
+          onClick={() => addEntry("topical")}
+        >
           Add topical entry
         </button>
-        <button type="button" className={buttonClass} onClick={() => addEntry("rinse")}>
+        <button
+          type="button"
+          className={buttonClass}
+          onClick={() => addEntry("rinse")}
+        >
           Add rinse entry
         </button>
       </div>
@@ -162,7 +175,9 @@ export function LocalAnesthesiaControl({
         <ol className="space-y-3" aria-label="Local anesthesia entries">
           {value.localAnesthesiaEntries.map((entry, index) => {
             const routeProducts = products.filter(
-              (item) => item.metadata?.kind === "local-anesthetic" && item.metadata.route === entry.route,
+              (item) =>
+                item.metadata?.kind === "local-anesthetic" &&
+                item.metadata.route === entry.route,
             );
             const typeOptions =
               entry.route === "injection"
@@ -195,7 +210,7 @@ export function LocalAnesthesiaControl({
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
-                  <div className="lg:col-span-3">
+                  <div className="text-sm lg:col-span-3">
                     <FixedChoiceListbox
                       id={`local-anesthesia-route-${entry.id}`}
                       label="Route"
@@ -205,8 +220,7 @@ export function LocalAnesthesiaControl({
                         updateEntry(entry.id, {
                           route,
                           administrationType: "",
-                          toothAreas:
-                            route === "rinse" ? ["full mouth"] : [],
+                          toothAreas: route === "rinse" ? ["full mouth"] : [],
                           product: "",
                           catalogueItemId: undefined,
                           amountMl: route === "injection" ? "1.8" : "",
@@ -217,7 +231,7 @@ export function LocalAnesthesiaControl({
                   </div>
 
                   {entry.route !== "rinse" ? (
-                    <div className="lg:col-span-3">
+                    <div className="text-sm lg:col-span-3">
                       <FixedChoiceListbox
                         id={`local-anesthesia-administration-type-${entry.id}`}
                         label={
@@ -258,7 +272,7 @@ export function LocalAnesthesiaControl({
                     </label>
                   )}
 
-                  <div className="text-sm lg:col-span-3">
+                  <div className="text-sm md:col-span-2 lg:col-span-3">
                     <ClinicalLocationMultiCombobox
                       id={`local-anesthesia-${entry.id}-tooth-area`}
                       label="Tooth/area"
@@ -270,7 +284,7 @@ export function LocalAnesthesiaControl({
                     />
                   </div>
 
-                  <div className="md:col-span-2 lg:col-span-3">
+                  <div className="text-sm md:col-span-1 lg:col-span-3">
                     <FixedChoiceListbox
                       id={`local-anesthesia-product-${entry.id}`}
                       label="Anesthetic product"
@@ -305,7 +319,7 @@ export function LocalAnesthesiaControl({
                     />
                   </div>
 
-                  <label className="text-sm font-medium lg:col-span-3">
+                  <label className="text-sm font-medium sm:col-span-1 md:col-span-1 lg:col-span-3">
                     Amount (mL)
                     <input
                       type="number"
@@ -324,36 +338,35 @@ export function LocalAnesthesiaControl({
                       Time administered
                     </label>
                     <div className="mt-1 flex flex-wrap gap-2">
-                      <input
+                      <Time24Input
                         id={`local-anesthesia-time-${entry.id}`}
-                        type="time"
                         className={`${inputClass} min-w-36 flex-1`}
                         value={entry.timeAdministered}
-                        onChange={(event) =>
+                        onChange={(timeAdministered) =>
                           updateEntry(entry.id, {
-                            timeAdministered: event.target.value,
+                            timeAdministered,
                           })
                         }
                       />
                       <button
                         type="button"
-                        className={buttonClass}
+                        className={timeActionButtonClass}
                         onClick={() =>
                           updateEntry(entry.id, {
                             timeAdministered: currentTime(),
                           })
                         }
                       >
-                        Now
+                        Set to now
                       </button>
                       <button
                         type="button"
-                        className={buttonClass}
+                        className={timeActionButtonClass}
                         onClick={() =>
                           updateEntry(entry.id, { timeAdministered: "" })
                         }
                       >
-                        Clear
+                        Clear time
                       </button>
                     </div>
                   </div>
@@ -373,7 +386,10 @@ export function LocalAnesthesiaControl({
       >
         <h4 className="font-semibold">Post-anesthetic assessment</h4>
         {assessmentIncomplete ? (
-          <p className="text-sm text-amber-900 dark:text-amber-200" role="alert">
+          <p
+            className="text-sm text-amber-900 dark:text-amber-200"
+            role="alert"
+          >
             Confirm No C/I to LA and complete the post-anesthetic assessment
             before finishing the note.
           </p>

@@ -1,7 +1,12 @@
 "use client";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
-import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
+import { Time24Input } from "@/components/forms/Time24Input";
+import {
+  formatTime24Value,
+  getCurrentTimeString,
+  getTodayDateString,
+} from "@/lib/templates/date";
 import {
   extraoralLateralityToSides,
   extraoralLymphNodeLocationOptions,
@@ -866,19 +871,6 @@ export function buildSummaryText(form, selectedFindings) {
     return normalized ? `${capitalizeSentence(normalized)}.` : "";
   };
   const joinComma = (items) => items.filter(Boolean).join(", ");
-  const formatClockTime = (value) => {
-    const normalized = clean(value);
-    const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
-
-    if (!match) return normalized;
-
-    let hours = Number(match[1]);
-    const minutes = match[2];
-    const period = hours >= 12 ? "PM" : "AM";
-    hours %= 12;
-    if (hours === 0) hours = 12;
-    return `${hours}:${minutes} ${period}`;
-  };
   const parseNumeric = (value) => {
     const normalized = clean(value);
     if (!normalized) return null;
@@ -896,7 +888,7 @@ export function buildSummaryText(form, selectedFindings) {
     const systolic = parseNumeric(reading.systolic);
     const diastolic = parseNumeric(reading.diastolic);
     const heartRate = parseNumeric(reading.heartRate);
-    const time = clean(reading.time);
+    const time = formatTime24Value(reading.time);
     const segments = [];
 
     if (systolic != null && diastolic != null) {
@@ -910,7 +902,7 @@ export function buildSummaryText(form, selectedFindings) {
     if (!segments.length) return "";
 
     const vitals = segments.join(", ");
-    return time ? `${vitals} (at ${formatClockTime(time)})` : vitals;
+    return time ? `${vitals} (at ${time})` : vitals;
   };
   const formatAverageVitalsLine = (readings) => {
     const systolicValues = [];
@@ -1473,17 +1465,17 @@ export function buildSummaryText(form, selectedFindings) {
       if (route === "Topical" && !applicationType) return;
 
       const amount = Number(amountMlRaw);
-      const time = clean(entry.timeAdministered);
+      const time = formatTime24Value(entry.timeAdministered);
       if (route === "Injection") {
         detailLines.push(
           `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${
-            time ? ` (at ${formatClockTime(time)})` : ""
+            time ? ` (at ${time})` : ""
           }`,
         );
       } else if (route === "Topical") {
         detailLines.push(
           `${applicationType} ${quadrant}: ${product} ${amountMlRaw} ml${
-            time ? ` (at ${formatClockTime(time)})` : ""
+            time ? ` (at ${time})` : ""
           }`,
         );
       }
@@ -2894,15 +2886,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor={`vitals-time-${readingIndex}`}>
-                              Time
+                              Time (HH:mm)
                             </Label>
-                            <Input
+                            <Time24Input
                               id={`vitals-time-${readingIndex}`}
-                              type="time"
+                              className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-slate-600"
                               value={reading.time}
-                              onChange={(e) =>
+                              onChange={(time) =>
                                 updateVitalsReading(readingIndex, {
-                                  time: e.target.value,
+                                  time,
                                 })
                               }
                             />
@@ -4052,17 +4044,16 @@ export function GingivalDescriptionWebformImportedTemplate({
 
                           <div className="space-y-2 md:col-span-2 lg:col-span-1">
                             <Label htmlFor={`local-anesthesia-time-${index}`}>
-                              Time administered
+                              Time administered (HH:mm)
                             </Label>
                             <div className="flex flex-nowrap items-center gap-2">
-                              <Input
+                              <Time24Input
                                 id={`local-anesthesia-time-${index}`}
-                                type="time"
-                                className="min-w-0 max-w-[9rem] flex-1"
+                                className="flex h-10 min-w-0 max-w-[9rem] flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-slate-600"
                                 value={entry.timeAdministered}
-                                onChange={(e) =>
+                                onChange={(timeAdministered) =>
                                   updateLocalAnesthesiaEntry(index, {
-                                    timeAdministered: e.target.value,
+                                    timeAdministered,
                                   })
                                 }
                               />

@@ -25,6 +25,7 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
+import { Time24Input } from "@/components/forms/Time24Input";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
@@ -81,6 +82,12 @@ import type {
 import { createRecareNormalStructuredIntraoralFindings } from "@/lib/templates/recareIntraoralCatalog";
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import {
+  createEmptyVitalsReading,
+  getCurrentVitalsTime,
+  hasVitalsMeasurement,
+  type VitalsReading,
+} from "@/lib/templates/vitalsReadings";
 import {
   applyGingivitisObservationPreset,
   copyGingivalDescriptionAssessment,
@@ -139,6 +146,10 @@ const treatmentRowButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
+const vitalsActionButtonClass =
+  "inline-flex h-10 self-end items-center justify-center rounded-xl border border-slate-300 px-3 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const vitalsRemoveButtonClass =
+  "inline-flex h-10 items-center justify-center rounded-xl border border-red-300 px-3 text-xs font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const evidenceSectionClass =
   "space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700";
 const evidenceSectionHeadingClass = "mb-2 text-center text-sm font-semibold";
@@ -200,6 +211,12 @@ const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
   patientChiefConcern: "",
   radiographs: "",
+  vitalsReadings: {
+    systolic: "",
+    diastolic: "",
+    heartRate: "",
+    time: "",
+  },
   structuredExtraoralFindings: {
     optionId: "",
     laterality: "",
@@ -262,6 +279,7 @@ function isEmptyAdultHygieneDraft(form: AdultHygiene2026Form): boolean {
       rda: "",
       class5IndicatorStatus: "not-documented",
       ppeStatementApplies: false,
+      vitalsReadings: form.vitalsReadings.filter(hasVitalsMeasurement),
     }) === emptyAdultHygieneDraft
   );
 }
@@ -718,8 +736,8 @@ function TextField({
   required?: boolean;
   error?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
-  type?: "text" | "date";
-  inputMode?: "decimal";
+  type?: "text" | "date" | "number" | "time";
+  inputMode?: "decimal" | "numeric";
   readOnly?: boolean;
   placeholder?: string;
 }) {
@@ -738,6 +756,16 @@ function TextField({
           onChange={onChange}
           inputRef={inputRef}
           readOnly={readOnly}
+          ariaInvalid={Boolean(error)}
+          ariaDescribedBy={error ? errorId : undefined}
+        />
+      ) : type === "time" ? (
+        <Time24Input
+          id={id}
+          className={inputClass}
+          value={value}
+          onChange={onChange}
+          inputRef={inputRef}
           ariaInvalid={Boolean(error)}
           ariaDescribedBy={error ? errorId : undefined}
         />
@@ -3017,6 +3045,7 @@ export function AdultHygiene2026Template({
       setForm({
         ...emptyForm,
         ...draft.form,
+        vitalsReadings: draft.form.vitalsReadings ?? [],
         periodontalClassification: normalizePeriodontalClassification(
           draft.form.periodontalClassification,
         ),
@@ -3139,6 +3168,34 @@ export function AdultHygiene2026Template({
     ) {
       setProviderError("");
     }
+  }
+
+  function updateVitalsReading(
+    readingIndex: number,
+    patch: Partial<VitalsReading>,
+  ) {
+    updateField(
+      "vitalsReadings",
+      form.vitalsReadings.map((reading, currentIndex) =>
+        currentIndex === readingIndex ? { ...reading, ...patch } : reading,
+      ),
+    );
+  }
+
+  function addVitalsReading() {
+    updateField("vitalsReadings", [
+      ...form.vitalsReadings,
+      createEmptyVitalsReading(true),
+    ]);
+  }
+
+  function removeVitalsReading(readingIndex: number) {
+    updateField(
+      "vitalsReadings",
+      form.vitalsReadings.filter(
+        (_reading, currentIndex) => currentIndex !== readingIndex,
+      ),
+    );
   }
 
   async function copyNote(mode: AdultHygiene2026Output = outputMode) {
@@ -3774,6 +3831,102 @@ export function AdultHygiene2026Template({
                 ) : null}
               </div>
             </div>
+
+            <fieldset className="space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700">
+              <legend className="px-1 font-semibold">Vitals Readings</legend>
+              <div className="space-y-3">
+                {form.vitalsReadings.map((reading, readingIndex) => (
+                  <div
+                    key={`adult-hygiene-vitals-${readingIndex}`}
+                    className="space-y-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-sm font-medium">
+                        Vitals Entry {readingIndex + 1}
+                      </p>
+                      <button
+                        type="button"
+                        className={vitalsRemoveButtonClass}
+                        onClick={() => removeVitalsReading(readingIndex)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div className="grid gap-3 xs:grid-cols-1 sm:grid-cols-3 md:grid-cols-6">
+                      <TextField
+                        id={`adult-hygiene-vitals-systolic-${readingIndex}`}
+                        label="Systolic"
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="e.g. 118"
+                        value={reading.systolic}
+                        onChange={(value) =>
+                          updateVitalsReading(readingIndex, { systolic: value })
+                        }
+                      />
+                      <TextField
+                        id={`adult-hygiene-vitals-diastolic-${readingIndex}`}
+                        label="Diastolic"
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="e.g. 76"
+                        value={reading.diastolic}
+                        onChange={(value) =>
+                          updateVitalsReading(readingIndex, { diastolic: value })
+                        }
+                      />
+                      <TextField
+                        id={`adult-hygiene-vitals-heart-rate-${readingIndex}`}
+                        label="Heart Rate"
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="e.g. 72"
+                        value={reading.heartRate}
+                        onChange={(value) =>
+                          updateVitalsReading(readingIndex, { heartRate: value })
+                        }
+                      />
+                      <TextField
+                        id={`adult-hygiene-vitals-time-${readingIndex}`}
+                        label="Time"
+                        type="time"
+                        value={reading.time}
+                        onChange={(value) =>
+                          updateVitalsReading(readingIndex, { time: value })
+                        }
+                      />
+                      <button
+                        type="button"
+                        className={vitalsActionButtonClass}
+                        onClick={() =>
+                          updateVitalsReading(readingIndex, {
+                            time: getCurrentVitalsTime(),
+                          })
+                        }
+                      >
+                        Set to now
+                      </button>
+                      <button
+                        type="button"
+                        className={vitalsActionButtonClass}
+                        onClick={() =>
+                          updateVitalsReading(readingIndex, { time: "" })
+                        }
+                      >
+                        Clear time
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                className={vitalsActionButtonClass}
+                onClick={addVitalsReading}
+              >
+                Add reading
+              </button>
+            </fieldset>
           </Section>
 
           <Section title="Records">

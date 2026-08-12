@@ -8,6 +8,7 @@ function formatDraftTime(value: string | Date): string {
   return new Intl.DateTimeFormat("en-CA", {
     dateStyle: "medium",
     timeStyle: "short",
+    hourCycle: "h23",
   }).format(date);
 }
 

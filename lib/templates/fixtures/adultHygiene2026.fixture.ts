@@ -13,6 +13,14 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   consentLegalGuardian: false,
   consentDetails: "",
   medicalHistoryReview: "Synthetic history reviewed with no changes.",
+  vitalsReadings: [
+    {
+      systolic: "118",
+      diastolic: "76",
+      heartRate: "72",
+      time: "09:15",
+    },
+  ],
   premedicationStatus: "not-required",
   premedicationDetails: "",
   patientChiefConcern: [

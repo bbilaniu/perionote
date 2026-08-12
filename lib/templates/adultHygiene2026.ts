@@ -22,6 +22,7 @@ import {
   createEmptyLocalAnesthesiaValue,
   type LocalAnesthesiaEntry,
 } from "@/lib/templates/localAnesthesia";
+import type { VitalsReading } from "@/lib/templates/vitalsReadings";
 
 export {
   standardTreatmentCompletedPreset,
@@ -216,6 +217,7 @@ export interface AdultHygiene2026Form {
   consentLegalGuardian: boolean;
   consentDetails: string;
   medicalHistoryReview: string;
+  vitalsReadings: VitalsReading[];
   premedicationStatus: PremedicationStatus;
   premedicationDetails: string;
   patientChiefConcern: string[];
@@ -335,6 +337,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     consentLegalGuardian: false,
     consentDetails: "",
     medicalHistoryReview: "",
+    vitalsReadings: [],
     premedicationStatus: "not-documented",
     premedicationDetails: "",
     patientChiefConcern: [],
