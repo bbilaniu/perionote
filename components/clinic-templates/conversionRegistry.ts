@@ -2,17 +2,20 @@ import { AdultHygiene2021Template } from "@/components/templates/native/AdultHyg
 import { AdultHygiene2026Template } from "@/components/templates/native/AdultHygiene2026Template";
 import { AdolescentHygiene2026Template } from "@/components/templates/native/AdolescentHygiene2026Template";
 import { AdolescentHygieneTemplate } from "@/components/templates/native/AdolescentHygieneTemplate";
+import { ChildRecareHygieneTemplate } from "@/components/templates/native/ChildRecareHygieneTemplate";
 import { RecareExamTemplate } from "@/components/templates/native/RecareExamTemplate";
 import { adolescentHygieneFixture } from "@/lib/templates/fixtures/adolescentHygiene.fixture";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
 import { adultHygiene2026Fixture } from "@/lib/templates/fixtures/adultHygiene2026.fixture";
 import { adolescentHygiene2026Fixture } from "@/lib/templates/fixtures/adolescentHygiene2026.fixture";
+import { childRecareHygieneFixture } from "@/lib/templates/fixtures/childRecareHygiene.fixture";
 import { recareExamFixture } from "@/lib/templates/fixtures/recareExam.fixture";
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { buildAdolescentHygiene2026Summary } from "@/lib/templates/adolescentHygiene2026";
 import { buildAdolescentHygieneSummary } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
+import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
 import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
 import type { ComponentType } from "react";
 import type {
@@ -37,6 +40,25 @@ function defineClinicConversion<TFixture>(
 }
 
 const allClinicConversions = [
+  defineClinicConversion({
+    slug: "child-recare-exam-hygiene-notes",
+    title: "Child Recare Exam & Hygiene Notes",
+    description:
+      "Interactive draft of the combined pediatric recall exam and hygiene note.",
+    headerDescription:
+      "Complete one pediatric encounter and copy a Combined, Dentist, or Hygienist note. This is an early draft for workflow and clinical-content review; entered values are kept in a temporary local recovery draft.",
+    kind: "native",
+    lifecycle: "draft",
+    provenance: {
+      sourceClinicTemplateSlug: "child-recare-exam-hygiene-notes",
+      sourceRevision: "a094b24",
+      clinicalReviewDate: "2026-08-12",
+    },
+    fixture: childRecareHygieneFixture,
+    summary: buildChildRecareHygieneSummary(childRecareHygieneFixture),
+    buildSummary: buildChildRecareHygieneSummary,
+    component: ChildRecareHygieneTemplate,
+  }),
   defineClinicConversion({
     slug: "adolescent-hygiene",
     title: "12–17 Years Old Hygiene Template",
