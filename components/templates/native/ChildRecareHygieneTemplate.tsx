@@ -16,6 +16,7 @@ import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
+import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
 import type {
   ChildDocumentationStatus,
   ChildExamStatus,
@@ -208,6 +209,8 @@ function StatusControl({
   status,
   detail,
   detailLabel,
+  detailType = "text",
+  detailSuffix,
   onStatusChange,
   onDetailChange,
 }: {
@@ -216,6 +219,8 @@ function StatusControl({
   status: ChildDocumentationStatus;
   detail?: string;
   detailLabel?: string;
+  detailType?: "text" | "number";
+  detailSuffix?: string;
   onStatusChange: (value: ChildDocumentationStatus) => void;
   onDetailChange?: (value: string) => void;
 }) {
@@ -233,6 +238,8 @@ function StatusControl({
           id={`${id}-details`}
           label={detailLabel ?? `${label} details`}
           value={detail ?? ""}
+          type={detailType}
+          suffix={detailSuffix}
           onChange={onDetailChange}
         />
       ) : null}
@@ -402,15 +409,6 @@ export function ChildRecareHygieneTemplate({
 
   return (
     <div className="space-y-5">
-      <InteractiveTemplateHeader {...presentation} />
-      <LocalDraftRecovery
-        drafts={localDraft.recoverableDrafts}
-        lastSavedAt={localDraft.lastSavedAt}
-        restoredAt={localDraft.restoredAt}
-        storageError={localDraft.storageError}
-        onRestore={localDraft.restoreDraft}
-      />
-
       <form
         className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.7fr)]"
         onSubmit={(event) => {
@@ -419,9 +417,18 @@ export function ChildRecareHygieneTemplate({
         }}
       >
         <div className="space-y-5">
+          <InteractiveTemplateHeader {...presentation} />
+          <LocalDraftRecovery
+            drafts={localDraft.recoverableDrafts}
+            lastSavedAt={localDraft.lastSavedAt}
+            restoredAt={localDraft.restoredAt}
+            storageError={localDraft.storageError}
+            onRestore={localDraft.restoreDraft}
+          />
+
           <Section
-            title="Patient and visit"
-            description="Record the pediatric recall team, consent, infection-control checks, and visit context."
+            title="Patient and Visit Context"
+            description="Identify the patient and document the reason for today's pediatric visit."
           >
             <TextField
               id="child-recare-patient-id"
@@ -431,6 +438,19 @@ export function ChildRecareHygieneTemplate({
               error={patientIdError}
               onChange={(value) => updateField("patientId", value)}
             />
+            <CatalogueCombobox
+              id="child-recare-chief-concern"
+              label="Patient's chief concern"
+              catalogueKey="patient.chief-concerns"
+              value={form.chiefConcern}
+              onChange={(value) => updateField("chiefConcern", value)}
+            />
+          </Section>
+
+          <Section
+            title="Visit Team"
+            description="At least one provider field is required before copying."
+          >
             <div className="grid gap-4 md:grid-cols-3">
               <CatalogueCombobox
                 id="child-recare-dentist"
@@ -456,6 +476,9 @@ export function ChildRecareHygieneTemplate({
                 onChange={(value) => updateField("rda", value)}
               />
             </div>
+          </Section>
+
+          <Section title="Consent, Medical History, and Sterilization">
             <TextField
               id="child-recare-consent"
               label="Consent given by"
@@ -478,13 +501,6 @@ export function ChildRecareHygieneTemplate({
                 onChange={(value) => updateField("mieleCodes", value)}
               />
             </div>
-            <CatalogueCombobox
-              id="child-recare-chief-concern"
-              label="Patient's chief concern"
-              catalogueKey="patient.chief-concerns"
-              value={form.chiefConcern}
-              onChange={(value) => updateField("chiefConcern", value)}
-            />
             <TextareaField
               id="child-recare-medical-history"
               label="Medical history"
@@ -676,25 +692,59 @@ export function ChildRecareHygieneTemplate({
                 status={form.scalingStatus}
                 detail={form.scalingUnits}
                 detailLabel="Scaling units"
+                detailType="number"
+                detailSuffix="units"
                 onStatusChange={(value) => updateField("scalingStatus", value)}
                 onDetailChange={(value) => updateField("scalingUnits", value)}
               />
-              <StatusControl
-                id="child-recare-polish"
-                label="Polish completed"
-                status={form.polishStatus}
-                detail={form.polishDetails}
-                onStatusChange={(value) => updateField("polishStatus", value)}
-                onDetailChange={(value) => updateField("polishDetails", value)}
-              />
-              <StatusControl
-                id="child-recare-fluoride"
-                label="Fluoride completed"
-                status={form.fluorideStatus}
-                detail={form.fluorideDetails}
-                onStatusChange={(value) => updateField("fluorideStatus", value)}
-                onDetailChange={(value) => updateField("fluorideDetails", value)}
-              />
+              <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <FixedChoiceListbox
+                  id="child-recare-polish-status"
+                  label="Polish completed"
+                  value={form.polishStatus}
+                  options={documentationOptions}
+                  onChange={(value) => updateField("polishStatus", value)}
+                />
+                {form.polishStatus === "yes" ? (
+                  <CatalogueCombobox
+                    id="child-recare-polish-details"
+                    label="Polishing material"
+                    catalogueKey="hygiene-treatment.polishing-products"
+                    value={form.polishDetails}
+                    onChange={(value) => updateField("polishDetails", value)}
+                  />
+                ) : null}
+              </div>
+              <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <FixedChoiceListbox
+                  id="child-recare-fluoride-status"
+                  label="Fluoride completed"
+                  value={form.fluorideStatus}
+                  options={documentationOptions}
+                  onChange={(value) => updateField("fluorideStatus", value)}
+                />
+                {form.fluorideStatus === "yes" ? (
+                  <CatalogueCombobox
+                    id="child-recare-fluoride-details"
+                    label="Fluoride applied"
+                    catalogueKey="hygiene-treatment.desensitizer"
+                    value={form.fluorideDetails}
+                    rememberMetadata={{
+                      kind: "desensitizing-remineralizing-product",
+                      productType: "fluoride-varnish",
+                    }}
+                    suggestionFilter={(item) => {
+                      const metadata = item.metadata;
+                      return (
+                        isDesensitizingRemineralizingProductMetadata(
+                          metadata,
+                        ) && metadata.productType !== "desensitizer"
+                      );
+                    }}
+                    onChange={(value) => updateField("fluorideDetails", value)}
+                  />
+                ) : null}
+              </div>
             </div>
           </Section>
 
@@ -746,12 +796,20 @@ export function ChildRecareHygieneTemplate({
                 value={form.nextVisit}
                 onChange={(value) => updateField("nextVisit", value)}
               />
-              <IsoDateInput
-                id="child-recare-booked"
-                label="Booked date"
-                value={form.bookedDate}
-                onChange={(value) => updateField("bookedDate", value)}
-              />
+              <div className="self-start">
+                <label
+                  className="text-sm font-medium"
+                  htmlFor="child-recare-booked"
+                >
+                  Booked date
+                </label>
+                <IsoDateInput
+                  id="child-recare-booked"
+                  label="Booked date"
+                  value={form.bookedDate}
+                  onChange={(value) => updateField("bookedDate", value)}
+                />
+              </div>
             </div>
           </Section>
         </div>

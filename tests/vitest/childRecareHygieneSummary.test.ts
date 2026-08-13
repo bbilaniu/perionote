@@ -55,6 +55,12 @@ describe("buildChildRecareHygieneSummary", () => {
     expect(combined).toContain("HYGIENE");
     expect(combined).toContain("Overjet: 2 mm.");
     expect(combined).toContain("Scaling: Yes — 0.5 units.");
+    expect(combined).toContain(
+      "Polish: Yes — Enamel Pro® Prophy Paste with Fluoride (Strawberry).",
+    );
+    expect(combined).toContain(
+      "Fluoride: Yes — Oral Science Inc. FluoriMax 2.5% NaF Varnish.",
+    );
     expect(dentist).toContain("Recall interval: 6-month recall.");
     expect(dentist).not.toContain("HYGIENE");
     expect(dentist).not.toContain("Hygiene interval:");
