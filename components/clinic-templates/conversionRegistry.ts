@@ -44,11 +44,11 @@ const allClinicConversions = [
     slug: "child-recare-exam-hygiene-notes",
     title: "Child Recare Exam & Hygiene Notes",
     description:
-      "Interactive draft of the combined pediatric recall exam and hygiene note.",
+      "Interactive pilot of the combined pediatric recall exam and hygiene note.",
     headerDescription:
-      "Complete one pediatric encounter and copy a Combined, Dentist, or Hygienist note. This is an early draft for workflow and clinical-content review; entered values are kept in a temporary local recovery draft.",
+      "Complete one pediatric encounter and copy a Combined, Dentist, or Hygienist note. This pilot is available for workflow and clinical-content evaluation; entered values are kept in a temporary local recovery draft.",
     kind: "native",
-    lifecycle: "draft",
+    lifecycle: "pilot",
     provenance: {
       sourceClinicTemplateSlug: "child-recare-exam-hygiene-notes",
       sourceRevision: "a094b24",

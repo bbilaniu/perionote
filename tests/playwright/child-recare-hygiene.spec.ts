@@ -3,13 +3,13 @@ import { expect, test } from "@playwright/test";
 const sourceUrl = "/templates/clinic/child-recare-exam-hygiene-notes";
 const interactiveUrl = `${sourceUrl}/interactive`;
 
-test("child recare draft is discoverable from its source template", async ({
+test("child recare pilot is discoverable from its source template", async ({
   page,
 }) => {
   await page.goto(sourceUrl);
 
   const interactiveLink = page.getByRole("link", {
-    name: "Open interactive version · draft",
+    name: "Open interactive version · pilot",
   });
   await expect(interactiveLink).toHaveAttribute("href", `${interactiveUrl}/`);
   await interactiveLink.click();
@@ -21,8 +21,8 @@ test("child recare draft is discoverable from its source template", async ({
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.locator('header[data-template-lifecycle="draft"]')).toContainText(
-    "Draft interactive conversion",
+  await expect(page.locator('header[data-template-lifecycle="pilot"]')).toContainText(
+    "Pilot interactive conversion",
   );
 });
 
