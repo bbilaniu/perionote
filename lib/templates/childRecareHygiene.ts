@@ -7,8 +7,14 @@ export interface ChildRecareHygieneForm {
   dentist: string;
   rda: string;
   rdh: string;
+  /** @deprecated Retained so drafts created before structured consent still restore. */
   consentBy: string;
+  consentPatient: boolean;
+  consentParent: boolean;
+  consentLegalGuardian: boolean;
+  consentDetails: string;
   class5IndicatorStatus: ChildDocumentationStatus;
+  ppeStatementApplies: boolean;
   mieleCodes: string;
   chiefConcern: string;
   medicalHistory: string;
@@ -62,7 +68,12 @@ export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
     rda: "",
     rdh: "",
     consentBy: "",
+    consentPatient: false,
+    consentParent: false,
+    consentLegalGuardian: false,
+    consentDetails: "",
     class5IndicatorStatus: "not-documented",
+    ppeStatementApplies: false,
     mieleCodes: "",
     chiefConcern: "",
     medicalHistory: "",

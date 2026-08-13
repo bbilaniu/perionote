@@ -29,12 +29,14 @@ import {
 } from "@/lib/templates/childRecareHygiene";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
+import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const templateId = "child-recare-exam-hygiene-notes";
 const emptyForm = createEmptyChildRecareHygieneForm();
 const emptySerializedForm = JSON.stringify(emptyForm);
 const controlClass = formControlClass();
+const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
 const buttonClass =
   "rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60";
 
@@ -56,12 +58,35 @@ const outputOptions = [
   { value: "hygienist", label: "Hygienist" },
 ] as const;
 
-function isValidForm(value: unknown): value is ChildRecareHygieneForm {
-  return matchesDraftShape(value, emptyForm);
+export function isValidChildRecareHygieneForm(
+  value: unknown,
+): value is ChildRecareHygieneForm {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return matchesDraftShape(
+    { ...emptyForm, ...(value as Record<string, unknown>) },
+    emptyForm,
+  );
 }
 
 function isEmptyForm(value: ChildRecareHygieneForm): boolean {
-  return JSON.stringify(value) === emptySerializedForm;
+  return (
+    JSON.stringify({
+      ...value,
+      dentist: "",
+      rdh: "",
+      rda: "",
+      class5IndicatorStatus: "not-documented",
+      ppeStatementApplies: false,
+    }) === emptySerializedForm
+  );
+}
+
+function createDefaultChildRecareHygieneForm(): ChildRecareHygieneForm {
+  return {
+    ...createEmptyChildRecareHygieneForm(),
+    class5IndicatorStatus: "yes",
+    ppeStatementApplies: true,
+  };
 }
 
 function Section({
@@ -88,6 +113,31 @@ function Section({
   );
 }
 
+function CheckboxField({
+  id,
+  label,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-3 text-sm">
+      <input
+        id={id}
+        type="checkbox"
+        className={checkboxClass}
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
+
 function TextField({
   id,
   label,
@@ -97,6 +147,7 @@ function TextField({
   suffix,
   error,
   inputRef,
+  readOnly,
 }: {
   id: string;
   label: string;
@@ -106,6 +157,7 @@ function TextField({
   suffix?: string;
   error?: string;
   inputRef?: React.RefObject<HTMLInputElement | null>;
+  readOnly?: boolean;
 }) {
   const errorId = `${id}-error`;
   return (
@@ -119,6 +171,7 @@ function TextField({
           id={id}
           type={type}
           value={value}
+          readOnly={readOnly}
           min={type === "number" ? "0" : undefined}
           step={type === "number" ? "any" : undefined}
           aria-invalid={Boolean(error)}
@@ -273,7 +326,7 @@ export function ChildRecareHygieneTemplate({
   presentation,
 }: InteractiveTemplateProps<ChildRecareHygieneForm>) {
   const [form, setForm] = useState<ChildRecareHygieneForm>(
-    createEmptyChildRecareHygieneForm,
+    createDefaultChildRecareHygieneForm,
   );
   const [output, setOutput] =
     useState<ChildRecareHygieneOutput>("combined");
@@ -291,7 +344,7 @@ export function ChildRecareHygieneTemplate({
     form,
     startedAt,
     isEmpty: isEmptyForm,
-    isValidForm,
+    isValidForm: isValidChildRecareHygieneForm,
     onRestore: (draft) => {
       setForm({ ...createEmptyChildRecareHygieneForm(), ...draft.form });
       setStartedAt(new Date(draft.startedAt));
@@ -302,6 +355,25 @@ export function ChildRecareHygieneTemplate({
   });
 
   useEffect(() => setStartedAt((current) => current ?? new Date()), []);
+
+  useEffect(() => {
+    if (
+      !form.mieleCodes.trim() ||
+      (form.class5IndicatorStatus === "yes" && form.ppeStatementApplies)
+    ) {
+      return;
+    }
+    setForm((current) =>
+      !current.mieleCodes.trim() ||
+      (current.class5IndicatorStatus === "yes" && current.ppeStatementApplies)
+        ? current
+        : {
+            ...current,
+            class5IndicatorStatus: "yes",
+            ppeStatementApplies: true,
+          },
+    );
+  }, [form.class5IndicatorStatus, form.mieleCodes, form.ppeStatementApplies]);
 
   useEffect(() => {
     if (
@@ -333,11 +405,20 @@ export function ChildRecareHygieneTemplate({
 
   const summaries = useMemo(
     () => ({
-      combined: buildChildRecareHygieneSummary(form, { output: "combined" }),
-      dentist: buildChildRecareHygieneSummary(form, { output: "dentist" }),
-      hygienist: buildChildRecareHygieneSummary(form, { output: "hygienist" }),
+      combined: buildChildRecareHygieneSummary(form, {
+        output: "combined",
+        ...(startedAt ? { startedAt } : {}),
+      }),
+      dentist: buildChildRecareHygieneSummary(form, {
+        output: "dentist",
+        ...(startedAt ? { startedAt } : {}),
+      }),
+      hygienist: buildChildRecareHygieneSummary(form, {
+        output: "hygienist",
+        ...(startedAt ? { startedAt } : {}),
+      }),
     }),
-    [form],
+    [form, startedAt],
   );
   const summary = summaries[output];
   const outputLabel =
@@ -396,7 +477,7 @@ export function ChildRecareHygieneTemplate({
     }
     localDraft.beginNewDraft();
     setForm({
-      ...createEmptyChildRecareHygieneForm(),
+      ...createDefaultChildRecareHygieneForm(),
       dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
       rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
       rda: getProviderDefault("visit-team.rda")?.label ?? "",
@@ -430,14 +511,25 @@ export function ChildRecareHygieneTemplate({
             title="Patient and Visit Context"
             description="Identify the patient and document the reason for today's pediatric visit."
           >
-            <TextField
-              id="child-recare-patient-id"
-              label="Patient ID"
-              value={form.patientId}
-              inputRef={patientIdRef}
-              error={patientIdError}
-              onChange={(value) => updateField("patientId", value)}
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextField
+                id="child-recare-patient-id"
+                label="Patient ID"
+                value={form.patientId}
+                inputRef={patientIdRef}
+                error={patientIdError}
+                onChange={(value) => updateField("patientId", value)}
+              />
+              <TextField
+                id="child-recare-note-started"
+                label="Note started"
+                value={
+                  startedAt ? formatRecareExamLocalTimestamp(startedAt) : ""
+                }
+                readOnly
+                onChange={() => undefined}
+              />
+            </div>
             <CatalogueCombobox
               id="child-recare-chief-concern"
               label="Patient's chief concern"
@@ -479,31 +571,88 @@ export function ChildRecareHygieneTemplate({
           </Section>
 
           <Section title="Consent, Medical History, and Sterilization">
-            <TextField
-              id="child-recare-consent"
-              label="Consent given by"
-              value={form.consentBy}
-              onChange={(value) => updateField("consentBy", value)}
-            />
-            <div className="grid gap-4 md:grid-cols-2">
-              <StatusControl
-                id="child-recare-class5"
-                label="Class 5 indicator strip checked"
-                status={form.class5IndicatorStatus}
-                onStatusChange={(value) =>
-                  updateField("class5IndicatorStatus", value)
-                }
-              />
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <CheckboxField
+                  id="child-recare-class5"
+                  label="Class 5 indicators checked"
+                  checked={form.class5IndicatorStatus === "yes"}
+                  onChange={(value) =>
+                    updateField(
+                      "class5IndicatorStatus",
+                      value ? "yes" : "not-documented",
+                    )
+                  }
+                />
+                <CheckboxField
+                  id="child-recare-ppe"
+                  label="Standard PPE statement applies"
+                  checked={form.ppeStatementApplies}
+                  onChange={(value) =>
+                    updateField("ppeStatementApplies", value)
+                  }
+                />
+              </div>
               <TextField
                 id="child-recare-miele"
-                label="Miele sterilization codes"
+                label="Sterilization codes"
                 value={form.mieleCodes}
                 onChange={(value) => updateField("mieleCodes", value)}
               />
             </div>
-            <TextareaField
+
+            <fieldset className="space-y-3">
+              <legend className="font-semibold">Consent given by</legend>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Select every applicable source.
+              </p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {(
+                  [
+                    ["consentPatient", "patient", "Patient"],
+                    ["consentParent", "parent", "Parent"],
+                    ["consentLegalGuardian", "guardian", "Legal guardian"],
+                  ] as const
+                ).map(([key, idSuffix, label]) => (
+                  <CheckboxField
+                    key={key}
+                    id={`child-recare-consent-${idSuffix}`}
+                    label={label}
+                    checked={form[key]}
+                    onChange={(value) => {
+                      setForm((current) => ({
+                        ...current,
+                        [key]: value,
+                        consentBy: "",
+                      }));
+                      setCopyMessage("");
+                    }}
+                  />
+                ))}
+              </div>
+              {form.consentPatient ||
+              form.consentParent ||
+              form.consentLegalGuardian ? (
+                <TextField
+                  id="child-recare-consent-details"
+                  label="Consent details"
+                  value={form.consentDetails}
+                  onChange={(value) => updateField("consentDetails", value)}
+                />
+              ) : form.consentBy ? (
+                <TextField
+                  id="child-recare-legacy-consent"
+                  label="Legacy consent source"
+                  value={form.consentBy}
+                  onChange={(value) => updateField("consentBy", value)}
+                />
+              ) : null}
+            </fieldset>
+
+            <CatalogueCombobox
               id="child-recare-medical-history"
-              label="Medical history"
+              label="Medical history reviewed"
+              catalogueKey="medical-history.review"
               value={form.medicalHistory}
               onChange={(value) => updateField("medicalHistory", value)}
             />

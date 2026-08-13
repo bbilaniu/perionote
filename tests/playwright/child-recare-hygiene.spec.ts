@@ -28,11 +28,34 @@ test("child recare draft is discoverable from its source template", async ({
 
 test("child recare demo generates audience-specific notes", async ({ page }) => {
   await page.goto(interactiveUrl);
+  await expect(page.getByLabel("Note started", { exact: true })).toHaveValue(
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+  );
+  await expect(page.getByLabel("Note started", { exact: true })).toHaveAttribute(
+    "readonly",
+    "",
+  );
+  await expect(
+    page.getByRole("combobox", {
+      name: "Medical history reviewed",
+      exact: true,
+    }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
 
   await expect(page.locator("#child-recare-patient-id")).toHaveValue(
     "TEST-CHILD-1001",
   );
+  await expect(page.getByLabel("Parent", { exact: true })).toBeChecked();
+  await expect(
+    page.getByRole("combobox", {
+      name: "Medical history reviewed",
+      exact: true,
+    }),
+  ).toHaveValue("Reviewed; no changes reported");
+  await expect(
+    page.getByLabel("Standard PPE statement applies", { exact: true }),
+  ).toBeChecked();
   const preview = page.locator("#child-recare-summary");
   await expect(preview).toHaveValue(/DENTAL EXAM[\s\S]*HYGIENE/);
   await expect(preview).toHaveValue(/Overjet: 2 mm\./);
@@ -42,6 +65,15 @@ test("child recare demo generates audience-specific notes", async ({ page }) => 
   );
   await expect(preview).toHaveValue(
     /Fluoride: Yes — Oral Science Inc\. FluoriMax 2\.5% NaF Varnish\./,
+  );
+  await expect(preview).toHaveValue(
+    /Informed verbal consent for treatment today given by: Parent\./,
+  );
+  await expect(preview).toHaveValue(
+    /Medical history reviewed: Reviewed; no changes reported\./,
+  );
+  await expect(preview).toHaveValue(
+    /ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES/,
   );
   await expect(page.getByLabel("Scaling units", { exact: true })).toHaveValue(
     "0.5",
@@ -64,6 +96,26 @@ test("child recare demo generates audience-specific notes", async ({ page }) => 
   await expect(preview).not.toHaveValue(/DENTAL EXAM/);
   await expect(preview).toHaveValue(/Hygiene interval: 6-month scale\./);
   await expect(preview).not.toHaveValue(/Recall interval:/);
+});
+
+test("child recare uses the 2026 sterilization safeguards", async ({ page }) => {
+  await page.goto(interactiveUrl);
+
+  const class5 = page.getByLabel("Class 5 indicators checked", {
+    exact: true,
+  });
+  const ppe = page.getByLabel("Standard PPE statement applies", {
+    exact: true,
+  });
+  await expect(class5).toBeChecked();
+  await expect(ppe).toBeChecked();
+
+  await class5.uncheck();
+  await ppe.uncheck();
+  await page.getByLabel("Sterilization codes", { exact: true }).fill("PED-1");
+
+  await expect(class5).toBeChecked();
+  await expect(ppe).toBeChecked();
 });
 
 test("child recare desktop layout keeps context cards in the form column", async ({

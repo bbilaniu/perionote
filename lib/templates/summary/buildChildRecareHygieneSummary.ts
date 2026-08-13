@@ -4,6 +4,7 @@ import type {
   ChildRecareHygieneForm,
   ChildRecareHygieneOutput,
 } from "@/lib/templates/childRecareHygiene";
+import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 
 function sentence(label: string, value: string): string {
   const trimmed = value.trim();
@@ -43,31 +44,50 @@ function section(lines: string[]): string {
   return lines.filter(Boolean).join("\n");
 }
 
+function joinConsentSources(values: string[]): string {
+  if (values.length <= 1) return values[0] ?? "";
+  if (values.length === 2) return `${values[0]} and ${values[1]}`;
+  return `${values.slice(0, -1).join(", ")}, and ${values.at(-1)}`;
+}
+
 export function buildChildRecareHygieneSummary(
   form: ChildRecareHygieneForm,
-  options: { output?: ChildRecareHygieneOutput } = {},
+  options: { output?: ChildRecareHygieneOutput; startedAt?: Date } = {},
 ): string {
   const output = options.output ?? "combined";
   const includesDentist = output !== "hygienist";
   const includesHygiene = output !== "dentist";
+  const structuredConsentSources = [
+    ...(form.consentPatient ? ["Patient"] : []),
+    ...(form.consentParent ? ["Parent"] : []),
+    ...(form.consentLegalGuardian ? ["Legal guardian"] : []),
+  ];
+  const consentSource = structuredConsentSources.length
+    ? joinConsentSources(structuredConsentSources)
+    : form.consentBy;
 
   const header = section([
+    options.startedAt ? formatNoteHeaderLocalTimestamp(options.startedAt) : "",
     sentence("PATIENT ID", form.patientId),
     sentence("Dentist", form.dentist),
     sentence("RDA", form.rda),
     sentence("RDH", form.rdh),
     sentence(
       "Informed verbal consent for treatment today given by",
-      form.consentBy,
+      consentSource,
     ),
+    sentence("Consent details", form.consentDetails),
     statusSentence(
       "Class 5 indicator strip checked",
       form.class5IndicatorStatus,
     ),
     sentence("Miele sterilization codes scanned", form.mieleCodes),
+    form.ppeStatementApplies
+      ? "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
+      : "",
     "Patient presents for a pediatric recall exam and cleaning.",
     sentence("Patient's chief concern", form.chiefConcern),
-    sentence("Medical history", form.medicalHistory),
+    sentence("Medical history reviewed", form.medicalHistory),
     statusSentence(
       "Premedication required",
       form.premedicationStatus,
