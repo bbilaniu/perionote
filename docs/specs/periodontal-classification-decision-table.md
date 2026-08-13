@@ -103,8 +103,9 @@ they were patient findings.
 Extent/distribution is currently clinician-selected and is not calculated. The
 encounter state does not contain the percentage of periodontitis-involved teeth
 or the distribution evidence needed to distinguish localized, generalized, and
-molar/incisor-pattern disease safely. The selected extent is charted only with a
-periodontitis diagnosis.
+molar/incisor-pattern disease safely. A clinician-selected localized or
+generalized extent is charted with a confirmed gingivitis or periodontitis
+diagnosis; molar/incisor pattern is charted only with periodontitis.
 
 Periodontitis extent must not be inferred from BOP percentage. Gingivitis extent
 and periodontitis extent use different findings and denominators. Automated

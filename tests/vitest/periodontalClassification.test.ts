@@ -668,6 +668,27 @@ describe("Health/Gingivitis classification", () => {
     );
   });
 
+  it("presents clinician-selected extent with a gingivitis diagnosis", () => {
+    const classification = createEmptyPeriodontalClassification();
+    classification.diagnosis = "gingivitis";
+    classification.extent = "generalized";
+    classification.gingivalHealth.context = "gingivitis-intact";
+
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis: GENERALIZED GINGIVITIS - INTACT PERIODONTIUM",
+    );
+
+    classification.extent = "localized";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis: LOCALIZED GINGIVITIS - INTACT PERIODONTIUM",
+    );
+
+    classification.extent = "molar-incisor";
+    expect(formatHealthGingivitisBlock(classification)).toBe(
+      "Periodontal diagnosis: GINGIVITIS - INTACT PERIODONTIUM",
+    );
+  });
+
   it("documents the basis and optional location for a reduced non-periodontitis periodontium", () => {
     const classification = createEmptyPeriodontalClassification();
     classification.diagnosis = "health";

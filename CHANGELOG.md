@@ -1,5 +1,15 @@
 # hygienenote
 
+## 0.11.0
+
+### Minor Changes
+
+- ad4b991: Add a separate 2026 Adolescent Hygiene template that combines the dental exam and hygiene encounter while producing Combined, Dentist, or Hygienist notes. Preserve the original adolescent template and its draft identity unchanged.
+
+### Patch Changes
+
+- 4ce4a93: Repair the pediatric recare form layout, separate patient context from the visit team, restore correctly sized date and note-started controls, capture scaling units plus polishing and fluoride products, and align medical history, consent, and sterilization safeguards with the other 2026 templates.
+
 ## 0.10.0
 
 ### Minor Changes

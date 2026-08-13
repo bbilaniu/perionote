@@ -101,6 +101,11 @@ describe("local catalogues", () => {
     ]);
 
     expect(
+      listCatalogueItems(emptyState, "clinical-exam.terminal-plane").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Flush terminal plane", "Mesial step", "Distal step"]);
+    expect(
       listCatalogueItems(emptyState, "clinical-exam.molar-occlusion").map(
         (item) => item.label,
       ),
