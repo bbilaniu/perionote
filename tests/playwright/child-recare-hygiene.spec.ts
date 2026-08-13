@@ -88,6 +88,12 @@ test("child recare demo generates audience-specific notes", async ({ page }) => 
   await expect(
     page.getByRole("combobox", { name: "Fluoride applied", exact: true }),
   ).toHaveValue("Oral Science Inc. FluoriMax 2.5% NaF Varnish");
+  await expect(
+    page.getByRole("combobox", {
+      name: "Skeletal classification",
+      exact: true,
+    }),
+  ).toHaveValue("Class I");
 
   await page.getByRole("radio", { name: "Dentist", exact: true }).check();
   await expect(preview).toHaveValue(/DENTAL EXAM/);

@@ -789,9 +789,10 @@ export function ChildRecareHygieneTemplate({
               )}
             </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <TextField
+              <CatalogueCombobox
                 id="child-recare-skeletal-classification"
                 label="Skeletal classification"
+                catalogueKey="clinical-exam.skeletal-occlusion"
                 value={form.skeletalClassification}
                 onChange={(value) =>
                   updateField("skeletalClassification", value)
