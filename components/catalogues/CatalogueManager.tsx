@@ -57,6 +57,7 @@ const catalogueTabGroups: Array<{
     section: "Clinical Exam",
     title: "Occlusion",
     keys: [
+      "clinical-exam.terminal-plane",
       "clinical-exam.molar-occlusion",
       "clinical-exam.skeletal-occlusion",
       "clinical-exam.additional-occlusal-findings",

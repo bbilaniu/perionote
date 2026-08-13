@@ -59,6 +59,10 @@ test("child recare demo generates audience-specific notes", async ({ page }) => 
   const preview = page.locator("#child-recare-summary");
   await expect(preview).toHaveValue(/DENTAL EXAM[\s\S]*HYGIENE/);
   await expect(preview).toHaveValue(/Overjet: 2 mm\./);
+  await expect(preview).toHaveValue(/Terminal plane: Flush terminal plane\./);
+  await expect(
+    page.getByRole("combobox", { name: "Terminal plane", exact: true }),
+  ).toHaveValue("Flush terminal plane");
   await expect(preview).toHaveValue(/Scaling: Yes — 0\.5 units\./);
   await expect(preview).toHaveValue(
     /Polish: Yes — Enamel Pro® Prophy Paste with Fluoride \(Strawberry\)\./,
@@ -96,6 +100,42 @@ test("child recare demo generates audience-specific notes", async ({ page }) => 
   await expect(preview).not.toHaveValue(/DENTAL EXAM/);
   await expect(preview).toHaveValue(/Hygiene interval: 6-month scale\./);
   await expect(preview).not.toHaveValue(/Recall interval:/);
+});
+
+test("child recare defaults to terminal plane and can use molar classification", async ({
+  page,
+}) => {
+  await page.goto(interactiveUrl);
+
+  const assessment = page.getByRole("button", {
+    name: "Occlusion assessment",
+    exact: true,
+  });
+  await expect(assessment).toContainText("Terminal plane (primary dentition)");
+  await page
+    .getByRole("combobox", { name: "Terminal plane", exact: true })
+    .fill("Mesial step");
+  await expect(page.locator("#child-recare-summary")).toHaveValue(
+    /Terminal plane: Mesial step\./,
+  );
+
+  await assessment.click();
+  await page
+    .getByRole("option", {
+      name: "Molar classification (permanent first molars)",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("combobox", { name: "Molar classification", exact: true })
+    .fill("Cl I");
+
+  await expect(page.locator("#child-recare-summary")).toHaveValue(
+    /Molar classification: Cl I\./,
+  );
+  await expect(page.locator("#child-recare-summary")).not.toHaveValue(
+    /Terminal plane:/,
+  );
 });
 
 test("child recare uses the 2026 sterilization safeguards", async ({ page }) => {

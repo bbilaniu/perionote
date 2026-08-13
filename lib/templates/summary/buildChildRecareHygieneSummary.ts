@@ -112,7 +112,9 @@ export function buildChildRecareHygieneSummary(
           form.oralHabitsDetails,
         ),
         examSentence("TMJ", form.tmjStatus, form.tmjFindings),
-        sentence("Molar occlusion / molar classification", form.molarOcclusion),
+        form.occlusionAssessment === "terminal-plane"
+          ? sentence("Terminal plane", form.terminalPlane)
+          : sentence("Molar classification", form.molarOcclusion),
         sentence("Skeletal classification", form.skeletalClassification),
         sentence("Overjet", form.overjetMm ? `${form.overjetMm.trim()} mm` : ""),
         sentence(

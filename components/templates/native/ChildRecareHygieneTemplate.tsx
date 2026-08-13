@@ -20,6 +20,7 @@ import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/c
 import type {
   ChildDocumentationStatus,
   ChildExamStatus,
+  ChildOcclusionAssessment,
   ChildRecareHygieneForm,
   ChildRecareHygieneOutput,
 } from "@/lib/templates/childRecareHygiene";
@@ -57,6 +58,17 @@ const outputOptions = [
   { value: "dentist", label: "Dentist" },
   { value: "hygienist", label: "Hygienist" },
 ] as const;
+
+const occlusionAssessmentOptions: Array<{
+  value: ChildOcclusionAssessment;
+  label: string;
+}> = [
+  { value: "terminal-plane", label: "Terminal plane (primary dentition)" },
+  {
+    value: "molar-classification",
+    label: "Molar classification (permanent first molars)",
+  },
+];
 
 export function isValidChildRecareHygieneForm(
   value: unknown,
@@ -346,7 +358,17 @@ export function ChildRecareHygieneTemplate({
     isEmpty: isEmptyForm,
     isValidForm: isValidChildRecareHygieneForm,
     onRestore: (draft) => {
-      setForm({ ...createEmptyChildRecareHygieneForm(), ...draft.form });
+      const hasOcclusionAssessment = Object.prototype.hasOwnProperty.call(
+        draft.form,
+        "occlusionAssessment",
+      );
+      setForm({
+        ...createEmptyChildRecareHygieneForm(),
+        ...draft.form,
+        ...(!hasOcclusionAssessment && draft.form.molarOcclusion.trim()
+          ? { occlusionAssessment: "molar-classification" as const }
+          : {}),
+      });
       setStartedAt(new Date(draft.startedAt));
       setPatientIdError("");
       setProviderError("");
@@ -738,13 +760,35 @@ export function ChildRecareHygieneTemplate({
                 onFindingsChange={(value) => updateField("tmjFindings", value)}
               />
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <TextField
-                id="child-recare-molar-occlusion"
-                label="Molar occlusion / molar classification"
-                value={form.molarOcclusion}
-                onChange={(value) => updateField("molarOcclusion", value)}
+            <div className="space-y-4">
+              <FixedChoiceListbox
+                id="child-recare-occlusion-assessment"
+                label="Occlusion assessment"
+                value={form.occlusionAssessment}
+                options={occlusionAssessmentOptions}
+                onChange={(value) =>
+                  updateField("occlusionAssessment", value)
+                }
               />
+              {form.occlusionAssessment === "terminal-plane" ? (
+                <CatalogueCombobox
+                  id="child-recare-terminal-plane"
+                  label="Terminal plane"
+                  catalogueKey="clinical-exam.terminal-plane"
+                  value={form.terminalPlane}
+                  onChange={(value) => updateField("terminalPlane", value)}
+                />
+              ) : (
+                <CatalogueCombobox
+                  id="child-recare-molar-occlusion"
+                  label="Molar classification"
+                  catalogueKey="clinical-exam.molar-occlusion"
+                  value={form.molarOcclusion}
+                  onChange={(value) => updateField("molarOcclusion", value)}
+                />
+              )}
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 id="child-recare-skeletal-classification"
                 label="Skeletal classification"

@@ -50,7 +50,10 @@ describe("buildChildRecareHygieneSummary", () => {
     delete legacyDraft.consentLegalGuardian;
     delete legacyDraft.consentDetails;
     delete legacyDraft.ppeStatementApplies;
+    delete legacyDraft.occlusionAssessment;
+    delete legacyDraft.terminalPlane;
     legacyDraft.consentBy = "Grandparent";
+    legacyDraft.molarOcclusion = "Class I bilateral";
 
     expect(isValidChildRecareHygieneForm(legacyDraft)).toBe(true);
     expect(
@@ -78,6 +81,8 @@ describe("buildChildRecareHygieneSummary", () => {
     expect(combined).toContain("DENTAL EXAM");
     expect(combined).toContain("HYGIENE");
     expect(combined).toContain("Overjet: 2 mm.");
+    expect(combined).toContain("Terminal plane: Flush terminal plane.");
+    expect(combined).not.toContain("Molar classification:");
     expect(combined).toContain(
       "Medical history reviewed: Reviewed; no changes reported.",
     );
@@ -109,5 +114,18 @@ describe("buildChildRecareHygieneSummary", () => {
     );
 
     expect(summary).toContain("----- August 12, 2026 18:21 -----");
+  });
+
+  it("uses molar classification only when that assessment is selected", () => {
+    const form = {
+      ...createEmptyChildRecareHygieneForm(),
+      occlusionAssessment: "molar-classification" as const,
+      terminalPlane: "Flush terminal plane",
+      molarOcclusion: "Cl I",
+    };
+
+    const summary = buildChildRecareHygieneSummary(form);
+    expect(summary).toContain("Molar classification: Cl I.");
+    expect(summary).not.toContain("Terminal plane:");
   });
 });

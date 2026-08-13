@@ -1,6 +1,9 @@
 export type ChildDocumentationStatus = "not-documented" | "yes" | "no";
 export type ChildExamStatus = "not-assessed" | "wnl" | "findings";
 export type ChildRecareHygieneOutput = "combined" | "dentist" | "hygienist";
+export type ChildOcclusionAssessment =
+  | "terminal-plane"
+  | "molar-classification";
 
 export interface ChildRecareHygieneForm {
   patientId: string;
@@ -31,6 +34,8 @@ export interface ChildRecareHygieneForm {
   oralHabitsDetails: string;
   tmjStatus: ChildExamStatus;
   tmjFindings: string;
+  occlusionAssessment: ChildOcclusionAssessment;
+  terminalPlane: string;
   molarOcclusion: string;
   skeletalClassification: string;
   overjetMm: string;
@@ -90,6 +95,8 @@ export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
     oralHabitsDetails: "",
     tmjStatus: "not-assessed",
     tmjFindings: "",
+    occlusionAssessment: "terminal-plane",
+    terminalPlane: "",
     molarOcclusion: "",
     skeletalClassification: "",
     overjetMm: "",
