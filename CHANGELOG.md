@@ -1,5 +1,11 @@
 # hygienenote
 
+## 0.11.1
+
+### Patch Changes
+
+- e829a78: Promote the pediatric recare template to pilot, default its occlusion documentation to Terminal plane with primary-dentition choices, preserve an explicit molar-classification option for permanent first molars, and use the shared skeletal-occlusion catalogue for skeletal classification.
+
 ## 0.11.0
 
 ### Minor Changes
