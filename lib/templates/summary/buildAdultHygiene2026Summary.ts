@@ -859,6 +859,14 @@ export function buildAdultHygiene2026Summary(
     formatLocalAnesthesiaSummary(form),
   ];
 
+  const guardianCommunication = [
+    documentationStatusLine(
+      "Information relayed to parent or legal guardian",
+      form.guardianCommunicationStatus ?? "not-documented",
+      form.guardianCommunicationDetails ?? "",
+    ),
+  ];
+
   const occlusalSplintState = resolveOcclusalSplintState(form);
   const occlusalSplint = ownershipUseLine(
     "Occlusal splint (night guard)",
@@ -967,6 +975,7 @@ export function buildAdultHygiene2026Summary(
     hygieneTreatmentOptions,
     combinedTreatmentPlan,
     ...(includesHygiene ? [treatmentCompleted] : []),
+    ...(includesHygiene ? [guardianCommunication] : []),
     ...(output === "hygiene" ? [hygieneAppliancesAndHistory] : []),
     ...(output === "complete"
       ? [recareFollowUp, hygieneFollowUp]

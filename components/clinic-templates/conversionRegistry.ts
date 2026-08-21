@@ -1,15 +1,21 @@
 import { AdultHygiene2021Template } from "@/components/templates/native/AdultHygiene2021Template";
 import { AdultHygiene2026Template } from "@/components/templates/native/AdultHygiene2026Template";
+import { AdolescentHygiene2026Template } from "@/components/templates/native/AdolescentHygiene2026Template";
 import { AdolescentHygieneTemplate } from "@/components/templates/native/AdolescentHygieneTemplate";
+import { ChildRecareHygieneTemplate } from "@/components/templates/native/ChildRecareHygieneTemplate";
 import { RecareExamTemplate } from "@/components/templates/native/RecareExamTemplate";
 import { adolescentHygieneFixture } from "@/lib/templates/fixtures/adolescentHygiene.fixture";
 import { adultHygiene2021Fixture } from "@/lib/templates/fixtures/adultHygiene2021.fixture";
 import { adultHygiene2026Fixture } from "@/lib/templates/fixtures/adultHygiene2026.fixture";
+import { adolescentHygiene2026Fixture } from "@/lib/templates/fixtures/adolescentHygiene2026.fixture";
+import { childRecareHygieneFixture } from "@/lib/templates/fixtures/childRecareHygiene.fixture";
 import { recareExamFixture } from "@/lib/templates/fixtures/recareExam.fixture";
 import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
+import { buildAdolescentHygiene2026Summary } from "@/lib/templates/adolescentHygiene2026";
 import { buildAdolescentHygieneSummary } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
+import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
 import { buildRecareExamSummary } from "@/lib/templates/summary/buildRecareExamSummary";
 import type { ComponentType } from "react";
 import type {
@@ -35,6 +41,25 @@ function defineClinicConversion<TFixture>(
 
 const allClinicConversions = [
   defineClinicConversion({
+    slug: "child-recare-exam-hygiene-notes",
+    title: "Child Recare Exam & Hygiene Notes",
+    description:
+      "Interactive pilot of the combined pediatric recall exam and hygiene note.",
+    headerDescription:
+      "Complete one pediatric encounter and copy a Combined, Dentist, or Hygienist note. This pilot is available for workflow and clinical-content evaluation; entered values are kept in a temporary local recovery draft.",
+    kind: "native",
+    lifecycle: "pilot",
+    provenance: {
+      sourceClinicTemplateSlug: "child-recare-exam-hygiene-notes",
+      sourceRevision: "a094b24",
+      clinicalReviewDate: "2026-08-12",
+    },
+    fixture: childRecareHygieneFixture,
+    summary: buildChildRecareHygieneSummary(childRecareHygieneFixture),
+    buildSummary: buildChildRecareHygieneSummary,
+    component: ChildRecareHygieneTemplate,
+  }),
+  defineClinicConversion({
     slug: "adolescent-hygiene",
     title: "12–17 Years Old Hygiene Template",
     description: "Interactive conversion of the clinic adolescent hygiene note.",
@@ -51,6 +76,27 @@ const allClinicConversions = [
     summary: buildAdolescentHygieneSummary(adolescentHygieneFixture),
     buildSummary: buildAdolescentHygieneSummary,
     component: AdolescentHygieneTemplate,
+  }),
+  defineClinicConversion({
+    slug: "adolescent-hygiene-2026",
+    title: "2026 Adolescent Hygiene",
+    description:
+      "Unified adolescent encounter with Combined, Dentist, and Hygienist outputs.",
+    headerDescription:
+      "Complete one adolescent encounter and copy a Combined, Dentist, or Hygienist note. The original adolescent template remains available separately. Encounter values are kept in a temporary local recovery draft.",
+    kind: "native",
+    lifecycle: "pilot",
+    provenance: {
+      sourceClinicTemplateSlug: "adolescent-hygiene-2026",
+      sourceRevision: "70b65c4",
+      clinicalReviewDate: "2026-08-11",
+    },
+    fixture: adolescentHygiene2026Fixture,
+    summary: buildAdolescentHygiene2026Summary(
+      adolescentHygiene2026Fixture,
+    ),
+    buildSummary: buildAdolescentHygiene2026Summary,
+    component: AdolescentHygiene2026Template,
   }),
   defineClinicConversion({
     slug: "adult-hygiene-2021",

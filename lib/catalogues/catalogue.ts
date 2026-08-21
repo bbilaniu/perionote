@@ -15,6 +15,7 @@ export const CATALOGUE_KEYS = [
   "visit-team.rda",
   "visit-team.rdh",
   "patient.chief-concerns",
+  "clinical-exam.terminal-plane",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
   "clinical-exam.additional-occlusal-findings",
@@ -213,6 +214,12 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-i`, label: "Cl I" },
   { id: `seed.${prefix}.cl-ii`, label: "Cl II" },
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
+];
+
+const terminalPlaneSeeds: CatalogueSeed[] = [
+  { id: "seed.terminal-plane.flush", label: "Flush terminal plane" },
+  { id: "seed.terminal-plane.mesial-step", label: "Mesial step" },
+  { id: "seed.terminal-plane.distal-step", label: "Distal step" },
 ];
 
 const additionalOcclusalFindingSeeds: CatalogueSeed[] = [
@@ -591,6 +598,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Patient chief concerns",
     fieldLabels: ["Patient chief concern", "Patient's chief concern"],
     seeds: patientChiefConcernSeeds,
+    lifecycle: "pilot",
+  },
+  {
+    key: "clinical-exam.terminal-plane",
+    section: "Clinical Exam",
+    title: "Terminal plane",
+    fieldLabels: ["Terminal plane"],
+    seeds: terminalPlaneSeeds,
     lifecycle: "pilot",
   },
   {

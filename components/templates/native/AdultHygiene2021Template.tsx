@@ -1056,6 +1056,7 @@ export function PeriodontalClassificationControl({
   ];
   const isHealthGingivitisDiagnosis =
     value.diagnosis === "health" || value.diagnosis === "gingivitis";
+  const isGingivitisDiagnosis = value.diagnosis === "gingivitis";
   const hasAssessedDiagnosis = Boolean(value.diagnosis);
   const isPeriodontitisDiagnosis = value.diagnosis === "periodontitis";
   const isTreatedPeriodontitisContext =
@@ -1087,6 +1088,16 @@ export function PeriodontalClassificationControl({
   )
     ? value.status
     : "";
+  const extentOptions = isGingivitisDiagnosis
+    ? periodontalExtentChoices.filter(
+        (choice) => choice.value !== "molar-incisor",
+      )
+    : periodontalExtentChoices;
+  const extentLabel = isGingivitisDiagnosis
+    ? "Extent of gingivitis"
+    : isPeriodontitisDiagnosis
+      ? "Periodontitis extent/distribution"
+      : "Extent/distribution";
   const hasHorizontalBoneLoss = value.stageBasis.some(
     (evidence) => evidence.criterionId === "stage.horizontal-bone-loss",
   );
@@ -2016,6 +2027,10 @@ export function PeriodontalClassificationControl({
             onChange={(diagnosis) =>
               update({
                 diagnosis,
+                ...(diagnosis === "gingivitis" &&
+                value.extent === "molar-incisor"
+                  ? { extent: "" }
+                  : {}),
                 gingivalHealth: {
                   ...value.gingivalHealth,
                   context: "",
@@ -2036,9 +2051,9 @@ export function PeriodontalClassificationControl({
           />
           <FixedChoiceListbox
             id="adult-hygiene-periodontal-extent"
-            label="Extent/distribution"
+            label={extentLabel}
             value={value.extent}
-            options={periodontalExtentChoices}
+            options={extentOptions}
             onChange={(extent) => update({ extent })}
           />
         </div>

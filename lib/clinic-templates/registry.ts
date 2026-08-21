@@ -180,6 +180,48 @@ Next Visit: [SELECT/INSERT: NEXT VISIT]
 Date Booked: `,
   },
   {
+    slug: "adolescent-hygiene-2026",
+    title: "2026 Adolescent Hygiene",
+    sourceTitle: "2026 Adolescent Hygiene + Recare",
+    category: "child-adolescent-hygiene",
+    description:
+      "Unified adolescent encounter for Combined, Dentist, and Hygienist documentation.",
+    content: `ONE ENCOUNTER — THREE NOTE OUTPUTS
+Combined: complete adolescent dental exam and hygiene record
+Dentist: dental exam/recare record
+Hygienist: hygiene assessment and treatment record
+
+PATIENT AND VISIT
+Last recare date
+Dentist / RDH / RDA
+Class 5 indicators and sterilization codes
+Consent by patient, parent, and/or legal guardian
+Medical history, vitals, and premedication
+
+RECORDS AND DENTAL EXAM
+Chief concern
+Radiographs and intraoral photos
+EOE / IOE
+Teeth and odontogram
+Occlusion and oral habits
+Appliances, orthodontic and retainer history
+Caries risk assessment
+Dental and combined treatment plans
+
+HYGIENE
+Hygiene area of concern
+Plaque, stain, calculus, and bleeding
+Periodontal and gingival assessment
+Oral hygiene education and goals
+Treatment completed and local anesthesia
+Information relayed to parent or legal guardian
+
+FOLLOW-UP
+Recommended recare and hygiene intervals
+Next dentist and hygiene visits
+Dates booked`,
+  },
+  {
     slug: "adult-hygiene-2021",
     title: "2021 Adult Hygiene",
     sourceTitle: "2021 Adult Hygiene NEW",

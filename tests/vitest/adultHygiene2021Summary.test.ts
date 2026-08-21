@@ -173,6 +173,23 @@ Date Booked: 2026-11-15`);
     expect(summary).not.toMatch(/Stage II|Grade B/);
   });
 
+  it("includes gingivitis extent in the generated note", () => {
+    const form = createEmptyAdultHygiene2021Form();
+    form.periodontalClassification = {
+      ...form.periodontalClassification,
+      diagnosis: "gingivitis",
+      extent: "localized",
+      gingivalHealth: {
+        ...form.periodontalClassification.gingivalHealth,
+        context: "gingivitis-intact",
+      },
+    };
+
+    expect(buildAdultHygiene2021Summary(form)).toBe(
+      "Periodontal diagnosis: LOCALIZED GINGIVITIS - INTACT PERIODONTIUM",
+    );
+  });
+
   it("preserves output when the optional gingival description is absent", () => {
     const current = createEmptyAdultHygiene2021Form();
     const oldShape = { ...current };

@@ -1,6 +1,6 @@
 {
   "name": "hygienenote",
-  "version": "0.10.0",
+  "version": "0.11.1",
   "private": true,
   "engines": {
     "node": ">=24 <25"
@@ -20,7 +20,8 @@
     "catalogue:from-cleardent": "node scripts/transform-cleardent-catalogue.mjs",
     "codex:patches:prepare": "node scripts/codex-patch-branches.mjs prepare",
     "codex:patches:configure": "node scripts/codex-patch-branches.mjs configure",
-    "codex:patches:apply": "node scripts/codex-patch-branches.mjs apply"
+    "codex:patches:apply": "node scripts/codex-patch-branches.mjs apply",
+    "beta:sync": "git fetch origin && git switch beta && git merge --ff-only origin/main && git push origin beta"
   },
   "dependencies": {
     "next": "15.5.22",
