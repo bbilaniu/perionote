@@ -37,3 +37,20 @@ jobs:
           commit: Version Packages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-beta:
+    name: Fast-forward beta after versioning
+    needs: changesets
+    if: contains(github.event.head_commit.message, 'Version Packages')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward beta to main
+        run: |
+          git fetch origin beta
+          git merge-base --is-ancestor origin/beta HEAD
+          git push origin HEAD:beta
