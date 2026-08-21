@@ -16,7 +16,7 @@
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:webkit": "playwright test --project=webkit",
     "changeset": "changeset",
-    "version": "changeset version",
+    "version": "changeset version && npm install --package-lock-only"
     "catalogue:from-cleardent": "node scripts/transform-cleardent-catalogue.mjs",
     "codex:patches:prepare": "node scripts/codex-patch-branches.mjs prepare",
     "codex:patches:configure": "node scripts/codex-patch-branches.mjs configure",
