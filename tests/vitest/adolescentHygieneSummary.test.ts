@@ -116,4 +116,40 @@ Treatment completed today: Unknown imported treatment wording`);
       buildAdolescentHygieneSummary({ ...unchecked, properPpeWorn: true }),
     ).toContain("ALL PROPER PPE");
   });
+
+  it("includes structured completed care and Dyclonine rinse", () => {
+    const form = {
+      ...createEmptyAdolescentHygieneForm(),
+      treatmentCompleted: [
+        {
+          id: "fluoride",
+          treatmentType: "Fluoride varnish application",
+          toothAreas: ["full mouth"],
+          procedureKind: "product-application" as const,
+          productApplicationType: "fluoride-varnish" as const,
+          product: "Colgate® PreviDent® Varnish (5% NaF)",
+        },
+      ],
+      localAnesthesiaEntries: [
+        {
+          id: "dyclonine",
+          route: "rinse" as const,
+          administrationType: "",
+          toothAreas: ["full mouth"],
+          product: "Dyclonine 1% rinse",
+          amountMl: "5",
+          durationSeconds: "60",
+          timeAdministered: "",
+        },
+      ],
+    };
+
+    const summary = buildAdolescentHygieneSummary(form);
+    expect(summary).toContain(
+      "Treatment completed today: Colgate® PreviDent® Varnish (5% NaF) application — full mouth",
+    );
+    expect(summary).toContain(
+      "Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds",
+    );
+  });
 });

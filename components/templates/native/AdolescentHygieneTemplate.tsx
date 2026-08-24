@@ -19,10 +19,11 @@ import {
   AdultHygieneCalculusControl,
   AdultHygienePlaqueControl,
   PeriodontalClassificationControl,
-  TreatmentCompletedList,
 } from "@/components/templates/native/AdultHygiene2021Template";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import type {
   AdolescentDocumentationStatus,
@@ -37,9 +38,12 @@ import {
   brushingFrequencyChoices,
   flossingFrequencyChoices,
   homeCareOheTopicChoices,
-  standardTreatmentCompletedPreset,
-  type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygiene2021";
+import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
+import {
+  createStandardTreatmentEntriesFromCatalogue,
+  treatmentCompletedEntryIdentity,
+} from "@/lib/templates/adultHygieneTreatment";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
   copyPeriodontalClassification,
@@ -67,7 +71,26 @@ const adolescentDraftArrayItemShapes = {
   ohiTechniques: "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
   "treatmentCompleted[].toothAreas": "",
+  localAnesthesiaEntries: {
+    id: "",
+    route: "injection",
+    administrationType: "",
+    toothAreas: [],
+    product: "",
+    amountMl: "",
+    durationSeconds: "",
+    timeAdministered: "",
+  },
+  "localAnesthesiaEntries[].toothAreas": "",
 } as const;
+
+function buildAdolescentOheTreatmentRecap(
+  form: AdolescentHygieneForm,
+): string {
+  return [...form.ohiTechniques, form.oheNotes.trim()]
+    .filter(Boolean)
+    .join("; ");
+}
 
 const documentationStatusOptions: ReadonlyArray<{
   value: AdolescentDocumentationStatus;
@@ -318,7 +341,8 @@ export function AdolescentHygieneTemplate({
   const rdhRef = useRef<HTMLInputElement>(null);
   const providerDefaultsAppliedRef = useRef(false);
   const treatmentEntrySequence = useRef(0);
-  const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
+  const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
+    useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId: "adolescent-hygiene",
@@ -477,41 +501,22 @@ export function AdolescentHygieneTemplate({
     patientIdRef.current?.focus();
   }
 
-  function createTreatmentEntry(
-    source?: Omit<AdultHygieneTreatmentCompletedEntry, "id">,
-  ): AdultHygieneTreatmentCompletedEntry {
+  function nextTreatmentEntryId(): string {
     treatmentEntrySequence.current += 1;
-    return {
-      id: `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`,
-      treatmentType: source?.treatmentType ?? "",
-      toothAreas: [...(source?.toothAreas ?? [])],
-    };
+    return `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`;
   }
 
   function applyStandardTreatment() {
     const existing = new Set(
-      form.treatmentCompleted.map(
-        (entry) =>
-          `${entry.treatmentType.trim().toLocaleLowerCase("en-CA")}|${entry.toothAreas
-            .join("|")
-            .toLocaleLowerCase("en-CA")}`,
-      ),
+      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
     );
-    const additions = standardTreatmentCompletedPreset.flatMap((entry) => {
-      const key = `${entry.treatmentType
-        .trim()
-        .toLocaleLowerCase("en-CA")}|${entry.toothAreas
-        .join("|")
-        .toLocaleLowerCase("en-CA")}`;
-      return existing.has(key)
-        ? []
-        : [
-            createTreatmentEntry({
-              treatmentType: entry.treatmentType,
-              toothAreas: [...entry.toothAreas],
-            }),
-          ];
-    });
+    const additions = createStandardTreatmentEntriesFromCatalogue(
+      getItems("hygiene-treatment.completed"),
+      nextTreatmentEntryId,
+      buildAdolescentOheTreatmentRecap(form),
+    ).filter(
+      (entry) => !existing.has(treatmentCompletedEntryIdentity(entry)),
+    );
     if (additions.length) {
       updateField("treatmentCompleted", [
         ...form.treatmentCompleted,
@@ -857,30 +862,55 @@ export function AdolescentHygieneTemplate({
                   updateField("scalingUnits", value)
                 }
               />
-              <YesNoWithDetails
-                id="adolescent-polish"
-                label="Polish"
-                status={form.polishStatus}
-                details={form.polishDetails}
-                detailsLabel="Polish details"
-                onStatusChange={(value) => updateField("polishStatus", value)}
-                onDetailsChange={(value) =>
-                  updateField("polishDetails", value)
-                }
-              />
-              <YesNoWithDetails
-                id="adolescent-fluoride"
-                label="Fluoride"
-                status={form.fluorideStatus}
-                details={form.fluorideDetails}
-                detailsLabel="Fluoride details"
-                onStatusChange={(value) =>
-                  updateField("fluorideStatus", value)
-                }
-                onDetailsChange={(value) =>
-                  updateField("fluorideDetails", value)
-                }
-              />
+              <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <FixedChoiceListbox
+                  id="adolescent-polish"
+                  label="Polish"
+                  value={form.polishStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => updateField("polishStatus", value)}
+                />
+                {form.polishStatus === "yes" ? (
+                  <CatalogueCombobox
+                    id="adolescent-polish-product"
+                    label="Polish product"
+                    catalogueKey="hygiene-treatment.polishing-products"
+                    value={form.polishDetails}
+                    onChange={(value) => updateField("polishDetails", value)}
+                    showAllSuggestionsWhenSelected
+                  />
+                ) : null}
+              </div>
+              <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <FixedChoiceListbox
+                  id="adolescent-fluoride"
+                  label="Fluoride"
+                  value={form.fluorideStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => updateField("fluorideStatus", value)}
+                />
+                {form.fluorideStatus === "yes" ? (
+                  <CatalogueCombobox
+                    id="adolescent-fluoride-product"
+                    label="Fluoride product"
+                    catalogueKey="hygiene-treatment.desensitizer"
+                    value={form.fluorideDetails}
+                    rememberMetadata={{
+                      kind: "desensitizing-remineralizing-product",
+                      productType: "fluoride-varnish",
+                    }}
+                    suggestionFilter={(item) => {
+                      const metadata = item.metadata;
+                      return (
+                        isDesensitizingRemineralizingProductMetadata(metadata) &&
+                        metadata.productType === "fluoride-varnish"
+                      );
+                    }}
+                    onChange={(value) => updateField("fluorideDetails", value)}
+                    showAllSuggestionsWhenSelected
+                  />
+                ) : null}
+              </div>
               <YesNoWithDetails
                 id="adolescent-information-relayed"
                 label="Relayed info to parent or legal guardian"
@@ -897,14 +927,24 @@ export function AdolescentHygieneTemplate({
             </div>
             <TreatmentCompletedList
               entries={form.treatmentCompleted}
+              oheRecap={buildAdolescentOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
-              onAdd={() =>
-                updateField("treatmentCompleted", [
-                  ...form.treatmentCompleted,
-                  createTreatmentEntry(),
-                ])
-              }
               onChange={(value) => updateField("treatmentCompleted", value)}
+            />
+            <LocalAnesthesiaControl
+              value={{
+                localAnesthesiaNoContraindication:
+                  form.localAnesthesiaNoContraindication,
+                localAnesthesiaEntries: form.localAnesthesiaEntries,
+                localAnesthesiaNoAdverseReactions:
+                  form.localAnesthesiaNoAdverseReactions,
+                localAnesthesiaAdequateAchieved:
+                  form.localAnesthesiaAdequateAchieved,
+                localAnesthesiaNotes: form.localAnesthesiaNotes,
+              }}
+              onChange={(localAnesthesia) =>
+                setForm((current) => ({ ...current, ...localAnesthesia }))
+              }
             />
             <TextareaField
               id="adolescent-next-visit-goal"

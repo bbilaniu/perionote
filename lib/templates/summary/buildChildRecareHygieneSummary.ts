@@ -5,6 +5,8 @@ import type {
   ChildRecareHygieneOutput,
 } from "@/lib/templates/childRecareHygiene";
 import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import { formatAdultHygieneTreatmentCompleted } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import { formatLocalAnesthesiaSummary } from "@/lib/templates/localAnesthesia";
 
 function sentence(label: string, value: string): string {
   const trimmed = value.trim();
@@ -142,6 +144,8 @@ export function buildChildRecareHygieneSummary(
         ),
         statusSentence("Polish", form.polishStatus, form.polishDetails),
         statusSentence("Fluoride", form.fluorideStatus, form.fluorideDetails),
+        formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
+        formatLocalAnesthesiaSummary(form),
       ])
     : "";
 

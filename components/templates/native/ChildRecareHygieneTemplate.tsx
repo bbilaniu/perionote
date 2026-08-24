@@ -14,7 +14,9 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
 import type {
@@ -29,6 +31,11 @@ import {
   hasRequiredChildRecareHygieneFields,
 } from "@/lib/templates/childRecareHygiene";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTreatmentEntryFromCatalogueItem,
+  treatmentCompletedEntryIdentity,
+  type AdultHygieneTreatmentCompletedEntry,
+} from "@/lib/templates/adultHygieneTreatment";
 import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
@@ -36,6 +43,21 @@ import type { InteractiveTemplateProps } from "@/lib/templates/types";
 const templateId = "child-recare-exam-hygiene-notes";
 const emptyForm = createEmptyChildRecareHygieneForm();
 const emptySerializedForm = JSON.stringify(emptyForm);
+const childDraftArrayItemShapes = {
+  treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
+  "treatmentCompleted[].toothAreas": "",
+  localAnesthesiaEntries: {
+    id: "",
+    route: "injection",
+    administrationType: "",
+    toothAreas: [],
+    product: "",
+    amountMl: "",
+    durationSeconds: "",
+    timeAdministered: "",
+  },
+  "localAnesthesiaEntries[].toothAreas": "",
+} as const;
 const controlClass = formControlClass();
 const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
 const buttonClass =
@@ -77,6 +99,7 @@ export function isValidChildRecareHygieneForm(
   return matchesDraftShape(
     { ...emptyForm, ...(value as Record<string, unknown>) },
     emptyForm,
+    childDraftArrayItemShapes,
   );
 }
 
@@ -349,7 +372,8 @@ export function ChildRecareHygieneTemplate({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const providerDefaultsApplied = useRef(false);
-  const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
+  const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
+    useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId,
@@ -458,6 +482,75 @@ export function ChildRecareHygieneTemplate({
       String(value).trim()
     ) {
       setProviderError("");
+    }
+  }
+
+  function nextTreatmentEntryId(): string {
+    return `child-treatment-${Date.now()}-${
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(16).slice(2)
+    }`;
+  }
+
+  function pediatricOheRecap(): string {
+    return [
+      form.ohiReviewed ? "OHI reviewed" : "",
+      form.brushingTechnique.trim(),
+      form.flossingTechnique.trim(),
+    ]
+      .filter(Boolean)
+      .join("; ");
+  }
+
+  function applyPediatricStandardCare() {
+    const standardIds = [
+      "seed.hygiene-treatment.completed.dentist-recare-exam",
+      "seed.hygiene-treatment.completed.scaling",
+      "seed.hygiene-treatment.completed.selective-polish",
+      "seed.hygiene-treatment.completed.ohe",
+      "seed.hygiene-treatment.completed.fluoride-varnish-application",
+    ];
+    const itemsById = new Map(
+      getItems("hygiene-treatment.completed").map((item) => [item.id, item]),
+    );
+    const existing = new Set(
+      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
+    );
+    const additions = standardIds.flatMap((id) => {
+      const item = itemsById.get(id);
+      if (!item) return [];
+      const entry = createTreatmentEntryFromCatalogueItem(
+        item,
+        nextTreatmentEntryId(),
+        pediatricOheRecap(),
+      );
+      if (!entry || existing.has(treatmentCompletedEntryIdentity(entry))) {
+        return [];
+      }
+      const adjusted: AdultHygieneTreatmentCompletedEntry = {
+        ...entry,
+        procedureSource:
+          entry.procedureKind === "ohe" ? "ohe" : "standard-treatment",
+        ...(entry.procedureKind === "scaling"
+          ? { quantity: form.scalingUnits.trim() || "0.5" }
+          : {}),
+        ...(entry.procedureKind === "polish" && form.polishDetails.trim()
+          ? { product: form.polishDetails.trim() }
+          : {}),
+        ...(entry.productApplicationType === "fluoride-varnish" &&
+        form.fluorideDetails.trim()
+          ? { product: form.fluorideDetails.trim() }
+          : {}),
+      };
+      existing.add(treatmentCompletedEntryIdentity(adjusted));
+      return [adjusted];
+    });
+    if (additions.length) {
+      updateField("treatmentCompleted", [
+        ...form.treatmentCompleted,
+        ...additions,
+      ]);
     }
   }
 
@@ -906,6 +999,7 @@ export function ChildRecareHygieneTemplate({
                     catalogueKey="hygiene-treatment.polishing-products"
                     value={form.polishDetails}
                     onChange={(value) => updateField("polishDetails", value)}
+                    showAllSuggestionsWhenSelected
                   />
                 ) : null}
               </div>
@@ -932,14 +1026,37 @@ export function ChildRecareHygieneTemplate({
                       return (
                         isDesensitizingRemineralizingProductMetadata(
                           metadata,
-                        ) && metadata.productType !== "desensitizer"
+                        ) && metadata.productType === "fluoride-varnish"
                       );
                     }}
                     onChange={(value) => updateField("fluorideDetails", value)}
+                    showAllSuggestionsWhenSelected
                   />
                 ) : null}
               </div>
             </div>
+            <TreatmentCompletedList
+              entries={form.treatmentCompleted}
+              oheRecap={pediatricOheRecap()}
+              onApplyStandard={applyPediatricStandardCare}
+              standardActionLabel="Apply standard pediatric care"
+              onChange={(value) => updateField("treatmentCompleted", value)}
+            />
+            <LocalAnesthesiaControl
+              value={{
+                localAnesthesiaNoContraindication:
+                  form.localAnesthesiaNoContraindication,
+                localAnesthesiaEntries: form.localAnesthesiaEntries,
+                localAnesthesiaNoAdverseReactions:
+                  form.localAnesthesiaNoAdverseReactions,
+                localAnesthesiaAdequateAchieved:
+                  form.localAnesthesiaAdequateAchieved,
+                localAnesthesiaNotes: form.localAnesthesiaNotes,
+              }}
+              onChange={(localAnesthesia) =>
+                setForm((current) => ({ ...current, ...localAnesthesia }))
+              }
+            />
           </Section>
 
           <Section title="Communication and follow-up">

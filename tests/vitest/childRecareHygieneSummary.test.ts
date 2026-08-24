@@ -128,4 +128,48 @@ describe("buildChildRecareHygieneSummary", () => {
     expect(summary).toContain("Molar classification: Cl I.");
     expect(summary).not.toContain("Terminal plane:");
   });
+
+  it("includes structured completed care and Dyclonine rinse in hygiene output", () => {
+    const form = {
+      ...createEmptyChildRecareHygieneForm(),
+      treatmentCompleted: [
+        {
+          id: "fluoride",
+          treatmentType: "Fluoride varnish application",
+          toothAreas: ["full mouth"],
+          procedureKind: "product-application" as const,
+          productApplicationType: "fluoride-varnish" as const,
+          product: "VOCO GmbH Profluoride® Varnish (5% NaF)",
+        },
+      ],
+      localAnesthesiaEntries: [
+        {
+          id: "dyclonine",
+          route: "rinse" as const,
+          administrationType: "",
+          toothAreas: ["full mouth"],
+          product: "Dyclonine 1% rinse",
+          amountMl: "5",
+          durationSeconds: "60",
+          timeAdministered: "",
+        },
+      ],
+    };
+
+    const hygienist = buildChildRecareHygieneSummary(form, {
+      output: "hygienist",
+    });
+    const dentist = buildChildRecareHygieneSummary(form, {
+      output: "dentist",
+    });
+
+    expect(hygienist).toContain(
+      "Treatment completed today: VOCO GmbH Profluoride® Varnish (5% NaF) application — full mouth",
+    );
+    expect(hygienist).toContain(
+      "Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds",
+    );
+    expect(dentist).not.toContain("Treatment completed today:");
+    expect(dentist).not.toContain("Dyclonine");
+  });
 });
