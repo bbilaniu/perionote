@@ -1,3 +1,9 @@
+import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
+import {
+  createEmptyLocalAnesthesiaValue,
+  type LocalAnesthesiaEntry,
+} from "@/lib/templates/localAnesthesia";
+
 export type ChildDocumentationStatus = "not-documented" | "yes" | "no";
 export type ChildExamStatus = "not-assessed" | "wnl" | "findings";
 export type ChildRecareHygieneOutput = "combined" | "dentist" | "hygienist";
@@ -56,6 +62,12 @@ export interface ChildRecareHygieneForm {
   polishDetails: string;
   fluorideStatus: ChildDocumentationStatus;
   fluorideDetails: string;
+  treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
+  localAnesthesiaNoContraindication: boolean;
+  localAnesthesiaEntries: LocalAnesthesiaEntry[];
+  localAnesthesiaNoAdverseReactions: boolean;
+  localAnesthesiaAdequateAchieved: boolean;
+  localAnesthesiaNotes: string;
   guardianCommunicationStatus: ChildDocumentationStatus;
   guardianCommunicationDetails: string;
   goalForNextVisit: string;
@@ -67,6 +79,7 @@ export interface ChildRecareHygieneForm {
 }
 
 export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
+  const localAnesthesia = createEmptyLocalAnesthesiaValue();
   return {
     patientId: "",
     dentist: "",
@@ -117,6 +130,8 @@ export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
     polishDetails: "",
     fluorideStatus: "not-documented",
     fluorideDetails: "",
+    treatmentCompleted: [],
+    ...localAnesthesia,
     guardianCommunicationStatus: "not-documented",
     guardianCommunicationDetails: "",
     goalForNextVisit: "",

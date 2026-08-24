@@ -13,6 +13,7 @@ import {
   formatPeriodontalClassification,
 } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatLocalTime24 } from "@/lib/templates/date";
+import { formatLocalAnesthesiaSummary } from "@/lib/templates/localAnesthesia";
 
 type BuildAdolescentHygieneSummaryOptions = {
   startedAt?: Date;
@@ -231,6 +232,7 @@ export function buildAdolescentHygieneSummary(
           : "Scaling: Yes.",
     yesNoLine("Polish", form.polishStatus, form.polishDetails),
     formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
+    formatLocalAnesthesiaSummary(form),
     yesNoLine("Fluoride", form.fluorideStatus, form.fluorideDetails),
     yesNoLine(
       "Relayed info to parent or legal guardian",

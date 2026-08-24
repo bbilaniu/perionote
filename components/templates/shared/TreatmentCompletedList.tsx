@@ -148,6 +148,7 @@ export function TreatmentCompletedList({
   entries,
   oheRecap = "",
   onApplyStandard,
+  standardActionLabel = "Apply standard treatment",
   onApplyRecare,
   radiographsHref,
   onChange,
@@ -156,6 +157,7 @@ export function TreatmentCompletedList({
   entries: AdultHygieneTreatmentCompletedEntry[];
   oheRecap?: string;
   onApplyStandard: () => void;
+  standardActionLabel?: string;
   onApplyRecare?: () => void;
   radiographsHref?: string;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
@@ -320,7 +322,7 @@ export function TreatmentCompletedList({
           className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
           onClick={onApplyStandard}
         >
-          Apply standard treatment
+          {standardActionLabel}
         </button>
         {onApplyRecare ? (
           <button
