@@ -18,6 +18,8 @@ import {
 
 const dyclonineCatalogueItemId =
   "seed.hygiene-treatment.anesthetic.dyclonine-rinse";
+const benzocaineCatalogueItemId =
+  "seed.hygiene-treatment.anesthetic.benzocaine-20";
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 const timeActionButtonClass =
@@ -67,8 +69,14 @@ export function LocalAnesthesiaControl({
   const dyclonine = products.find(
     (item) => item.id === dyclonineCatalogueItemId,
   );
+  const benzocaine = products.find(
+    (item) => item.id === benzocaineCatalogueItemId,
+  );
   const hasDyclonineRinse = value.localAnesthesiaEntries.some(
     (entry) => entry.catalogueItemId === dyclonineCatalogueItemId,
+  );
+  const hasBenzocaineTopical = value.localAnesthesiaEntries.some(
+    (entry) => entry.catalogueItemId === benzocaineCatalogueItemId,
   );
   const assessmentIncomplete =
     value.localAnesthesiaEntries.length > 0 &&
@@ -118,6 +126,27 @@ export function LocalAnesthesiaControl({
     });
   }
 
+  function applyBenzocaineTopical() {
+    if (!benzocaine || hasBenzocaineTopical) return;
+    const metadata = isLocalAnestheticCatalogueMetadata(benzocaine.metadata)
+      ? benzocaine.metadata
+      : undefined;
+    onChange({
+      ...value,
+      localAnesthesiaEntries: [
+        ...value.localAnesthesiaEntries,
+        {
+          ...newEntry("topical"),
+          administrationType: "Mucosal application",
+          toothAreas: ["before injection"],
+          product: benzocaine.label,
+          catalogueItemId: benzocaine.id,
+          amountMl: String(metadata?.defaultAmountMl ?? 0.5),
+        },
+      ],
+    });
+  }
+
   return (
     <fieldset
       className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700"
@@ -135,16 +164,28 @@ export function LocalAnesthesiaControl({
         >
           No C/I to LA
         </NativeChoiceControl>
-        <button
-          type="button"
-          className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
-          disabled={!dyclonine || hasDyclonineRinse}
-          onClick={applyDyclonineRinse}
-        >
-          {hasDyclonineRinse
-            ? "Dyclonine rinse applied"
-            : "Apply Dyclonine rinse"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
+            disabled={!benzocaine || hasBenzocaineTopical}
+            onClick={applyBenzocaineTopical}
+          >
+            {hasBenzocaineTopical
+              ? "Benzocaine topical applied"
+              : "Apply Benzocaine topical"}
+          </button>
+          <button
+            type="button"
+            className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
+            disabled={!dyclonine || hasDyclonineRinse}
+            onClick={applyDyclonineRinse}
+          >
+            {hasDyclonineRinse
+              ? "Dyclonine rinse applied"
+              : "Apply Dyclonine rinse"}
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
