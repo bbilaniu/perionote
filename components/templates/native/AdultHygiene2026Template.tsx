@@ -28,6 +28,7 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { Time24Input } from "@/components/forms/Time24Input";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { Cambra123SixAdultControl } from "@/components/templates/shared/Cambra123SixAdultControl";
+import { CollapsibleFieldset } from "@/components/templates/shared/CollapsibleFieldset";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
@@ -1046,55 +1047,6 @@ function CheckboxField({
   );
 }
 
-function ObservationDisclosure({
-  id,
-  label,
-  summary,
-  open,
-  onToggle,
-  children,
-}: {
-  id: string;
-  label: string;
-  summary: string;
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  const contentId = `${id}-content`;
-  return (
-    <fieldset
-      className="border-t border-slate-200 pt-3 dark:border-slate-700"
-      aria-label={label}
-    >
-      <button
-        id={id}
-        type="button"
-        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-        aria-expanded={open}
-        aria-controls={contentId}
-        onClick={onToggle}
-      >
-        <span className="min-w-0">{label}</span>
-        <span className="flex shrink-0 items-center gap-3">
-          <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-            {summary}
-          </span>
-          <DropdownChevron open={open} />
-        </span>
-        <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-          {summary}
-        </span>
-      </button>
-      {open ? (
-        <div id={contentId} className="space-y-4 pt-3">
-          {children}
-        </div>
-      ) : null}
-    </fieldset>
-  );
-}
-
 function measurementFor(
   evidence: readonly PeriodontalCriterionEvidence[],
   criterionId: string,
@@ -1577,34 +1529,13 @@ export function PeriodontalClassificationControl({
 
   return (
     <div className="space-y-5">
-      <fieldset
-        className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
-        aria-label="Structured periodontal observations"
+      <CollapsibleFieldset
+        id="adult-hygiene-structured-periodontal-observations"
+        label="Structured periodontal observations"
+        summary={structuredObservationSummary}
+        open={structuredObservationsOpen}
+        onToggle={() => setStructuredObservationsOpen((open) => !open)}
       >
-        <button
-          id="adult-hygiene-structured-periodontal-observations"
-          type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-          aria-expanded={structuredObservationsOpen}
-          aria-controls="adult-hygiene-structured-periodontal-observations-content"
-          onClick={() => setStructuredObservationsOpen((open) => !open)}
-        >
-          <span className="min-w-0">Structured periodontal observations</span>
-          <span className="flex shrink-0 items-center gap-3">
-            <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-              {structuredObservationSummary}
-            </span>
-            <DropdownChevron open={structuredObservationsOpen} />
-          </span>
-          <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-            {structuredObservationSummary}
-          </span>
-        </button>
-        {structuredObservationsOpen ? (
-          <div
-            id="adult-hygiene-structured-periodontal-observations-content"
-            className="space-y-4 pt-2"
-          >
             <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
               <legend className="font-semibold">
                 Periodontal assessment findings
@@ -1729,12 +1660,13 @@ export function PeriodontalClassificationControl({
               </div>
             </fieldset>
 
-            <ObservationDisclosure
+            <CollapsibleFieldset
               id="adult-hygiene-patient-specific-stage-evidence"
               label="Patient-specific stage evidence"
               summary={stageObservationSummary}
               open={stageEvidenceOpen}
               onToggle={() => setStageEvidenceOpen((open) => !open)}
+              appearance="nested"
             >
               {stageEvidenceGroups.map(({ value: group, label }) => (
                 <div key={group} className={evidenceSectionClass}>
@@ -1928,14 +1860,15 @@ export function PeriodontalClassificationControl({
                   </div>
                 </div>
               ))}
-            </ObservationDisclosure>
+            </CollapsibleFieldset>
 
-            <ObservationDisclosure
+            <CollapsibleFieldset
               id="adult-hygiene-patient-specific-grade-evidence"
               label="Patient-specific grade evidence"
               summary={gradeObservationSummary}
               open={gradeEvidenceOpen}
               onToggle={() => setGradeEvidenceOpen((open) => !open)}
+              appearance="nested"
             >
               <div className={evidenceSectionClass}>
                 <h3 className={evidenceSectionHeadingClass}>
@@ -2102,7 +2035,7 @@ export function PeriodontalClassificationControl({
                   </div>
                 </div>
               </div>
-            </ObservationDisclosure>
+            </CollapsibleFieldset>
             <button
               type="button"
               className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
@@ -2111,9 +2044,7 @@ export function PeriodontalClassificationControl({
               Collapse observations
               <DropdownChevron open />
             </button>
-          </div>
-        ) : null}
-      </fieldset>
+      </CollapsibleFieldset>
 
       <section
         className="space-y-3"
@@ -2695,34 +2626,13 @@ function GingivalDescriptionControl({
           />
         ) : null}
       </div>
-      <fieldset
-        className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
-        aria-label="Structured gingival observations"
+      <CollapsibleFieldset
+        id="adult-hygiene-structured-gingival-observations"
+        label="Structured gingival observations"
+        summary={structuredObservationSummary}
+        open={structuredObservationsOpen}
+        onToggle={() => setStructuredObservationsOpen((open) => !open)}
       >
-        <button
-          id="adult-hygiene-structured-gingival-observations"
-          type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-          aria-expanded={structuredObservationsOpen}
-          aria-controls="adult-hygiene-structured-gingival-observations-content"
-          onClick={() => setStructuredObservationsOpen((open) => !open)}
-        >
-          <span className="min-w-0">Structured gingival observations</span>
-          <span className="flex shrink-0 items-center gap-3">
-            <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-              {structuredObservationSummary}
-            </span>
-            <DropdownChevron open={structuredObservationsOpen} />
-          </span>
-          <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-            {structuredObservationSummary}
-          </span>
-        </button>
-        {structuredObservationsOpen ? (
-          <div
-            id="adult-hygiene-structured-gingival-observations-content"
-            className="space-y-4 pt-2"
-          >
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Apply the reviewed normal observations or document individual
               findings.
@@ -2878,9 +2788,7 @@ function GingivalDescriptionControl({
               Collapse observations
               <DropdownChevron open />
             </button>
-          </div>
-        ) : null}
-      </fieldset>
+      </CollapsibleFieldset>
     </>
   );
 }

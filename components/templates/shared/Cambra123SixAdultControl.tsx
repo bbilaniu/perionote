@@ -1,7 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
-import { formControlClass } from "@/components/forms/controlStyles";
+import {
+  DropdownChevron,
+  formControlClass,
+} from "@/components/forms/controlStyles";
+import { CollapsibleFieldset } from "@/components/templates/shared/CollapsibleFieldset";
 import {
   assessCambra123SixAdult,
   cambra123SixAdultItems,
@@ -141,6 +146,26 @@ export function Cambra123SixAdultControl({
   const result = assessCambra123SixAdult(value);
   const hasAssessment = hasCambra123SixAdultContent(value);
   const showLegacy = !hasAssessment && legacyContentPresent(legacy);
+  const [factorsOpen, setFactorsOpen] = useState(hasAssessment);
+  const yesCount =
+    result.protectiveYesCount +
+    result.riskYesCount +
+    result.diseaseIndicatorYesCount;
+  const signedScore =
+    result.totalScore > 0 ? `+${result.totalScore}` : String(result.totalScore);
+  const factorsSummary = showLegacy
+    ? "Legacy documentation"
+    : hasAssessment
+      ? `${yesCount} Yes · Score ${signedScore} · ${
+          value.finalRiskLevel
+            ? `Final ${value.finalRiskLevel}`
+            : `Suggested ${result.suggestedLevel}`
+        }`
+      : "Not calculated";
+
+  useEffect(() => {
+    if (hasAssessment) setFactorsOpen(true);
+  }, [hasAssessment]);
 
   function withStartedStatus(
     patch: Partial<Cambra123SixAdultAssessment>,
@@ -177,98 +202,116 @@ export function Cambra123SixAdultControl({
       return;
     }
     onChange(createEmptyCambra123SixAdultAssessment());
+    setFactorsOpen(false);
   }
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 dark:border-sky-900 dark:bg-sky-950/40">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="font-semibold">CAMBRA123 (2021), ages 6–adult</h3>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Check or uncheck Yes responses to recalculate immediately, then
-              record the clinician&apos;s final category.
-            </p>
+      <CollapsibleFieldset
+        id="adult-hygiene-cambra-assessment-factors"
+        label="CAMBRA123 assessment factors"
+        summary={factorsSummary}
+        open={factorsOpen}
+        onToggle={() => setFactorsOpen((open) => !open)}
+      >
+        <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 dark:border-sky-900 dark:bg-sky-950/40">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 className="font-semibold">CAMBRA123 (2021), ages 6–adult</h3>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                Check or uncheck Yes responses to recalculate immediately, then
+                record the clinician&apos;s final category.
+              </p>
+            </div>
+            <span className="rounded-full border border-sky-300 px-3 py-1 text-xs font-semibold text-sky-900 dark:border-sky-700 dark:text-sky-100">
+              {value.completionStatus === "complete"
+                ? "Calculated"
+                : value.completionStatus === "in-progress"
+                  ? "Started"
+                  : "Not started"}
+            </span>
           </div>
-          <span className="rounded-full border border-sky-300 px-3 py-1 text-xs font-semibold text-sky-900 dark:border-sky-700 dark:text-sky-100">
-            {value.completionStatus === "complete"
-              ? "Calculated"
-              : value.completionStatus === "in-progress"
-                ? "Started"
-                : "Not started"}
-          </span>
         </div>
-      </div>
 
-      {showLegacy ? (
-        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
-          <h3 className="font-semibold">Legacy caries-risk documentation</h3>
-          <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
-            This older draft predates CAMBRA123. Its existing documentation
-            remains in the generated note until this assessment is started.
-          </p>
-          <dl className="mt-3 grid gap-2 text-sm md:grid-cols-[auto_1fr]">
-            {legacy.level ? (
-              <>
-                <dt className="font-semibold">Level</dt>
-                <dd>{legacy.level}</dd>
-              </>
-            ) : null}
-            {legacy.factors.length ? (
-              <>
-                <dt className="font-semibold">Factors</dt>
-                <dd>{legacy.factors.join("; ")}</dd>
-              </>
-            ) : null}
-            {legacy.notes.trim() ? (
-              <>
-                <dt className="font-semibold">Notes</dt>
-                <dd>{legacy.notes}</dd>
-              </>
-            ) : null}
-          </dl>
-          <button
-            type="button"
-            className={`${buttonClass} mt-4 bg-sky-700 text-white hover:bg-sky-800`}
-            onClick={() =>
-              onChange(
-                withStartedStatus({ completionStatus: "in-progress" }),
-              )
-            }
-          >
-            Start CAMBRA123 assessment
-          </button>
-        </div>
-      ) : null}
+        {showLegacy ? (
+          <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+            <h3 className="font-semibold">Legacy caries-risk documentation</h3>
+            <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
+              This older draft predates CAMBRA123. Its existing documentation
+              remains in the generated note until this assessment is started.
+            </p>
+            <dl className="mt-3 grid gap-2 text-sm md:grid-cols-[auto_1fr]">
+              {legacy.level ? (
+                <>
+                  <dt className="font-semibold">Level</dt>
+                  <dd>{legacy.level}</dd>
+                </>
+              ) : null}
+              {legacy.factors.length ? (
+                <>
+                  <dt className="font-semibold">Factors</dt>
+                  <dd>{legacy.factors.join("; ")}</dd>
+                </>
+              ) : null}
+              {legacy.notes.trim() ? (
+                <>
+                  <dt className="font-semibold">Notes</dt>
+                  <dd>{legacy.notes}</dd>
+                </>
+              ) : null}
+            </dl>
+            <button
+              type="button"
+              className={`${buttonClass} mt-4 bg-sky-700 text-white hover:bg-sky-800`}
+              onClick={() => {
+                setFactorsOpen(true);
+                onChange(
+                  withStartedStatus({ completionStatus: "in-progress" }),
+                );
+              }}
+            >
+              Start CAMBRA123 assessment
+            </button>
+          </div>
+        ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ItemGroup
-          kind="protective"
-          value={value}
-          onToggle={toggleItem}
-        />
-        <div className="space-y-4">
+        <div className="grid gap-4 xl:grid-cols-2">
           <ItemGroup
-            kind="risk"
-            phase="question"
+            kind="protective"
             value={value}
             onToggle={toggleItem}
           />
-          <ItemGroup
-            kind="risk"
-            phase="clinical-exam"
-            value={value}
-            onToggle={toggleItem}
-          />
+          <div className="space-y-4">
+            <ItemGroup
+              kind="risk"
+              phase="question"
+              value={value}
+              onToggle={toggleItem}
+            />
+            <ItemGroup
+              kind="risk"
+              phase="clinical-exam"
+              value={value}
+              onToggle={toggleItem}
+            />
+          </div>
+          <div className="xl:col-span-2">
+            <ItemGroup
+              kind="disease-indicator"
+              value={value}
+              onToggle={toggleItem}
+            />
+          </div>
         </div>
-        <div className="xl:col-span-2">
-          <ItemGroup
-            kind="disease-indicator"
-            value={value}
-            onToggle={toggleItem}
-          />
-        </div>
-      </div>
+        <button
+          type="button"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+          onClick={() => setFactorsOpen(false)}
+        >
+          Collapse assessment
+          <DropdownChevron open />
+        </button>
+      </CollapsibleFieldset>
 
       <div className="rounded-xl border border-slate-200 p-4 dark:border-slate-700">
         <h3 className="font-semibold">CAMBRA123 quantitative aid</h3>

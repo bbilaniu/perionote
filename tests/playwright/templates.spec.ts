@@ -1545,6 +1545,12 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
     name: "Final clinician caries-risk category",
     exact: true,
   });
+  const cambraFactors = page.getByRole("button", {
+    name: /CAMBRA123 assessment factors/,
+  });
+  await expect(cambraFactors).toHaveAttribute("aria-expanded", "false");
+  await expect(cambraFactors).toContainText("Not calculated");
+  await cambraFactors.click();
   await page.getByRole("checkbox", {
     name: /Frequent snacking \(more than 3 times daily\)/,
   }).check();
@@ -1562,6 +1568,12 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
   await page.getByRole("button", { name: "Apply CAMBRA123 suggestion" }).click();
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
+  await expect(cambraFactors).toContainText("2 Yes · Score +4 · Final High");
+  await page.getByRole("button", { name: "Collapse assessment" }).click();
+  await expect(cambraFactors).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" }),
+  ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
   );
@@ -1572,6 +1584,7 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
     "Final clinician caries-risk category: High.",
   );
 
+  await cambraFactors.click();
   await page.getByRole("checkbox", {
     name: /Hyposalivatory medications/,
   }).uncheck();
@@ -1582,6 +1595,7 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "CAMBRA123 score: 2 (Column 1: 0; Column 2: +2; Column 3: +0).",
   );
+  await expect(cambraFactors).toContainText("1 Yes · Score +2 · Final High");
 });
 
 test("2026 Adult Hygiene documents the basis for a reduced non-periodontitis periodontium", async ({
