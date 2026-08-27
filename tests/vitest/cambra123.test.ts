@@ -31,7 +31,7 @@ describe("CAMBRA123 2021 ages 6–adult", () => {
     ).toHaveLength(4);
   });
 
-  it("does not suggest a category before completion", () => {
+  it("recalculates and suggests a category while responses are changing", () => {
     const result = assessCambra123SixAdult({
       ...createEmptyCambra123SixAdultAssessment(),
       completionStatus: "in-progress",
@@ -39,10 +39,7 @@ describe("CAMBRA123 2021 ages 6–adult", () => {
     });
 
     expect(result.totalScore).toBe(2);
-    expect(result.suggestedLevel).toBe("");
-    expect(result.warnings).toContainEqual(
-      expect.stringContaining("Complete the assessment"),
-    );
+    expect(result.suggestedLevel).toBe("Moderate");
   });
 
   it("scores each column and suggests Low when protective factors prevail", () => {

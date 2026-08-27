@@ -314,12 +314,6 @@ export function assessCambra123SixAdult(
     );
   }
 
-  if (assessment.completionStatus !== "complete") {
-    suggestedLevel = "";
-    warnings.push(
-      "Complete the assessment before using the CAMBRA123 category suggestion; unchecked items are not yet treated as assessed No responses.",
-    );
-  }
   if (unrecognizedCount) {
     warnings.push(
       `${unrecognizedCount} stored ${

@@ -1,7 +1,6 @@
 "use client";
 
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
-import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { formControlClass } from "@/components/forms/controlStyles";
 import {
   assessCambra123SixAdult,
@@ -163,7 +162,11 @@ export function Cambra123SixAdultControl({
     const yesItemIds = cambra123SixAdultItems
       .map((item) => item.id)
       .filter((itemId) => selected.has(itemId));
-    onChange(withStartedStatus({ yesItemIds }));
+    onChange({
+      ...value,
+      completionStatus: "complete",
+      yesItemIds,
+    });
   }
 
   function resetAssessment() {
@@ -183,15 +186,15 @@ export function Cambra123SixAdultControl({
           <div>
             <h3 className="font-semibold">CAMBRA123 (2021), ages 6–adult</h3>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
-              Check Yes responses, review the quantitative aid, then record the
-              clinician&apos;s final category.
+              Check or uncheck Yes responses to recalculate immediately, then
+              record the clinician&apos;s final category.
             </p>
           </div>
           <span className="rounded-full border border-sky-300 px-3 py-1 text-xs font-semibold text-sky-900 dark:border-sky-700 dark:text-sky-100">
             {value.completionStatus === "complete"
-              ? "Complete"
+              ? "Calculated"
               : value.completionStatus === "in-progress"
-                ? "In progress"
+                ? "Started"
                 : "Not started"}
           </span>
         </div>
@@ -294,30 +297,10 @@ export function Cambra123SixAdultControl({
           </div>
         </div>
 
-        <div className="mt-4">
-          <NativeChoiceControl
-            type="checkbox"
-            checked={value.completionStatus === "complete"}
-            className="w-full justify-start"
-            onChange={(checked) =>
-              onChange({
-                ...value,
-                completionStatus: checked
-                  ? "complete"
-                  : hasAssessment
-                    ? "in-progress"
-                    : "not-started",
-              })
-            }
-          >
-            Assessment complete — every unchecked item was assessed as No
-          </NativeChoiceControl>
-        </div>
-
         <div className="mt-4 border-l-4 border-sky-600 pl-4" aria-live="polite">
           <h3 className="font-semibold">Suggested CAMBRA123 category</h3>
           <p className="mt-1 text-sm font-semibold">
-            {result.suggestedLevel || "Not available until assessment is complete"}
+            {hasAssessment ? result.suggestedLevel : "Not calculated"}
           </p>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
             Quantitative score band: {result.scoreLevel}. The selected final
@@ -336,7 +319,8 @@ export function Cambra123SixAdultControl({
               ))}
             </ul>
           </details>
-          {result.suggestedLevel &&
+          {hasAssessment &&
+          result.suggestedLevel &&
           value.finalRiskLevel !== result.suggestedLevel ? (
             <button
               type="button"

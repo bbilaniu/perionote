@@ -1558,16 +1558,8 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await expect(
     page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
       .locator("xpath=.."),
-  ).toContainText("Not available until assessment is complete");
-  await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
-  await page.getByRole("checkbox", {
-    name: "Assessment complete — every unchecked item was assessed as No",
-    exact: true,
-  }).check();
-  await expect(
-    page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
-      .locator("xpath=.."),
   ).toContainText("High");
+  await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
   await page.getByRole("button", { name: "Apply CAMBRA123 suggestion" }).click();
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
@@ -1578,6 +1570,17 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   );
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "Final clinician caries-risk category: High.",
+  );
+
+  await page.getByRole("checkbox", {
+    name: /Hyposalivatory medications/,
+  }).uncheck();
+  await expect(
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
+      .locator("xpath=.."),
+  ).toContainText("Moderate");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "CAMBRA123 score: 2 (Column 1: 0; Column 2: +2; Column 3: +0).",
   );
 });
 
