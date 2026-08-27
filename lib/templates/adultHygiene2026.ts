@@ -23,6 +23,10 @@ import {
   type LocalAnesthesiaEntry,
 } from "@/lib/templates/localAnesthesia";
 import type { VitalsReading } from "@/lib/templates/vitalsReadings";
+import {
+  createEmptyCambra123SixAdultAssessment,
+  type Cambra123SixAdultAssessment,
+} from "@/lib/templates/cambra123";
 
 export {
   standardTreatmentCompletedPreset,
@@ -276,6 +280,7 @@ export interface AdultHygiene2026Form {
   cariesRiskLevel: CariesRiskLevel;
   cariesRiskFactors: string[];
   cariesRiskNotes: string;
+  cambra123Assessment: Cambra123SixAdultAssessment;
   oralHygieneCompliance: string;
   oralHygieneComplianceComment: string;
   homeCareInstructionReviewed: boolean;
@@ -398,6 +403,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     cariesRiskLevel: "",
     cariesRiskFactors: [],
     cariesRiskNotes: "",
+    cambra123Assessment: createEmptyCambra123SixAdultAssessment(),
     oralHygieneCompliance: "",
     oralHygieneComplianceComment: "",
     homeCareInstructionReviewed: false,

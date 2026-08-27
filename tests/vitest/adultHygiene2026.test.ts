@@ -234,7 +234,7 @@ TMJ: WNL.
       "Oral habits:",
       "CPAP:",
       "Plaque:",
-      "Moderate caries risk",
+      "Caries risk assessment (CAMBRA123 2021, ages 6–adult)",
       "Oral hygiene compliance:",
       "Dental Treatment Options Discussed:",
       "Hygiene Treatment Options Discussed:",
@@ -345,6 +345,7 @@ TMJ: WNL.
       "recareAdditionalComments",
       "dentalNextVisit",
       "dentalDateBooked",
+      "cambra123Assessment",
     ]) {
       delete legacyDraft[field];
     }
@@ -362,6 +363,15 @@ TMJ: WNL.
     legacyPeriodontalClassification.gingivalHealth = legacyGingivalHealth;
     legacyDraft.periodontalClassification = legacyPeriodontalClassification;
     expect(isAdultHygieneDraftForm(legacyDraft)).toBe(true);
+    expect(
+      isAdultHygieneDraftForm({
+        ...createEmptyAdultHygiene2026Form(),
+        cambra123Assessment: {
+          ...createEmptyAdultHygiene2026Form().cambra123Assessment,
+          yesItemIds: [42],
+        },
+      }),
+    ).toBe(false);
     expect(
       isAdultHygieneDraftForm({
         ...createEmptyAdultHygiene2026Form(),
@@ -455,6 +465,46 @@ OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
         ...legacyOhe,
       }),
     ).toContain(expected);
+  });
+
+  it("charts a completed CAMBRA123 assessment and supersedes legacy risk text", () => {
+    const form = createEmptyAdultHygiene2026Form();
+    form.cariesRiskLevel = "Moderate";
+    form.cariesRiskFactors = ["Legacy factor that must not be mixed in"];
+    form.cariesRiskNotes = "Legacy notes";
+    form.cambra123Assessment = {
+      ...form.cambra123Assessment,
+      completionStatus: "complete",
+      yesItemIds: [
+        "protective.f-toothpaste-twice-daily",
+        "risk.frequent-snacking",
+        "risk.reduced-salivary-function",
+        "disease.new-dentin-cavities",
+      ],
+      finalRiskLevel: "Extreme",
+      notes: "Dry-mouth management reviewed",
+    };
+
+    const summary = buildAdultHygiene2026Summary(form);
+    expect(summary).toContain(
+      "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+    );
+    expect(summary).toContain(
+      "Protective factors — Yes: Fluoride toothpaste twice daily or more.",
+    );
+    expect(summary).toContain(
+      "Biological/environmental risk factors — Yes: Frequent snacking (more than 3 times daily); Reduced salivary function (measured low flow rate).",
+    );
+    expect(summary).toContain(
+      "Disease indicators — Yes: New cavities or lesions into dentin (radiographically).",
+    );
+    expect(summary).toContain(
+      "CAMBRA123 score: 6 (Column 1: -1; Column 2: +4; Column 3: +3).",
+    );
+    expect(summary).toContain("Final clinician caries-risk category: Extreme.");
+    expect(summary).toContain("CAMBRA123 notes: Dry-mouth management reviewed.");
+    expect(summary).not.toContain("Legacy factor");
+    expect(summary).not.toContain("Legacy notes");
   });
 
   it("uses independent model, fixture, summary, component, and draft identities", () => {

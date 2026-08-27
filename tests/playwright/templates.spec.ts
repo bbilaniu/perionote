@@ -1542,30 +1542,43 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   );
 
   const cariesRiskLevel = page.getByRole("button", {
-    name: "Caries risk level",
+    name: "Final clinician caries-risk category",
     exact: true,
   });
-  const factors = page.getByRole("combobox", {
-    name: "Caries risk factors",
-    exact: true,
-  });
-  await factors.focus();
-  await page
-    .getByRole("option", { name: /High frequency of sugar intake Starter/ })
-    .click();
+  await page.getByRole("checkbox", {
+    name: /Frequent snacking \(more than 3 times daily\)/,
+  }).check();
+  await page.getByRole("checkbox", {
+    name: /Hyposalivatory medications/,
+  }).check();
 
   await expect(
-    page.getByRole("heading", { name: "Suggested caries risk level" }),
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Suggested caries risk level" })
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
+      .locator("xpath=.."),
+  ).toContainText("Not available until assessment is complete");
+  await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
+  await page.getByRole("checkbox", {
+    name: "Assessment complete — every unchecked item was assessed as No",
+    exact: true,
+  }).check();
+  await expect(
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
       .locator("xpath=.."),
   ).toContainText("High");
-  await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
-  await page
-    .getByRole("button", { name: "Apply caries risk suggestion" })
-    .click();
+  await page.getByRole("button", { name: "Apply CAMBRA123 suggestion" }).click();
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "CAMBRA123 score: 4 (Column 1: 0; Column 2: +4; Column 3: +0).",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Final clinician caries-risk category: High.",
+  );
 });
 
 test("2026 Adult Hygiene documents the basis for a reduced non-periodontitis periodontium", async ({

@@ -27,6 +27,7 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { Time24Input } from "@/components/forms/Time24Input";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { Cambra123SixAdultControl } from "@/components/templates/shared/Cambra123SixAdultControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
@@ -47,7 +48,6 @@ import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2026Output,
   type AdultHygiene2026Form,
-  type CariesRiskLevel,
   brushingFrequencyChoices,
   createEmptyAdultHygiene2026Form,
   diseaseAndRiskOheTopicChoices,
@@ -61,8 +61,8 @@ import {
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
-import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import { copyCambra123SixAdultAssessment } from "@/lib/templates/cambra123";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   buildOheTreatmentRecap,
@@ -153,15 +153,6 @@ const vitalsRemoveButtonClass =
 const evidenceSectionClass =
   "space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700";
 const evidenceSectionHeadingClass = "mb-2 text-center text-sm font-semibold";
-const cariesRiskLevelOptions: Array<{
-  value: CariesRiskLevel;
-  label: string;
-}> = [
-  { value: "", label: "None selected" },
-  { value: "Low", label: "Low" },
-  { value: "Moderate", label: "Moderate" },
-  { value: "High", label: "High" },
-];
 const gingivalCandidateFieldTargetIds: Record<
   GingivalHealthCandidateMissingFieldId,
   string
@@ -270,6 +261,7 @@ const adultHygieneDraftArrayItemShapes = {
   "periodontalClassification.gradeBasis": { criterionId: "" },
   "periodontalClassification.gingivalHealth.reducedPeriodontiumBases": "",
   cariesRiskFactors: "",
+  "cambra123Assessment.yesItemIds": "",
   ohiAidsReviewed: "",
   oheTopicsReviewed: "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
@@ -3103,6 +3095,9 @@ export function AdultHygiene2026Template({
         gingivalDescription: copyGingivalDescriptionAssessment(
           draft.form.gingivalDescription,
         ),
+        cambra123Assessment: copyCambra123SixAdultAssessment(
+          draft.form.cambra123Assessment ?? emptyForm.cambra123Assessment,
+        ),
       });
       setStartedAt(new Date(draft.startedAt));
       setPatientIdError("");
@@ -3198,7 +3193,6 @@ export function AdultHygiene2026Template({
   const summary = summaries[outputMode];
   const selectedOutputLabel =
     outputChoices.find(([value]) => value === outputMode)?.[1] ?? "Note";
-  const cariesRiskSuggestion = suggestAdultCariesRisk(form.cariesRiskFactors);
   const occlusalSplintState = resolveOcclusalSplintState(form);
 
   function updateField<TKey extends keyof AdultHygiene2026Form>(
@@ -3365,6 +3359,9 @@ export function AdultHygiene2026Template({
       calculusAreas: [...(fixture.calculusAreas ?? [])],
       bleedingAreas: [...(fixture.bleedingAreas ?? [])],
       cariesRiskFactors: [...fixture.cariesRiskFactors],
+      cambra123Assessment: copyCambra123SixAdultAssessment(
+        fixture.cambra123Assessment,
+      ),
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
       oheTopicsReviewed: [...fixture.oheTopicsReviewed],
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
@@ -4573,75 +4570,15 @@ export function AdultHygiene2026Template({
           </Section>
 
           <Section title="Caries Risk Assessment">
-            <div className="grid gap-4 md:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-caries-risk-level"
-                label="Caries risk level"
-                value={form.cariesRiskLevel}
-                options={cariesRiskLevelOptions}
-                onChange={(value) => updateField("cariesRiskLevel", value)}
-              />
-              <div className="md:col-span-2">
-                <CatalogueMultiCombobox
-                  id="adult-hygiene-caries-risk-factors"
-                  label="Caries risk factors"
-                  catalogueKey="clinical-exam.caries-risk-factors"
-                  values={form.cariesRiskFactors}
-                  onChange={(value) => updateField("cariesRiskFactors", value)}
-                  roomySelectionActions
-                />
-              </div>
-              <div className="border-l-4 border-sky-600 pl-4 md:col-span-2">
-                <h3 className="font-semibold">Suggested caries risk level</h3>
-                <p className="mt-1 text-sm">
-                  {cariesRiskSuggestion.level || "Not available"}
-                </p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Based only on the risk factors documented above. The selected
-                  risk level is not changed automatically.
-                </p>
-                {cariesRiskSuggestion.reasons.length ? (
-                  <details className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                    <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
-                      Why this was suggested
-                    </summary>
-                    <ul className="mt-2 list-disc space-y-1 pl-5">
-                      {cariesRiskSuggestion.reasons.map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
-                    </ul>
-                  </details>
-                ) : null}
-                {cariesRiskSuggestion.warnings.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-                    {cariesRiskSuggestion.warnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {cariesRiskSuggestion.level &&
-                form.cariesRiskLevel !== cariesRiskSuggestion.level ? (
-                  <button
-                    type="button"
-                    className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
-                    onClick={() =>
-                      updateField("cariesRiskLevel", cariesRiskSuggestion.level)
-                    }
-                  >
-                    Apply caries risk suggestion
-                  </button>
-                ) : null}
-              </div>
-              <div className="md:col-span-2">
-                <TextareaField
-                  id="adult-hygiene-caries-risk-notes"
-                  label="Caries risk notes"
-                  placeholder="Document rationale for the caries risk selection."
-                  value={form.cariesRiskNotes}
-                  onChange={(value) => updateField("cariesRiskNotes", value)}
-                />
-              </div>
-            </div>
+            <Cambra123SixAdultControl
+              value={form.cambra123Assessment}
+              legacy={{
+                level: form.cariesRiskLevel,
+                factors: form.cariesRiskFactors,
+                notes: form.cariesRiskNotes,
+              }}
+              onChange={(value) => updateField("cambra123Assessment", value)}
+            />
           </Section>
 
           <Section title="Oral Hygiene and Education">
