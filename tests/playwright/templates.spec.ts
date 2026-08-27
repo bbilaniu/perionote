@@ -1115,6 +1115,54 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
   );
 });
 
+test("2026 Adult Hygiene applies Benzocaine topical before injection", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  const applyBenzocaine = localAnesthesia.getByRole("button", {
+    name: "Apply Benzocaine topical",
+    exact: true,
+  });
+  await applyBenzocaine.click();
+
+  const entry = localAnesthesia
+    .getByRole("list", { name: "Local anesthesia entries", exact: true })
+    .locator(":scope > li");
+  await expect(entry).toHaveCount(1);
+  await expect(
+    entry.getByRole("button", { name: "Route", exact: true }),
+  ).toHaveAttribute("data-value", "topical");
+  await expect(
+    entry.getByRole("button", { name: "Application type", exact: true }),
+  ).toHaveAttribute("data-value", "Mucosal application");
+  await expect(
+    entry.getByRole("button", { name: "Anesthetic product", exact: true }),
+  ).toHaveAttribute(
+    "data-value",
+    "seed.hygiene-treatment.anesthetic.benzocaine-20",
+  );
+  await expect(
+    entry.getByRole("spinbutton", { name: "Amount (mL)", exact: true }),
+  ).toHaveValue("0.5");
+  await expect(
+    entry.getByRole("button", { name: "Tooth/area", exact: true }),
+  ).toContainText("before injection");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Mucosal application — before injection: Benzocaine 20% paste 0.5 ml",
+  );
+  await expect(
+    localAnesthesia.getByRole("button", {
+      name: "Benzocaine topical applied",
+      exact: true,
+    }),
+  ).toBeDisabled();
+});
+
 test("2026 Local Anesthesia uses styled pointer-selectable dropdowns", async ({
   page,
 }) => {
