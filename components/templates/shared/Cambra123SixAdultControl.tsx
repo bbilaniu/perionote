@@ -158,8 +158,8 @@ export function Cambra123SixAdultControl({
     : hasAssessment
       ? `${yesCount} Yes · Score ${signedScore} · ${
           value.finalRiskLevel
-            ? `Final ${value.finalRiskLevel}`
-            : `Suggested ${result.suggestedLevel}`
+            ? value.finalRiskLevel
+            : `${result.suggestedLevel} (Suggested)`
         }`
       : "Not calculated";
 

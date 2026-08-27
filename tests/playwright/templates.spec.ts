@@ -1566,9 +1566,12 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
       .locator("xpath=.."),
   ).toContainText("High");
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
+  await expect(cambraFactors).toContainText(
+    "2 Yes · Score +4 · High (Suggested)",
+  );
   await page.getByRole("button", { name: "Apply CAMBRA123 suggestion" }).click();
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
-  await expect(cambraFactors).toContainText("2 Yes · Score +4 · Final High");
+  await expect(cambraFactors).toContainText("2 Yes · Score +4 · High");
   await page.getByRole("button", { name: "Collapse assessment" }).click();
   await expect(cambraFactors).toHaveAttribute("aria-expanded", "false");
   await expect(
@@ -1595,7 +1598,7 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "CAMBRA123 score: 2 (Column 1: 0; Column 2: +2; Column 3: +0).",
   );
-  await expect(cambraFactors).toContainText("1 Yes · Score +2 · Final High");
+  await expect(cambraFactors).toContainText("1 Yes · Score +2 · High");
 });
 
 test("2026 Adult Hygiene documents the basis for a reduced non-periodontitis periodontium", async ({
