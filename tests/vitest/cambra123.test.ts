@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  assessCambra123ZeroToSix,
   assessCambra123SixAdult,
+  cambra123ZeroToSixItems,
   cambra123SixAdultItems,
+  createEmptyCambra123ZeroToSixAssessment,
   createEmptyCambra123SixAdultAssessment,
+  type Cambra123ZeroToSixItemId,
   type Cambra123SixAdultItemId,
 } from "@/lib/templates/cambra123";
 
@@ -15,6 +19,105 @@ function completedWith(
     yesItemIds,
   };
 }
+
+function zeroToSixCompletedWith(
+  ...yesItemIds: Cambra123ZeroToSixItemId[]
+) {
+  return {
+    ...createEmptyCambra123ZeroToSixAssessment(),
+    completionStatus: "complete" as const,
+    yesItemIds,
+  };
+}
+
+describe("CAMBRA123 2021 ages 0–6", () => {
+  it("contains the published 4 protective, 6 risk, and 2 disease items", () => {
+    expect(
+      cambra123ZeroToSixItems.filter((item) => item.kind === "protective"),
+    ).toHaveLength(4);
+    expect(
+      cambra123ZeroToSixItems.filter((item) => item.kind === "risk"),
+    ).toHaveLength(6);
+    expect(
+      cambra123ZeroToSixItems.filter(
+        (item) => item.kind === "disease-indicator",
+      ),
+    ).toHaveLength(2);
+  });
+
+  it("uses the ages 0–6 quantitative score bands", () => {
+    const protectiveIds = cambra123ZeroToSixItems
+      .filter((item) => item.kind === "protective")
+      .map((item) => item.id);
+    const riskIds = cambra123ZeroToSixItems
+      .filter((item) => item.kind === "risk")
+      .map((item) => item.id);
+
+    expect(
+      assessCambra123ZeroToSix(
+        zeroToSixCompletedWith(...protectiveIds),
+      ).suggestedLevel,
+    ).toBe("Low");
+    expect(
+      assessCambra123ZeroToSix(
+        zeroToSixCompletedWith("risk.frequent-snacking"),
+      ).suggestedLevel,
+    ).toBe("Moderate");
+    expect(
+      assessCambra123ZeroToSix(
+        zeroToSixCompletedWith(
+          "risk.frequent-snacking",
+          "risk.bottle-nonspill-cup",
+        ),
+      ).suggestedLevel,
+    ).toBe("High");
+    expect(
+      assessCambra123ZeroToSix(
+        zeroToSixCompletedWith(
+          ...riskIds,
+          "disease.evident-decay-white-spots",
+        ),
+      ).suggestedLevel,
+    ).toBe("Very High");
+  });
+
+  it("treats disease or household recent decay as at least High guidance", () => {
+    const protectiveIds = cambra123ZeroToSixItems
+      .filter((item) => item.kind === "protective")
+      .map((item) => item.id);
+
+    expect(
+      assessCambra123ZeroToSix(
+        zeroToSixCompletedWith(
+          ...protectiveIds,
+          "disease.evident-decay-white-spots",
+        ),
+      ).suggestedLevel,
+    ).toBe("High");
+    expect(
+      assessCambra123ZeroToSix(
+        zeroToSixCompletedWith(
+          ...protectiveIds,
+          "risk.household-recent-decay",
+        ),
+      ).suggestedLevel,
+    ).toBe("High");
+  });
+
+  it("uses extensive or severe decay to elevate High guidance to Very High", () => {
+    const result = assessCambra123ZeroToSix({
+      ...zeroToSixCompletedWith(
+        "risk.frequent-snacking",
+        "risk.bottle-nonspill-cup",
+      ),
+      severeOrExtensiveRecentDecay: true,
+    });
+
+    expect(result.totalScore).toBe(4);
+    expect(result.scoreLevel).toBe("High");
+    expect(result.suggestedLevel).toBe("Very High");
+  });
+});
 
 describe("CAMBRA123 2021 ages 6–adult", () => {
   it("contains the published 8 protective, 8 risk, and 4 disease items", () => {

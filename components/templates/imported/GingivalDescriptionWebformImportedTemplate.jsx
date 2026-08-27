@@ -1489,14 +1489,16 @@ export function buildSummaryText(form, selectedFindings) {
       detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
     });
 
-    if (form.localAnesthesiaNoAdverseReactions) {
-      detailLines.push("No adverse reactions noted");
-    }
-    if (form.localAnesthesiaAdequateAchieved) {
-      detailLines.push("Adequate anesthesia achieved");
-    }
-    if (clean(form.localAnesthesiaNotes)) {
-      detailLines.push(cleanSentence(form.localAnesthesiaNotes));
+    if (form.localAnesthesiaEntries.length > 0) {
+      if (form.localAnesthesiaNoAdverseReactions) {
+        detailLines.push("No adverse reactions noted");
+      }
+      if (form.localAnesthesiaAdequateAchieved) {
+        detailLines.push("Adequate anesthesia achieved");
+      }
+      if (clean(form.localAnesthesiaNotes)) {
+        detailLines.push(cleanSentence(form.localAnesthesiaNotes));
+      }
     }
 
     if (!heading && !detailLines.length) return "";
@@ -4119,14 +4121,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                     </div>
 
-                    <div
-                      className={cx(
-                        "space-y-4 rounded-2xl border p-4 transition-colors",
-                        shouldHighlightLocalAnesthesiaAssessment
-                          ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
-                          : "border-slate-200 dark:border-slate-700",
-                      )}
-                    >
+                    {hasLocalAnesthesiaActivity ? (
+                      <div
+                        className={cx(
+                          "space-y-4 rounded-2xl border p-4 transition-colors",
+                          shouldHighlightLocalAnesthesiaAssessment
+                            ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+                            : "border-slate-200 dark:border-slate-700",
+                        )}
+                      >
                       <div className="space-y-1">
                         <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                           Post-anesthetic assessment
@@ -4175,7 +4178,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                           }))
                         }
                       />
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </SectionCard>

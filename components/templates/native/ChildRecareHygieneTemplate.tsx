@@ -16,6 +16,7 @@ import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
@@ -39,11 +40,17 @@ import {
 import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
+import {
+  copyCambra123SixAdultAssessment,
+  copyCambra123ZeroToSixAssessment,
+} from "@/lib/templates/cambra123";
 
 const templateId = "child-recare-exam-hygiene-notes";
 const emptyForm = createEmptyChildRecareHygieneForm();
 const emptySerializedForm = JSON.stringify(emptyForm);
 const childDraftArrayItemShapes = {
+  "cambra123ZeroToSixAssessment.yesItemIds": "",
+  "cambra123SixAdultAssessment.yesItemIds": "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
   "treatmentCompleted[].toothAreas": "",
   localAnesthesiaEntries: {
@@ -382,13 +389,22 @@ export function ChildRecareHygieneTemplate({
     isEmpty: isEmptyForm,
     isValidForm: isValidChildRecareHygieneForm,
     onRestore: (draft) => {
+      const emptyForm = createEmptyChildRecareHygieneForm();
       const hasOcclusionAssessment = Object.prototype.hasOwnProperty.call(
         draft.form,
         "occlusionAssessment",
       );
       setForm({
-        ...createEmptyChildRecareHygieneForm(),
+        ...emptyForm,
         ...draft.form,
+        cambra123ZeroToSixAssessment: copyCambra123ZeroToSixAssessment(
+          draft.form.cambra123ZeroToSixAssessment ??
+            emptyForm.cambra123ZeroToSixAssessment,
+        ),
+        cambra123SixAdultAssessment: copyCambra123SixAdultAssessment(
+          draft.form.cambra123SixAdultAssessment ??
+            emptyForm.cambra123SixAdultAssessment,
+        ),
         ...(!hasOcclusionAssessment && draft.form.molarOcclusion.trim()
           ? { occlusionAssessment: "molar-classification" as const }
           : {}),
@@ -922,6 +938,27 @@ export function ChildRecareHygieneTemplate({
               detailLabel="Caries details"
               onStatusChange={(value) => updateField("cariesStatus", value)}
               onDetailChange={(value) => updateField("cariesDetails", value)}
+            />
+          </Section>
+
+          <Section
+            title="Caries Risk Assessment"
+            description="Select the CAMBRA123 age-band instrument used for this encounter."
+          >
+            <PediatricCambra123Control
+              instrument={form.cambra123Instrument}
+              zeroToSixAssessment={form.cambra123ZeroToSixAssessment}
+              sixAdultAssessment={form.cambra123SixAdultAssessment}
+              cariesStatus={form.cariesStatus}
+              onInstrumentChange={(value) =>
+                updateField("cambra123Instrument", value)
+              }
+              onZeroToSixChange={(value) =>
+                updateField("cambra123ZeroToSixAssessment", value)
+              }
+              onSixAdultChange={(value) =>
+                updateField("cambra123SixAdultAssessment", value)
+              }
             />
           </Section>
 

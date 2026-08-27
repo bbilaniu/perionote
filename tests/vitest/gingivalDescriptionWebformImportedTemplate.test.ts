@@ -324,6 +324,20 @@ describe("buildSummaryText", () => {
     );
   });
 
+  it("omits post-anesthetic findings when no anesthetic entry exists", () => {
+    const form = buildBaseForm();
+    form.localAnesthesiaNoContraindication = true;
+    form.localAnesthesiaNoAdverseReactions = true;
+    form.localAnesthesiaAdequateAchieved = true;
+    form.localAnesthesiaNotes = "Stale assessment text";
+
+    const summary = buildSummaryText(form, []);
+
+    expect(summary).not.toContain("No adverse reactions noted");
+    expect(summary).not.toContain("Adequate anesthesia achieved");
+    expect(summary).not.toContain("Stale assessment text");
+  });
+
   it("formats disposition under a Continuity of Care heading", () => {
     const form = buildBaseForm();
     form.disposition = form.disposition.map((entry) =>

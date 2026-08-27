@@ -1014,6 +1014,9 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     exact: true,
   });
   await expect(noContraindications).not.toBeChecked();
+  await expect(
+    localAnesthesia.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toHaveCount(0);
 
   await localAnesthesia
     .getByRole("button", { name: "Apply Dyclonine rinse", exact: true })
@@ -1022,6 +1025,9 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     .getByRole("list", { name: "Local anesthesia entries", exact: true })
     .locator(":scope > li");
   await expect(entry).toHaveCount(1);
+  await expect(
+    localAnesthesia.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toBeVisible();
   await expect(
     entry.getByRole("button", { name: "Route", exact: true }),
   ).toHaveAttribute("data-value", "rinse");
@@ -2078,7 +2084,14 @@ test("local anesthesia assessment is emphasized when activity is documented with
   await page.goto("/templates/dental-hygiene-note-webform");
 
   await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
+  await expect(
+    page.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Add topical entry" }).click();
+
+  await expect(
+    page.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toBeVisible();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
