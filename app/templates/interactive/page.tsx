@@ -25,12 +25,14 @@ export default function InteractiveTemplatesPage() {
           <Link
             key={template.slug}
             href={`/templates/${template.slug}`}
-            className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+            className="group relative rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
           >
             <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Standalone · {template.lifecycle}
             </p>
-            <h2 className="mt-1 text-lg font-semibold">{template.title}</h2>
+            <h2 className="mt-1 text-lg font-semibold group-hover:text-chart-accent dark:group-hover:text-sky-300">
+              {template.title}
+            </h2>
             <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
               {template.description}
             </p>

@@ -64,6 +64,7 @@ export const clinicTemplateRegistry: readonly ClinicTemplateDefinition[] = [
     title: "Child Recare Exam & Hygiene Notes",
     sourceTitle: "Child Recare Exam & Hygiene Notes",
     category: "child-adolescent-hygiene",
+    versionStatus: "current",
     description: "Combined pediatric recall exam and hygiene note.",
     content: `Dentist: [SELECT/INSERT: Dentists]
 Assistant: [SELECT/INSERT: RDA]
@@ -400,6 +401,7 @@ Hygiene Date Booked: `,
     title: "Local Anesthetic",
     sourceTitle: "Local Anesthetic",
     category: "local-anesthesia-addendum",
+    versionStatus: "previous",
     description: "Short local anesthetic treatment addendum.",
     content: `Topical gel placed prior to injection
 Anaesthetic used: [SELECT/INSERT: Anaesthetic]
@@ -412,6 +414,7 @@ Patient tolerated well. No adverse reactions`,
     title: "Split Adult Hygiene — Part 1",
     sourceTitle: "Split Adult Hygiene Part 1",
     category: "adult-hygiene",
+    versionStatus: "previous",
     description: "First part of the split adult hygiene workflow.",
     content: `Last Recall Date: [AUTO: Last Recall Date]
 
@@ -447,6 +450,7 @@ Gingival Assessment:`,
     title: "Split Adult Hygiene — Part 2",
     sourceTitle: "Split Adult Hygiene Part 2",
     category: "adult-hygiene",
+    versionStatus: "previous",
     description: "Second part of the split adult hygiene workflow.",
     content: `Hygiene Area of Concern:
 
@@ -570,6 +574,7 @@ Date Booked: `,
     title: "Periodontal Recare",
     sourceTitle: "Periodontal Recare",
     category: "periodontal-maintenance",
+    versionStatus: "previous",
     description: "Periodontal maintenance assessment and recall note.",
     content: `DENTIST: [SELECT/INSERT: Dentists]
 RDA: [SELECT/INSERT: RDA]
@@ -614,6 +619,7 @@ Next Appointment: (6month)(3month) Hygiene
     title: "Emergency Exam",
     sourceTitle: "Emergency Exam",
     category: "emergency-limited-exam",
+    versionStatus: "previous",
     description: "Limited emergency exam, diagnosis, and treatment plan note.",
     content: `DENTIST: [SELECT/INSERT: Dentists]
 RDA/RDH: [SELECT/INSERT: RDA] [SELECT/INSERT: Hygienist]
@@ -664,6 +670,7 @@ Date Booked:`,
     title: "TMJ Exam / Consult or Referral",
     sourceTitle: "TMJ Exam / Consult or Referral",
     category: "tmj-tmd-assessment",
+    versionStatus: "previous",
     description: "TMJ/TMD clinical assessment, diagnosis, and management note.",
     content: `DENTIST: [SELECT/INSERT: Dentists]
 RDA: [SELECT/INSERT: RDA]
