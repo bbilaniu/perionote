@@ -70,8 +70,10 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
       .getByRole("radio", { name: "All", exact: true }),
   ).toBeChecked();
   await expect(
-    page.getByRole("checkbox", { name: "Show previous templates" }),
-  ).not.toBeChecked();
+    page
+      .getByRole("radiogroup", { name: "Template versions" })
+      .getByRole("radio", { name: "Current", exact: true }),
+  ).toBeChecked();
 
   const currentAdultCard = page
     .getByRole("article")
@@ -159,8 +161,9 @@ test("clinical template cards follow the selected default destination", async ({
 }) => {
   await page.goto("/templates/clinic");
   await page
-    .getByRole("checkbox", { name: "Show previous templates" })
-    .check();
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
 
   const adultHygieneCard = page
     .getByRole("article")
@@ -239,8 +242,9 @@ test("clinical template catalogue can show only interactive versions", async ({
   ).toHaveCount(4);
 
   await page
-    .getByRole("checkbox", { name: "Show previous templates" })
-    .check();
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
   const previousAdultCard = page
     .getByRole("article")
     .filter({ hasText: "2021 Adult Hygiene" });

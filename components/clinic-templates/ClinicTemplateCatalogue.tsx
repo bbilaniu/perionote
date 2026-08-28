@@ -29,6 +29,7 @@ export type ClinicTemplateCatalogueGroup = {
 
 type DefaultCardDestination = "interactive" | "original";
 type TemplateVisibility = "all" | "interactive";
+type TemplateVersionVisibility = "current" | "all";
 
 const titleLinkClass =
   "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
@@ -42,7 +43,8 @@ export function ClinicTemplateCatalogue({
     useState<DefaultCardDestination>("interactive");
   const [templateVisibility, setTemplateVisibility] =
     useState<TemplateVisibility>("all");
-  const [showPreviousTemplates, setShowPreviousTemplates] = useState(false);
+  const [templateVersionVisibility, setTemplateVersionVisibility] =
+    useState<TemplateVersionVisibility>("current");
   const visibleGroups = groups
     .map((group) => ({
       ...group,
@@ -51,7 +53,7 @@ export function ClinicTemplateCatalogue({
           ...category,
           templates: category.templates.filter(
             (template) =>
-              (showPreviousTemplates ||
+              (templateVersionVisibility === "all" ||
                 template.versionStatus !== "previous") &&
               (templateVisibility === "all" ||
                 template.interactiveLifecycle),
@@ -139,16 +141,24 @@ export function ClinicTemplateCatalogue({
           </div>
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Previous versions
+              Template versions
             </p>
-            <NativeChoiceControl
-              type="checkbox"
-              checked={showPreviousTemplates}
-              onChange={setShowPreviousTemplates}
-              className="w-full rounded-lg"
+            <div
+              role="radiogroup"
+              aria-label="Template versions"
+              className="grid grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
             >
-              Show previous templates
-            </NativeChoiceControl>
+              {(["current", "all"] as const).map((visibility) => (
+                <SegmentButton
+                  key={visibility}
+                  name="clinic-template-version-visibility"
+                  selected={templateVersionVisibility === visibility}
+                  onClick={() => setTemplateVersionVisibility(visibility)}
+                >
+                  {visibility === "current" ? "Current" : "All"}
+                </SegmentButton>
+              ))}
+            </div>
           </div>
         </div>
       </section>
