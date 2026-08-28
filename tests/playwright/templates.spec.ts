@@ -1640,6 +1640,19 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await expect(cambraFactors).toHaveAttribute("aria-expanded", "false");
   await expect(cambraFactors).toContainText("Not calculated");
   await cambraFactors.click();
+  await cariesRiskLevel.click();
+  await page.getByRole("option", { name: "Low", exact: true }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "CAMBRA123 score: 0 (Column 1: 0; Column 2: +0; Column 3: +0).",
+  );
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Clear CAMBRA123 assessment" })
+    .click();
+  await page.getByRole("button", { name: /CAMBRA123 assessment factors/ }).click();
   await page.getByRole("checkbox", {
     name: /Frequent snacking \(more than 3 times daily\)/,
   }).check();
