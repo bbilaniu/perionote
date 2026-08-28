@@ -3,6 +3,9 @@ name: Version
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+    types: [closed]
 
 permissions:
   contents: write
@@ -15,6 +18,7 @@ concurrency:
 jobs:
   changesets:
     name: Create version pull request
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,14 +44,18 @@ jobs:
 
   sync-beta:
     name: Fast-forward beta after versioning
-    needs: changesets
-    if: contains(github.event.head_commit.message, 'Version Packages')
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'changeset-release/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
 
       - name: Fast-forward beta to main
         run: |
