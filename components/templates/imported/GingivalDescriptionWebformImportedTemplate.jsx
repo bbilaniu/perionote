@@ -3873,13 +3873,24 @@ export function GingivalDescriptionWebformImportedTemplate({
                             variant="outline"
                             className="rounded-2xl px-3 py-1.5 text-xs"
                             onClick={() =>
-                              setForm((current) => ({
-                                ...current,
-                                localAnesthesiaEntries:
+                              setForm((current) => {
+                                const localAnesthesiaEntries =
                                   current.localAnesthesiaEntries.filter(
                                     (_, entryIndex) => entryIndex !== index,
-                                  ),
-                              }))
+                                  );
+                                return {
+                                  ...current,
+                                  localAnesthesiaEntries,
+                                  ...(localAnesthesiaEntries.length === 0
+                                    ? {
+                                        localAnesthesiaNoAdverseReactions:
+                                          false,
+                                        localAnesthesiaAdequateAchieved: false,
+                                        localAnesthesiaNotes: "",
+                                      }
+                                    : {}),
+                                };
+                              })
                             }
                           >
                             Remove
