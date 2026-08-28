@@ -2200,6 +2200,78 @@ test("local anesthesia assessment is emphasized when activity is documented with
   ).toHaveCount(0);
 });
 
+test("imported webform resets post-anesthetic findings after the final entry is removed", async ({
+  page,
+}) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).check();
+  await page.getByRole("button", { name: "Add topical entry" }).click();
+  await page
+    .getByRole("checkbox", { name: "No adverse reactions noted" })
+    .check();
+  await page
+    .getByRole("checkbox", { name: "Adequate anesthesia achieved" })
+    .check();
+  await page
+    .getByRole("textbox", { name: "Anesthesia notes" })
+    .fill("Old finding");
+
+  await page
+    .locator("#local-anesthesia-entry-0")
+    .getByRole("button", { name: "Remove" })
+    .click();
+  await page.getByRole("button", { name: "Add injection entry" }).click();
+
+  await expect(
+    page.getByRole("checkbox", { name: "No adverse reactions noted" }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("checkbox", { name: "Adequate anesthesia achieved" }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("textbox", { name: "Anesthesia notes" }),
+  ).toBeEmpty();
+});
+
+test("native local anesthesia resets post-anesthetic findings after the final entry is removed", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  await localAnesthesia.getByRole("button", { name: "Add topical entry" }).click();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "No adverse reactions noted" })
+    .check();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "Adequate anesthesia achieved" })
+    .check();
+  await localAnesthesia
+    .getByRole("textbox", { name: "Anesthesia notes" })
+    .fill("Old finding");
+
+  await localAnesthesia.getByRole("button", { name: "Remove" }).click();
+  await localAnesthesia.getByRole("button", { name: "Add injection entry" }).click();
+
+  await expect(
+    localAnesthesia.getByRole("checkbox", {
+      name: "No adverse reactions noted",
+    }),
+  ).not.toBeChecked();
+  await expect(
+    localAnesthesia.getByRole("checkbox", {
+      name: "Adequate anesthesia achieved",
+    }),
+  ).not.toBeChecked();
+  await expect(
+    localAnesthesia.getByRole("textbox", { name: "Anesthesia notes" }),
+  ).toBeEmpty();
+});
+
 test("imported webform summary uses preview a formatting", async ({ page }) => {
   await page.goto("/templates/dental-hygiene-note-webform");
   page.once("dialog", (dialog) => dialog.accept());

@@ -236,15 +236,23 @@ export function LocalAnesthesiaControl({
                   <button
                     type="button"
                     className={`${buttonClass} border-red-300 text-red-800 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950`}
-                    onClick={() =>
+                    onClick={() => {
+                      const localAnesthesiaEntries =
+                        value.localAnesthesiaEntries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        );
                       onChange({
                         ...value,
-                        localAnesthesiaEntries:
-                          value.localAnesthesiaEntries.filter(
-                            (candidate) => candidate.id !== entry.id,
-                          ),
-                      })
-                    }
+                        localAnesthesiaEntries,
+                        ...(localAnesthesiaEntries.length === 0
+                          ? {
+                              localAnesthesiaNoAdverseReactions: false,
+                              localAnesthesiaAdequateAchieved: false,
+                              localAnesthesiaNotes: "",
+                            }
+                          : {}),
+                      });
+                    }}
                   >
                     Remove
                   </button>
