@@ -34,6 +34,7 @@ import {
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
   createTreatmentEntryFromCatalogueItem,
+  recareExamTreatmentPreset,
   treatmentCompletedEntryIdentity,
   type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygieneTreatment";
@@ -521,7 +522,6 @@ export function ChildRecareHygieneTemplate({
 
   function applyPediatricStandardCare() {
     const standardIds = [
-      "seed.hygiene-treatment.completed.dentist-recare-exam",
       "seed.hygiene-treatment.completed.scaling",
       "seed.hygiene-treatment.completed.selective-polish",
       "seed.hygiene-treatment.completed.ohe",
@@ -568,6 +568,23 @@ export function ChildRecareHygieneTemplate({
         ...additions,
       ]);
     }
+  }
+
+  function applyRecareExam() {
+    if (
+      form.treatmentCompleted.some(
+        (entry) =>
+          treatmentCompletedEntryIdentity(entry) === "procedure:recare-exam",
+      )
+    ) {
+      return;
+    }
+    const entry: AdultHygieneTreatmentCompletedEntry = {
+      id: nextTreatmentEntryId(),
+      ...recareExamTreatmentPreset,
+      toothAreas: [...recareExamTreatmentPreset.toothAreas],
+    };
+    updateField("treatmentCompleted", [entry, ...form.treatmentCompleted]);
   }
 
   async function copyNote() {
@@ -1077,6 +1094,7 @@ export function ChildRecareHygieneTemplate({
               oheRecap={pediatricOheRecap()}
               onApplyStandard={applyPediatricStandardCare}
               standardActionLabel="Apply standard pediatric care"
+              onApplyRecare={applyRecareExam}
               onChange={(value) => updateField("treatmentCompleted", value)}
             />
             <LocalAnesthesiaControl
