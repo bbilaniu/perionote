@@ -1,5 +1,16 @@
 # hygienenote
 
+## 0.13.0
+
+### Minor Changes
+
+- 9474d4d: Add the CAMBRA123 2021 ages 6–adult caries-risk assessment to the 2026 adult and adolescent hygiene forms. The structured assessment scores protective factors, biological and environmental risks, and disease indicators as responses change; provides transparent clinical guidance while preserving the clinician's final category; supports drafts and generated notes; and keeps the factor checklist collapsible with compact summaries that distinguish suggested from clinician-selected risk.
+- 8fc7b5c: Mark the 2026 adult and adolescent hygiene templates as current, hide their previous versions by default, and add Current and All catalogue controls that reveal previous templates without changing existing template routes or draft identifiers.
+
+### Patch Changes
+
+- 1dfdd00: Align the template-library and standalone-form card hover styles with the clinical-template catalogue by emphasizing the border, shadow, and title colour.
+
 ## 0.12.0
 
 ### Minor Changes
