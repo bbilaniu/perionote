@@ -69,10 +69,39 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
       .getByRole("radiogroup", { name: "Show templates" })
       .getByRole("radio", { name: "All", exact: true }),
   ).toBeChecked();
+  await expect(
+    page.getByRole("checkbox", { name: "Show previous templates" }),
+  ).not.toBeChecked();
+
+  const currentAdultCard = page
+    .getByRole("article")
+    .filter({ hasText: "2026 Adult Hygiene" });
+  const currentAdolescentCard = page
+    .getByRole("article")
+    .filter({ hasText: "2026 Adolescent Hygiene" });
+  await expect(
+    currentAdultCard.getByText("current", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentAdolescentCard.getByText("current", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("article")
+      .filter({ hasText: "12–17 Years Old Hygiene Template" }),
+  ).toHaveCount(0);
 
   const recareCard = page
     .getByRole("article")
-    .filter({ hasText: "Recare Exam" });
+    .filter({
+      has: page.getByText(
+        "Periodic exam note covering clinical findings and planning.",
+        { exact: true },
+      ),
+    });
   await expect(
     recareCard.getByRole("link", { name: "Open interactive Recare Exam" }),
   ).toHaveAttribute("href", "/templates/clinic/recare-exam/interactive/");
@@ -129,6 +158,9 @@ test("clinical template cards follow the selected default destination", async ({
   page,
 }) => {
   await page.goto("/templates/clinic");
+  await page
+    .getByRole("checkbox", { name: "Show previous templates" })
+    .check();
 
   const adultHygieneCard = page
     .getByRole("article")
@@ -147,7 +179,12 @@ test("clinical template cards follow the selected default destination", async ({
     .click();
   const recareCard = page
     .getByRole("article")
-    .filter({ hasText: "Recare Exam" });
+    .filter({
+      has: page.getByText(
+        "Periodic exam note covering clinical findings and planning.",
+        { exact: true },
+      ),
+    });
   await Promise.all([
     page.waitForURL("**/templates/clinic/recare-exam/"),
     recareCard
@@ -182,12 +219,17 @@ test("clinical template catalogue can show only interactive versions", async ({
   await expect(interactiveOnly).toBeChecked();
   await expect(
     page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByRole("article").filter({ hasText: "2026 Adult Hygiene" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("article").filter({ hasText: "Recare Exam" }),
+    page.getByRole("article").filter({
+      has: page.getByText(
+        "Periodic exam note covering clinical findings and planning.",
+        { exact: true },
+      ),
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
@@ -195,6 +237,43 @@ test("clinical template catalogue can show only interactive versions", async ({
   await expect(
     page.getByRole("link", { name: "View original template" }),
   ).toHaveCount(4);
+
+  await page
+    .getByRole("checkbox", { name: "Show previous templates" })
+    .check();
+  const previousAdultCard = page
+    .getByRole("article")
+    .filter({ hasText: "2021 Adult Hygiene" });
+  const previousAdolescentCard = page
+    .getByRole("article")
+    .filter({ hasText: "12–17 Years Old Hygiene Template" });
+  await expect(previousAdultCard).toBeVisible();
+  await expect(previousAdolescentCard).toBeVisible();
+  await expect(
+    previousAdultCard.getByText("previous", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    previousAdolescentCard.getByText("previous", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    previousAdultCard.getByRole("link", {
+      name: "Open interactive 2021 Adult Hygiene",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "/templates/clinic/adult-hygiene-2021/interactive/",
+  );
+  await expect(
+    previousAdolescentCard.getByRole("link", {
+      name: "Open interactive 12–17 Years Old Hygiene Template",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "/templates/clinic/adolescent-hygiene/interactive/",
+  );
+  await expect(
+    page.getByRole("link", { name: "View original template" }),
+  ).toHaveCount(6);
 
   await showTemplates
     .getByRole("radio", { name: "All", exact: true })

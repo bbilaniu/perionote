@@ -53,6 +53,7 @@ type ClinicTemplateDefinition = {
   title: string;
   sourceTitle: string;
   category: ClinicTemplateCategory;
+  versionStatus?: "current" | "previous";
   description: string;
   content: string;
 };
@@ -134,6 +135,7 @@ BOOKED: [AUTO: Next Appointment Date]`,
     title: "12–17 Years Old Hygiene Template",
     sourceTitle: "12-17YRS Old Hygiene Template",
     category: "child-adolescent-hygiene",
+    versionStatus: "previous",
     description: "Hygiene note for adolescent patients aged 12–17.",
     content: `RDH: [SELECT/INSERT: Hygienist]
 RDA: [SELECT/INSERT: RDA]
@@ -184,6 +186,7 @@ Date Booked: `,
     title: "2026 Adolescent Hygiene",
     sourceTitle: "2026 Adolescent Hygiene + Recare",
     category: "child-adolescent-hygiene",
+    versionStatus: "current",
     description:
       "Unified adolescent encounter for Combined, Dentist, and Hygienist documentation.",
     content: `ONE ENCOUNTER — THREE NOTE OUTPUTS
@@ -226,6 +229,7 @@ Dates booked`,
     title: "2021 Adult Hygiene",
     sourceTitle: "2021 Adult Hygiene NEW",
     category: "adult-hygiene",
+    versionStatus: "previous",
     description: "Comprehensive adult hygiene assessment and treatment note.",
     content: `Last Recare Date: [AUTO: Last Recall Date]
 
@@ -300,6 +304,7 @@ Date Booked: `,
     title: "2026 Adult Hygiene",
     sourceTitle: "2026 Adult Hygiene",
     category: "adult-hygiene",
+    versionStatus: "current",
     description:
       "Unified adult encounter for Complete, Hygiene, and Recare documentation.",
     content: `Last Recare Date: [AUTO: Last Recall Date]

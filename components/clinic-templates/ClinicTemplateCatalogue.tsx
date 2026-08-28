@@ -11,6 +11,7 @@ export type ClinicTemplateCatalogueItem = {
   slug: string;
   title: string;
   description: string;
+  versionStatus?: "current" | "previous";
   interactiveLifecycle?: TemplateLifecycleStatus;
 };
 
@@ -41,18 +42,20 @@ export function ClinicTemplateCatalogue({
     useState<DefaultCardDestination>("interactive");
   const [templateVisibility, setTemplateVisibility] =
     useState<TemplateVisibility>("all");
+  const [showPreviousTemplates, setShowPreviousTemplates] = useState(false);
   const visibleGroups = groups
     .map((group) => ({
       ...group,
       categories: group.categories
         .map((category) => ({
           ...category,
-          templates:
-            templateVisibility === "interactive"
-              ? category.templates.filter(
-                  (template) => template.interactiveLifecycle,
-                )
-              : category.templates,
+          templates: category.templates.filter(
+            (template) =>
+              (showPreviousTemplates ||
+                template.versionStatus !== "previous") &&
+              (templateVisibility === "all" ||
+                template.interactiveLifecycle),
+          ),
         }))
         .filter(
           (category) =>
@@ -80,7 +83,7 @@ export function ClinicTemplateCatalogue({
             Choose what opens from a card and which templates appear below.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Show templates
@@ -133,6 +136,19 @@ export function ClinicTemplateCatalogue({
                 );
               })}
             </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Previous versions
+            </p>
+            <NativeChoiceControl
+              type="checkbox"
+              checked={showPreviousTemplates}
+              onChange={setShowPreviousTemplates}
+              className="w-full rounded-lg"
+            >
+              Show previous templates
+            </NativeChoiceControl>
           </div>
         </div>
       </section>
@@ -294,14 +310,28 @@ function ClinicTemplateCard({
             </Link>
           )}
         </h4>
-        {template.interactiveLifecycle ? (
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${lifecyclePresentation[template.interactiveLifecycle].badgeClassName}`}
-            data-template-lifecycle-badge={template.interactiveLifecycle}
-          >
-            Interactive · {template.interactiveLifecycle}
-          </span>
-        ) : null}
+        <div className="flex flex-wrap justify-end gap-2">
+          {template.versionStatus ? (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${
+                template.versionStatus === "current"
+                  ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-200"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+              data-template-version-status={template.versionStatus}
+            >
+              {template.versionStatus}
+            </span>
+          ) : null}
+          {template.interactiveLifecycle ? (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${lifecyclePresentation[template.interactiveLifecycle].badgeClassName}`}
+              data-template-lifecycle-badge={template.interactiveLifecycle}
+            >
+              Interactive · {template.interactiveLifecycle}
+            </span>
+          ) : null}
+        </div>
       </div>
       <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
         {template.description}
