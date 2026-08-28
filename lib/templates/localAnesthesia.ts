@@ -119,14 +119,16 @@ export function formatLocalAnesthesiaSummary(
   totals.forEach((amount, product) => {
     detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
   });
-  if (value.localAnesthesiaNoAdverseReactions) {
-    detailLines.push("No adverse reactions noted");
-  }
-  if (value.localAnesthesiaAdequateAchieved) {
-    detailLines.push("Adequate anesthesia achieved");
-  }
-  if (trimmed(value.localAnesthesiaNotes)) {
-    detailLines.push(trimmed(value.localAnesthesiaNotes));
+  if (value.localAnesthesiaEntries.length > 0) {
+    if (value.localAnesthesiaNoAdverseReactions) {
+      detailLines.push("No adverse reactions noted");
+    }
+    if (value.localAnesthesiaAdequateAchieved) {
+      detailLines.push("Adequate anesthesia achieved");
+    }
+    if (trimmed(value.localAnesthesiaNotes)) {
+      detailLines.push(trimmed(value.localAnesthesiaNotes));
+    }
   }
 
   if (!value.localAnesthesiaNoContraindication && !detailLines.length) {

@@ -45,6 +45,21 @@ describe("local anesthesia", () => {
     expect(localAnesthesiaLocationChoices.rinse).toEqual(["full mouth"]);
   });
 
+  it("omits post-anesthetic findings when no anesthetic entry exists", () => {
+    const summary = formatLocalAnesthesiaSummary({
+      ...createEmptyLocalAnesthesiaValue(),
+      localAnesthesiaNoContraindication: true,
+      localAnesthesiaNoAdverseReactions: true,
+      localAnesthesiaAdequateAchieved: true,
+      localAnesthesiaNotes: "Stale assessment text",
+    });
+
+    expect(summary).toBe("Local anesthetic administered: No C/I to LA");
+    expect(summary).not.toContain("No adverse reactions noted");
+    expect(summary).not.toContain("Adequate anesthesia achieved");
+    expect(summary).not.toContain("Stale assessment text");
+  });
+
   it("formats a Dyclonine rinse with timing, duration, total, and assessment", () => {
     expect(
       formatLocalAnesthesiaSummary({

@@ -7,6 +7,17 @@ import type {
 import { formatNoteHeaderLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import { formatAdultHygieneTreatmentCompleted } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatLocalAnesthesiaSummary } from "@/lib/templates/localAnesthesia";
+import {
+  assessCambra123SixAdult,
+  assessCambra123ZeroToSix,
+  cambra123SixAdultItemsByKind,
+  cambra123ZeroToSixItemsByKind,
+  hasCambra123SixAdultContent,
+  hasCambra123ZeroToSixContent,
+  type Cambra123ItemKind,
+  type Cambra123SixAdultAssessment,
+  type Cambra123ZeroToSixAssessment,
+} from "@/lib/templates/cambra123";
 
 function sentence(label: string, value: string): string {
   const trimmed = value.trim();
@@ -50,6 +61,92 @@ function joinConsentSources(values: string[]): string {
   if (values.length <= 1) return values[0] ?? "";
   if (values.length === 2) return `${values[0]} and ${values[1]}`;
   return `${values.slice(0, -1).join(", ")}, and ${values.at(-1)}`;
+}
+
+function selectedCambraLine(
+  label: string,
+  complete: boolean,
+  itemLabels: string[],
+): string {
+  if (!itemLabels.length && !complete) return "";
+  return `${label}: ${itemLabels.length ? itemLabels.join("; ") : "None"}.`;
+}
+
+function cambra123ZeroToSixLines(
+  assessment: Cambra123ZeroToSixAssessment,
+): string[] {
+  if (!hasCambra123ZeroToSixContent(assessment)) return [];
+  const result = assessCambra123ZeroToSix(assessment);
+  const complete = assessment.completionStatus === "complete";
+  const selectedLine = (label: string, kind: Cambra123ItemKind) =>
+    selectedCambraLine(
+      label,
+      complete,
+      cambra123ZeroToSixItemsByKind(assessment, kind).map(
+        (item) => item.label,
+      ),
+    );
+
+  return [
+    `Caries risk assessment (CAMBRA123 2021, ages 0–6): ${
+      complete
+        ? "Complete."
+        : assessment.completionStatus === "in-progress"
+          ? "In progress."
+          : "Not started."
+    }`,
+    selectedLine("Protective factors — Yes", "protective"),
+    selectedLine("Biological/environmental risk factors — Yes", "risk"),
+    selectedLine("Disease indicators — Yes", "disease-indicator"),
+    assessment.severeOrExtensiveRecentDecay
+      ? "Very High clinical modifier — extensive or severe recent/existing decay: Yes."
+      : "",
+    complete
+      ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
+      : "",
+    assessment.finalRiskLevel
+      ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
+      : complete
+        ? "Final clinician caries-risk category: Not documented."
+        : "",
+    sentence("CAMBRA123 notes", assessment.notes),
+  ].filter(Boolean);
+}
+
+function cambra123SixAdultLines(
+  assessment: Cambra123SixAdultAssessment,
+): string[] {
+  if (!hasCambra123SixAdultContent(assessment)) return [];
+  const result = assessCambra123SixAdult(assessment);
+  const complete = assessment.completionStatus === "complete";
+  const selectedLine = (label: string, kind: Cambra123ItemKind) =>
+    selectedCambraLine(
+      label,
+      complete,
+      cambra123SixAdultItemsByKind(assessment, kind).map((item) => item.label),
+    );
+
+  return [
+    `Caries risk assessment (CAMBRA123 2021, ages 6–adult): ${
+      complete
+        ? "Complete."
+        : assessment.completionStatus === "in-progress"
+          ? "In progress."
+          : "Not started."
+    }`,
+    selectedLine("Protective factors — Yes", "protective"),
+    selectedLine("Biological/environmental risk factors — Yes", "risk"),
+    selectedLine("Disease indicators — Yes", "disease-indicator"),
+    complete
+      ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
+      : "",
+    assessment.finalRiskLevel
+      ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
+      : complete
+        ? "Final clinician caries-risk category: Not documented."
+        : "",
+    sentence("CAMBRA123 notes", assessment.notes),
+  ].filter(Boolean);
 }
 
 export function buildChildRecareHygieneSummary(
@@ -149,6 +246,16 @@ export function buildChildRecareHygieneSummary(
       ])
     : "";
 
+  const cambraLines =
+    form.cambra123Instrument === "0-6"
+      ? cambra123ZeroToSixLines(form.cambra123ZeroToSixAssessment)
+      : form.cambra123Instrument === "6-adult"
+        ? cambra123SixAdultLines(form.cambra123SixAdultAssessment)
+        : [];
+  const cariesRisk = cambraLines.length
+    ? section(["CARIES RISK ASSESSMENT", ...cambraLines])
+    : "";
+
   const followUp = section([
     statusSentence(
       "Information relayed to parent or legal guardian",
@@ -163,5 +270,7 @@ export function buildChildRecareHygieneSummary(
     sentence("Booked", form.bookedDate),
   ]);
 
-  return [header, dentist, hygiene, followUp].filter(Boolean).join("\n\n");
+  return [header, dentist, cariesRisk, hygiene, followUp]
+    .filter(Boolean)
+    .join("\n\n");
 }

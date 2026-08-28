@@ -236,15 +236,23 @@ export function LocalAnesthesiaControl({
                   <button
                     type="button"
                     className={`${buttonClass} border-red-300 text-red-800 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950`}
-                    onClick={() =>
+                    onClick={() => {
+                      const localAnesthesiaEntries =
+                        value.localAnesthesiaEntries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        );
                       onChange({
                         ...value,
-                        localAnesthesiaEntries:
-                          value.localAnesthesiaEntries.filter(
-                            (candidate) => candidate.id !== entry.id,
-                          ),
-                      })
-                    }
+                        localAnesthesiaEntries,
+                        ...(localAnesthesiaEntries.length === 0
+                          ? {
+                              localAnesthesiaNoAdverseReactions: false,
+                              localAnesthesiaAdequateAchieved: false,
+                              localAnesthesiaNotes: "",
+                            }
+                          : {}),
+                      });
+                    }}
                   >
                     Remove
                   </button>
@@ -418,54 +426,56 @@ export function LocalAnesthesiaControl({
         </ol>
       ) : null}
 
-      <div
-        className={`space-y-3 rounded-xl border p-4 ${
-          assessmentIncomplete
-            ? "border-amber-400 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30"
-            : "border-slate-200 dark:border-slate-700"
-        }`}
-      >
-        <h4 className="font-semibold">Post-anesthetic assessment</h4>
-        {assessmentIncomplete ? (
-          <p
-            className="text-sm text-amber-900 dark:text-amber-200"
-            role="alert"
-          >
-            Confirm No C/I to LA and complete the post-anesthetic assessment
-            before finishing the note.
-          </p>
-        ) : null}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <NativeChoiceControl
-            type="checkbox"
-            checked={value.localAnesthesiaNoAdverseReactions}
-            onChange={(localAnesthesiaNoAdverseReactions) =>
-              onChange({ ...value, localAnesthesiaNoAdverseReactions })
-            }
-          >
-            No adverse reactions noted
-          </NativeChoiceControl>
-          <NativeChoiceControl
-            type="checkbox"
-            checked={value.localAnesthesiaAdequateAchieved}
-            onChange={(localAnesthesiaAdequateAchieved) =>
-              onChange({ ...value, localAnesthesiaAdequateAchieved })
-            }
-          >
-            Adequate anesthesia achieved
-          </NativeChoiceControl>
+      {value.localAnesthesiaEntries.length > 0 ? (
+        <div
+          className={`space-y-3 rounded-xl border p-4 ${
+            assessmentIncomplete
+              ? "border-amber-400 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30"
+              : "border-slate-200 dark:border-slate-700"
+          }`}
+        >
+          <h4 className="font-semibold">Post-anesthetic assessment</h4>
+          {assessmentIncomplete ? (
+            <p
+              className="text-sm text-amber-900 dark:text-amber-200"
+              role="alert"
+            >
+              Confirm No C/I to LA and complete the post-anesthetic assessment
+              before finishing the note.
+            </p>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <NativeChoiceControl
+              type="checkbox"
+              checked={value.localAnesthesiaNoAdverseReactions}
+              onChange={(localAnesthesiaNoAdverseReactions) =>
+                onChange({ ...value, localAnesthesiaNoAdverseReactions })
+              }
+            >
+              No adverse reactions noted
+            </NativeChoiceControl>
+            <NativeChoiceControl
+              type="checkbox"
+              checked={value.localAnesthesiaAdequateAchieved}
+              onChange={(localAnesthesiaAdequateAchieved) =>
+                onChange({ ...value, localAnesthesiaAdequateAchieved })
+              }
+            >
+              Adequate anesthesia achieved
+            </NativeChoiceControl>
+          </div>
+          <label className="block text-sm font-medium">
+            Anesthesia notes
+            <textarea
+              className={`mt-1 min-h-24 ${inputClass}`}
+              value={value.localAnesthesiaNotes}
+              onChange={(event) =>
+                onChange({ ...value, localAnesthesiaNotes: event.target.value })
+              }
+            />
+          </label>
         </div>
-        <label className="block text-sm font-medium">
-          Anesthesia notes
-          <textarea
-            className={`mt-1 min-h-24 ${inputClass}`}
-            value={value.localAnesthesiaNotes}
-            onChange={(event) =>
-              onChange({ ...value, localAnesthesiaNotes: event.target.value })
-            }
-          />
-        </label>
-      </div>
+      ) : null}
     </fieldset>
   );
 }

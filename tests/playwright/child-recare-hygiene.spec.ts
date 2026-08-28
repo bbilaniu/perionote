@@ -164,6 +164,75 @@ test("child recare uses the 2026 sterilization safeguards", async ({ page }) => 
   await expect(ppe).toBeChecked();
 });
 
+test("child recare selects, calculates, and preserves pediatric CAMBRA instruments", async ({
+  page,
+}) => {
+  await page.goto(interactiveUrl);
+
+  await expect(
+    page.getByText("Select an age-band instrument to display its assessment factors."),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /CAMBRA123 assessment factors/ }),
+  ).toHaveCount(0);
+
+  await page.getByRole("radio", { name: "Ages 0–6", exact: true }).check();
+  const factors = page.getByRole("button", {
+    name: /CAMBRA123 assessment factors/,
+  });
+  await expect(factors).toHaveAttribute("aria-expanded", "false");
+  await factors.click();
+
+  const finalRiskLevel = page.getByRole("button", {
+    name: "Final clinician caries-risk category",
+    exact: true,
+  });
+  await finalRiskLevel.click();
+  await page.getByRole("option", { name: "Low", exact: true }).click();
+  await expect(page.locator("#child-recare-summary")).toHaveValue(
+    /Caries risk assessment \(CAMBRA123 2021, ages 0–6\): Complete[\s\S]*CAMBRA123 score: 0[\s\S]*Final clinician caries-risk category: Low\./,
+  );
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Clear CAMBRA123 assessment" })
+    .click();
+  await factors.click();
+
+  const cariesDetected = page.getByRole("button", {
+    name: "Caries detected",
+    exact: true,
+  });
+  await cariesDetected.click();
+  await page.getByRole("option", { name: "Yes", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Use caries finding in CAMBRA" })
+    .click();
+
+  await expect(factors).toContainText("1 Yes · Score +3 · High (Suggested)");
+  await page.getByRole("button", { name: "Apply CAMBRA123 suggestion" }).click();
+  await expect(factors).toContainText("1 Yes · Score +3 · High");
+  await expect(page.locator("#child-recare-summary")).toHaveValue(
+    /CAMBRA123 2021, ages 0–6[\s\S]*Disease indicators — Yes: Evident tooth decay or white spot lesions[\s\S]*Final clinician caries-risk category: High\./,
+  );
+
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Existing answers will be retained but excluded from this note",
+    );
+    await dialog.accept();
+  });
+  await page
+    .getByRole("radio", { name: "Ages 6–adult", exact: true })
+    .check();
+  await expect(factors).toContainText("Not calculated");
+  await expect(page.locator("#child-recare-summary")).not.toHaveValue(
+    /CAMBRA123 2021, ages 0–6/,
+  );
+
+  await page.getByRole("radio", { name: "Ages 0–6", exact: true }).check();
+  await expect(factors).toContainText("1 Yes · Score +3 · High");
+});
+
 test("child recare desktop layout keeps context cards in the form column", async ({
   page,
 }) => {
@@ -175,6 +244,7 @@ test("child recare desktop layout keeps context cards in the form column", async
     "Visit Team",
     "Consent, Medical History, and Sterilization",
     "Records and dental exam",
+    "Caries Risk Assessment",
     "Hygiene assessment and treatment",
     "Communication and follow-up",
     "Generated note",

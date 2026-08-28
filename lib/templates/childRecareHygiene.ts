@@ -3,6 +3,12 @@ import {
   createEmptyLocalAnesthesiaValue,
   type LocalAnesthesiaEntry,
 } from "@/lib/templates/localAnesthesia";
+import {
+  createEmptyCambra123SixAdultAssessment,
+  createEmptyCambra123ZeroToSixAssessment,
+  type Cambra123SixAdultAssessment,
+  type Cambra123ZeroToSixAssessment,
+} from "@/lib/templates/cambra123";
 
 export type ChildDocumentationStatus = "not-documented" | "yes" | "no";
 export type ChildExamStatus = "not-assessed" | "wnl" | "findings";
@@ -10,6 +16,7 @@ export type ChildRecareHygieneOutput = "combined" | "dentist" | "hygienist";
 export type ChildOcclusionAssessment =
   | "terminal-plane"
   | "molar-classification";
+export type ChildCambra123Instrument = "" | "0-6" | "6-adult";
 
 export interface ChildRecareHygieneForm {
   patientId: string;
@@ -49,6 +56,9 @@ export interface ChildRecareHygieneForm {
   doctorComments: string;
   cariesStatus: ChildDocumentationStatus;
   cariesDetails: string;
+  cambra123Instrument: ChildCambra123Instrument;
+  cambra123ZeroToSixAssessment: Cambra123ZeroToSixAssessment;
+  cambra123SixAdultAssessment: Cambra123SixAdultAssessment;
   disclosedStatus: ChildDocumentationStatus;
   plaqueIndex: string;
   calculusStatus: ChildDocumentationStatus;
@@ -117,6 +127,10 @@ export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
     doctorComments: "",
     cariesStatus: "not-documented",
     cariesDetails: "",
+    cambra123Instrument: "",
+    cambra123ZeroToSixAssessment:
+      createEmptyCambra123ZeroToSixAssessment(),
+    cambra123SixAdultAssessment: createEmptyCambra123SixAdultAssessment(),
     disclosedStatus: "not-documented",
     plaqueIndex: "",
     calculusStatus: "not-documented",

@@ -25,6 +25,9 @@ export default function ClinicTemplatesPage() {
               slug: template.slug,
               title: template.title,
               description: template.description,
+              ...(template.versionStatus
+                ? { versionStatus: template.versionStatus }
+                : {}),
               ...(conversion
                 ? { interactiveLifecycle: conversion.lifecycle }
                 : {}),
