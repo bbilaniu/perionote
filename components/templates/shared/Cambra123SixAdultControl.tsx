@@ -369,7 +369,11 @@ export function Cambra123SixAdultControl({
               type="button"
               className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
               onClick={() =>
-                onChange({ ...value, finalRiskLevel: result.suggestedLevel })
+                onChange({
+                  ...value,
+                  completionStatus: "complete",
+                  finalRiskLevel: result.suggestedLevel,
+                })
               }
             >
               Apply CAMBRA123 suggestion
@@ -385,7 +389,7 @@ export function Cambra123SixAdultControl({
           value={value.finalRiskLevel}
           options={riskLevelOptions}
           onChange={(finalRiskLevel) =>
-            onChange(withStartedStatus({ finalRiskLevel }))
+            onChange({ ...value, completionStatus: "complete", finalRiskLevel })
           }
         />
         {value.completionStatus === "complete" && !value.finalRiskLevel ? (

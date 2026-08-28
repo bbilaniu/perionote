@@ -183,6 +183,21 @@ test("child recare selects, calculates, and preserves pediatric CAMBRA instrumen
   await expect(factors).toHaveAttribute("aria-expanded", "false");
   await factors.click();
 
+  const finalRiskLevel = page.getByRole("button", {
+    name: "Final clinician caries-risk category",
+    exact: true,
+  });
+  await finalRiskLevel.click();
+  await page.getByRole("option", { name: "Low", exact: true }).click();
+  await expect(page.locator("#child-recare-summary")).toHaveValue(
+    /Caries risk assessment \(CAMBRA123 2021, ages 0–6\): Complete[\s\S]*CAMBRA123 score: 0[\s\S]*Final clinician caries-risk category: Low\./,
+  );
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Clear CAMBRA123 assessment" })
+    .click();
+  await factors.click();
+
   const cariesDetected = page.getByRole("button", {
     name: "Caries detected",
     exact: true,
