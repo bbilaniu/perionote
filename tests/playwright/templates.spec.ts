@@ -69,10 +69,41 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
       .getByRole("radiogroup", { name: "Show templates" })
       .getByRole("radio", { name: "All", exact: true }),
   ).toBeChecked();
+  await expect(
+    page
+      .getByRole("radiogroup", { name: "Template versions" })
+      .getByRole("radio", { name: "Current", exact: true }),
+  ).toBeChecked();
+
+  const currentAdultCard = page
+    .getByRole("article")
+    .filter({ hasText: "2026 Adult Hygiene" });
+  const currentAdolescentCard = page
+    .getByRole("article")
+    .filter({ hasText: "2026 Adolescent Hygiene" });
+  await expect(
+    currentAdultCard.getByText("current", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    currentAdolescentCard.getByText("current", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
+  ).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("article")
+      .filter({ hasText: "12–17 Years Old Hygiene Template" }),
+  ).toHaveCount(0);
 
   const recareCard = page
     .getByRole("article")
-    .filter({ hasText: "Recare Exam" });
+    .filter({
+      has: page.getByText(
+        "Periodic exam note covering clinical findings and planning.",
+        { exact: true },
+      ),
+    });
   await expect(
     recareCard.getByRole("link", { name: "Open interactive Recare Exam" }),
   ).toHaveAttribute("href", "/templates/clinic/recare-exam/interactive/");
@@ -129,6 +160,10 @@ test("clinical template cards follow the selected default destination", async ({
   page,
 }) => {
   await page.goto("/templates/clinic");
+  await page
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
 
   const adultHygieneCard = page
     .getByRole("article")
@@ -147,7 +182,12 @@ test("clinical template cards follow the selected default destination", async ({
     .click();
   const recareCard = page
     .getByRole("article")
-    .filter({ hasText: "Recare Exam" });
+    .filter({
+      has: page.getByText(
+        "Periodic exam note covering clinical findings and planning.",
+        { exact: true },
+      ),
+    });
   await Promise.all([
     page.waitForURL("**/templates/clinic/recare-exam/"),
     recareCard
@@ -182,12 +222,17 @@ test("clinical template catalogue can show only interactive versions", async ({
   await expect(interactiveOnly).toBeChecked();
   await expect(
     page.getByRole("article").filter({ hasText: "2021 Adult Hygiene" }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await expect(
     page.getByRole("article").filter({ hasText: "2026 Adult Hygiene" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("article").filter({ hasText: "Recare Exam" }),
+    page.getByRole("article").filter({
+      has: page.getByText(
+        "Periodic exam note covering clinical findings and planning.",
+        { exact: true },
+      ),
+    }),
   ).toBeVisible();
   await expect(
     page.getByRole("article").filter({ hasText: "Local Anesthetic" }),
@@ -195,6 +240,44 @@ test("clinical template catalogue can show only interactive versions", async ({
   await expect(
     page.getByRole("link", { name: "View original template" }),
   ).toHaveCount(4);
+
+  await page
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
+  const previousAdultCard = page
+    .getByRole("article")
+    .filter({ hasText: "2021 Adult Hygiene" });
+  const previousAdolescentCard = page
+    .getByRole("article")
+    .filter({ hasText: "12–17 Years Old Hygiene Template" });
+  await expect(previousAdultCard).toBeVisible();
+  await expect(previousAdolescentCard).toBeVisible();
+  await expect(
+    previousAdultCard.getByText("previous", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    previousAdolescentCard.getByText("previous", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    previousAdultCard.getByRole("link", {
+      name: "Open interactive 2021 Adult Hygiene",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "/templates/clinic/adult-hygiene-2021/interactive/",
+  );
+  await expect(
+    previousAdolescentCard.getByRole("link", {
+      name: "Open interactive 12–17 Years Old Hygiene Template",
+    }),
+  ).toHaveAttribute(
+    "href",
+    "/templates/clinic/adolescent-hygiene/interactive/",
+  );
+  await expect(
+    page.getByRole("link", { name: "View original template" }),
+  ).toHaveCount(6);
 
   await showTemplates
     .getByRole("radio", { name: "All", exact: true })
@@ -1014,6 +1097,9 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     exact: true,
   });
   await expect(noContraindications).not.toBeChecked();
+  await expect(
+    localAnesthesia.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toHaveCount(0);
 
   await localAnesthesia
     .getByRole("button", { name: "Apply Dyclonine rinse", exact: true })
@@ -1022,6 +1108,9 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     .getByRole("list", { name: "Local anesthesia entries", exact: true })
     .locator(":scope > li");
   await expect(entry).toHaveCount(1);
+  await expect(
+    localAnesthesia.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toBeVisible();
   await expect(
     entry.getByRole("button", { name: "Route", exact: true }),
   ).toHaveAttribute("data-value", "rinse");
@@ -1542,30 +1631,76 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   );
 
   const cariesRiskLevel = page.getByRole("button", {
-    name: "Caries risk level",
+    name: "Final clinician caries-risk category",
     exact: true,
   });
-  const factors = page.getByRole("combobox", {
-    name: "Caries risk factors",
-    exact: true,
+  const cambraFactors = page.getByRole("button", {
+    name: /CAMBRA123 assessment factors/,
   });
-  await factors.focus();
+  await expect(cambraFactors).toHaveAttribute("aria-expanded", "false");
+  await expect(cambraFactors).toContainText("Not calculated");
+  await cambraFactors.click();
+  await cariesRiskLevel.click();
+  await page.getByRole("option", { name: "Low", exact: true }).click();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "CAMBRA123 score: 0 (Column 1: 0; Column 2: +0; Column 3: +0).",
+  );
+  page.once("dialog", (dialog) => dialog.accept());
   await page
-    .getByRole("option", { name: /High frequency of sugar intake Starter/ })
+    .getByRole("button", { name: "Clear CAMBRA123 assessment" })
     .click();
+  await page.getByRole("button", { name: /CAMBRA123 assessment factors/ }).click();
+  await page.getByRole("checkbox", {
+    name: /Frequent snacking \(more than 3 times daily\)/,
+  }).check();
+  await page.getByRole("checkbox", {
+    name: /Hyposalivatory medications/,
+  }).check();
 
   await expect(
-    page.getByRole("heading", { name: "Suggested caries risk level" }),
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Suggested caries risk level" })
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
       .locator("xpath=.."),
   ).toContainText("High");
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "");
-  await page
-    .getByRole("button", { name: "Apply caries risk suggestion" })
-    .click();
+  await expect(cambraFactors).toContainText(
+    "2 Yes · Score +4 · High (Suggested)",
+  );
+  await page.getByRole("button", { name: "Apply CAMBRA123 suggestion" }).click();
   await expect(cariesRiskLevel).toHaveAttribute("data-value", "High");
+  await expect(cambraFactors).toContainText("2 Yes · Score +4 · High");
+  await page.getByRole("button", { name: "Collapse assessment" }).click();
+  await expect(cambraFactors).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" }),
+  ).toBeVisible();
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "CAMBRA123 score: 4 (Column 1: 0; Column 2: +4; Column 3: +0).",
+  );
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "Final clinician caries-risk category: High.",
+  );
+
+  await cambraFactors.click();
+  await page.getByRole("checkbox", {
+    name: /Hyposalivatory medications/,
+  }).uncheck();
+  await expect(
+    page.getByRole("heading", { name: "Suggested CAMBRA123 category" })
+      .locator("xpath=.."),
+  ).toContainText("Moderate");
+  await expect(page.locator("#adult-hygiene-summary")).toContainText(
+    "CAMBRA123 score: 2 (Column 1: 0; Column 2: +2; Column 3: +0).",
+  );
+  await expect(cambraFactors).toContainText("1 Yes · Score +2 · High");
 });
 
 test("2026 Adult Hygiene documents the basis for a reduced non-periodontitis periodontium", async ({
@@ -2045,7 +2180,14 @@ test("local anesthesia assessment is emphasized when activity is documented with
   await page.goto("/templates/dental-hygiene-note-webform");
 
   await page.getByRole("checkbox", { name: "No C/I to LA" }).click();
+  await expect(
+    page.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Add topical entry" }).click();
+
+  await expect(
+    page.getByText("Post-anesthetic assessment", { exact: true }),
+  ).toBeVisible();
 
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
@@ -2056,6 +2198,78 @@ test("local anesthesia assessment is emphasized when activity is documented with
   await expect(
     page.getByText("Complete the post-anesthetic assessment before finishing the note."),
   ).toHaveCount(0);
+});
+
+test("imported webform resets post-anesthetic findings after the final entry is removed", async ({
+  page,
+}) => {
+  await page.goto("/templates/dental-hygiene-note-webform");
+
+  await page.getByRole("checkbox", { name: "No C/I to LA" }).check();
+  await page.getByRole("button", { name: "Add topical entry" }).click();
+  await page
+    .getByRole("checkbox", { name: "No adverse reactions noted" })
+    .check();
+  await page
+    .getByRole("checkbox", { name: "Adequate anesthesia achieved" })
+    .check();
+  await page
+    .getByRole("textbox", { name: "Anesthesia notes" })
+    .fill("Old finding");
+
+  await page
+    .locator("#local-anesthesia-entry-0")
+    .getByRole("button", { name: "Remove" })
+    .click();
+  await page.getByRole("button", { name: "Add injection entry" }).click();
+
+  await expect(
+    page.getByRole("checkbox", { name: "No adverse reactions noted" }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("checkbox", { name: "Adequate anesthesia achieved" }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("textbox", { name: "Anesthesia notes" }),
+  ).toBeEmpty();
+});
+
+test("native local anesthesia resets post-anesthetic findings after the final entry is removed", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const localAnesthesia = page.getByRole("group", {
+    name: "Local anesthesia",
+    exact: true,
+  });
+  await localAnesthesia.getByRole("button", { name: "Add topical entry" }).click();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "No adverse reactions noted" })
+    .check();
+  await localAnesthesia
+    .getByRole("checkbox", { name: "Adequate anesthesia achieved" })
+    .check();
+  await localAnesthesia
+    .getByRole("textbox", { name: "Anesthesia notes" })
+    .fill("Old finding");
+
+  await localAnesthesia.getByRole("button", { name: "Remove" }).click();
+  await localAnesthesia.getByRole("button", { name: "Add injection entry" }).click();
+
+  await expect(
+    localAnesthesia.getByRole("checkbox", {
+      name: "No adverse reactions noted",
+    }),
+  ).not.toBeChecked();
+  await expect(
+    localAnesthesia.getByRole("checkbox", {
+      name: "Adequate anesthesia achieved",
+    }),
+  ).not.toBeChecked();
+  await expect(
+    localAnesthesia.getByRole("textbox", { name: "Anesthesia notes" }),
+  ).toBeEmpty();
 });
 
 test("imported webform summary uses preview a formatting", async ({ page }) => {

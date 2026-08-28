@@ -233,6 +233,7 @@ describe("local catalogues", () => {
       "Enamel Pro® Prophy Paste with Fluoride (Mint)",
       "Enamel Pro® Prophy Paste with Fluoride (Raspberry)",
       "Enamel Pro® Prophy Paste with Fluoride (Vanilla Mint)",
+      "Enamel Pro® Prophy Paste with Fluoride (Grape)",
     ]);
     expect(
       listCatalogueItems(

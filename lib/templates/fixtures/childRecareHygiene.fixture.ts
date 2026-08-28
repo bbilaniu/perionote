@@ -1,4 +1,8 @@
 import type { ChildRecareHygieneForm } from "@/lib/templates/childRecareHygiene";
+import {
+  createEmptyCambra123SixAdultAssessment,
+  createEmptyCambra123ZeroToSixAssessment,
+} from "@/lib/templates/cambra123";
 
 export const childRecareHygieneFixture: ChildRecareHygieneForm = {
   patientId: "TEST-CHILD-1001",
@@ -37,6 +41,9 @@ export const childRecareHygieneFixture: ChildRecareHygieneForm = {
   doctorComments: "Monitor eruption of permanent molars",
   cariesStatus: "no",
   cariesDetails: "",
+  cambra123Instrument: "",
+  cambra123ZeroToSixAssessment: createEmptyCambra123ZeroToSixAssessment(),
+  cambra123SixAdultAssessment: createEmptyCambra123SixAdultAssessment(),
   disclosedStatus: "yes",
   plaqueIndex: "Localized light plaque at gingival margins",
   calculusStatus: "yes",

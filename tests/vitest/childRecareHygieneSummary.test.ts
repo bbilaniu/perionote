@@ -52,6 +52,9 @@ describe("buildChildRecareHygieneSummary", () => {
     delete legacyDraft.ppeStatementApplies;
     delete legacyDraft.occlusionAssessment;
     delete legacyDraft.terminalPlane;
+    delete legacyDraft.cambra123Instrument;
+    delete legacyDraft.cambra123ZeroToSixAssessment;
+    delete legacyDraft.cambra123SixAdultAssessment;
     legacyDraft.consentBy = "Grandparent";
     legacyDraft.molarOcclusion = "Class I bilateral";
 
@@ -114,6 +117,36 @@ describe("buildChildRecareHygieneSummary", () => {
     );
 
     expect(summary).toContain("----- August 12, 2026 18:21 -----");
+  });
+
+  it("includes only the selected pediatric CAMBRA instrument in every output", () => {
+    const form = createEmptyChildRecareHygieneForm();
+    form.cambra123Instrument = "0-6";
+    form.cambra123ZeroToSixAssessment = {
+      ...form.cambra123ZeroToSixAssessment,
+      completionStatus: "complete",
+      yesItemIds: ["risk.household-recent-decay"],
+      finalRiskLevel: "High",
+      notes: "Active pediatric assessment",
+    };
+    form.cambra123SixAdultAssessment = {
+      ...form.cambra123SixAdultAssessment,
+      completionStatus: "complete",
+      yesItemIds: ["risk.frequent-snacking"],
+      finalRiskLevel: "Extreme",
+      notes: "INACTIVE ASSESSMENT",
+    };
+
+    for (const output of ["combined", "dentist", "hygienist"] as const) {
+      const summary = buildChildRecareHygieneSummary(form, { output });
+      expect(summary).toContain("CARIES RISK ASSESSMENT");
+      expect(summary).toContain("CAMBRA123 2021, ages 0–6");
+      expect(summary).toContain(
+        "Final clinician caries-risk category: High.",
+      );
+      expect(summary).not.toContain("ages 6–adult");
+      expect(summary).not.toContain("INACTIVE ASSESSMENT");
+    }
   });
 
   it("uses molar classification only when that assessment is selected", () => {
