@@ -371,27 +371,19 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
       defaultToothAreas: ["full mouth"],
     },
   ),
-  completedCareSeed(
-    "sdf-application",
-    "SDF application",
-    {
-      category: "product-application",
-      procedure: "product-application",
-      productType: "silver-diamine-fluoride",
-      defaultProduct: "Advantage Arrest® Silver Diamine Fluoride 38%",
-    },
-  ),
-  completedCareSeed(
-    "desensitizer-application",
-    "Desensitizer application",
-    {
-      category: "product-application",
-      procedure: "product-application",
-      productType: "desensitizer",
-      defaultProduct:
-        "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
-    },
-  ),
+  completedCareSeed("sdf-application", "SDF application", {
+    category: "product-application",
+    procedure: "product-application",
+    productType: "silver-diamine-fluoride",
+    defaultProduct: "Advantage Arrest® Silver Diamine Fluoride 38%",
+  }),
+  completedCareSeed("desensitizer-application", "Desensitizer application", {
+    category: "product-application",
+    procedure: "product-application",
+    productType: "desensitizer",
+    defaultProduct:
+      "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+  }),
   completedCareSeed(
     "resin-sealant",
     "Sealant application, resin-based material",
@@ -413,6 +405,7 @@ const polishingProductSeeds: CatalogueSeed[] = [
   "Mint",
   "Raspberry",
   "Vanilla Mint",
+  "Grape",
 ].map((flavour) => ({
   id: `seed.hygiene-treatment.polishing-products.${flavour
     .toLocaleLowerCase("en-CA")
@@ -842,9 +835,7 @@ const legacySeedAliases = new Map<string, string>([
     "seed.scheduling.dentist-next-visit.9-mrc",
   ],
 ]);
-const retiredSeedIds = new Set([
-  "seed.hygiene-treatment.desensitizer.none",
-]);
+const retiredSeedIds = new Set(["seed.hygiene-treatment.desensitizer.none"]);
 
 export class CatalogueValidationError extends Error {
   constructor(message: string) {
@@ -1040,13 +1031,11 @@ function parseCatalogueItemMetadata(
     if (
       productType !== undefined &&
       (typeof productType !== "string" ||
-        !(DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]).includes(
-          productType,
-        ))
+        !(
+          DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]
+        ).includes(productType))
     ) {
-      throw new CatalogueValidationError(
-        "Invalid completed-care productType.",
-      );
+      throw new CatalogueValidationError("Invalid completed-care productType.");
     }
     return {
       kind: "completed-care",
@@ -1058,8 +1047,7 @@ function parseCatalogueItemMetadata(
       ...(productType === undefined
         ? {}
         : {
-            productType:
-              productType as DesensitizingRemineralizingProductType,
+            productType: productType as DesensitizingRemineralizingProductType,
           }),
     };
   }
@@ -1102,9 +1090,9 @@ function parseCatalogueItemMetadata(
     const productType = value.productType;
     if (
       typeof productType !== "string" ||
-      !(DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]).includes(
-        productType,
-      )
+      !(
+        DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]
+      ).includes(productType)
     ) {
       throw new CatalogueValidationError(
         "Invalid desensitizing/remineralizing product type.",
