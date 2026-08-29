@@ -1,6 +1,6 @@
 # Issue 68: Picklynia Adult Hygiene Extensions
 
-- Status: Approved for implementation
+- Status: Implemented and archived
 - Date: 2026-08-03
 - Source: GitHub issue 68 and the requester's follow-up clarification
 - Target: `adult-hygiene-2021` interactive conversion

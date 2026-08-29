@@ -1,5 +1,7 @@
 # Codex Workflow
 
+> Archived. Use the current [contribution guide](../../../CONTRIBUTING.md).
+
 Use Codex for focused, reviewable tasks in HygieneNote.
 
 ## Scope each Codex task

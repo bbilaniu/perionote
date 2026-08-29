@@ -11,7 +11,7 @@ described below.
 
 **Implementation status:** Implemented in the Adult Hygiene 2021 interactive
 template. The
-[Periodontal Candidate-Classification Decision Table](../specs/periodontal-classification-decision-table.md)
+[Periodontal Candidate-Classification Decision Table](../../specs/periodontal-classification-decision-table.md)
 is the normative specification for current candidate logic, safety invariants,
 confirmation, and generated-output behavior. Clinical sign-off remains pending
 as recorded in that decision table.

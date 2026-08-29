@@ -1,6 +1,6 @@
 # Slice 3: Recare Tooth-Level Findings
 
-- Status: Approved for implementation
+- Status: Implemented and archived
 - Date: 2026-08-01
 - Target conversion: `recare-exam`
 - Interactive route: `/templates/clinic/recare-exam/interactive`

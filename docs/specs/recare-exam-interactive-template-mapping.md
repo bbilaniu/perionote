@@ -15,16 +15,16 @@
   - [ADR 0003: Define Interactive Template Conversion and Provenance](../adr/0003-define-interactive-template-conversion-and-provenance.md)
   - [ADR 0004: Colocate Clinical Conversions with Source Templates](../adr/0004-colocate-clinical-conversions-with-source-templates.md)
 - Catalogue implementation:
-  [Recare Exam Local Catalogue Pilot Proposal](../requests/2026-07-25_recare-exam-local-catalogue-pilot-proposal.md)
+  [Recare Exam Local Catalogue Pilot Proposal](../requests/archive/2026-07-25_recare-exam-local-catalogue-pilot-proposal.md)
 - Additive Slice 2 provenance:
-  [Recare Intraoral and Occlusal Findings](../requests/2026-07-28_gingival-description-and-ioe/slice-2-recare-intraoral-and-occlusal-findings.md), using the reviewed
-  [`hygienenote-gingival-ioe.catalog.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json)
+  [Recare Intraoral and Occlusal Findings](../requests/archive/2026-07-28_gingival-description-and-ioe/slice-2-recare-intraoral-and-occlusal-findings.md), using the reviewed
+  [`gingival-ioe.catalog.json`](../../lib/templates/catalogues/gingival-ioe.catalog.json)
   normalized IOE catalogue.
 - Additive Slice 3 provenance:
-  [Recare Tooth-Level Findings](../requests/2026-08-01_recare-tooth-level-findings.md), clinically approved 2026-08-01 using the reviewed normalized
-  [`hygienenote-gingival-ioe.catalog.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json)
+  [Recare Tooth-Level Findings](../requests/archive/2026-08-01_recare-tooth-level-findings.md), clinically approved 2026-08-01 using the reviewed normalized
+  [`gingival-ioe.catalog.json`](../../lib/templates/catalogues/gingival-ioe.catalog.json)
   catalogue and
-  [`hygienenote-gingival-ioe.schema.json`](../requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.schema.json).
+  [`hygienenote-gingival-ioe.schema.json`](../requests/archive/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.schema.json).
 
 ## Purpose
 

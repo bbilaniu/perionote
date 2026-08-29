@@ -1,8 +1,11 @@
-# HygieneNote Bootstrap Spec
+# PerioNote Bootstrap Spec
+
+> Archived. This predates the HygieneNote name and current repository
+> structure.
 
 ## Purpose
 
-HygieneNote is a single repository that supports:
+PerioNote is a single repository that supports:
 
 1. a **template library** for reusable periodontal / hygiene note templates
 2. a **preview app** for rendering, testing, and manually using templates
@@ -15,7 +18,7 @@ The goal is to let contributors work from desktop or on the go, while keeping te
 
 ## Core Product Direction
 
-HygieneNote should be **both**:
+PerioNote should be **both**:
 
 - a **library of reusable TSX template components**
 - a **runnable Next.js app** that previews those templates inline
@@ -54,7 +57,7 @@ This dual structure allows:
 
 ## Why Tailwind-only
 
-HygieneNote should start with **Tailwind only**.
+PerioNote should start with **Tailwind only**.
 
 Reasons:
 - quickest path for importing legacy ChatGPT JSX files
@@ -85,7 +88,7 @@ The repository should support all of the following:
 ## Recommended Repository Structure
 
 ```text
-HygieneNote/
+PerioNote/
   app/
     page.tsx
     templates/
@@ -126,7 +129,7 @@ HygieneNote/
     fixtures/
 
   docs/
-    hygienenote-bootstrap-spec.md
+    perionote-bootstrap-spec.md
     contributor-workflow.md
     codex-workflow.md
     migration-checklist.md
