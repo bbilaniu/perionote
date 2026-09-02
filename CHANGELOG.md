@@ -1,5 +1,12 @@
 # hygienenote
 
+## 0.13.1
+
+### Patch Changes
+
+- f72cfb4: Give the pediatric recare form a separate recare-exam action and keep the exam out of standard pediatric care.
+- ca44863: Added extractions to dentist treatment options
+
 ## 0.13.0
 
 ### Minor Changes
