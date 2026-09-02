@@ -1,5 +1,7 @@
 # Migration Checklist
 
+> Archived. Use the current [legacy import guide](../../legacy-imports.md).
+
 Use this checklist for each legacy JSX import.
 
 1. archive `original.jsx` in `legacy/imported-jsx/<slug>/`

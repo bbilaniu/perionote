@@ -1,5 +1,7 @@
 # Harmonize dropdown and combobox presentation in HygieneNote
 
+> Archive status: Implemented. Retained as design and acceptance history.
+
 ## Goal
 
 Inspect the HygieneNote form controls that allow users to select from a list and harmonize their visual presentation and interaction patterns.

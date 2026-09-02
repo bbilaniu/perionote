@@ -1,4 +1,4 @@
-import catalogue from "@/docs/requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json";
+import catalogue from "@/lib/templates/catalogues/gingival-ioe.catalog.json";
 
 export type GingivalDescriptionStatus = "not_assessed" | "wnl" | "findings";
 export type GingivalFindingExtent = "generalized" | "localized" | "";

@@ -1,5 +1,7 @@
 # Request: Output / Header Alignment Follow-Up
 
+> Archive status: Implemented. Retained as design and acceptance history.
+
 ## Goal
 Correct four remaining inconsistencies in the hygiene-note template:
 - the visit date is captured in the form but not included in the plain-text output,

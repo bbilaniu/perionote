@@ -1,5 +1,7 @@
 # Contributor Workflow
 
+> Archived. Use the current [contribution guide](../../../CONTRIBUTING.md).
+
 ## Standard flow
 
 1. branch from `main`

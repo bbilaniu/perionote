@@ -164,6 +164,37 @@ test("child recare uses the 2026 sterilization safeguards", async ({ page }) => 
   await expect(ppe).toBeChecked();
 });
 
+test("child standard pediatric care keeps the recare exam separate", async ({
+  page,
+}) => {
+  await page.goto(interactiveUrl);
+
+  const preview = page.locator("#child-recare-summary");
+  const completedCare = page.getByRole("list", {
+    name: "Treatment completed today entries",
+  });
+
+  await page
+    .getByRole("button", { name: "Apply standard pediatric care", exact: true })
+    .click();
+
+  await expect(preview).toHaveValue(/Treatment completed today:/);
+  await expect(preview).not.toHaveValue(/Dentist Recare Exam/);
+  await expect(completedCare.locator(":scope > li")).toHaveCount(4);
+
+  const applyRecare = page.getByRole("button", {
+    name: "Apply recare exam",
+    exact: true,
+  });
+  await applyRecare.click();
+  await applyRecare.click();
+
+  await expect(preview).toHaveValue(
+    /Treatment completed today: Dentist Recare Exam/,
+  );
+  await expect(completedCare.locator(":scope > li")).toHaveCount(5);
+});
+
 test("child recare selects, calculates, and preserves pediatric CAMBRA instruments", async ({
   page,
 }) => {

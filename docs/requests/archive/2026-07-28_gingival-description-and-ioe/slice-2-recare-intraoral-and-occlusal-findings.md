@@ -1,6 +1,6 @@
 # Slice 2: Recare Intraoral and Occlusal Findings
 
-- Status: Approved for implementation after independent Slice 1 delivery
+- Status: Implemented and archived
 - Date: 2026-07-28
 - Target conversion: `recare-exam`
 - Interactive route: `/templates/clinic/recare-exam/interactive`

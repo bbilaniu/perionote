@@ -1,5 +1,7 @@
 # Request: Local Anesthesia Topical Entry Proposal
 
+> Archive status: Implemented. Retained as design and acceptance history.
+
 ## Goal
 Refactor the `Local Anesthesia` section so it can accurately document both injected anesthetic and topical anesthetic applications, including sulcular products such as `ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%`.
 

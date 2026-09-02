@@ -6,9 +6,9 @@
 - Implemented: 2026-07-25
 - Pilot template: `recare-exam`
 - Governing decision:
-  [ADR 0001: Support Local Customizable Documentation Catalogues](../adr/0001-support-local-customizable-documentation-catalogues.md)
+  [ADR 0001: Support Local Customizable Documentation Catalogues](../../adr/0001-support-local-customizable-documentation-catalogues.md)
 - Related specification:
-  [Recare Exam Interactive Template Mapping](../specs/recare-exam-interactive-template-mapping.md)
+  [Recare Exam Interactive Template Mapping](../../specs/recare-exam-interactive-template-mapping.md)
 
 ## Goal
 

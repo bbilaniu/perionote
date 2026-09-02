@@ -1,6 +1,6 @@
 # Slice 1: Adult Hygiene Gingival Description
 
-- Status: Approved for implementation
+- Status: Implemented and archived
 - Date: 2026-07-28
 - Target conversion: `adult-hygiene-2021`
 - Interactive route:

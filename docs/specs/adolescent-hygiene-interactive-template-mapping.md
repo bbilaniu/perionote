@@ -8,7 +8,7 @@
 - Interactive route: `/templates/clinic/adolescent-hygiene/interactive`
 - Source baseline commit: `7d3d21c`
 - Lifecycle status: `draft`
-- Additive request: [`2026-08-06_hygiene_only_appointment`](../requests/2026-08-06_hygiene_only_appointment)
+- Additive request: [`2026-08-06_hygiene_only_appointment`](../requests/archive/2026-08-06_hygiene_only_appointment.md)
 - Governing decisions:
   - [ADR 0001](../adr/0001-support-local-customizable-documentation-catalogues.md)
   - [ADR 0003](../adr/0003-define-interactive-template-conversion-and-provenance.md)

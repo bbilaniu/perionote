@@ -1,6 +1,6 @@
 # Gingival Description and IOE: Approved Routing and Delivery Plan
 
-- Status: Approved for split implementation
+- Status: Implemented and archived
 - Date: 2026-07-28
 - Target conversions:
   - `adult-hygiene-2021`
@@ -21,8 +21,8 @@ clinical review, and rollback boundary.
 
 Use:
 
-- `docs/requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.catalog.json`
-- `docs/requests/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.schema.json`
+- `lib/templates/catalogues/gingival-ioe.catalog.json` (runtime catalogue)
+- `docs/requests/archive/2026-07-28_gingival-description-and-ioe/hygienenote-gingival-ioe.schema.json` (historical schema)
 
 The catalogue's `normalizedSections` object is the source of truth for the new
 fixed clinical vocabulary. `DH Note.docx` and `source.sourceTables` are

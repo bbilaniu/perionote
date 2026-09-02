@@ -1,312 +1,99 @@
 # HygieneNote
 
-HygieneNote is a Next.js + Tailwind workspace for building, previewing, importing, and testing periodontal and dental hygiene note templates.
+HygieneNote is a local-first Next.js application for completing, reviewing,
+and copying structured dental hygiene notes. It also preserves the clinic note
+templates and the provenance used to build their interactive conversions.
 
-It is designed for two kinds of work at the same time:
+The application is a workflow aid, not the authoritative patient record or an
+autonomous clinical decision system. Generated text remains visible for
+clinician review before it is copied to the record.
 
-- a **template library** of reusable TSX components and summary builders
-- a **preview app** where templates can be opened, filled, and visually reviewed
+## What is in the app
 
-The repo is also structured to support **quick import of legacy ChatGPT-generated JSX templates**, followed by gradual cleanup into a more maintainable TSX-based architecture.
+- `/templates/clinic` — copyable versions of source clinic templates
+- `/templates/clinic/<slug>/interactive` — interactive clinic conversions
+- `/templates/interactive` — standalone interactive templates
+- `/templates/<slug>` — standalone template and compatibility routes
+- `/catalogues` — browser-local, user-managed documentation suggestions
+- `/drafts` — temporary browser-local recovery drafts
 
-## Goals
+The interactive clinic conversions currently cover child, adolescent, adult,
+and recare workflows. Their lifecycle and provenance are defined in
+[`components/clinic-templates/conversionRegistry.ts`](./components/clinic-templates/conversionRegistry.ts).
 
-- preview templates in the browser
-- import existing standalone JSX templates quickly
-- generate polished, segmented clinical note output
-- support fixture-based testing for summaries
-- support Playwright preview and E2E testing
-- support safe GitHub + Codex collaboration
-- support local development and preview deploys
+## Local-first data boundary
 
-## Tech Stack
+Encounter data, recovery drafts, provider defaults, and deliberately remembered
+catalogue suggestions stay in the current browser profile. HygieneNote does not
+provide a patient-record backend. Do not add patient-identifying information to
+fixtures, source templates, documentation, or committed catalogue seeds.
 
-- **Next.js**
-- **TypeScript**
-- **Tailwind CSS**
-- **Vitest** for summary and helper tests
-- **Playwright** for preview and E2E tests
-- **GitHub** for source control and PR workflow
-- **Codex** for scoped implementation tasks
+See the accepted [architecture decisions](./docs/adr/README.md) for the storage,
+catalogue, conversion, and provenance contracts.
 
-## Architecture
-
-HygieneNote is intentionally both:
-
-- a **runnable app**
-- a **template component library**
-
-That allows contributors to:
-
-- open templates directly in the browser
-- refine summary formatting safely
-- import older JSX templates without blocking on a full refactor
-- extract shared logic over time
-
-## Recommended Repository Structure
+## Project layout
 
 ```text
-HygieneNote/
-  app/
-    page.tsx
-    templates/
-      page.tsx
-      [templateSlug]/
-        page.tsx
-
-  components/
-    templates/
-      registry.ts
-      shared/
-      native/
-      imported/
-
-  lib/
-    templates/
-      summary/
-      fixtures/
-      adapters/
-      validation/
-
-  legacy/
-    imported-jsx/
-
-  tests/
-    vitest/
-    playwright/
-
-  docs/
-    adr/
-    codex-workflow.md
-    contributor-workflow.md
-    migration-checklist.md
-
-  .github/
-    workflows/
+app/                         Next.js routes
+components/clinic-templates Clinic template browser and conversion registry
+components/templates        Interactive template components and registry
+components/catalogues       Browser-local catalogue UI
+components/drafts           Recovery-draft UI
+lib/clinic-templates        Source clinic template registry
+lib/templates               State, summary builders, fixtures, and catalogues
+tests/vitest                Unit and generated-note regression tests
+tests/playwright            Browser workflow tests
+docs/                       Current decisions, specifications, and work records
+legacy/imported-jsx         Preserved legacy source material
 ```
 
-## Template Types
+## Development
 
-The preview app separates templates into two user-facing libraries:
-
-- `/templates/clinic` contains copyable versions of the clinic's existing EMR
-  progress-note templates
-- `/templates/interactive` contains runnable HygieneNote webforms
-
-The individual interactive routes remain at `/templates/<slug>` for backward
-compatibility.
-
-### Native templates
-These are templates written directly for HygieneNote in TSX.
-
-### Imported templates
-These are templates migrated from older standalone JSX files. The import strategy is **render first, refactor later**.
-
-## Expected Template Shape
-
-### Legacy wrapper-first (default)
-
-For legacy imports, the first usable milestone is:
-
-- archive original JSX in `legacy/imported-jsx/<slug>/original.jsx`
-- create a direct wrapper component in `components/templates/imported/` (`.jsx` or `.tsx`)
-- register the template in `components/templates/registry.ts`
-- verify it renders from `/templates/<slug>`
-- add one Playwright smoke test
-
-Summary builders and fixtures are optional on day one for legacy wrappers.
-
-### Mature template (later)
-
-When ready, evolve the wrapper into:
-
-- extracted summary builder
-- fixture-based Vitest coverage
-- cleaner shared UI structure
-
-## Legacy Import Strategy
-
-Imported ChatGPT-generated JSX files should follow this order:
-
-1. archive the original file in `legacy/imported-jsx/`
-2. create a wrapper component in `components/templates/imported/` (`.jsx` or `.tsx`)
-3. register it in `components/templates/registry.ts`
-4. make it render in the preview app
-5. add a smoke test for the route
-6. clean up and extract summary logic later when needed
-
-Do not block imports on perfect typing or architecture.
-
-## Development Workflow
-
-### Standard flow
-
-1. pull latest `main`
-2. create a branch
-3. make a focused change
-4. run relevant tests
-5. open a PR
-6. review and merge
-
-### Branch examples
-
-- `feat/import-gingival-template`
-- `fix/summary-indentation`
-- `refactor/extract-summary-builder`
-- `test/add-playwright-smoke-gingival`
-- `codex/add-template-registry`
-
-## Testing Strategy
-
-### Vitest
-Use for:
-
-- summary builders
-- formatter helpers
-- fixtures
-- note output expectations
-
-### Playwright smoke tests
-Every preview page should have a smoke test that confirms:
-
-- the route loads
-- the template title appears
-- the primary wrapped UI appears (for wrapper-first imports)
-
-### Playwright E2E
-Use full E2E only for important or stable templates.
-
-## Summary Style
-
-Generated notes should prefer:
-
-- headings
-- indentation
-- short lines
-- no wall-of-text summaries unless explicitly requested
-
-Example:
-
-```text
-Visit Details:
-  Date: 2026-03-08
-History and Exam:
-  Patient concerns: Bleeding gums.
-Gingival Description:
-  Color: Pink (generalized; teeth #5; location Facial; distribution Marginal; Mild).
-Next Appointment:
-  Planned care: 4 bitewings and re-evaluation.
-  Recall frequency: 4 months.
-```
-
-## Local Commands
-
-Expected commands:
+HygieneNote requires Node.js 24 and npm.
 
 ```bash
 npm install
 npm run dev
-npm run test
-npm run test:e2e
-npm run test:e2e:webkit
-npm run lint
 ```
 
-Next.js generated files are isolated by workflow so concurrent checks do not
-overwrite a running development server:
+Common checks:
 
-- `npm run dev` uses `.next-dev`
-- `npm run build` uses an isolated project copy in the operating system's
-  temporary directory, then publishes its static export to `out`
-- Playwright's managed development server uses `.next-playwright`
+```bash
+npm run lint
+npm run test
+npm run build
+npm run test:e2e
+```
 
-Each development output directory has a single-writer lock. Starting a second
-server for the same output fails with the owning process ID instead of allowing
-concurrent writes that can corrupt generated chunks. Use the npm scripts rather
-than invoking `next dev` directly so the workflow isolation remains active.
-
-First-time required Chromium E2E setup:
+Install Chromium once before the browser suite:
 
 ```bash
 npx playwright install chromium
 ```
 
-`npm run test:e2e` is the required Chromium validation. WebKit is an advisory,
-non-blocking compatibility check and can be installed and run separately:
+`npm run dev`, `npm run build`, and Playwright use separate Next.js output
+directories so they can run without corrupting one another's generated files.
+Use the npm scripts instead of invoking `next dev` directly.
+
+WebKit is an optional compatibility check:
 
 ```bash
 npx playwright install webkit
 npm run test:e2e:webkit
 ```
 
-## Preview Deploys
+## Documentation
 
-HygieneNote should support both:
+Start with the [documentation index](./docs/README.md). It distinguishes
+authoritative decisions and specifications from active requests and archived
+implementation records.
 
-- local preview during development
-- automatic preview deploys for branch review on iPad, MacBook, or desktop
+For contribution expectations, including changesets and clinical-output review,
+see [CONTRIBUTING.md](./CONTRIBUTING.md). Released changes are recorded in
+[CHANGELOG.md](./CHANGELOG.md).
 
-## GitHub Pages Deployment
+## Deployment
 
-This project is now configured for static export deployment to GitHub Pages.
-
-- `next.config.ts` uses `output: "export"` and enables a repository-aware `basePath`/`assetPrefix` when running in GitHub Actions.
-- `.github/workflows/deploy-pages.yml` builds the app and publishes `out/` to GitHub Pages.
-
-One-time repository settings in GitHub:
-
-1. Open **Settings → Pages**.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-
-After that, pushing to `main` will deploy the static site automatically.
-
-## Codex
-
-Codex should be used for small, scoped tasks.
-
-Good Codex tasks:
-
-- import one legacy wrapper template
-- extract one summary builder
-- add one fixture test
-- add one preview smoke test
-
-Avoid mixing import, redesign, refactor, and full testing in one Codex task.
-
-See [`docs/codex-workflow.md`](./docs/codex-workflow.md) for the workflow.
-
-## Contribution Guidelines
-
-Before opening a PR, make sure:
-
-- the template renders
-- wrapper UI still works
-- no obvious TSX parse issues were introduced
-- fixtures are updated if output changed
-- screenshots are included for visible UI changes
-
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full contributor workflow.
-
-## Current Priority
-
-1. bootstrap Next.js + Tailwind
-2. add template registry
-3. create template browser page
-4. import existing JSX templates
-5. extract summary builders
-6. add fixture and smoke coverage
-7. enable preview deploys
-8. formalize Codex PR workflow
-
-## Design Principle
-
-HygieneNote is a clinical template workspace.
-
-The priority is to make templates:
-
-- usable
-- previewable
-- testable
-- reviewable
-
-Start by making templates work. Improve structure incrementally.
+The app is configured as a static Next.js export. The GitHub Pages workflow
+builds `out/` and publishes it from `main`; the repository's custom domain is
+recorded in `CNAME`.
