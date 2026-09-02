@@ -422,6 +422,7 @@ const polishingProductSeeds: CatalogueSeed[] = [
 const dentalTreatmentSeeds = catalogueSeeds("dental-treatment.items", [
   ["filling", "Filling (Direct Restoration)"],
   ["root-canals", "Root Canals (Endodontic Therapy)"],
+  ["extraction", "Extraction (Tooth Ablation)"],
   ["crown", "Crown (Indirect Restoration)"],
   ["bridge", "Bridge (Indirect Restoration)"],
   ["denture", "Denture (Removable Prosthesis)"],

@@ -253,6 +253,7 @@ describe("local catalogues", () => {
     ).toEqual([
       "Filling (Direct Restoration)",
       "Root Canals (Endodontic Therapy)",
+      "Extraction (Tooth Ablation)",
       "Crown (Indirect Restoration)",
       "Bridge (Indirect Restoration)",
       "Denture (Removable Prosthesis)",
