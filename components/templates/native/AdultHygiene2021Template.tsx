@@ -652,7 +652,7 @@ function Section({
   return (
     <section
       id={getTemplateSectionId(title)}
-      className="scroll-mt-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 2xl:scroll-mt-6"
     >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
@@ -3188,7 +3188,7 @@ export function AdultHygiene2021Template({
           void copyNote();
         }}
       >
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
@@ -3199,9 +3199,9 @@ export function AdultHygiene2021Template({
             onRestore={localDraft.restoreDraft}
           />
 
-          <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[13rem_minmax(0,1fr)]">
+          <div className="w-full min-w-0 max-w-full 2xl:grid 2xl:grid-cols-[13rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-6">
             <TemplateSectionNavigation sections={adultHygiene2021Sections} />
-            <div className="min-w-0 space-y-6">
+            <div className="mt-6 min-w-0 max-w-full space-y-6 2xl:mt-0">
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">

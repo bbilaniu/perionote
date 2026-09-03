@@ -119,7 +119,37 @@ test("compact section navigation stays within the page viewport", async ({
     )
   ).toBe(true);
 
+  await page
+    .getByRole("navigation", { name: "Form sections" })
+    .getByRole("link", { name: "Teeth and Odontogram", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#template-section-teeth-and-odontogram$/);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const navigation = document.querySelector(
+          "nav[aria-label='Form sections']"
+        );
+        const section = document.querySelector(
+          "#template-section-teeth-and-odontogram"
+        );
+        if (!navigation || !section) return -1;
+        return (
+          section.getBoundingClientRect().top -
+          navigation.getBoundingClientRect().bottom
+        );
+      })
+    )
+    .toBeGreaterThanOrEqual(12);
+
   await page.evaluate(() => window.scrollTo(0, 1200));
+  await expect
+    .poll(() =>
+      page
+        .getByRole("navigation", { name: "Form sections" })
+        .evaluate((navigation) => navigation.getBoundingClientRect().top)
+    )
+    .toBeGreaterThanOrEqual(7);
   await expect
     .poll(() =>
       page

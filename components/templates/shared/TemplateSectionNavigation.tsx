@@ -122,7 +122,7 @@ export function TemplateSectionNavigation({
   return (
     <nav
       aria-label="Form sections"
-      className="sticky top-2 z-20 min-w-0 max-w-full self-start rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 2xl:top-6 2xl:max-h-[calc(100vh-3rem)] 2xl:overflow-y-auto"
+      className="sticky top-2 z-20 min-w-0 max-w-full self-start rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-lg ring-1 ring-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95 dark:ring-white/10 2xl:top-6 2xl:max-h-[calc(100vh-3rem)] 2xl:overflow-y-auto 2xl:shadow-sm 2xl:ring-0"
     >
       <p className="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
         On this form

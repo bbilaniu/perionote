@@ -64,7 +64,10 @@ function SectionCard({
   contentClassName,
 }) {
   return (
-    <Card id={id} className={cx("scroll-mt-6 rounded-3xl", className)}>
+    <Card
+      id={id}
+      className={cx("scroll-mt-32 rounded-3xl 2xl:scroll-mt-6", className)}
+    >
       <CardHeader className="space-y-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-xl">{title}</CardTitle>
@@ -2676,12 +2679,12 @@ export function GingivalDescriptionWebformImportedTemplate({
               </p>
             </CardHeader>
             <CardContent>
-              <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[13rem_minmax(0,1fr)]">
+              <div className="w-full min-w-0 max-w-full 2xl:grid 2xl:grid-cols-[13rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-6">
                 <TemplateSectionNavigation
                   sections={importedTemplateSections}
                   onNavigate={revealSection}
                 />
-                <div className="min-w-0 space-y-6">
+                <div className="mt-6 min-w-0 max-w-full space-y-6 2xl:mt-0">
               {isVeryShort ? (
                 <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
                   <div className="flex flex-wrap gap-3">
