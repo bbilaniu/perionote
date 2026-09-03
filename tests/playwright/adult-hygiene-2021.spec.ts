@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
@@ -33,6 +34,7 @@ test("interactive Generated Note cards match the form card background", async ({
     "/templates/clinic/recare-exam/interactive",
   ]) {
     await page.goto(url);
+    await openGeneratedNote(page);
     const generatedNoteCard = page
       .getByRole("heading", { name: "Generated Note", exact: true })
       .locator("xpath=ancestor::section[1]");
@@ -41,7 +43,7 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
-test("interactive banners share the first row with Generated Note on wide screens", async ({
+test("interactive forms keep vertical navigation and automatically dock the note on wide screens", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -51,21 +53,124 @@ test("interactive banners share the first row with Generated Note on wide screen
     "/templates/clinic/recare-exam/interactive",
   ]) {
     await page.goto(url);
-
-    const banner = page.locator("header[data-template-lifecycle]");
-    const generatedNoteCard = page
-      .getByRole("heading", { name: "Generated Note", exact: true })
+    const navigation = page.getByRole("navigation", {
+      name: "Form sections",
+    });
+    const firstSection = page
+      .getByRole("heading", { name: "Patient and Visit Context", exact: true })
       .locator("xpath=ancestor::section[1]");
-    const [bannerBox, generatedNoteBox] = await Promise.all([
-      banner.boundingBox(),
-      generatedNoteCard.boundingBox(),
+    const [navigationBox, firstSectionBox] = await Promise.all([
+      navigation.boundingBox(),
+      firstSection.boundingBox(),
     ]);
 
-    expect(bannerBox).not.toBeNull();
-    expect(generatedNoteBox).not.toBeNull();
-    expect(generatedNoteBox!.y).toBeCloseTo(bannerBox!.y, 0);
-    expect(bannerBox!.x + bannerBox!.width).toBeLessThan(generatedNoteBox!.x);
+    expect(navigationBox).not.toBeNull();
+    expect(firstSectionBox).not.toBeNull();
+    expect(navigationBox!.x + navigationBox!.width).toBeLessThan(
+      firstSectionBox!.x,
+    );
+
+    const drawer = page.getByRole("complementary", {
+      name: "Generated note preview",
+    });
+    await expect(drawer).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Review note" }),
+    ).toBeHidden();
+    const workspaceHeader = page.locator("h1").locator("xpath=ancestor::header[1]");
+    const [resizedSectionBox, workspaceHeaderBox, drawerBox] = await Promise.all([
+      firstSection.boundingBox(),
+      workspaceHeader.boundingBox(),
+      drawer.boundingBox(),
+    ]);
+    expect(resizedSectionBox).not.toBeNull();
+    expect(workspaceHeaderBox).not.toBeNull();
+    expect(drawerBox).not.toBeNull();
+    expect(resizedSectionBox!.x + resizedSectionBox!.width).toBeLessThan(
+      drawerBox!.x,
+    );
+    expect(workspaceHeaderBox!.x + workspaceHeaderBox!.width).toBeLessThan(
+      drawerBox!.x,
+    );
   }
+});
+
+test("loading demo data warns before replacing a modified form", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const patientId = page.locator("#adult-hygiene-patient-id");
+  const loadDemo = page.getByRole("button", { name: "Load synthetic demo" });
+
+  await patientId.fill("KEEP-MY-CHANGES");
+
+  const cancelledDialogPromise = page.waitForEvent("dialog");
+  const cancelledClickPromise = loadDemo.click();
+  const cancelledDialog = await cancelledDialogPromise;
+  expect(cancelledDialog.message()).toContain(
+    "Changes made since this page was opened or last reset will be overwritten.",
+  );
+  await cancelledDialog.dismiss();
+  await cancelledClickPromise;
+  await expect(patientId).toHaveValue("KEEP-MY-CHANGES");
+
+  const acceptedDialogPromise = page.waitForEvent("dialog");
+  const acceptedClickPromise = loadDemo.click();
+  const acceptedDialog = await acceptedDialogPromise;
+  await acceptedDialog.accept();
+  await acceptedClickPromise;
+  await expect(patientId).toHaveValue("TEST-AH-1001");
+
+  await patientId.fill("RESET-THIS-CHANGE");
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Clear all entered 2021 Adult Hygiene values and start a new note?",
+    );
+    await dialog.accept();
+  });
+  await page.getByRole("button", { name: "Reset form" }).click();
+  await expect(patientId).toHaveValue("");
+
+  // A successful reset establishes the new clean baseline, so this is immediate.
+  await loadDemo.click();
+  await expect(patientId).toHaveValue("TEST-AH-1001");
+});
+
+test("mobile section navigation stays compact and opens as a side sheet", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(adultHygieneUrl);
+
+  const sectionButton = page.getByRole("button", {
+    name: /Open form sections\. Current section:/,
+  });
+  await expect(sectionButton).toContainText("1 of 10");
+  await sectionButton.click();
+
+  const sectionDialog = page.getByRole("dialog", { name: "On this form" });
+  await expect(sectionDialog).toBeVisible();
+  await sectionDialog.getByRole("link", { name: "Visit Team" }).click();
+  await expect(sectionDialog).not.toBeVisible();
+  await expect(page).toHaveURL(/#template-section-visit-team$/);
+  await expect(sectionButton).toContainText("2 of 10");
+});
+
+test("generated note opens as a full-width mobile drawer and closes with Escape", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(adultHygieneUrl);
+
+  await page.getByRole("button", { name: "Review note" }).click();
+  const drawer = page.getByRole("complementary", {
+    name: "Generated note preview",
+  });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toHaveCSS("position", "fixed");
+  await page.keyboard.press("Escape");
+  await expect(drawer).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Review note" })).toBeFocused();
 });
 
 test("date and time fields stay inside cards on narrow screens", async ({
@@ -195,6 +300,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   ).toBeVisible();
 
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Enter a Patient ID.")).toBeVisible();
   await expect(
@@ -203,6 +309,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(page.locator("#adult-hygiene-patient-id")).toBeFocused();
 
   await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-3003");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.locator("#adult-hygiene-dentist")).toBeFocused();
   await expect(
@@ -317,6 +424,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   );
 
   const preview = await page.locator("#adult-hygiene-summary").inputValue();
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2021,6 +2129,7 @@ test("Adult Hygiene copies a manual grade selection without requiring an overrid
   const gradeOverrideReason = page.getByLabel("Grade override reason");
   await expect(gradeOverrideReason).toBeVisible();
 
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2031,6 +2140,7 @@ test("Adult Hygiene copies a manual grade selection without requiring an overrid
   ).resolves.not.toMatch(/Grade override:/);
 
   await gradeOverrideReason.fill("Clinician-selected Grade C");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2062,6 +2172,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   );
   await expect(overrideReason).toBeVisible();
 
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2074,6 +2185,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   ).resolves.not.toContain("Health/Gingivitis override:");
 
   await overrideReason.fill("Clinician-selected health classification");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(

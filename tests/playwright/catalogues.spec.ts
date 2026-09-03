@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
@@ -230,6 +231,7 @@ test("saved providers can prefill new notes without changing restored drafts", a
   await recareDentist.fill("");
   await recareRda.fill("");
   await recareRdh.fill("");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(
     page.getByText("Enter at least one of Dentist, RDA, or RDH."),

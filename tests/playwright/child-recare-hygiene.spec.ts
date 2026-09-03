@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
 const sourceUrl = "/templates/clinic/child-recare-exam-hygiene-notes";
 const interactiveUrl = `${sourceUrl}/interactive`;
@@ -95,6 +96,7 @@ test("child recare demo generates audience-specific notes", async ({ page }) => 
     }),
   ).toHaveValue("Class I");
 
+  await openGeneratedNote(page);
   await page.getByRole("radio", { name: "Dentist", exact: true }).check();
   await expect(preview).toHaveValue(/DENTAL EXAM/);
   await expect(preview).not.toHaveValue(/HYGIENE/);
@@ -264,13 +266,13 @@ test("child recare selects, calculates, and preserves pediatric CAMBRA instrumen
   await expect(factors).toContainText("1 Yes · Score +3 · High");
 });
 
-test("child recare desktop layout keeps context cards in the form column", async ({
+test("child recare desktop layout gives its header and recovery strip the workspace width", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(interactiveUrl);
 
-  await expect(page.locator("main h2")).toHaveText([
+  await expect(page.locator("main h2:visible")).toHaveText([
     "Patient and Visit Context",
     "Visit Team",
     "Consent, Medical History, and Sterilization",
@@ -278,7 +280,7 @@ test("child recare desktop layout keeps context cards in the form column", async
     "Caries Risk Assessment",
     "Hygiene assessment and treatment",
     "Communication and follow-up",
-    "Generated note",
+    "Generated Note",
   ]);
 
   const dimensions = await page.evaluate(() => {
@@ -305,8 +307,8 @@ test("child recare desktop layout keeps context cards in the form column", async
     };
   });
 
-  expect(dimensions.headerWidth).toBeLessThan(dimensions.formWidth * 0.75);
-  expect(dimensions.recoveryWidth).toBeLessThan(dimensions.formWidth * 0.75);
+  expect(Math.abs(dimensions.headerWidth - dimensions.formWidth)).toBeLessThan(2);
+  expect(Math.abs(dimensions.recoveryWidth - dimensions.formWidth)).toBeLessThan(2);
   expect(dimensions.dateButtonHeight).toBe(dimensions.dateHeight);
   await expect(page.getByLabel("Booked date", { exact: true })).toBeVisible();
 });

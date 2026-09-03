@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
 const sourceUrl = "/templates/clinic/adolescent-hygiene";
 const interactiveUrl = `${sourceUrl}/interactive`;
@@ -86,6 +87,7 @@ test("adolescent synthetic demo generates and copies the mapped note", async ({
   const preview = await page
     .locator("#adolescent-hygiene-summary")
     .inputValue();
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(page.evaluate(() => navigator.clipboard.readText())).resolves.toBe(
