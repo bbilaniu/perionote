@@ -27,6 +27,7 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
@@ -47,6 +48,10 @@ import {
 } from "@/lib/templates/adultHygiene2021";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
@@ -622,6 +627,19 @@ const documentationStatusOptions: Array<{
   { value: "yes", label: "Yes" },
 ];
 
+const adultHygiene2021Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Patient Concerns and Hygiene Findings",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment",
+  "Appliances and Relevant History",
+  "Intervals and Next Visit",
+]);
+
 function Section({
   title,
   description,
@@ -632,7 +650,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 2xl:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -3167,7 +3188,7 @@ export function AdultHygiene2021Template({
           void copyNote();
         }}
       >
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
@@ -3177,6 +3198,10 @@ export function AdultHygiene2021Template({
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
           />
+
+          <div className="w-full min-w-0 max-w-full 2xl:grid 2xl:grid-cols-[13rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-6">
+            <TemplateSectionNavigation sections={adultHygiene2021Sections} />
+            <div className="mt-6 min-w-0 max-w-full space-y-6 2xl:mt-0">
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -3749,6 +3774,8 @@ export function AdultHygiene2021Template({
               />
             </div>
           </Section>
+            </div>
+          </div>
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">

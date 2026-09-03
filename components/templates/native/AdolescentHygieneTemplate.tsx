@@ -23,6 +23,7 @@ import {
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import type {
@@ -45,6 +46,10 @@ import {
   treatmentCompletedEntryIdentity,
 } from "@/lib/templates/adultHygieneTreatment";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import {
   copyPeriodontalClassification,
   normalizePeriodontalClassification,
@@ -112,6 +117,18 @@ const retainerOptions: ReadonlyArray<{
   { value: "fixed-and-removable", label: "Fixed and removable" },
 ];
 
+const adolescentHygieneSections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Hygiene Findings",
+  "Periodontal and Gingival Assessment",
+  "Oral Hygiene Instruction",
+  "Appliances and Orthodontic History",
+  "Treatment and Communication",
+  "Comments and Scheduling",
+]);
+
 function isEmptyAdolescentDraft(form: AdolescentHygieneForm): boolean {
   return (
     JSON.stringify({ ...form, dentist: "", rdh: "", rda: "" }) ===
@@ -144,7 +161,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 2xl:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -535,7 +555,7 @@ export function AdolescentHygieneTemplate({
           void copyNote();
         }}
       >
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <InteractiveTemplateHeader {...presentation} />
 
           <LocalDraftRecovery
@@ -545,6 +565,10 @@ export function AdolescentHygieneTemplate({
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
           />
+
+          <div className="w-full min-w-0 max-w-full 2xl:grid 2xl:grid-cols-[13rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-6">
+            <TemplateSectionNavigation sections={adolescentHygieneSections} />
+            <div className="mt-6 min-w-0 max-w-full space-y-6 2xl:mt-0">
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-2">
@@ -1002,6 +1026,8 @@ export function AdolescentHygieneTemplate({
               </div>
             </div>
           </Section>
+            </div>
+          </div>
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">
