@@ -33,6 +33,7 @@ import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftReco
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
@@ -63,6 +64,10 @@ import {
 } from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import { copyCambra123SixAdultAssessment } from "@/lib/templates/cambra123";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
@@ -705,6 +710,44 @@ const documentationStatusOptions: Array<{
   { value: "yes", label: "Yes" },
 ];
 
+const adultHygiene2026Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records",
+  "Patient Concerns and Hygiene Findings",
+  "EOE",
+  "IOE",
+  "Occlusion and Habits",
+  "Teeth and Odontogram",
+  "Appliances and Relevant History",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment plan",
+  "Treatment completed today",
+  "Intervals and Follow-up",
+]);
+
+const adolescentHygiene2026Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Patient Concerns and Hygiene Findings",
+  "EOE",
+  "IOE",
+  "Occlusion and Habits",
+  "Teeth and Odontogram",
+  "Appliances and Relevant History",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment plan",
+  "Treatment completed today",
+  "Communication with Parent or Legal Guardian",
+  "Intervals and Follow-up",
+]);
+
 function Section({
   title,
   description,
@@ -715,7 +758,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -2955,6 +3001,9 @@ export function AdultHygiene2026Template({
   variant?: Hygiene2026Variant;
 }) {
   const isAdolescent = variant === "adolescent";
+  const templateSections = isAdolescent
+    ? adolescentHygiene2026Sections
+    : adultHygiene2026Sections;
   const templateId = isAdolescent
     ? "adolescent-hygiene-2026"
     : "adult-hygiene-2026";
@@ -3632,6 +3681,10 @@ export function AdultHygiene2026Template({
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
           />
+
+          <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[13rem_minmax(0,1fr)]">
+            <TemplateSectionNavigation sections={templateSections} />
+            <div className="min-w-0 space-y-6">
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -4757,6 +4810,8 @@ export function AdultHygiene2026Template({
               />
             </div>
           </Section>
+            </div>
+          </div>
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">

@@ -51,6 +51,7 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
@@ -70,6 +71,10 @@ import {
   recareExtraoralOptions,
 } from "@/lib/templates/extraoralObservationsCatalog";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
@@ -137,6 +142,18 @@ const examStatusOptions: Array<{ value: ExamStatus; label: string }> = [
   { value: "findings", label: "Findings" },
 ];
 
+const recareExamSections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records and Chief Concern",
+  "Clinical Exam",
+  "Occlusion & Habits",
+  "Appliances and Relevant History",
+  "Odontogram",
+  "Treatment and Next Visit",
+]);
+
 function Section({
   title,
   description,
@@ -147,7 +164,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -2346,6 +2366,10 @@ export function RecareExamTemplate({
             onRestore={localDraft.restoreDraft}
           />
 
+          <div className="grid min-w-0 items-start gap-6 2xl:grid-cols-[13rem_minmax(0,1fr)]">
+            <TemplateSectionNavigation sections={recareExamSections} />
+            <div className="min-w-0 space-y-6">
+
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
               <TextField
@@ -3044,6 +3068,8 @@ export function RecareExamTemplate({
               />
             </div>
           </Section>
+            </div>
+          </div>
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">

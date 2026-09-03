@@ -17,6 +17,7 @@ import { InteractiveTemplateHeader } from "@/components/templates/shared/Interac
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
@@ -32,6 +33,10 @@ import {
   hasRequiredChildRecareHygieneFields,
 } from "@/lib/templates/childRecareHygiene";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import {
   createTreatmentEntryFromCatalogueItem,
   recareExamTreatmentPreset,
@@ -100,6 +105,16 @@ const occlusionAssessmentOptions: Array<{
   },
 ];
 
+const childRecareHygieneSections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records and dental exam",
+  "Caries Risk Assessment",
+  "Hygiene assessment and treatment",
+  "Communication and follow-up",
+]);
+
 export function isValidChildRecareHygieneForm(
   value: unknown,
 ): value is ChildRecareHygieneForm {
@@ -142,7 +157,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -654,6 +672,10 @@ export function ChildRecareHygieneTemplate({
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
           />
+
+          <div className="grid min-w-0 items-start gap-5 2xl:grid-cols-[13rem_minmax(0,1fr)]">
+            <TemplateSectionNavigation sections={childRecareHygieneSections} />
+            <div className="min-w-0 space-y-5">
 
           <Section
             title="Patient and Visit Context"
@@ -1178,6 +1200,8 @@ export function ChildRecareHygieneTemplate({
               </div>
             </div>
           </Section>
+            </div>
+          </div>
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-6">
