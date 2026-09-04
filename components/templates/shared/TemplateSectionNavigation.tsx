@@ -80,6 +80,7 @@ export function TemplateSectionNavigation({
   const [showScrollCue, setShowScrollCue] = useState(false);
   const mobileDialogRef = useRef<HTMLDialogElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const desktopSectionListRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef(sections[0]?.id ?? "");
   const lastScrollRef = useRef({ position: 0, time: 0 });
   const cueTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,6 +115,37 @@ export function TemplateSectionNavigation({
       const atPageEnd =
         window.scrollY + window.innerHeight >=
         document.documentElement.scrollHeight - 2;
+      const sectionList = desktopSectionListRef.current;
+      if (sectionList) {
+        const firstSectionTop =
+          availableSections[0].getBoundingClientRect().top + currentPosition;
+        const lastSectionBottom =
+          availableSections[availableSections.length - 1]
+            .getBoundingClientRect()
+            .bottom + currentPosition;
+        const templateScrollStart = Math.max(
+          0,
+          firstSectionTop - activationLine,
+        );
+        const templateScrollEnd = Math.max(
+          templateScrollStart,
+          lastSectionBottom - window.innerHeight,
+        );
+        const templateProgress =
+          templateScrollEnd === templateScrollStart
+            ? Number(atPageEnd)
+            : Math.min(
+                1,
+                Math.max(
+                  0,
+                  (currentPosition - templateScrollStart) /
+                    (templateScrollEnd - templateScrollStart),
+                ),
+              );
+        const maximumListScroll =
+          sectionList.scrollHeight - sectionList.clientHeight;
+        sectionList.scrollTop = templateProgress * maximumListScroll;
+      }
       let nextActive = availableSections[0];
 
       if (atPageEnd) {
@@ -243,7 +275,11 @@ export function TemplateSectionNavigation({
           <p className="shrink-0 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             On this form
           </p>
-          <div className="mt-2 min-h-0 overflow-y-auto" data-section-list>
+          <div
+            ref={desktopSectionListRef}
+            className="template-section-scrollbar mt-2 min-h-0 overflow-y-auto"
+            data-section-list
+          >
             <SectionLinks
               sections={sections}
               activeId={activeId}
