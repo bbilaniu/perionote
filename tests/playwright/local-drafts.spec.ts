@@ -232,9 +232,13 @@ test("ultrawide workspace shows and opens current-form and other-form drafts", a
 
   await saveDraftAndStartNew(page);
 
-  const rail = page.getByRole("region", { name: "Local drafts" });
+  const rail = page.getByRole("region", { name: "Local Drafts" });
   await expect(rail).toBeVisible();
   await expect(rail.getByText("Current", { exact: true })).toBeVisible();
+  await expect(rail.getByText("Current", { exact: true })).toHaveCSS(
+    "text-transform",
+    "uppercase",
+  );
   await expect(rail.getByText("Synthetic recare workfile")).toBeVisible();
   await expect(rail.getByText("Synthetic adult workfile")).toBeVisible();
   await expect(
@@ -242,6 +246,22 @@ test("ultrawide workspace shows and opens current-form and other-form drafts", a
       .getByRole("region", { name: "Local draft recovery" })
       .getByText(/other local draft for this template/),
   ).toBeHidden();
+
+  const generatedNote = page
+    .getByRole("heading", { name: "Generated Note", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  const [generatedNoteBox, railBox] = await Promise.all([
+    generatedNote.boundingBox(),
+    rail.boundingBox(),
+  ]);
+  expect(generatedNoteBox).not.toBeNull();
+  expect(railBox).not.toBeNull();
+  expect(Math.abs(generatedNoteBox!.height - railBox!.height)).toBeLessThanOrEqual(
+    1,
+  );
+  await expect(generatedNote.locator("textarea")).toHaveClass(
+    /workspace-scrollbar/,
+  );
 
   await rail
     .getByRole("button", {
@@ -291,7 +311,7 @@ test("ultrawide draft rail keeps its footer visible while long draft lists scrol
   );
   await page.reload();
 
-  const rail = page.getByRole("region", { name: "Local drafts" });
+  const rail = page.getByRole("region", { name: "Local Drafts" });
   const draftLists = rail.getByRole("region", {
     name: "Saved draft lists",
   });
@@ -335,7 +355,7 @@ test("draft rail stays out of the standard desktop workspace", async ({
   await page.goto(recareExamUrl);
 
   await expect(
-    page.getByRole("region", { name: "Local drafts" }),
+    page.getByRole("region", { name: "Local Drafts" }),
   ).toBeHidden();
   await expect(
     page

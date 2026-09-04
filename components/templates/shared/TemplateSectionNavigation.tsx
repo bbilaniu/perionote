@@ -144,7 +144,8 @@ export function TemplateSectionNavigation({
               );
         const maximumListScroll =
           sectionList.scrollHeight - sectionList.clientHeight;
-        sectionList.scrollTop = templateProgress * maximumListScroll;
+        sectionList.scrollTop =
+          maximumListScroll <= 1 ? 0 : templateProgress * maximumListScroll;
       }
       let nextActive = availableSections[0];
 
@@ -277,7 +278,7 @@ export function TemplateSectionNavigation({
           </p>
           <div
             ref={desktopSectionListRef}
-            className="template-section-scrollbar mt-2 min-h-0 overflow-y-auto"
+            className="workspace-scrollbar mt-2 min-h-0 overflow-y-auto"
             data-section-list
           >
             <SectionLinks

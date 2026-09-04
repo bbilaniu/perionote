@@ -115,6 +115,36 @@ test("desktop Review note stays pinned while the section list follows form progr
   expect(reviewNoteInset).toBeLessThanOrEqual(14);
 });
 
+test("desktop section scrollbar clears after the viewport becomes tall enough", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 560 });
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const sectionList = page
+    .getByRole("navigation", { name: "Form sections" })
+    .locator("[data-section-list]");
+  await expect
+    .poll(() =>
+      sectionList.evaluate(
+        (list) => list.scrollHeight - list.clientHeight,
+      ),
+    )
+    .toBeGreaterThan(1);
+
+  await page.setViewportSize({ width: 1600, height: 1600 });
+  await expect
+    .poll(() =>
+      sectionList.evaluate(
+        (list) => list.scrollHeight - list.clientHeight,
+      ),
+    )
+    .toBeLessThanOrEqual(1);
+  await expect
+    .poll(() => sectionList.evaluate((list) => list.scrollTop))
+    .toBe(0);
+});
+
 test("navigation expands a collapsed very-short-template section", async ({
   page,
 }) => {

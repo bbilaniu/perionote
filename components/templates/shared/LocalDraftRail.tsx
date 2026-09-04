@@ -179,7 +179,7 @@ export function LocalDraftRail({
           id="local-draft-rail-title"
           className="mt-1 text-lg font-semibold tracking-tight"
         >
-          Local drafts
+          Local Drafts
         </h2>
         <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">
           Browser-only recovery copies kept for seven days. Not the clinical
@@ -201,7 +201,7 @@ export function LocalDraftRail({
                 savedAt={lastSavedAt ?? currentDraft?.savedAt}
               />
             </div>
-            <span className="shrink-0 rounded-full bg-sky-700 px-2 py-1 text-[0.6875rem] font-semibold text-white dark:bg-sky-400 dark:text-sky-950">
+            <span className="shrink-0 rounded-full bg-sky-700 px-2 py-1 text-[0.6875rem] font-semibold uppercase tracking-wide text-white dark:bg-sky-400 dark:text-sky-950">
               Current
             </span>
           </div>
@@ -219,7 +219,7 @@ export function LocalDraftRail({
           ref={draftListRef}
           role="region"
           aria-label="Saved draft lists"
-          className="template-section-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500"
+          className="workspace-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500"
           data-drag-scroll-disabled
           tabIndex={0}
           onScroll={updateScrollEdges}

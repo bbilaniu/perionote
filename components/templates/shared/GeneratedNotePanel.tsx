@@ -28,7 +28,7 @@ export function GeneratedNotePanel({
   headerAction?: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:flex xl:h-[calc(100dvh-11rem)] xl:min-h-0 xl:flex-col dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300">
@@ -47,12 +47,12 @@ export function GeneratedNotePanel({
       </label>
       <textarea
         id={textareaId}
-        className={`mt-4 min-h-[34rem] resize-y py-2 font-mono leading-6 ${formControlClass()}`}
+        className={`workspace-scrollbar mt-4 min-h-[34rem] resize-y py-2 font-mono leading-6 xl:min-h-0 xl:flex-1 xl:resize-none ${formControlClass()}`}
         readOnly
         value={value}
         placeholder={placeholder}
       />
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex shrink-0 items-center gap-3">
         <button
           type="submit"
           className={`${buttonClass} shrink-0 bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
