@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { Time24Input } from "@/components/forms/Time24Input";
 import {
   formatTime24Value,
@@ -63,7 +64,10 @@ function SectionCard({
   contentClassName,
 }) {
   return (
-    <Card id={id} className={cx("rounded-3xl", className)}>
+    <Card
+      id={id}
+      className={cx("scroll-mt-32 rounded-3xl 2xl:scroll-mt-6", className)}
+    >
       <CardHeader className="space-y-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-xl">{title}</CardTitle>
@@ -2053,17 +2057,29 @@ const VERY_SHORT_DEFAULT_OPEN_SECTIONS = {
   additionalClinicalDocumentation: false,
 };
 
-const VERY_SHORT_JUMP_SECTIONS = [
-  ["historyAndExam", "History and Exam"],
-  ["gingivalDescription", "Gingival Description"],
-  ["treatmentDoneToday", "Treatment Done Today"],
-  ["localAnesthesia", "Local Anesthesia"],
-  ["nextAppointment", "Next Appointment"],
-];
-
 function getSectionId(sectionKey) {
   return `template-section-${sectionKey}`;
 }
+
+const importedTemplateSections = [
+  ["historyAndExam", "History and Exam"],
+  ["eoeIoe", "EOE / IOE"],
+  ["gingivalDescription", "Gingival Description"],
+  ["deposits", "Calculus and Biofilm Deposits"],
+  ["periodontalStatus", "Periodontal Status"],
+  ["cariesRisk", "Caries Risk"],
+  ["ohe", "Oral Health Education (OHE)"],
+  ["recommendations", "Recommendations"],
+  ["treatmentDoneToday", "Treatment Done Today"],
+  ["nextAppointment", "Next Appointment"],
+  ["localAnesthesia", "Local Anesthesia"],
+  ["disposition", "Continuity of Care"],
+  ["additionalClinicalDocumentation", "Additional Clinical Documentation"],
+].map(([sectionKey, label]) => ({
+  id: getSectionId(sectionKey),
+  label,
+  sectionKey,
+}));
 
 function DepositsCard({
   title,
@@ -2406,15 +2422,16 @@ export function GingivalDescriptionWebformImportedTemplate({
     );
   };
 
-  const jumpToSection = (sectionKey) => {
-    const target = document.getElementById(getSectionId(sectionKey));
-    if (!target) return;
-
+  const revealSection = (sectionId) => {
+    if (!isVeryShort) return;
+    const sectionKey = importedTemplateSections.find(
+      (section) => section.id === sectionId,
+    )?.sectionKey;
+    if (!sectionKey) return;
     setOpenSections((current) => ({
       ...current,
       [sectionKey]: true,
     }));
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const treatmentHasHandInstrumentation = form.treatmentDoneToday.includes(
@@ -2661,9 +2678,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                 {description}
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
+              <div className="w-full min-w-0 max-w-full lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-6">
+                <TemplateSectionNavigation
+                  sections={importedTemplateSections}
+                  onNavigate={revealSection}
+                />
+                <div className="mt-6 min-w-0 max-w-full space-y-6 lg:mt-0">
               {isVeryShort ? (
-                <div className="space-y-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
                   <div className="flex flex-wrap gap-3">
                     <Button
                       type="button"
@@ -2681,22 +2704,6 @@ export function GingivalDescriptionWebformImportedTemplate({
                     >
                       Collapse all sections
                     </Button>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Quick jump</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
-                        <Button
-                          key={sectionKey}
-                          type="button"
-                          variant="outline"
-                          className="rounded-2xl px-3 py-1.5 text-xs"
-                          onClick={() => jumpToSection(sectionKey)}
-                        >
-                          {label}
-                        </Button>
-                      ))}
-                    </div>
                   </div>
                 </div>
               ) : null}
@@ -4305,6 +4312,8 @@ export function GingivalDescriptionWebformImportedTemplate({
               </SectionCard>
 
               {!isVeryShort ? actionButtons : null}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

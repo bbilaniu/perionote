@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import packageInfo from "@/package.json";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
 test("template library index separates clinic and interactive templates", async ({
   page,
@@ -303,6 +304,7 @@ test("2026 Adult Hygiene uses its own route and draft storage", async ({
 
   await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-2026");
   await page.locator("#adult-hygiene-rdh").fill("Independent RDH");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy complete note" }).click();
 
   await expect
@@ -448,6 +450,7 @@ test("2026 Adult Hygiene documents EOE and IOE findings", async ({
     "Appliances and Relevant History",
   ]);
 
+  await openGeneratedNote(page);
   const output = page.getByRole("group", { name: "Note output" });
   const completeOutput = output.getByRole("radio", {
     name: "Complete",
@@ -1195,6 +1198,7 @@ test("2026 Adult Hygiene records Dyclonine through Local Anesthesia", async ({
     "Dyclonine 1% rinse 5 ml — full mouth",
   );
 
+  await openGeneratedNote(page);
   await page
     .getByRole("group", { name: "Note output", exact: true })
     .getByRole("radio", { name: "Recare", exact: true })
@@ -1791,6 +1795,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   );
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
 
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
   await expect(page.getByText("Enter a Patient ID.")).toBeVisible();
@@ -1803,6 +1808,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
   ).resolves.toBe("sentinel");
 
   await page.locator("#recare-patient-id").fill("TEST-3003");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.locator("#recare-dentist")).toBeFocused();
   await expect(
@@ -1811,6 +1817,7 @@ test("recare exam blocks copying until Patient ID and a provider are entered", a
 
   await page.locator("#recare-rdh").fill("Example RDH");
   const visiblePreview = await page.locator("#recare-summary").inputValue();
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
@@ -1911,6 +1918,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
   );
 
   const demoPreview = await page.locator("#recare-summary").inputValue();
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   const copiedNote = await page.evaluate(() => navigator.clipboard.readText());
   expect(copiedNote).toBe(demoPreview);
@@ -1945,11 +1953,11 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
-      "Clear all entered Recare Exam values and start a new note?",
+      "Clear this form and start a new note?",
     );
     await dialog.accept();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
   const resetStartedAt = await page
     .locator("#recare-note-started")
@@ -1963,7 +1971,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
   page.once("dialog", async (dialog) => {
     await dialog.dismiss();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(page.locator("#recare-note-started")).toHaveValue(
     resetStartedAt,
   );

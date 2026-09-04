@@ -48,7 +48,11 @@ import {
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
-import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
@@ -70,6 +74,10 @@ import {
   recareExtraoralOptions,
 } from "@/lib/templates/extraoralObservationsCatalog";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
@@ -81,8 +89,7 @@ const treatmentRowButtonClass =
 const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
-const recareNoteDiscardWarning =
-  "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const recareNoteDiscardWarning = interactiveTemplateClearFormWarning;
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
 const recareDraftArrayItemShapes = {
@@ -137,6 +144,18 @@ const examStatusOptions: Array<{ value: ExamStatus; label: string }> = [
   { value: "findings", label: "Findings" },
 ];
 
+const recareExamSections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records and Chief Concern",
+  "Clinical Exam",
+  "Occlusion & Habits",
+  "Appliances and Relevant History",
+  "Odontogram",
+  "Treatment and Next Visit",
+]);
+
 function Section({
   title,
   description,
@@ -147,7 +166,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -2301,7 +2323,7 @@ export function RecareExamTemplate({
 
   function resetForm() {
     if (!window.confirm(recareNoteDiscardWarning)) {
-      return;
+      return false;
     }
 
     localDraft.beginNewDraft();
@@ -2311,6 +2333,7 @@ export function RecareExamTemplate({
     setProviderError("");
     setCopyMessage("");
     patientIdRef.current?.focus();
+    return true;
   }
 
   function createTreatmentEntry(
@@ -2326,25 +2349,36 @@ export function RecareExamTemplate({
   }
 
   return (
-    <div className="space-y-6">
-      <form
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
-        autoComplete="off"
-        onSubmit={(event) => {
+    <InteractiveTemplateWorkspace
+      presentation={presentation}
+      sections={recareExamSections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
           event.preventDefault();
           void copyNote();
-        }}
-      >
-        <div className="space-y-6">
-          <InteractiveTemplateHeader {...presentation} />
-
-          <LocalDraftRecovery
+      }}
+      onLoadDemo={loadDemo}
+      onReset={resetForm}
+      draftRecovery={
+        <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}
             lastSavedAt={localDraft.lastSavedAt}
             restoredAt={localDraft.restoredAt}
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
-          />
+        />
+      }
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="recare-summary"
+          accessibleLabel="Generated Recare Exam note"
+          value={summary}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          headerAction={headerAction}
+        />
+      )}
+    >
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -3044,59 +3078,6 @@ export function RecareExamTemplate({
               />
             </div>
           </Section>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated Note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The visible preview is copied unchanged.
-            </p>
-            <label className="sr-only" htmlFor="recare-summary">
-              Generated Recare Exam note
-            </label>
-            <textarea
-              id="recare-summary"
-              className={`${inputClass} min-h-[34rem] resize-y font-mono leading-6`}
-              readOnly
-              value={summary}
-              placeholder="Complete fields to build the note."
-            />
-
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-                disabled={!startedAt}
-              >
-                Copy note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={loadDemo}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+    </InteractiveTemplateWorkspace>
   );
 }

@@ -26,7 +26,11 @@ import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { Time24Input } from "@/components/forms/Time24Input";
-import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { Cambra123SixAdultControl } from "@/components/templates/shared/Cambra123SixAdultControl";
 import { CollapsibleFieldset } from "@/components/templates/shared/CollapsibleFieldset";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
@@ -63,6 +67,10 @@ import {
 } from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import { copyCambra123SixAdultAssessment } from "@/lib/templates/cambra123";
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
@@ -196,11 +204,6 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning =
-  "Clear all entered 2026 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
-const adolescentHygieneDiscardWarning =
-  "Clear all entered 2026 Adolescent Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
-
 export type Hygiene2026Variant = "adult" | "adolescent";
 
 const outputChoicesByVariant = {
@@ -705,6 +708,44 @@ const documentationStatusOptions: Array<{
   { value: "yes", label: "Yes" },
 ];
 
+const adultHygiene2026Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records",
+  "Patient Concerns and Hygiene Findings",
+  "EOE",
+  "IOE",
+  "Occlusion and Habits",
+  "Teeth and Odontogram",
+  "Appliances and Relevant History",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment plan",
+  "Treatment completed today",
+  "Intervals and Follow-up",
+]);
+
+const adolescentHygiene2026Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Patient Concerns and Hygiene Findings",
+  "EOE",
+  "IOE",
+  "Occlusion and Habits",
+  "Teeth and Odontogram",
+  "Appliances and Relevant History",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment plan",
+  "Treatment completed today",
+  "Communication with Parent or Legal Guardian",
+  "Intervals and Follow-up",
+]);
+
 function Section({
   title,
   description,
@@ -715,7 +756,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -2955,12 +2999,13 @@ export function AdultHygiene2026Template({
   variant?: Hygiene2026Variant;
 }) {
   const isAdolescent = variant === "adolescent";
+  const templateSections = isAdolescent
+    ? adolescentHygiene2026Sections
+    : adultHygiene2026Sections;
   const templateId = isAdolescent
     ? "adolescent-hygiene-2026"
     : "adult-hygiene-2026";
-  const discardWarning = isAdolescent
-    ? adolescentHygieneDiscardWarning
-    : adultHygieneDiscardWarning;
+  const discardWarning = interactiveTemplateClearFormWarning;
   const outputChoices = outputChoicesByVariant[variant];
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
@@ -3513,7 +3558,7 @@ export function AdultHygiene2026Template({
   }
 
   function resetForm() {
-    if (!window.confirm(discardWarning)) return;
+    if (!window.confirm(discardWarning)) return false;
     localDraft.beginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
@@ -3522,6 +3567,7 @@ export function AdultHygiene2026Template({
     setCopyMessage("");
     setOutputMode("complete");
     patientIdRef.current?.focus();
+    return true;
   }
 
   function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {
@@ -3613,25 +3659,59 @@ export function AdultHygiene2026Template({
   );
 
   return (
-    <div className="space-y-6">
-      <form
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
-        autoComplete="off"
-        onSubmit={(event) => {
+    <InteractiveTemplateWorkspace
+      presentation={presentation}
+      sections={templateSections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
           event.preventDefault();
           void copyNote();
-        }}
-      >
-        <div className="space-y-6">
-          <InteractiveTemplateHeader {...presentation} />
-
-          <LocalDraftRecovery
+      }}
+      onLoadDemo={loadDemo}
+      onReset={resetForm}
+      draftRecovery={
+        <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}
             lastSavedAt={localDraft.lastSavedAt}
             restoredAt={localDraft.restoredAt}
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
-          />
+        />
+      }
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="adult-hygiene-summary"
+          accessibleLabel={`Generated 2026 ${selectedOutputLabel.toLowerCase()} note`}
+          value={summary}
+          copyLabel={`Copy ${selectedOutputLabel.toLowerCase()} note`}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          headerAction={headerAction}
+          controls={
+            <fieldset className="mt-4 space-y-2">
+              <legend className="text-sm font-semibold">Note output</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {outputChoices.map(([value, label]) => (
+                  <NativeChoiceControl
+                    key={value}
+                    type="radio"
+                    name={`${templateId}-note-output`}
+                    checked={outputMode === value}
+                    className="px-2"
+                    onChange={() => {
+                      setOutputMode(value);
+                      setCopyMessage("");
+                    }}
+                  >
+                    {label}
+                  </NativeChoiceControl>
+                ))}
+              </div>
+            </fieldset>
+          }
+        />
+      )}
+    >
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -4757,77 +4837,6 @@ export function AdultHygiene2026Template({
               />
             </div>
           </Section>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated Note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The visible preview is copied unchanged.
-            </p>
-            <fieldset className="mt-4 space-y-2">
-              <legend className="text-sm font-semibold">Note output</legend>
-              <div className="grid grid-cols-3 gap-2">
-                {outputChoices.map(([value, label]) => (
-                  <NativeChoiceControl
-                    key={value}
-                    type="radio"
-                    name={`${templateId}-note-output`}
-                    checked={outputMode === value}
-                    className="px-2"
-                    onChange={() => {
-                      setOutputMode(value);
-                      setCopyMessage("");
-                    }}
-                  >
-                    {label}
-                  </NativeChoiceControl>
-                ))}
-              </div>
-            </fieldset>
-            <label className="sr-only" htmlFor="adult-hygiene-summary">
-              Generated 2026 {selectedOutputLabel.toLowerCase()} note
-            </label>
-            <textarea
-              id="adult-hygiene-summary"
-              className={`${inputClass} min-h-[34rem] resize-y font-mono leading-6`}
-              readOnly
-              value={summary}
-              placeholder="Complete fields to build the note."
-            />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-                disabled={!startedAt}
-              >
-                Copy {selectedOutputLabel.toLowerCase()} note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={loadDemo}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+    </InteractiveTemplateWorkspace>
   );
 }
