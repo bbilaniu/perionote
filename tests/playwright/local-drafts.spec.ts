@@ -155,7 +155,7 @@ test("restoring another draft first checkpoints the current form", async ({
   await page.getByRole("button", { name: "Copy note" }).click();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await page.locator("#recare-patient-id").fill("Synthetic draft B unsaved");
   await page.locator("#recare-rdh").fill("Synthetic RDH B");
 
@@ -240,11 +240,11 @@ test("saved drafts page identifies, opens, and deletes a local draft", async ({
 
   page.once("dialog", (dialog) => {
     expect(dialog.message()).toContain(
-      "current local draft will remain available",
+      "previous local draft remains available for seven days",
     );
     return dialog.accept();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-dentist")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-rda")).toHaveValue("");
@@ -316,7 +316,7 @@ test("saved drafts page warns separately before deleting all drafts", async ({
   await page.getByRole("button", { name: "Copy note" }).click();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await page.locator("#adult-hygiene-patient-id").fill("Synthetic draft two");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH two");
   await openGeneratedNote(page);

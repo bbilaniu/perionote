@@ -65,9 +65,15 @@ function SectionLinks({
 export function TemplateSectionNavigation({
   sections,
   onNavigate,
+  onReviewNote,
+  noteExpanded = false,
+  noteDrawerId,
 }: {
   sections: readonly TemplateSectionNavigationItem[];
   onNavigate?: (sectionId: string) => void;
+  onReviewNote?: () => void;
+  noteExpanded?: boolean;
+  noteDrawerId?: string;
 }) {
   const [activeId, setActiveId] = useState(sections[0]?.id ?? "");
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -213,17 +219,37 @@ export function TemplateSectionNavigation({
     <>
       <nav
         aria-label="Form sections"
-        className="sticky top-6 hidden max-h-[calc(100vh-3rem)] self-start overflow-y-auto rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur lg:block dark:border-slate-800 dark:bg-slate-900/95"
+        className="sticky top-6 order-2 hidden max-h-[calc(100vh-3rem)] self-start overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur lg:flex lg:flex-col dark:border-slate-800 dark:bg-slate-900/95"
       >
-        <p className="px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-          On this form
-        </p>
-        <div className="mt-2">
-          <SectionLinks
-            sections={sections}
-            activeId={activeId}
-            onNavigate={navigateToSection}
-          />
+        {onReviewNote ? (
+          <button
+            type="button"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+            aria-controls={noteDrawerId}
+            aria-expanded={noteExpanded}
+            data-review-note-trigger
+            onClick={onReviewNote}
+          >
+            Review note
+          </button>
+        ) : null}
+        <div
+          className={
+            onReviewNote
+              ? "mt-3 flex min-h-0 flex-1 flex-col border-t border-slate-200 pt-3 dark:border-slate-800"
+              : "flex min-h-0 flex-1 flex-col"
+          }
+        >
+          <p className="shrink-0 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            On this form
+          </p>
+          <div className="mt-2 min-h-0 overflow-y-auto" data-section-list>
+            <SectionLinks
+              sections={sections}
+              activeId={activeId}
+              onNavigate={navigateToSection}
+            />
+          </div>
         </div>
       </nav>
 
@@ -231,30 +257,44 @@ export function TemplateSectionNavigation({
         aria-label="Current form section"
         className="sticky top-2 z-30 min-w-0 max-w-full lg:hidden"
       >
-        <button
-          ref={mobileTriggerRef}
-          type="button"
-          className={`flex min-h-12 min-w-0 max-w-full items-center gap-3 rounded-xl border bg-white/95 px-4 py-2 text-left shadow-lg backdrop-blur transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:bg-slate-900/95 ${
-            showScrollCue
-              ? "border-sky-500 ring-2 ring-sky-200 dark:border-sky-400 dark:ring-sky-900"
-              : "border-slate-200 dark:border-slate-800"
-          }`}
-          aria-haspopup="dialog"
-          aria-expanded={mobileOpen}
-          aria-controls="mobile-form-sections"
-          aria-label={`Open form sections. Current section: ${activeSection?.label ?? "Unknown"}`}
-          onClick={() => setMobileOpen(true)}
-        >
-          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            {activeIndex + 1} of {sections.length}
-          </span>
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-            {activeSection?.label}
-          </span>
-          <span className="text-sm font-semibold text-sky-800 dark:text-sky-200">
-            Sections
-          </span>
-        </button>
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2">
+          <button
+            ref={mobileTriggerRef}
+            type="button"
+            className={`flex min-h-12 min-w-0 max-w-full items-center gap-2 rounded-xl border bg-white/95 px-3 py-2 text-left shadow-lg backdrop-blur transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:bg-slate-900/95 ${
+              showScrollCue
+                ? "border-sky-500 ring-2 ring-sky-200 dark:border-sky-400 dark:ring-sky-900"
+                : "border-slate-200 dark:border-slate-800"
+            }`}
+            aria-haspopup="dialog"
+            aria-expanded={mobileOpen}
+            aria-controls="mobile-form-sections"
+            aria-label={`Open form sections. Current section: ${activeSection?.label ?? "Unknown"}`}
+            onClick={() => setMobileOpen(true)}
+          >
+            <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {activeIndex + 1} of {sections.length}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+              {activeSection?.label}
+            </span>
+            <span className="hidden text-sm font-semibold text-sky-800 sm:inline dark:text-sky-200">
+              Sections
+            </span>
+          </button>
+          {onReviewNote ? (
+            <button
+              type="button"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+              aria-controls={noteDrawerId}
+              aria-expanded={noteExpanded}
+              data-review-note-trigger
+              onClick={onReviewNote}
+            >
+              Review note
+            </button>
+          ) : null}
+        </div>
       </nav>
 
       <dialog

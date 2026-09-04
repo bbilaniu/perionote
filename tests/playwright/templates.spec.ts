@@ -1953,11 +1953,11 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
   page.once("dialog", async (dialog) => {
     expect(dialog.message()).toContain(
-      "Clear all entered Recare Exam values and start a new note?",
+      "Clear this form and start a new note?",
     );
     await dialog.accept();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
   const resetStartedAt = await page
     .locator("#recare-note-started")
@@ -1971,7 +1971,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
   page.once("dialog", async (dialog) => {
     await dialog.dismiss();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(page.locator("#recare-note-started")).toHaveValue(
     resetStartedAt,
   );

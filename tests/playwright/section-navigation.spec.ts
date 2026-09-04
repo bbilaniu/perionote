@@ -81,6 +81,36 @@ test("section links update the URL and active location", async ({ page }) => {
   ).toBeInViewport();
 });
 
+test("desktop Review note stays pinned while the section list scrolls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 500 });
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const navigation = page.getByRole("navigation", { name: "Form sections" });
+  const reviewNote = navigation.getByRole("button", { name: "Review note" });
+  const sectionList = navigation.locator("[data-section-list]");
+
+  await page.evaluate(() => window.scrollTo(0, 1600));
+  const sectionListScrollTop = await sectionList.evaluate((list) => {
+    list.scrollTop = list.scrollHeight;
+    return list.scrollTop;
+  });
+  expect(sectionListScrollTop).toBeGreaterThan(0);
+  await expect(reviewNote).toBeVisible();
+  await expect(reviewNote).toBeInViewport();
+
+  const [navigationBox, reviewNoteBox] = await Promise.all([
+    navigation.boundingBox(),
+    reviewNote.boundingBox(),
+  ]);
+  expect(navigationBox).not.toBeNull();
+  expect(reviewNoteBox).not.toBeNull();
+  const reviewNoteInset = reviewNoteBox!.y - navigationBox!.y;
+  expect(reviewNoteInset).toBeGreaterThanOrEqual(12);
+  expect(reviewNoteInset).toBeLessThanOrEqual(14);
+});
+
 test("navigation expands a collapsed very-short-template section", async ({
   page,
 }) => {
@@ -120,7 +150,9 @@ test("compact section navigation stays within the page viewport", async ({
     )
   ).toBe(true);
 
-  await compactNavigation.getByRole("button").click();
+  await compactNavigation
+    .getByRole("button", { name: /Open form sections/ })
+    .click();
   await page
     .getByRole("dialog", { name: "On this form" })
     .getByRole("link", { name: "Teeth and Odontogram", exact: true })

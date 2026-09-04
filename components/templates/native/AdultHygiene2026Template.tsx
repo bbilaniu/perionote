@@ -27,7 +27,10 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { Time24Input } from "@/components/forms/Time24Input";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
-import { InteractiveTemplateWorkspace } from "@/components/templates/shared/InteractiveTemplateWorkspace";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { Cambra123SixAdultControl } from "@/components/templates/shared/Cambra123SixAdultControl";
 import { CollapsibleFieldset } from "@/components/templates/shared/CollapsibleFieldset";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
@@ -201,11 +204,6 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning =
-  "Clear all entered 2026 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
-const adolescentHygieneDiscardWarning =
-  "Clear all entered 2026 Adolescent Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
-
 export type Hygiene2026Variant = "adult" | "adolescent";
 
 const outputChoicesByVariant = {
@@ -3007,9 +3005,7 @@ export function AdultHygiene2026Template({
   const templateId = isAdolescent
     ? "adolescent-hygiene-2026"
     : "adult-hygiene-2026";
-  const discardWarning = isAdolescent
-    ? adolescentHygieneDiscardWarning
-    : adultHygieneDiscardWarning;
+  const discardWarning = interactiveTemplateClearFormWarning;
   const outputChoices = outputChoicesByVariant[variant];
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
@@ -3682,7 +3678,7 @@ export function AdultHygiene2026Template({
             onRestore={localDraft.restoreDraft}
         />
       }
-      generatedNote={
+      generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="adult-hygiene-summary"
           accessibleLabel={`Generated 2026 ${selectedOutputLabel.toLowerCase()} note`}
@@ -3690,6 +3686,7 @@ export function AdultHygiene2026Template({
           copyLabel={`Copy ${selectedOutputLabel.toLowerCase()} note`}
           copyDisabled={!startedAt}
           statusMessage={copyMessage}
+          headerAction={headerAction}
           controls={
             <fieldset className="mt-4 space-y-2">
               <legend className="text-sm font-semibold">Note output</legend>
@@ -3713,7 +3710,7 @@ export function AdultHygiene2026Template({
             </fieldset>
           }
         />
-      }
+      )}
     >
 
           <Section title="Patient and Visit Context">

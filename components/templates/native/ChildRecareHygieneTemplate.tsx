@@ -14,7 +14,10 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
-import { InteractiveTemplateWorkspace } from "@/components/templates/shared/InteractiveTemplateWorkspace";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
@@ -633,9 +636,7 @@ export function ChildRecareHygieneTemplate({
   function resetForm() {
     if (
       !isEmptyForm(form) &&
-      !window.confirm(
-        "Clear all entered Child Recare Exam & Hygiene values and start a new note? The current local draft will remain available for up to seven days.",
-      )
+      !window.confirm(interactiveTemplateClearFormWarning)
     ) {
       return false;
     }
@@ -678,7 +679,7 @@ export function ChildRecareHygieneTemplate({
             onRestore={localDraft.restoreDraft}
         />
       }
-      generatedNote={
+      generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="child-recare-summary"
           accessibleLabel={`Generated ${outputLabel.toLowerCase()} note`}
@@ -687,6 +688,7 @@ export function ChildRecareHygieneTemplate({
           copyDisabled={!startedAt}
           statusMessage={copyMessage}
           description="Select the audience-specific view. The visible preview is copied unchanged."
+          headerAction={headerAction}
           controls={
             <fieldset className="mt-4">
               <legend className="text-sm font-semibold">Note output</legend>
@@ -710,7 +712,7 @@ export function ChildRecareHygieneTemplate({
             </fieldset>
           }
         />
-      }
+      )}
     >
 
           <Section

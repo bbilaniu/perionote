@@ -14,6 +14,7 @@ export function GeneratedNotePanel({
   description = "The visible preview is copied unchanged.",
   placeholder = "Complete fields to build the note.",
   controls,
+  headerAction,
 }: {
   textareaId: string;
   accessibleLabel: string;
@@ -24,10 +25,14 @@ export function GeneratedNotePanel({
   description?: string;
   placeholder?: string;
   controls?: ReactNode;
+  headerAction?: ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-lg font-semibold">Generated Note</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-lg font-semibold">Generated Note</h2>
+        {headerAction}
+      </div>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
         {description}
       </p>

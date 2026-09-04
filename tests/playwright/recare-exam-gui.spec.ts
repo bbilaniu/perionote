@@ -1422,6 +1422,12 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
     .getByRole("button", { name: "Remember and add", exact: true })
     .click();
 
+  page.once("dialog", async (dialog) => {
+    expect(dialog.message()).toContain(
+      "Load synthetic demo data and replace the current form?",
+    );
+    await dialog.accept();
+  });
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
 
   const intraoralStatus = page.getByRole("button", {
@@ -1455,7 +1461,7 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
   page.once("dialog", async (dialog) => {
     await dialog.dismiss();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(intraoralStatus).toContainText("Findings");
   await expect(
     page.getByLabel("Overbite (mm)", { exact: true }),
@@ -1464,7 +1470,7 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
   page.once("dialog", async (dialog) => {
     await dialog.accept();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
 
   await expect(intraoralStatus).toContainText("Not assessed");
   await expect(

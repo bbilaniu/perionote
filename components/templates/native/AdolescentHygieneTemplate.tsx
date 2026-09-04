@@ -21,7 +21,10 @@ import {
   PeriodontalClassificationControl,
 } from "@/components/templates/native/AdultHygiene2021Template";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
-import { InteractiveTemplateWorkspace } from "@/components/templates/shared/InteractiveTemplateWorkspace";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
@@ -61,8 +64,7 @@ import {
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
-const adolescentDiscardWarning =
-  "Clear all entered Adolescent Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const adolescentDiscardWarning = interactiveTemplateClearFormWarning;
 const adolescentDraftExemplar = createEmptyAdolescentHygieneForm();
 const emptyAdolescentDraft = JSON.stringify(adolescentDraftExemplar);
 const adolescentDraftArrayItemShapes = {
@@ -564,15 +566,16 @@ export function AdolescentHygieneTemplate({
             onRestore={localDraft.restoreDraft}
         />
       }
-      generatedNote={
+      generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="adolescent-hygiene-summary"
           accessibleLabel="Generated adolescent hygiene note"
           value={summary}
           copyDisabled={!startedAt}
           statusMessage={copyMessage}
+          headerAction={headerAction}
         />
-      }
+      )}
     >
 
           <Section title="Patient and Visit Context">

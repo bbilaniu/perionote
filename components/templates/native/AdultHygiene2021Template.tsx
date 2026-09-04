@@ -25,7 +25,10 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
-import { InteractiveTemplateWorkspace } from "@/components/templates/shared/InteractiveTemplateWorkspace";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
@@ -177,8 +180,7 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning =
-  "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+const adultHygieneDiscardWarning = interactiveTemplateClearFormWarning;
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
@@ -3199,15 +3201,16 @@ export function AdultHygiene2021Template({
             onRestore={localDraft.restoreDraft}
         />
       }
-      generatedNote={
+      generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="adult-hygiene-summary"
           accessibleLabel="Generated 2021 Adult Hygiene note"
           value={summary}
           copyDisabled={!startedAt}
           statusMessage={copyMessage}
+          headerAction={headerAction}
         />
-      }
+      )}
     >
 
           <Section title="Patient and Visit Context">

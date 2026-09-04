@@ -2679,12 +2679,12 @@ export function GingivalDescriptionWebformImportedTemplate({
               </p>
             </CardHeader>
             <CardContent>
-              <div className="w-full min-w-0 max-w-full 2xl:grid 2xl:grid-cols-[13rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-6">
+              <div className="w-full min-w-0 max-w-full lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-6">
                 <TemplateSectionNavigation
                   sections={importedTemplateSections}
                   onNavigate={revealSection}
                 />
-                <div className="mt-6 min-w-0 max-w-full space-y-6 2xl:mt-0">
+                <div className="mt-6 min-w-0 max-w-full space-y-6 lg:mt-0">
               {isVeryShort ? (
                 <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
                   <div className="flex flex-wrap gap-3">

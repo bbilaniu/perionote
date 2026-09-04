@@ -12,10 +12,13 @@ import type { TemplatePresentation } from "@/lib/templates/types";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 
-const reviewButtonClass =
-  "inline-flex min-h-11 items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950";
 const secondaryButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950";
+const destructiveButtonClass =
+  "inline-flex min-h-11 items-center justify-center rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:border-red-800 dark:bg-slate-900 dark:text-red-200 dark:hover:bg-red-950 dark:focus-visible:ring-offset-slate-950";
+
+export const interactiveTemplateClearFormWarning =
+  "Clear this form and start a new note?\n\nThe previous local draft remains available for seven days.";
 
 export function InteractiveTemplateWorkspace({
   presentation,
@@ -31,7 +34,7 @@ export function InteractiveTemplateWorkspace({
   presentation: TemplatePresentation;
   sections: readonly TemplateSectionNavigationItem[];
   draftRecovery: ReactNode;
-  generatedNote: ReactNode;
+  generatedNote: (headerAction: ReactNode) => ReactNode;
   children: ReactNode;
   formRevision: string;
   onSubmit: FormEventHandler<HTMLFormElement>;
@@ -41,7 +44,7 @@ export function InteractiveTemplateWorkspace({
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
   const [baselineRequest, setBaselineRequest] = useState(0);
-  const reviewButtonRef = useRef<HTMLButtonElement>(null);
+  const workspaceRef = useRef<HTMLFormElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const noteDrawerRef = useRef<HTMLElement>(null);
   const baselineRevisionRef = useRef(formRevision);
@@ -75,7 +78,9 @@ export function InteractiveTemplateWorkspace({
       if (event.key === "Escape") {
         event.preventDefault();
         setNoteOpen(false);
-        window.requestAnimationFrame(() => reviewButtonRef.current?.focus());
+        window.requestAnimationFrame(() =>
+          focusVisibleReviewNoteTrigger(workspaceRef.current),
+        );
       }
     };
     window.addEventListener("keydown", closeOnEscape);
@@ -106,7 +111,19 @@ export function InteractiveTemplateWorkspace({
 
   const closeNote = () => {
     setNoteOpen(false);
-    window.requestAnimationFrame(() => reviewButtonRef.current?.focus());
+    window.requestAnimationFrame(() =>
+      focusVisibleReviewNoteTrigger(workspaceRef.current),
+    );
+  };
+
+  const reviewNote = () => {
+    if (wideLayout) {
+      noteDrawerRef.current
+        ?.querySelector<HTMLTextAreaElement>("textarea")
+        ?.focus({ preventScroll: true });
+      return;
+    }
+    setNoteOpen(true);
   };
 
   const submitForm: FormEventHandler<HTMLFormElement> = (event) => {
@@ -126,6 +143,7 @@ export function InteractiveTemplateWorkspace({
 
   return (
     <form
+      ref={workspaceRef}
       className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)]"
       autoComplete="off"
       onSubmit={submitForm}
@@ -150,20 +168,10 @@ export function InteractiveTemplateWorkspace({
               </button>
               <button
                 type="button"
-                className={secondaryButtonClass}
+                className={destructiveButtonClass}
                 onClick={resetForm}
               >
-                Reset form
-              </button>
-              <button
-                ref={reviewButtonRef}
-                type="button"
-                className={`${reviewButtonClass} col-span-2 sm:col-auto xl:hidden`}
-                aria-controls="generated-note-drawer"
-                aria-expanded={noteOpen}
-                onClick={() => setNoteOpen((current) => !current)}
-              >
-                {noteOpen ? "Close note" : "Review note"}
+                Clear form
               </button>
             </div>
           }
@@ -171,8 +179,13 @@ export function InteractiveTemplateWorkspace({
 
         {draftRecovery}
 
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[13rem_minmax(0,1fr)]">
-          <TemplateSectionNavigation sections={sections} />
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13rem]">
+          <TemplateSectionNavigation
+            sections={sections}
+            onReviewNote={reviewNote}
+            noteExpanded={noteOpen || wideLayout}
+            noteDrawerId="generated-note-drawer"
+          />
 
           <div className="min-w-0 max-w-full space-y-6">{children}</div>
         </div>
@@ -198,19 +211,26 @@ export function InteractiveTemplateWorkspace({
             : "pointer-events-none fixed inset-y-0 right-0 z-50 w-full translate-x-full overflow-y-auto bg-slate-100 p-4 opacity-0 shadow-2xl sm:w-[min(32rem,calc(100vw-2rem))] dark:bg-slate-950 xl:pointer-events-auto xl:sticky xl:top-6 xl:bottom-auto xl:left-auto xl:right-auto xl:z-10 xl:col-start-2 xl:row-start-1 xl:max-h-[calc(100vh-3rem)] xl:w-auto xl:translate-x-0 xl:self-start xl:bg-transparent xl:p-0 xl:opacity-100 xl:shadow-none"
         }
       >
-        <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900 xl:hidden">
-          <span className="text-sm font-semibold">Note preview</span>
+        {generatedNote(
           <button
             ref={closeButtonRef}
             type="button"
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
+            className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 xl:hidden"
             onClick={closeNote}
           >
             Close
-          </button>
-        </div>
-        {generatedNote}
+          </button>,
+        )}
       </aside>
     </form>
   );
+}
+
+function focusVisibleReviewNoteTrigger(container: HTMLElement | null) {
+  const triggers = container?.querySelectorAll<HTMLButtonElement>(
+    "[data-review-note-trigger]",
+  );
+  Array.from(triggers ?? [])
+    .find((trigger) => trigger.getClientRects().length > 0)
+    ?.focus();
 }
