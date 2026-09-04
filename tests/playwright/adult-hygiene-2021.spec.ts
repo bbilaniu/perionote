@@ -43,7 +43,7 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
-test("interactive forms keep navigation on the right with persistent note access", async ({
+test("interactive forms keep navigation on the right with a persistent note preview", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -74,8 +74,8 @@ test("interactive forms keep navigation on the right with persistent note access
       name: "Generated note preview",
     });
     await expect(drawer).toBeVisible();
-    const reviewNote = navigation.getByRole("button", { name: "Review note" });
-    await expect(reviewNote).toBeVisible();
+    const reviewNote = navigation.locator("[data-review-note-trigger]");
+    await expect(reviewNote).toBeHidden();
     const workspaceHeader = page
       .locator("h1")
       .locator("xpath=ancestor::header[1]");
@@ -97,8 +97,6 @@ test("interactive forms keep navigation on the right with persistent note access
     expect(workspaceHeaderBox!.x + workspaceHeaderBox!.width).toBeLessThan(
       drawerBox!.x,
     );
-    await reviewNote.click();
-    await expect(drawer.locator("textarea")).toBeFocused();
   }
 });
 

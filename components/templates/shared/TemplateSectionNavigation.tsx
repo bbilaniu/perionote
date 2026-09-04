@@ -224,7 +224,7 @@ export function TemplateSectionNavigation({
         {onReviewNote ? (
           <button
             type="button"
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 xl:hidden dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
             aria-controls={noteDrawerId}
             aria-expanded={noteExpanded}
             data-review-note-trigger
@@ -236,7 +236,7 @@ export function TemplateSectionNavigation({
         <div
           className={
             onReviewNote
-              ? "mt-3 flex min-h-0 flex-1 flex-col border-t border-slate-200 pt-3 dark:border-slate-800"
+              ? "mt-3 flex min-h-0 flex-1 flex-col border-t border-slate-200 pt-3 xl:mt-0 xl:border-t-0 xl:pt-0 dark:border-slate-800"
               : "flex min-h-0 flex-1 flex-col"
           }
         >
