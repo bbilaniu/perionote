@@ -6,6 +6,10 @@ import {
   interactiveDraftTabStorageKey,
 } from "@/lib/templates/localDrafts";
 import { createEmptyRecareExamForm } from "@/lib/templates/recareExam";
+import {
+  clearCurrentForm,
+  openFormActionDialog,
+} from "./helpers/interactiveTemplate";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 
@@ -1422,13 +1426,12 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
     .getByRole("button", { name: "Remember and add", exact: true })
     .click();
 
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain(
-      "Load synthetic demo data and replace the current form?",
-    );
-    await dialog.accept();
-  });
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  const demoDialog = page.getByRole("dialog", {
+    name: "Replace current form with synthetic demo?",
+  });
+  await expect(demoDialog).toBeVisible();
+  await demoDialog.getByRole("button", { name: "Replace form" }).click();
 
   const intraoralStatus = page.getByRole("button", {
     name: "Intraoral",
@@ -1458,19 +1461,14 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
   await expect(page.getByLabel("Posterior", { exact: true })).toBeChecked();
   await expect(page.getByLabel("Left", { exact: true })).toBeChecked();
 
-  page.once("dialog", async (dialog) => {
-    await dialog.dismiss();
-  });
-  await page.getByRole("button", { name: "Clear form" }).click();
+  const formDialog = await openFormActionDialog(page);
+  await formDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(intraoralStatus).toContainText("Findings");
   await expect(
     page.getByLabel("Overbite (mm)", { exact: true }),
   ).toHaveValue("3");
 
-  page.once("dialog", async (dialog) => {
-    await dialog.accept();
-  });
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await clearCurrentForm(page);
 
   await expect(intraoralStatus).toContainText("Not assessed");
   await expect(

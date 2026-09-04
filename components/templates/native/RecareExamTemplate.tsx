@@ -50,10 +50,10 @@ import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
+  interactiveTemplateUnloadWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
@@ -89,7 +89,6 @@ const treatmentRowButtonClass =
 const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
-const recareNoteDiscardWarning = interactiveTemplateClearFormWarning;
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
 const recareDraftArrayItemShapes = {
@@ -2054,7 +2053,7 @@ export function RecareExamTemplate({
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = recareNoteDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
 
     window.addEventListener("beforeunload", warnBeforeUnload);
@@ -2321,18 +2320,18 @@ export function RecareExamTemplate({
     updateField("additionalOcclusalFindings", next);
   }
 
-  function resetForm() {
-    if (!window.confirm(recareNoteDiscardWarning)) {
-      return false;
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      localDraft.discardAndBeginNewDraft();
     }
-
-    localDraft.beginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
     return true;
   }
 
@@ -2359,15 +2358,17 @@ export function RecareExamTemplate({
       }}
       onLoadDemo={loadDemo}
       onReset={resetForm}
-      draftRecovery={
-        <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-        />
-      }
+      draftRecovery={{
+        templateId: "recare-exam",
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
       generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="recare-summary"

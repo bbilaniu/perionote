@@ -12,14 +12,14 @@ function formatDraftTime(value: string | Date): string {
   }).format(date);
 }
 
-export function LocalDraftRecovery<T>({
+export function LocalDraftRecovery({
   drafts,
   lastSavedAt,
   restoredAt,
   storageError,
   onRestore,
 }: {
-  drafts: InteractiveDraft<T>[];
+  drafts: readonly InteractiveDraft<unknown>[];
   lastSavedAt: Date | null;
   restoredAt: Date | null;
   storageError: string;
@@ -45,7 +45,7 @@ export function LocalDraftRecovery<T>({
           </p>
         ) : null}
         <Link
-          className="font-semibold text-sky-800 hover:underline dark:text-sky-200"
+          className="font-semibold text-sky-800 hover:underline min-[2304px]:hidden dark:text-sky-200"
           href="/drafts"
         >
           View all saved drafts
@@ -68,7 +68,7 @@ export function LocalDraftRecovery<T>({
         </p>
       ) : null}
       {drafts.length ? (
-        <details className="mt-2 border-t border-sky-200 pt-2 dark:border-sky-900">
+        <details className="mt-2 border-t border-sky-200 pt-2 min-[2304px]:hidden dark:border-sky-900">
           <summary className="cursor-pointer font-semibold text-sky-900 marker:text-sky-700 hover:underline dark:text-sky-100 dark:marker:text-sky-300">
             {drafts.length} other local {drafts.length === 1 ? "draft" : "drafts"}{" "}
             for this template

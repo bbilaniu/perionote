@@ -8,18 +8,25 @@ import {
   type PointerEventHandler,
   type ReactNode,
 } from "react";
+import { ActionDialog } from "@/components/ActionDialog";
 import type { TemplateSectionNavigationItem } from "@/lib/templates/sectionNavigation";
 import type { TemplatePresentation } from "@/lib/templates/types";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { LocalDraftRail } from "@/components/templates/shared/LocalDraftRail";
+import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
+import type { LocalDraftWorkspaceState } from "@/components/templates/shared/localDraftWorkspace";
 
 const secondaryButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950";
+const tertiaryButtonClass =
+  "inline-flex min-h-11 items-center justify-center rounded-xl border border-transparent bg-transparent px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white/70 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:text-slate-300 dark:hover:border-slate-700 dark:hover:bg-slate-900/70 dark:hover:text-white dark:focus-visible:ring-offset-slate-950";
 const destructiveButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:border-red-800 dark:bg-slate-900 dark:text-red-200 dark:hover:bg-red-950 dark:focus-visible:ring-offset-slate-950";
 
-export const interactiveTemplateClearFormWarning =
-  "Clear this form and start a new note?\n\nThe previous local draft remains available for seven days.";
+export type InteractiveTemplateResetMode = "new" | "clear";
+export const interactiveTemplateUnloadWarning =
+  "Your local draft may not have finished saving.";
 
 const dragScrollExcludedSelector = [
   "a",
@@ -72,17 +79,21 @@ export function InteractiveTemplateWorkspace({
 }: {
   presentation: TemplatePresentation;
   sections: readonly TemplateSectionNavigationItem[];
-  draftRecovery: ReactNode;
+  draftRecovery: LocalDraftWorkspaceState;
   generatedNote: (headerAction: ReactNode) => ReactNode;
   children: ReactNode;
   formRevision: string;
   onSubmit: FormEventHandler<HTMLFormElement>;
   onLoadDemo: () => void;
-  onReset: () => boolean;
+  onReset: (mode: InteractiveTemplateResetMode) => boolean;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
   const [baselineRequest, setBaselineRequest] = useState(0);
+  const [actionDialog, setActionDialog] = useState<
+    "form" | "demo" | null
+  >(null);
+  const [resetError, setResetError] = useState("");
   const workspaceRef = useRef<HTMLFormElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const noteDrawerRef = useRef<HTMLElement>(null);
@@ -94,6 +105,7 @@ export function InteractiveTemplateWorkspace({
   } | null>(null);
   const baselineRevisionRef = useRef(formRevision);
   const pendingBaselineRef = useRef<{ kind: "demo" | "reset" } | null>(null);
+  const restoreDialogFocusRef = useRef(true);
 
   useEffect(() => {
     const wideLayoutQuery = window.matchMedia("(min-width: 1280px)");
@@ -132,26 +144,48 @@ export function InteractiveTemplateWorkspace({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [noteOpen, wideLayout]);
 
-  const loadDemo = () => {
-    const formWasModified = formRevision !== baselineRevisionRef.current;
-    if (
-      formWasModified &&
-      !window.confirm(
-        "Load synthetic demo data and replace the current form? Changes made since this page was opened or last reset will be overwritten.",
-      )
-    ) {
-      return;
-    }
-
+  const applyDemo = () => {
+    setActionDialog(null);
     pendingBaselineRef.current = { kind: "demo" };
     onLoadDemo();
     setBaselineRequest((request) => request + 1);
   };
 
-  const resetForm = () => {
-    if (!onReset()) return;
+  const loadDemo = () => {
+    const formWasModified = formRevision !== baselineRevisionRef.current;
+    if (formWasModified) {
+      setActionDialog("demo");
+      return;
+    }
+    applyDemo();
+  };
+
+  const resetForm = (mode: InteractiveTemplateResetMode) => {
+    const resetSucceeded = onReset(mode);
+    if (!resetSucceeded) {
+      setResetError(
+        "The current form could not be saved, so it was not cleared. Copy the note before trying again.",
+      );
+      return;
+    }
+
+    restoreDialogFocusRef.current = false;
+    setResetError("");
+    setActionDialog(null);
     pendingBaselineRef.current = { kind: "reset" };
     setBaselineRequest((request) => request + 1);
+  };
+
+  const dismissActionDialog = () => {
+    restoreDialogFocusRef.current = true;
+    setResetError("");
+    setActionDialog(null);
+  };
+
+  const openFormActionDialog = () => {
+    restoreDialogFocusRef.current = true;
+    setResetError("");
+    setActionDialog("form");
   };
 
   const closeNote = () => {
@@ -245,7 +279,7 @@ export function InteractiveTemplateWorkspace({
   return (
     <form
       ref={workspaceRef}
-      className="grid min-w-0 items-start gap-6 data-[drag-scrolling=true]:cursor-grabbing data-[drag-scrolling=true]:select-none xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)]"
+      className="grid min-w-0 items-start gap-6 data-[drag-scrolling=true]:cursor-grabbing data-[drag-scrolling=true]:select-none xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)] min-[2304px]:relative min-[2304px]:left-1/2 min-[2304px]:w-[calc(100vw-3rem)] min-[2304px]:max-w-[133rem] min-[2304px]:-translate-x-1/2 min-[2304px]:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)_22rem]"
       autoComplete="off"
       onSubmit={submitForm}
       onLostPointerCapture={cancelDragScroll}
@@ -261,7 +295,7 @@ export function InteractiveTemplateWorkspace({
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
               <button
                 type="button"
-                className={secondaryButtonClass}
+                className={tertiaryButtonClass}
                 aria-label="Load synthetic demo"
                 onClick={loadDemo}
               >
@@ -274,16 +308,22 @@ export function InteractiveTemplateWorkspace({
               </button>
               <button
                 type="button"
-                className={destructiveButtonClass}
-                onClick={resetForm}
+                className={secondaryButtonClass}
+                onClick={openFormActionDialog}
               >
-                Clear form
+                New / clear form
               </button>
             </div>
           }
         />
 
-        {draftRecovery}
+        <LocalDraftRecovery
+          drafts={draftRecovery.drafts}
+          lastSavedAt={draftRecovery.lastSavedAt}
+          restoredAt={draftRecovery.restoredAt}
+          storageError={draftRecovery.storageError}
+          onRestore={draftRecovery.onRestore}
+        />
 
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13rem]">
           <TemplateSectionNavigation
@@ -328,6 +368,81 @@ export function InteractiveTemplateWorkspace({
           </button>,
         )}
       </aside>
+      <aside className="hidden min-[2304px]:sticky min-[2304px]:top-6 min-[2304px]:col-start-3 min-[2304px]:row-start-1 min-[2304px]:block min-[2304px]:h-[calc(100dvh-11rem)] min-[2304px]:min-h-0 min-[2304px]:self-start">
+        <LocalDraftRail {...draftRecovery} />
+      </aside>
+
+      <ActionDialog
+        open={actionDialog === "form"}
+        title="New or clear form?"
+        description={
+          <>
+            Keep this work as a local draft before opening a blank form, or
+            discard it and clear the current form. Local drafts stay in this
+            browser for seven days and are not clinical records.
+          </>
+        }
+        onDismiss={dismissActionDialog}
+        restoreFocusOnClose={restoreDialogFocusRef.current}
+      >
+        {resetError ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+          >
+            {resetError}
+          </p>
+        ) : null}
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            data-dialog-initial-focus
+            onClick={dismissActionDialog}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={destructiveButtonClass}
+            onClick={() => resetForm("clear")}
+          >
+            Clear current form
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            onClick={() => resetForm("new")}
+          >
+            Save draft &amp; start new
+          </button>
+        </div>
+      </ActionDialog>
+
+      <ActionDialog
+        open={actionDialog === "demo"}
+        title="Replace current form with synthetic demo?"
+        description="This replaces the entries in the current form. Deliberately remembered catalogue values are unchanged."
+        onDismiss={() => setActionDialog(null)}
+      >
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            data-dialog-initial-focus
+            onClick={() => setActionDialog(null)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={destructiveButtonClass}
+            onClick={applyDemo}
+          >
+            Replace form
+          </button>
+        </div>
+      </ActionDialog>
     </form>
   );
 }

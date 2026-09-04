@@ -1,6 +1,10 @@
 import { test, expect } from "@playwright/test";
 import packageInfo from "@/package.json";
-import { openGeneratedNote } from "./helpers/interactiveTemplate";
+import {
+  openFormActionDialog,
+  openGeneratedNote,
+  saveDraftAndStartNew,
+} from "./helpers/interactiveTemplate";
 
 test("homepage presents the primary clinical workflows", async ({ page }) => {
   await page.goto("/");
@@ -2030,13 +2034,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
     .locator("#recare-note-started")
     .inputValue();
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain(
-      "Clear this form and start a new note?",
-    );
-    await dialog.accept();
-  });
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await saveDraftAndStartNew(page);
   await expect(page.locator("#recare-patient-id")).toHaveValue("");
   const resetStartedAt = await page
     .locator("#recare-note-started")
@@ -2047,10 +2045,8 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
   );
 
   await page.clock.setSystemTime(new Date(2026, 6, 25, 11, 40));
-  page.once("dialog", async (dialog) => {
-    await dialog.dismiss();
-  });
-  await page.getByRole("button", { name: "Clear form" }).click();
+  const formDialog = await openFormActionDialog(page);
+  await formDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(page.locator("#recare-note-started")).toHaveValue(
     resetStartedAt,
   );

@@ -75,6 +75,7 @@ export function useLocalInteractiveDraft<T>({
   const [restoredAt, setRestoredAt] = useState<Date | null>(null);
   const [storageError, setStorageError] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [currentDraftId, setCurrentDraftId] = useState("");
 
   formRef.current = form;
   startedAtRef.current = startedAt;
@@ -129,10 +130,13 @@ export function useLocalInteractiveDraft<T>({
     }
   }, [templateId]);
 
-  const beginNewDraft = useCallback(() => {
-    saveNow();
+  const beginNewDraft = useCallback((): LocalDraftSaveResult => {
+    const saveResult = saveNow();
+    if (saveResult === "failed") return saveResult;
+
     const draftId = createInteractiveDraftId();
     draftIdRef.current = draftId;
+    setCurrentDraftId(draftId);
     try {
       selectInteractiveDraftForCurrentTab(templateId, draftId);
     } catch {
@@ -143,7 +147,32 @@ export function useLocalInteractiveDraft<T>({
     setLastSavedAt(null);
     setRestoredAt(null);
     refreshRecoverableDrafts();
+    return saveResult;
   }, [refreshRecoverableDrafts, saveNow, templateId]);
+
+  const discardAndBeginNewDraft = useCallback(() => {
+    try {
+      if (draftIdRef.current) {
+        deleteInteractiveDraft(
+          window.localStorage,
+          templateId,
+          draftIdRef.current,
+        );
+      }
+      const draftId = createInteractiveDraftId();
+      draftIdRef.current = draftId;
+      setCurrentDraftId(draftId);
+      selectInteractiveDraftForCurrentTab(templateId, draftId);
+      setLastSavedAt(null);
+      setRestoredAt(null);
+      setStorageError("");
+      refreshRecoverableDrafts();
+    } catch {
+      setStorageError(
+        "The current draft could not be discarded from local storage.",
+      );
+    }
+  }, [refreshRecoverableDrafts, templateId]);
 
   const restoreDraft = useCallback(
     (draftId: string) => {
@@ -169,6 +198,7 @@ export function useLocalInteractiveDraft<T>({
           return;
         }
         draftIdRef.current = draft.draftId;
+        setCurrentDraftId(draft.draftId);
         selectInteractiveDraftForCurrentTab(templateId, draft.draftId);
         onRestoreRef.current(draft);
         setLastSavedAt(new Date(draft.savedAt));
@@ -194,6 +224,7 @@ export function useLocalInteractiveDraft<T>({
           : null;
       const draftId = priorDraftId || createInteractiveDraftId();
       draftIdRef.current = draftId;
+      setCurrentDraftId(draftId);
       window.sessionStorage.setItem(tabKey, draftId);
       window.sessionStorage.setItem(markerKey, marker);
       if (priorDraftId) {
@@ -242,12 +273,14 @@ export function useLocalInteractiveDraft<T>({
 
   return {
     recoverableDrafts,
+    currentDraftId,
     lastSavedAt,
     restoredAt,
     hydrated,
     storageError,
     saveNow,
     beginNewDraft,
+    discardAndBeginNewDraft,
     restoreDraft,
   };
 }
