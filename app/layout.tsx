@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PrimaryNavigation } from "@/components/PrimaryNavigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CatalogueProvider } from "@/components/catalogues/CatalogueProvider";
 import packageInfo from "@/package.json";
@@ -70,38 +71,13 @@ export default function RootLayout({
           <div className="flex min-h-screen flex-col">
           <header className="border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-slate-900/90">
             <div className="mx-auto flex max-w-[112rem] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-4 sm:flex-nowrap sm:px-6">
-              <span className="text-lg font-semibold tracking-tight">
-                HygieneNote
-              </span>
-              <nav
-                aria-label="Primary navigation"
-                className="order-3 flex w-full items-center justify-between gap-3 sm:order-none sm:ml-auto sm:w-auto sm:justify-start sm:gap-4"
+              <Link
+                href="/"
+                className="rounded-sm text-lg font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
               >
-                <Link
-                  className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
-                  href="/templates/clinic"
-                >
-                  Clinical templates
-                </Link>
-                <Link
-                  className="hidden text-sm font-medium text-chart-accent hover:underline sm:inline dark:text-sky-300 dark:hover:text-sky-200"
-                  href="/templates/interactive"
-                >
-                  Standalone forms
-                </Link>
-                <Link
-                  className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
-                  href="/drafts"
-                >
-                  Saved drafts
-                </Link>
-                <Link
-                  className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300 dark:hover:text-sky-200"
-                  href="/catalogues"
-                >
-                  Catalogues
-                </Link>
-              </nav>
+                HygieneNote
+              </Link>
+              <PrimaryNavigation />
               <ThemeToggle />
             </div>
           </header>
