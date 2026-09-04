@@ -81,6 +81,36 @@ test("section links update the URL and active location", async ({ page }) => {
   ).toBeInViewport();
 });
 
+test("desktop Review note stays pinned while the section list scrolls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 500 });
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+  const navigation = page.getByRole("navigation", { name: "Form sections" });
+  const reviewNote = navigation.getByRole("button", { name: "Review note" });
+  const sectionList = navigation.locator("[data-section-list]");
+
+  await page.evaluate(() => window.scrollTo(0, 1600));
+  const sectionListScrollTop = await sectionList.evaluate((list) => {
+    list.scrollTop = list.scrollHeight;
+    return list.scrollTop;
+  });
+  expect(sectionListScrollTop).toBeGreaterThan(0);
+  await expect(reviewNote).toBeVisible();
+  await expect(reviewNote).toBeInViewport();
+
+  const [navigationBox, reviewNoteBox] = await Promise.all([
+    navigation.boundingBox(),
+    reviewNote.boundingBox(),
+  ]);
+  expect(navigationBox).not.toBeNull();
+  expect(reviewNoteBox).not.toBeNull();
+  const reviewNoteInset = reviewNoteBox!.y - navigationBox!.y;
+  expect(reviewNoteInset).toBeGreaterThanOrEqual(12);
+  expect(reviewNoteInset).toBeLessThanOrEqual(14);
+});
+
 test("navigation expands a collapsed very-short-template section", async ({
   page,
 }) => {
@@ -108,9 +138,10 @@ test("compact section navigation stays within the page viewport", async ({
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
 
-  await expect(
-    page.getByRole("navigation", { name: "Form sections" })
-  ).toBeVisible();
+  const compactNavigation = page.getByRole("navigation", {
+    name: "Current form section",
+  });
+  await expect(compactNavigation).toBeVisible();
   expect(
     await page.evaluate(
       () =>
@@ -119,8 +150,11 @@ test("compact section navigation stays within the page viewport", async ({
     )
   ).toBe(true);
 
+  await compactNavigation
+    .getByRole("button", { name: /Open form sections/ })
+    .click();
   await page
-    .getByRole("navigation", { name: "Form sections" })
+    .getByRole("dialog", { name: "On this form" })
     .getByRole("link", { name: "Teeth and Odontogram", exact: true })
     .click();
   await expect(page).toHaveURL(/#template-section-teeth-and-odontogram$/);
@@ -128,7 +162,7 @@ test("compact section navigation stays within the page viewport", async ({
     .poll(() =>
       page.evaluate(() => {
         const navigation = document.querySelector(
-          "nav[aria-label='Form sections']"
+          "nav[aria-label='Current form section']"
         );
         const section = document.querySelector(
           "#template-section-teeth-and-odontogram"
@@ -146,14 +180,14 @@ test("compact section navigation stays within the page viewport", async ({
   await expect
     .poll(() =>
       page
-        .getByRole("navigation", { name: "Form sections" })
+        .getByRole("navigation", { name: "Current form section" })
         .evaluate((navigation) => navigation.getBoundingClientRect().top)
     )
     .toBeGreaterThanOrEqual(7);
   await expect
     .poll(() =>
       page
-        .getByRole("navigation", { name: "Form sections" })
+        .getByRole("navigation", { name: "Current form section" })
         .evaluate((navigation) => navigation.getBoundingClientRect().top)
     )
     .toBeLessThanOrEqual(9);

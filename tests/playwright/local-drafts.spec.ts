@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 import {
   INTERACTIVE_DRAFT_STORAGE_PREFIX,
   interactiveDraftStorageKey,
@@ -150,13 +151,15 @@ test("restoring another draft first checkpoints the current form", async ({
   await page.goto(recareExamUrl);
   await page.locator("#recare-patient-id").fill("Synthetic draft A");
   await page.locator("#recare-rdh").fill("Synthetic RDH A");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await page.locator("#recare-patient-id").fill("Synthetic draft B unsaved");
   await page.locator("#recare-rdh").fill("Synthetic RDH B");
 
+  await page.getByText(/other recoverable draft/).click();
   await page.getByRole("button", { name: "Restore" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue(
     "Synthetic draft A",
@@ -187,6 +190,7 @@ test("Recare copy saves independent drafts for multiple open tabs", async ({
 
   await firstPage.locator("#recare-patient-id").fill("Synthetic tab A");
   await firstPage.locator("#recare-rdh").fill("Synthetic RDH A");
+  await openGeneratedNote(firstPage);
   await firstPage.getByRole("button", { name: "Copy note" }).click();
   await expect(
     firstPage.getByText("Note copied.", { exact: true }),
@@ -194,6 +198,7 @@ test("Recare copy saves independent drafts for multiple open tabs", async ({
 
   await secondPage.locator("#recare-patient-id").fill("Synthetic tab B");
   await secondPage.locator("#recare-rdh").fill("Synthetic RDH B");
+  await openGeneratedNote(secondPage);
   await secondPage.getByRole("button", { name: "Copy note" }).click();
   await expect(
     secondPage.getByText("Note copied.", { exact: true }),
@@ -229,16 +234,17 @@ test("saved drafts page identifies, opens, and deletes a local draft", async ({
   await page.locator("#adult-hygiene-dentist").fill("Synthetic Draft Dentist");
   await page.locator("#adult-hygiene-rda").fill("Synthetic Draft RDA");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic Draft RDH");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
 
   page.once("dialog", (dialog) => {
     expect(dialog.message()).toContain(
-      "current local draft will remain available",
+      "previous local draft remains available for seven days",
     );
     return dialog.accept();
   });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-dentist")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-rda")).toHaveValue("");
@@ -306,12 +312,14 @@ test("saved drafts page warns separately before deleting all drafts", async ({
   await page.goto(adultHygieneUrl);
   await page.locator("#adult-hygiene-patient-id").fill("Synthetic draft one");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH one");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await page.getByRole("button", { name: "Clear form" }).click();
   await page.locator("#adult-hygiene-patient-id").fill("Synthetic draft two");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH two");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
   await page.goto("/drafts");

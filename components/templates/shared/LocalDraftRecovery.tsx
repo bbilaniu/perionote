@@ -27,28 +27,33 @@ export function LocalDraftRecovery<T>({
 }) {
   return (
     <section
-      className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-slate-700 dark:border-sky-900 dark:bg-sky-950/30 dark:text-slate-300"
+      className="rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-slate-700 dark:border-sky-900 dark:bg-sky-950/30 dark:text-slate-300"
       aria-label="Local draft recovery"
     >
-      <p>
-        This note is saved only in this browser every 10 seconds, when copied,
-        and when the page is left. Local drafts are deleted seven days after
-        their most recent save and are not the clinical record.
-      </p>
-      <Link
-        className="mt-2 inline-flex font-medium text-sky-800 hover:underline dark:text-sky-200"
-        href="/drafts"
-      >
-        View all saved drafts
-      </Link>
-      {lastSavedAt ? (
-        <p className="mt-2" role="status">
-          Local draft saved {formatDraftTime(lastSavedAt)}.
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p>
+          <span className="font-semibold text-sky-950 dark:text-sky-100">
+            Local recovery only
+          </span>{" "}
+          <span aria-hidden="true">·</span> Autosaves every 10 seconds and
+          keeps drafts for seven days <span aria-hidden="true">·</span> Not the
+          clinical record
         </p>
-      ) : null}
+        {lastSavedAt ? (
+          <p className="font-medium" role="status">
+            Saved {formatDraftTime(lastSavedAt)}
+          </p>
+        ) : null}
+        <Link
+          className="font-semibold text-sky-800 hover:underline dark:text-sky-200"
+          href="/drafts"
+        >
+          View all saved drafts
+        </Link>
+      </div>
       {restoredAt ? (
         <p
-          className="mt-2 font-medium text-sky-900 dark:text-sky-200"
+          className="mt-2 border-t border-sky-200 pt-2 font-medium text-sky-900 dark:border-sky-900 dark:text-sky-200"
           role="status"
         >
           Restored the draft saved {formatDraftTime(restoredAt)}.
@@ -63,9 +68,12 @@ export function LocalDraftRecovery<T>({
         </p>
       ) : null}
       {drafts.length ? (
-        <div className="mt-3 border-t border-sky-200 pt-3 dark:border-sky-900">
-          <h2 className="font-semibold">Other recoverable drafts</h2>
-          <p className="mt-1 text-xs">
+        <details className="mt-2 border-t border-sky-200 pt-2 dark:border-sky-900">
+          <summary className="cursor-pointer font-semibold text-sky-900 marker:text-sky-700 hover:underline dark:text-sky-100 dark:marker:text-sky-300">
+            {drafts.length} other recoverable{" "}
+            {drafts.length === 1 ? "draft" : "drafts"}
+          </summary>
+          <p className="mt-2 text-xs">
             These may be from other tabs or a previous browser session.
           </p>
           <ul className="mt-2 space-y-2">
@@ -88,7 +96,7 @@ export function LocalDraftRecovery<T>({
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       ) : null}
     </section>
   );

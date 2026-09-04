@@ -13,11 +13,14 @@ import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
-import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import {
+  interactiveTemplateClearFormWarning,
+  InteractiveTemplateWorkspace,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
-import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
@@ -73,8 +76,6 @@ const childDraftArrayItemShapes = {
 } as const;
 const controlClass = formControlClass();
 const checkboxClass = "mt-1 h-4 w-4 accent-sky-700";
-const buttonClass =
-  "rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60";
 
 const documentationOptions = [
   { value: "not-documented", label: "Not documented" },
@@ -159,7 +160,7 @@ function Section({
   return (
     <section
       id={getTemplateSectionId(title)}
-      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 2xl:scroll-mt-6"
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
     >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
@@ -635,11 +636,9 @@ export function ChildRecareHygieneTemplate({
   function resetForm() {
     if (
       !isEmptyForm(form) &&
-      !window.confirm(
-        "Clear all entered Child Recare Exam & Hygiene values and start a new note? The current local draft will remain available for up to seven days.",
-      )
+      !window.confirm(interactiveTemplateClearFormWarning)
     ) {
-      return;
+      return false;
     }
     localDraft.beginNewDraft();
     setForm({
@@ -652,30 +651,69 @@ export function ChildRecareHygieneTemplate({
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
+    return true;
   }
 
   return (
-    <div className="space-y-5">
-      <form
-        className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.7fr)]"
-        onSubmit={(event) => {
+    <InteractiveTemplateWorkspace
+      presentation={presentation}
+      sections={childRecareHygieneSections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
           event.preventDefault();
           void copyNote();
-        }}
-      >
-        <div className="min-w-0 space-y-5">
-          <InteractiveTemplateHeader {...presentation} />
-          <LocalDraftRecovery
+      }}
+      onLoadDemo={() => {
+        setForm({ ...fixture });
+        setPatientIdError("");
+        setProviderError("");
+        setCopyMessage("Synthetic demo data loaded.");
+      }}
+      onReset={resetForm}
+      draftRecovery={
+        <LocalDraftRecovery
             drafts={localDraft.recoverableDrafts}
             lastSavedAt={localDraft.lastSavedAt}
             restoredAt={localDraft.restoredAt}
             storageError={localDraft.storageError}
             onRestore={localDraft.restoreDraft}
-          />
-
-          <div className="w-full min-w-0 max-w-full 2xl:grid 2xl:grid-cols-[13rem_minmax(0,1fr)] 2xl:items-start 2xl:gap-5">
-            <TemplateSectionNavigation sections={childRecareHygieneSections} />
-            <div className="mt-5 min-w-0 max-w-full space-y-5 2xl:mt-0">
+        />
+      }
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="child-recare-summary"
+          accessibleLabel={`Generated ${outputLabel.toLowerCase()} note`}
+          value={summary}
+          copyLabel={`Copy ${outputLabel.toLowerCase()} note`}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          description="Select the audience-specific view. The visible preview is copied unchanged."
+          headerAction={headerAction}
+          controls={
+            <fieldset className="mt-4">
+              <legend className="text-sm font-semibold">Note output</legend>
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {outputOptions.map((option) => (
+                  <NativeChoiceControl
+                    key={option.value}
+                    type="radio"
+                    name="child-recare-output"
+                    checked={output === option.value}
+                    className="px-2"
+                    onChange={() => {
+                      setOutput(option.value);
+                      setCopyMessage("");
+                    }}
+                  >
+                    {option.label}
+                  </NativeChoiceControl>
+                ))}
+              </div>
+            </fieldset>
+          }
+        />
+      )}
+    >
 
           <Section
             title="Patient and Visit Context"
@@ -1200,83 +1238,6 @@ export function ChildRecareHygieneTemplate({
               </div>
             </div>
           </Section>
-            </div>
-          </div>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Select the audience-specific view. The visible preview is copied unchanged.
-            </p>
-            <fieldset className="mt-4">
-              <legend className="text-sm font-semibold">Note output</legend>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                {outputOptions.map((option) => (
-                  <NativeChoiceControl
-                    key={option.value}
-                    type="radio"
-                    name="child-recare-output"
-                    checked={output === option.value}
-                    className="px-2"
-                    onChange={() => {
-                      setOutput(option.value);
-                      setCopyMessage("");
-                    }}
-                  >
-                    {option.label}
-                  </NativeChoiceControl>
-                ))}
-              </div>
-            </fieldset>
-            <label className="sr-only" htmlFor="child-recare-summary">
-              Generated {outputLabel.toLowerCase()} note
-            </label>
-            <textarea
-              id="child-recare-summary"
-              className={`${controlClass} mt-4 min-h-[34rem] resize-y py-2 font-mono leading-6`}
-              readOnly
-              value={summary}
-            />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                disabled={!startedAt}
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-              >
-                Copy {outputLabel.toLowerCase()} note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={() => {
-                  setForm({ ...fixture });
-                  setPatientIdError("");
-                  setProviderError("");
-                  setCopyMessage("Synthetic demo data loaded.");
-                }}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+    </InteractiveTemplateWorkspace>
   );
 }

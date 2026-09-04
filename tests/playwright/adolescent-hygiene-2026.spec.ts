@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
 const sourceUrl = "/templates/clinic/adolescent-hygiene-2026";
 const interactiveUrl = `${sourceUrl}/interactive`;
@@ -33,6 +34,7 @@ test("2026 adolescent is a separate unified encounter", async ({ page }) => {
     }),
   ).toBeVisible();
 
+  await openGeneratedNote(page);
   const output = page.getByRole("group", { name: "Note output" });
   await expect(output.getByText("Combined", { exact: true })).toBeVisible();
   await expect(output.getByText("Dentist", { exact: true })).toBeVisible();
@@ -44,6 +46,7 @@ test("2026 adolescent projects dentist and hygienist notes from one record", asy
 }) => {
   await page.goto(interactiveUrl);
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  await openGeneratedNote(page);
 
   const summary = page.locator("#adult-hygiene-summary");
   await expect(summary).toHaveValue(/EOE:/);
