@@ -85,7 +85,7 @@ export function InteractiveTemplateWorkspace({
   formRevision: string;
   onSubmit: FormEventHandler<HTMLFormElement>;
   onLoadDemo: () => void;
-  onReset: (mode: InteractiveTemplateResetMode) => void;
+  onReset: (mode: InteractiveTemplateResetMode) => boolean;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
@@ -93,6 +93,7 @@ export function InteractiveTemplateWorkspace({
   const [actionDialog, setActionDialog] = useState<
     "form" | "demo" | null
   >(null);
+  const [resetError, setResetError] = useState("");
   const workspaceRef = useRef<HTMLFormElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const noteDrawerRef = useRef<HTMLElement>(null);
@@ -104,6 +105,7 @@ export function InteractiveTemplateWorkspace({
   } | null>(null);
   const baselineRevisionRef = useRef(formRevision);
   const pendingBaselineRef = useRef<{ kind: "demo" | "reset" } | null>(null);
+  const restoreDialogFocusRef = useRef(true);
 
   useEffect(() => {
     const wideLayoutQuery = window.matchMedia("(min-width: 1280px)");
@@ -159,10 +161,31 @@ export function InteractiveTemplateWorkspace({
   };
 
   const resetForm = (mode: InteractiveTemplateResetMode) => {
+    const resetSucceeded = onReset(mode);
+    if (!resetSucceeded) {
+      setResetError(
+        "The current form could not be saved, so it was not cleared. Copy the note before trying again.",
+      );
+      return;
+    }
+
+    restoreDialogFocusRef.current = false;
+    setResetError("");
     setActionDialog(null);
-    onReset(mode);
     pendingBaselineRef.current = { kind: "reset" };
     setBaselineRequest((request) => request + 1);
+  };
+
+  const dismissActionDialog = () => {
+    restoreDialogFocusRef.current = true;
+    setResetError("");
+    setActionDialog(null);
+  };
+
+  const openFormActionDialog = () => {
+    restoreDialogFocusRef.current = true;
+    setResetError("");
+    setActionDialog("form");
   };
 
   const closeNote = () => {
@@ -286,7 +309,7 @@ export function InteractiveTemplateWorkspace({
               <button
                 type="button"
                 className={secondaryButtonClass}
-                onClick={() => setActionDialog("form")}
+                onClick={openFormActionDialog}
               >
                 New / clear form
               </button>
@@ -359,14 +382,23 @@ export function InteractiveTemplateWorkspace({
             browser for seven days and are not clinical records.
           </>
         }
-        onDismiss={() => setActionDialog(null)}
+        onDismiss={dismissActionDialog}
+        restoreFocusOnClose={restoreDialogFocusRef.current}
       >
+        {resetError ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/50 dark:text-red-200"
+          >
+            {resetError}
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
           <button
             type="button"
             className={secondaryButtonClass}
             data-dialog-initial-focus
-            onClick={() => setActionDialog(null)}
+            onClick={dismissActionDialog}
           >
             Cancel
           </button>

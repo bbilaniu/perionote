@@ -264,10 +264,35 @@ test("loading demo data warns before replacing a modified form", async ({
     .getByRole("button", { name: "Save draft & start new" })
     .click();
   await expect(patientId).toHaveValue("");
+  await expect(patientId).toBeFocused();
 
   // A successful reset establishes the new clean baseline, so this is immediate.
   await loadDemo.click();
   await expect(patientId).toHaveValue("TEST-AH-1001");
+});
+
+test("a failed local draft save does not clear the current form", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const patientId = page.locator("#adult-hygiene-patient-id");
+  await patientId.fill("KEEP-UNSAVED-WORK");
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => {
+      throw new DOMException("Storage unavailable", "QuotaExceededError");
+    };
+  });
+
+  const formDialog = await openFormActionDialog(page);
+  await formDialog
+    .getByRole("button", { name: "Save draft & start new" })
+    .click();
+
+  await expect(formDialog).toBeVisible();
+  await expect(formDialog.getByRole("alert")).toContainText(
+    "The current form could not be saved, so it was not cleared.",
+  );
+  await expect(patientId).toHaveValue("KEEP-UNSAVED-WORK");
 });
 
 test("mobile section navigation stays compact and opens as a side sheet", async ({

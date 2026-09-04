@@ -130,8 +130,10 @@ export function useLocalInteractiveDraft<T>({
     }
   }, [templateId]);
 
-  const beginNewDraft = useCallback(() => {
-    saveNow();
+  const beginNewDraft = useCallback((): LocalDraftSaveResult => {
+    const saveResult = saveNow();
+    if (saveResult === "failed") return saveResult;
+
     const draftId = createInteractiveDraftId();
     draftIdRef.current = draftId;
     setCurrentDraftId(draftId);
@@ -145,6 +147,7 @@ export function useLocalInteractiveDraft<T>({
     setLastSavedAt(null);
     setRestoredAt(null);
     refreshRecoverableDrafts();
+    return saveResult;
   }, [refreshRecoverableDrafts, saveNow, templateId]);
 
   const discardAndBeginNewDraft = useCallback(() => {

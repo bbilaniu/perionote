@@ -14,12 +14,14 @@ export function ActionDialog({
   description,
   children,
   onDismiss,
+  restoreFocusOnClose = true,
 }: {
   open: boolean;
   title: string;
   description: ReactNode;
   children: ReactNode;
   onDismiss: () => void;
+  restoreFocusOnClose?: boolean;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -46,7 +48,6 @@ export function ActionDialog({
 
     if (!open && dialog.open) {
       dialog.close();
-      window.requestAnimationFrame(() => returnFocusRef.current?.focus());
     }
   }, [open]);
 
@@ -63,7 +64,9 @@ export function ActionDialog({
       }}
       onClose={() => {
         onDismiss();
-        window.requestAnimationFrame(() => returnFocusRef.current?.focus());
+        if (restoreFocusOnClose) {
+          window.requestAnimationFrame(() => returnFocusRef.current?.focus());
+        }
       }}
       onMouseDown={(event: MouseEvent<HTMLDialogElement>) => {
         if (event.target === event.currentTarget) onDismiss();

@@ -632,9 +632,12 @@ export function ChildRecareHygieneTemplate({
     );
   }
 
-  function resetForm(mode: InteractiveTemplateResetMode) {
-    if (mode === "new") localDraft.beginNewDraft();
-    else localDraft.discardAndBeginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      localDraft.discardAndBeginNewDraft();
+    }
     setForm({
       ...createDefaultChildRecareHygieneForm(),
       dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
@@ -645,6 +648,8 @@ export function ChildRecareHygieneTemplate({
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
+    return true;
   }
 
   return (

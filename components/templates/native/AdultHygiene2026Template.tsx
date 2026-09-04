@@ -3556,16 +3556,20 @@ export function AdultHygiene2026Template({
     }
   }
 
-  function resetForm(mode: InteractiveTemplateResetMode) {
-    if (mode === "new") localDraft.beginNewDraft();
-    else localDraft.discardAndBeginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      localDraft.discardAndBeginNewDraft();
+    }
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
     setOutputMode("complete");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
+    return true;
   }
 
   function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {
