@@ -1,4 +1,7 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
 import { lifecyclePresentation } from "@/lib/templates/lifecyclePresentation";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
@@ -40,4 +43,22 @@ describe("interactive template lifecycle presentation", () => {
       expect(presentation.badgeClassName).toContain(badgeClass);
     },
   );
+
+  it("places the description below the title and action row", () => {
+    const markup = renderToStaticMarkup(
+      createElement(InteractiveTemplateHeader, {
+        title: "Example template",
+        description: "Full-width description",
+        lifecycle: "ready",
+        actions: createElement("button", null, "Example action"),
+      }),
+    );
+
+    expect(markup.indexOf("Example action")).toBeLessThan(
+      markup.indexOf("Full-width description"),
+    );
+    expect(markup).toContain(
+      'class="mt-4 w-full text-sm text-slate-700 dark:text-slate-300"',
+    );
+  });
 });

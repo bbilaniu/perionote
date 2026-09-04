@@ -1,6 +1,6 @@
 import { lifecyclePresentation } from "@/lib/templates/lifecyclePresentation";
 import type { TemplatePresentation } from "@/lib/templates/types";
-import type { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 
 export function InteractiveTemplateHeader({
   title,
@@ -19,14 +19,14 @@ export function InteractiveTemplateHeader({
         <div className="min-w-0 flex-1">
           <p className={presentation.labelClassName}>{presentation.label}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-            {description}
-          </p>
         </div>
         {actions ? (
           <div className="w-full sm:w-auto sm:shrink-0">{actions}</div>
         ) : null}
       </div>
+      <p className="mt-4 w-full text-sm text-slate-700 dark:text-slate-300">
+        {description}
+      </p>
     </header>
   );
 }

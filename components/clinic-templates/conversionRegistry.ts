@@ -48,11 +48,11 @@ const allClinicConversions = [
     headerDescription:
       "Complete one pediatric encounter and copy a Combined, Dentist, or Hygienist note. This pilot is available for workflow and clinical-content evaluation; entered values are kept in a temporary local recovery draft.",
     kind: "native",
-    lifecycle: "pilot",
+    lifecycle: "ready",
     provenance: {
       sourceClinicTemplateSlug: "child-recare-exam-hygiene-notes",
       sourceRevision: "a094b24",
-      clinicalReviewDate: "2026-08-12",
+      clinicalReviewDate: "2026-09-04",
     },
     fixture: childRecareHygieneFixture,
     summary: buildChildRecareHygieneSummary(childRecareHygieneFixture),
@@ -62,7 +62,8 @@ const allClinicConversions = [
   defineClinicConversion({
     slug: "adolescent-hygiene",
     title: "12–17 Years Old Hygiene Template",
-    description: "Interactive conversion of the clinic adolescent hygiene note.",
+    description:
+      "Interactive conversion of the clinic adolescent hygiene note.",
     headerDescription:
       "Complete the form and copy a structured adolescent hygiene note. The conversion preserves the ClearDent workflow and includes optional Dentist and treatment-completed fields from the August 6 request.",
     kind: "native",
@@ -85,16 +86,14 @@ const allClinicConversions = [
     headerDescription:
       "Complete one adolescent encounter and copy a Combined, Dentist, or Hygienist note. The original adolescent template remains available separately. Encounter values are kept in a temporary local recovery draft.",
     kind: "native",
-    lifecycle: "pilot",
+    lifecycle: "ready",
     provenance: {
       sourceClinicTemplateSlug: "adolescent-hygiene-2026",
       sourceRevision: "70b65c4",
-      clinicalReviewDate: "2026-08-11",
+      clinicalReviewDate: "2026-09-04",
     },
     fixture: adolescentHygiene2026Fixture,
-    summary: buildAdolescentHygiene2026Summary(
-      adolescentHygiene2026Fixture,
-    ),
+    summary: buildAdolescentHygiene2026Summary(adolescentHygiene2026Fixture),
     buildSummary: buildAdolescentHygiene2026Summary,
     component: AdolescentHygiene2026Template,
   }),
@@ -125,11 +124,11 @@ const allClinicConversions = [
     headerDescription:
       "Complete one encounter and copy a Complete, Hygiene, or Recare note. Encounter values are kept in a temporary local recovery draft. Deliberately remembered catalogue suggestions also stay only in this browser profile.",
     kind: "native",
-    lifecycle: "pilot",
+    lifecycle: "ready",
     provenance: {
       sourceClinicTemplateSlug: "adult-hygiene-2026",
       sourceRevision: "0f5a80a",
-      clinicalReviewDate: "2026-08-08",
+      clinicalReviewDate: "2026-09-04",
     },
     fixture: adultHygiene2026Fixture,
     summary: buildAdultHygiene2026Summary(adultHygiene2026Fixture),
@@ -158,10 +157,7 @@ const allClinicConversions = [
 
 export const clinicConversionRegistry = allClinicConversions.filter(
   (conversion) =>
-    isTemplateAvailableForBuild(
-      conversion.lifecycle,
-      process.env.NODE_ENV,
-    ),
+    isTemplateAvailableForBuild(conversion.lifecycle, process.env.NODE_ENV),
 );
 
 export const clinicConversionSourceSlugs = clinicConversionRegistry.map(

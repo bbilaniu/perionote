@@ -22,14 +22,14 @@ export default function TemplatesIndexPage() {
             Clinical library
           </p>
           <h2 className="mt-1 text-lg font-semibold group-hover:text-chart-accent dark:group-hover:text-sky-300">
-            Clinical Templates
+            Clinical Forms
           </h2>
           <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
             Review the clinic&apos;s ClearDent source notes and open their
             interactive conversions when available.
           </p>
           <p className="mt-4 text-sm font-medium text-chart-accent dark:text-sky-300">
-            Browse clinical templates
+            Browse clinical forms
           </p>
         </Link>
 

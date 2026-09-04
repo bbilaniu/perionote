@@ -1,5 +1,5 @@
-import { CatalogueManager } from "@/components/catalogues/CatalogueManager";
+import { redirect } from "next/navigation";
 
 export default function CataloguesPage() {
-  return <CatalogueManager />;
+  redirect("/settings/");
 }

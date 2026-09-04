@@ -75,6 +75,7 @@ export default function ThemeToggle() {
       options={themeOptions}
       onChange={handleChange}
       compact
+      labelInTrigger
     />
   );
 }

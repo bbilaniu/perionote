@@ -6,16 +6,23 @@ import { usePathname } from "next/navigation";
 const navigationItems = [
   {
     href: "/templates/clinic",
-    label: "Clinical templates",
+    label: "Clinical forms",
     compact: false,
+    utility: false,
   },
   {
     href: "/templates/interactive",
     label: "Standalone forms",
     compact: true,
+    utility: false,
   },
-  { href: "/drafts", label: "Saved drafts", compact: false },
-  { href: "/catalogues", label: "Catalogues", compact: false },
+  {
+    href: "/drafts",
+    label: "Saved drafts",
+    compact: false,
+    utility: false,
+  },
+  { href: "/settings", label: "Settings", compact: false, utility: true },
 ] as const;
 
 export function PrimaryNavigation() {
@@ -30,20 +37,26 @@ export function PrimaryNavigation() {
         const active = pathname.startsWith(item.href);
 
         return (
-          <Link
+          <span
             key={item.href}
-            className={`border-b-2 px-0.5 py-2 text-sm font-medium transition focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-              item.compact ? "hidden sm:inline-flex" : "inline-flex"
-            } ${
-              active
-                ? "border-sky-700 text-sky-950 dark:border-sky-400 dark:text-sky-100"
-                : "border-transparent text-chart-accent hover:border-sky-300 hover:text-sky-950 dark:text-sky-300 dark:hover:border-sky-700 dark:hover:text-sky-100"
+            className={`${item.compact ? "hidden sm:flex" : "flex"} ${
+              item.utility
+                ? "ml-1 border-l border-l-slate-200 pl-4 dark:border-l-slate-700"
+                : ""
             }`}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
           >
-            {item.label}
-          </Link>
+            <Link
+              className={`relative inline-flex px-0.5 py-2 text-sm font-medium transition after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:transition-colors focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              active
+                  ? "text-sky-950 after:bg-sky-700 dark:text-sky-100 dark:after:bg-sky-400"
+                  : "text-chart-accent after:bg-transparent hover:text-sky-950 hover:after:bg-sky-300 dark:text-sky-300 dark:hover:text-sky-100 dark:hover:after:bg-sky-700"
+              }`}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+          </span>
         );
       })}
     </nav>

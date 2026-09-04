@@ -9,7 +9,7 @@ test("homepage presents the primary clinical workflows", async ({ page }) => {
     page.getByRole("heading", { name: "Create and manage hygiene notes" }),
   ).toBeVisible();
   for (const linkName of [
-    "Clinical templates",
+    "Clinical forms",
     "Standalone forms",
     "Saved drafts",
     "Catalogues",
@@ -29,8 +29,25 @@ test("primary navigation identifies the current area", async ({ page }) => {
   await expect(
     page
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Clinical templates" }),
+      .getByRole("link", { name: "Clinical forms" }),
   ).toHaveAttribute("aria-current", "page");
+
+  await page.goto("/settings");
+
+  await expect(
+    page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { name: "Settings" }),
+  ).toHaveAttribute("aria-current", "page");
+});
+
+test("legacy catalogues route forwards to settings", async ({ page }) => {
+  await page.goto("/catalogues");
+
+  await expect(page).toHaveURL(/\/settings\/?$/);
+  await expect(
+    page.getByRole("heading", { name: "Catalogues", exact: true }),
+  ).toBeVisible();
 });
 
 test("template library index separates clinic and interactive templates", async ({
@@ -84,7 +101,7 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   await page.goto("/templates/clinic");
 
   await expect(
-    page.getByRole("heading", { name: "Clinical Templates" }),
+    page.getByRole("heading", { name: "Clinical Forms" }),
   ).toBeVisible();
   await expect(
     page
@@ -358,6 +375,37 @@ test("2026 Adult Hygiene uses its own route and draft storage", async ({
       ),
     ),
   ).toBe(false);
+});
+
+test("generated note keeps copy feedback beside its action", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+  await openGeneratedNote(page);
+
+  const preview = page.getByRole("complementary", {
+    name: "Generated note preview",
+  });
+  const copyButton = preview.getByRole("button", {
+    name: "Copy complete note",
+  });
+  const copyStatus = preview.getByRole("status");
+  const generatedPanel = copyButton.locator("xpath=ancestor::section[1]");
+  const [buttonBox, statusBox, panelBox] = await Promise.all([
+    copyButton.boundingBox(),
+    copyStatus.boundingBox(),
+    generatedPanel.boundingBox(),
+  ]);
+
+  expect(buttonBox).not.toBeNull();
+  expect(statusBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
+  expect(Math.abs(buttonBox!.y - statusBox!.y)).toBeLessThan(
+    buttonBox!.height,
+  );
+  expect(
+    panelBox!.y + panelBox!.height - (buttonBox!.y + buttonBox!.height),
+  ).toBeLessThanOrEqual(22);
 });
 
 test("2026 Adult Hygiene merges night guard into the occlusal splint control", async ({
@@ -2015,7 +2063,7 @@ test("clinic template library follows the clinical menu and opens a template", a
   await page.goto("/templates/clinic");
 
   await expect(
-    page.getByRole("heading", { name: "Clinical Templates" }),
+    page.getByRole("heading", { name: "Clinical Forms" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Hygiene", exact: true }),

@@ -16,7 +16,7 @@ async function reloadDiscardingForm(page: Page) {
 test("catalogue manager groups related catalogues into keyboard-accessible tabs", async ({
   page,
 }) => {
-  await page.goto("/catalogues");
+  await page.goto("/settings");
 
   const providerGroup = page.getByRole("region", {
     name: "Provider roles catalogues",
@@ -178,7 +178,7 @@ test("saved providers can prefill new notes without changing restored drafts", a
   page,
 }) => {
   test.setTimeout(60_000);
-  await page.goto("/catalogues");
+  await page.goto("/settings");
   const dentistCatalogue = page.locator(
     '[data-catalogue-key="visit-team.dentist"]',
   );
@@ -403,7 +403,7 @@ test("form reset preserves remembered values and catalogue management controls s
     page.getByRole("option", { name: /Synthetic Remembered RDH Local/ }),
   ).toBeVisible();
 
-  await page.goto("/catalogues");
+  await page.goto("/settings");
   const molarCatalogue = page.locator(
     '[data-catalogue-key="clinical-exam.molar-occlusion"]',
   );
@@ -448,7 +448,7 @@ test("form reset preserves remembered values and catalogue management controls s
   await expect(page.getByRole("option", { name: /Cl I Starter/ })).toHaveCount(0);
   await expect(page.getByRole("option", { name: /Cl II Starter/ })).toBeVisible();
 
-  await page.goto("/catalogues");
+  await page.goto("/settings");
   const hiddenClassOneRow = page
     .locator('[data-catalogue-key="clinical-exam.molar-occlusion"]')
     .locator('[data-catalogue-item-id="seed.molar.cl-i"]');
@@ -467,7 +467,7 @@ test("form reset preserves remembered values and catalogue management controls s
 test("catalogue export and import transfer local values without a network request", async ({
   page,
 }) => {
-  await page.goto("/catalogues");
+  await page.goto("/settings");
   await page.waitForLoadState("networkidle");
   const networkRequests: string[] = [];
   page.on("request", (request) => {

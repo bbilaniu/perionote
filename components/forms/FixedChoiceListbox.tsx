@@ -22,6 +22,7 @@ export function FixedChoiceListbox<TValue extends string>({
   disabled,
   error,
   compact = false,
+  labelInTrigger = false,
 }: {
   id: string;
   label: string;
@@ -31,6 +32,7 @@ export function FixedChoiceListbox<TValue extends string>({
   disabled?: boolean;
   error?: string;
   compact?: boolean;
+  labelInTrigger?: boolean;
 }) {
   const generatedId = useId();
   const listboxId = `${id}-${generatedId}-options`;
@@ -148,9 +150,11 @@ export function FixedChoiceListbox<TValue extends string>({
         }
       }}
     >
-      <label className="text-sm font-medium" htmlFor={id}>
-        {label}
-      </label>
+      {!labelInTrigger ? (
+        <label className="text-sm font-medium" htmlFor={id}>
+          {label}
+        </label>
+      ) : null}
       <div className={`relative ${compact ? "" : "mt-1"}`}>
         <button
           ref={triggerRef}
@@ -162,7 +166,10 @@ export function FixedChoiceListbox<TValue extends string>({
             opensList: true,
             invalid: Boolean(error),
             compact,
-          })} ${compact ? "py-1.5" : "py-2"} text-left`}
+          })} ${compact ? "py-1.5" : "py-2"} ${
+            labelInTrigger ? "flex items-center gap-3" : ""
+          } text-left`}
+          aria-label={labelInTrigger ? label : undefined}
           aria-haspopup="listbox"
           aria-expanded={open}
           aria-controls={listboxId}
@@ -177,6 +184,9 @@ export function FixedChoiceListbox<TValue extends string>({
           }}
           onKeyDown={handleTriggerKeyDown}
         >
+          {labelInTrigger ? (
+            <span className="whitespace-nowrap font-medium">{label}</span>
+          ) : null}
           <span className="block truncate">
             {selectedOption?.label ?? "Select an option"}
           </span>

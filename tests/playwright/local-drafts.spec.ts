@@ -159,7 +159,7 @@ test("restoring another draft first checkpoints the current form", async ({
   await page.locator("#recare-patient-id").fill("Synthetic draft B unsaved");
   await page.locator("#recare-rdh").fill("Synthetic RDH B");
 
-  await page.getByText(/other recoverable draft/).click();
+  await page.getByText(/other local draft for this template/).click();
   await page.getByRole("button", { name: "Restore" }).click();
   await expect(page.locator("#recare-patient-id")).toHaveValue(
     "Synthetic draft A",

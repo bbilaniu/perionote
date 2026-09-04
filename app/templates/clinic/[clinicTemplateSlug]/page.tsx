@@ -50,7 +50,7 @@ export default async function ClinicTemplatePage({
           href="/templates/clinic"
           className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300"
         >
-          ← Clinical Templates
+          ← Clinical Forms
         </Link>
         <p className="mt-5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {getClinicCategoryTitle(template.category)}

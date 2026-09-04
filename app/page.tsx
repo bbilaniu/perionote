@@ -11,10 +11,10 @@ const launchCards = [
   {
     href: "/templates/clinic",
     eyebrow: "Primary workflow",
-    title: "Clinical templates",
+    title: "Clinical forms",
     description:
       "Start from the clinic’s current ClearDent source notes and interactive conversions.",
-    action: "Browse clinical templates",
+    action: "Browse clinical forms",
     featured: true,
   },
   {
@@ -38,7 +38,7 @@ const managementCards = [
     action: "Continue saved drafts",
   },
   {
-    href: "/catalogues",
+    href: "/settings",
     eyebrow: "Reusable content",
     title: "Catalogues",
     description:
