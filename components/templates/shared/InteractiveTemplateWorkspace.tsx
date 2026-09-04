@@ -11,7 +11,10 @@ import {
 import type { TemplateSectionNavigationItem } from "@/lib/templates/sectionNavigation";
 import type { TemplatePresentation } from "@/lib/templates/types";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
+import { LocalDraftRail } from "@/components/templates/shared/LocalDraftRail";
+import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
+import type { LocalDraftWorkspaceState } from "@/components/templates/shared/localDraftWorkspace";
 
 const secondaryButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-950";
@@ -72,7 +75,7 @@ export function InteractiveTemplateWorkspace({
 }: {
   presentation: TemplatePresentation;
   sections: readonly TemplateSectionNavigationItem[];
-  draftRecovery: ReactNode;
+  draftRecovery: LocalDraftWorkspaceState;
   generatedNote: (headerAction: ReactNode) => ReactNode;
   children: ReactNode;
   formRevision: string;
@@ -245,7 +248,7 @@ export function InteractiveTemplateWorkspace({
   return (
     <form
       ref={workspaceRef}
-      className="grid min-w-0 items-start gap-6 data-[drag-scrolling=true]:cursor-grabbing data-[drag-scrolling=true]:select-none xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)]"
+      className="grid min-w-0 items-start gap-6 data-[drag-scrolling=true]:cursor-grabbing data-[drag-scrolling=true]:select-none xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)] min-[2304px]:relative min-[2304px]:left-1/2 min-[2304px]:w-[calc(100vw-3rem)] min-[2304px]:max-w-[133rem] min-[2304px]:-translate-x-1/2 min-[2304px]:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)_22rem]"
       autoComplete="off"
       onSubmit={submitForm}
       onLostPointerCapture={cancelDragScroll}
@@ -283,7 +286,13 @@ export function InteractiveTemplateWorkspace({
           }
         />
 
-        {draftRecovery}
+        <LocalDraftRecovery
+          drafts={draftRecovery.drafts}
+          lastSavedAt={draftRecovery.lastSavedAt}
+          restoredAt={draftRecovery.restoredAt}
+          storageError={draftRecovery.storageError}
+          onRestore={draftRecovery.onRestore}
+        />
 
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13rem]">
           <TemplateSectionNavigation
@@ -327,6 +336,9 @@ export function InteractiveTemplateWorkspace({
             Close
           </button>,
         )}
+      </aside>
+      <aside className="hidden min-[2304px]:sticky min-[2304px]:top-6 min-[2304px]:col-start-3 min-[2304px]:row-start-1 min-[2304px]:block min-[2304px]:self-start">
+        <LocalDraftRail {...draftRecovery} />
       </aside>
     </form>
   );

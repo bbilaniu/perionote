@@ -172,6 +172,86 @@ test("restoring another draft first checkpoints the current form", async ({
   await expect(page.locator("#recare-rdh")).toHaveValue("Synthetic RDH B");
 });
 
+test("ultrawide workspace shows and opens current-form and other-form drafts", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 2560, height: 1000 },
+  });
+  const page = await context.newPage();
+
+  await page.goto(adultHygieneUrl);
+  await page
+    .locator("#adult-hygiene-patient-id")
+    .fill("Synthetic adult workfile");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic Adult RDH");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await page.goto(recareExamUrl);
+  await page.locator("#recare-patient-id").fill("Synthetic recare workfile");
+  await page.locator("#recare-rdh").fill("Synthetic Recare RDH");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "Clear form" }).click();
+
+  const rail = page.getByRole("region", { name: "Local drafts" });
+  await expect(rail).toBeVisible();
+  await expect(rail.getByText("Open now")).toBeVisible();
+  await expect(rail.getByText("Synthetic recare workfile")).toBeVisible();
+  await expect(rail.getByText("Synthetic adult workfile")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Local draft recovery" })
+      .getByText(/other local draft for this template/),
+  ).toBeHidden();
+
+  await rail
+    .getByRole("button", {
+      name: "Open draft for Synthetic recare workfile",
+    })
+    .click();
+  await expect(page.locator("#recare-patient-id")).toHaveValue(
+    "Synthetic recare workfile",
+  );
+
+  await rail
+    .getByRole("button", {
+      name: /Open 2021 Adult Hygiene draft for Synthetic adult workfile/,
+    })
+    .click();
+  await expect(page).toHaveURL(new RegExp(adultHygieneUrl + "/?$"));
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
+    "Synthetic adult workfile",
+  );
+
+  await page.setViewportSize({ width: 2560, height: 700 });
+  await expect(rail).toBeVisible();
+  await expect(
+    rail.getByRole("heading", { name: "Other forms" }),
+  ).toBeHidden();
+
+  await context.close();
+});
+
+test("draft rail stays out of the standard desktop workspace", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 2000, height: 1000 });
+  await page.goto(recareExamUrl);
+
+  await expect(
+    page.getByRole("region", { name: "Local drafts" }),
+  ).toBeHidden();
+  await expect(
+    page
+      .getByRole("region", { name: "Local draft recovery" })
+      .getByRole("link", { name: "View all saved drafts" }),
+  ).toBeVisible();
+});
+
 test("Recare copy saves independent drafts for multiple open tabs", async ({
   context,
 }) => {

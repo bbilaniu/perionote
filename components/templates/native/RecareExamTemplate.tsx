@@ -53,7 +53,6 @@ import {
   interactiveTemplateClearFormWarning,
   InteractiveTemplateWorkspace,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
@@ -2359,15 +2358,17 @@ export function RecareExamTemplate({
       }}
       onLoadDemo={loadDemo}
       onReset={resetForm}
-      draftRecovery={
-        <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-        />
-      }
+      draftRecovery={{
+        templateId: "recare-exam",
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
       generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="recare-summary"

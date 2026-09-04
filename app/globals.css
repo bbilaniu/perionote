@@ -49,6 +49,16 @@ body {
   }
 }
 
+.ultrawide-other-drafts {
+  display: none;
+}
+
+@media (min-width: 2304px) and (min-height: 800px) {
+  .ultrawide-other-drafts {
+    display: block;
+  }
+}
+
 /*
  * Mobile WebKit gives native date/time controls an intrinsic width based on
  * their localized value. Let the surrounding form grid size every temporal
