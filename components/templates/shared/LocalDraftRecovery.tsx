@@ -70,11 +70,13 @@ export function LocalDraftRecovery<T>({
       {drafts.length ? (
         <details className="mt-2 border-t border-sky-200 pt-2 dark:border-sky-900">
           <summary className="cursor-pointer font-semibold text-sky-900 marker:text-sky-700 hover:underline dark:text-sky-100 dark:marker:text-sky-300">
-            {drafts.length} other recoverable{" "}
-            {drafts.length === 1 ? "draft" : "drafts"}
+            {drafts.length} other local {drafts.length === 1 ? "draft" : "drafts"}{" "}
+            for this template
           </summary>
           <p className="mt-2 text-xs">
-            These may be from other tabs or a previous browser session.
+            The draft open in this tab is not included. Listed drafts may be
+            from another tab, an earlier session, or a checkpoint created
+            before clearing or restoring the form.
           </p>
           <ul className="mt-2 space-y-2">
             {drafts.map((draft) => (
