@@ -26,8 +26,9 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
+  interactiveTemplateUnloadWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
@@ -179,7 +180,6 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning = interactiveTemplateClearFormWarning;
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
@@ -3005,7 +3005,7 @@ export function AdultHygiene2021Template({
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adultHygieneDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -3139,16 +3139,15 @@ export function AdultHygiene2021Template({
     setCopyMessage("Synthetic demo data loaded.");
   }
 
-  function resetForm() {
-    if (!window.confirm(adultHygieneDiscardWarning)) return false;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode) {
+    if (mode === "new") localDraft.beginNewDraft();
+    else localDraft.discardAndBeginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
     patientIdRef.current?.focus();
-    return true;
   }
 
   function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {

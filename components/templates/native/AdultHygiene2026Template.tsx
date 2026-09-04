@@ -28,8 +28,9 @@ import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { Time24Input } from "@/components/forms/Time24Input";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
+  interactiveTemplateUnloadWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { Cambra123SixAdultControl } from "@/components/templates/shared/Cambra123SixAdultControl";
 import { CollapsibleFieldset } from "@/components/templates/shared/CollapsibleFieldset";
@@ -3004,7 +3005,6 @@ export function AdultHygiene2026Template({
   const templateId = isAdolescent
     ? "adolescent-hygiene-2026"
     : "adult-hygiene-2026";
-  const discardWarning = interactiveTemplateClearFormWarning;
   const outputChoices = outputChoicesByVariant[variant];
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
@@ -3119,11 +3119,11 @@ export function AdultHygiene2026Template({
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = discardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
-  }, [discardWarning]);
+  }, []);
 
   const summaries = useMemo(
     () => ({
@@ -3556,9 +3556,9 @@ export function AdultHygiene2026Template({
     }
   }
 
-  function resetForm() {
-    if (!window.confirm(discardWarning)) return false;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode) {
+    if (mode === "new") localDraft.beginNewDraft();
+    else localDraft.discardAndBeginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
@@ -3566,7 +3566,6 @@ export function AdultHygiene2026Template({
     setCopyMessage("");
     setOutputMode("complete");
     patientIdRef.current?.focus();
-    return true;
   }
 
   function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {

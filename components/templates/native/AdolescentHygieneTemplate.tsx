@@ -22,8 +22,9 @@ import {
 } from "@/components/templates/native/AdultHygiene2021Template";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
+  interactiveTemplateUnloadWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
@@ -63,7 +64,6 @@ import {
 import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
-const adolescentDiscardWarning = interactiveTemplateClearFormWarning;
 const adolescentDraftExemplar = createEmptyAdolescentHygieneForm();
 const emptyAdolescentDraft = JSON.stringify(adolescentDraftExemplar);
 const adolescentDraftArrayItemShapes = {
@@ -428,7 +428,7 @@ export function AdolescentHygieneTemplate({
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adolescentDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -509,16 +509,15 @@ export function AdolescentHygieneTemplate({
     setCopyMessage("Synthetic demo data loaded.");
   }
 
-  function resetForm() {
-    if (!window.confirm(adolescentDiscardWarning)) return false;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode) {
+    if (mode === "new") localDraft.beginNewDraft();
+    else localDraft.discardAndBeginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
     patientIdRef.current?.focus();
-    return true;
   }
 
   function nextTreatmentEntryId(): string {

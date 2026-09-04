@@ -15,8 +15,8 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
@@ -632,14 +632,9 @@ export function ChildRecareHygieneTemplate({
     );
   }
 
-  function resetForm() {
-    if (
-      !isEmptyForm(form) &&
-      !window.confirm(interactiveTemplateClearFormWarning)
-    ) {
-      return false;
-    }
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode) {
+    if (mode === "new") localDraft.beginNewDraft();
+    else localDraft.discardAndBeginNewDraft();
     setForm({
       ...createDefaultChildRecareHygieneForm(),
       dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
@@ -650,7 +645,6 @@ export function ChildRecareHygieneTemplate({
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
-    return true;
   }
 
   return (

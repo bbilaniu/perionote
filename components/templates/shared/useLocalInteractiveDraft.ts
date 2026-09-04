@@ -147,6 +147,30 @@ export function useLocalInteractiveDraft<T>({
     refreshRecoverableDrafts();
   }, [refreshRecoverableDrafts, saveNow, templateId]);
 
+  const discardAndBeginNewDraft = useCallback(() => {
+    try {
+      if (draftIdRef.current) {
+        deleteInteractiveDraft(
+          window.localStorage,
+          templateId,
+          draftIdRef.current,
+        );
+      }
+      const draftId = createInteractiveDraftId();
+      draftIdRef.current = draftId;
+      setCurrentDraftId(draftId);
+      selectInteractiveDraftForCurrentTab(templateId, draftId);
+      setLastSavedAt(null);
+      setRestoredAt(null);
+      setStorageError("");
+      refreshRecoverableDrafts();
+    } catch {
+      setStorageError(
+        "The current draft could not be discarded from local storage.",
+      );
+    }
+  }, [refreshRecoverableDrafts, templateId]);
+
   const restoreDraft = useCallback(
     (draftId: string) => {
       const saveResult = saveNow();
@@ -253,6 +277,7 @@ export function useLocalInteractiveDraft<T>({
     storageError,
     saveNow,
     beginNewDraft,
+    discardAndBeginNewDraft,
     restoreDraft,
   };
 }

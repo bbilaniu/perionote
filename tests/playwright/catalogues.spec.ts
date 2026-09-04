@@ -1,5 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openGeneratedNote } from "./helpers/interactiveTemplate";
+import {
+  clearCurrentForm,
+  openGeneratedNote,
+} from "./helpers/interactiveTemplate";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
@@ -241,8 +244,7 @@ test("saved providers can prefill new notes without changing restored drafts", a
   await expect(recareRda).toHaveValue("");
   await expect(recareRdh).toHaveValue("");
 
-  page.once("dialog", async (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await clearCurrentForm(page);
   await expect(recareDentist).toHaveValue("Default Synthetic Dentist");
   await expect(recareRda).toHaveValue("Default Synthetic RDA");
   await expect(recareRdh).toHaveValue("Default Synthetic RDH");
@@ -395,8 +397,7 @@ test("form reset preserves remembered values and catalogue management controls s
   const rdh = page.getByRole("combobox", { name: "RDH" });
   await rdh.fill("Synthetic Remembered RDH");
   await page.getByRole("button", { name: "Remember this value" }).click();
-  page.once("dialog", async (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await clearCurrentForm(page);
   await expect(rdh).toHaveValue("");
   await rdh.focus();
   await expect(

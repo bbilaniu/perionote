@@ -8,6 +8,7 @@ import {
   type PointerEventHandler,
   type ReactNode,
 } from "react";
+import { ActionDialog } from "@/components/ActionDialog";
 import type { TemplateSectionNavigationItem } from "@/lib/templates/sectionNavigation";
 import type { TemplatePresentation } from "@/lib/templates/types";
 import { InteractiveTemplateHeader } from "@/components/templates/shared/InteractiveTemplateHeader";
@@ -21,8 +22,9 @@ const secondaryButtonClass =
 const destructiveButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-xl border border-red-300 bg-white px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:border-red-800 dark:bg-slate-900 dark:text-red-200 dark:hover:bg-red-950 dark:focus-visible:ring-offset-slate-950";
 
-export const interactiveTemplateClearFormWarning =
-  "Clear this form and start a new note?\n\nThe previous local draft remains available for seven days.";
+export type InteractiveTemplateResetMode = "new" | "clear";
+export const interactiveTemplateUnloadWarning =
+  "Your local draft may not have finished saving.";
 
 const dragScrollExcludedSelector = [
   "a",
@@ -81,11 +83,14 @@ export function InteractiveTemplateWorkspace({
   formRevision: string;
   onSubmit: FormEventHandler<HTMLFormElement>;
   onLoadDemo: () => void;
-  onReset: () => boolean;
+  onReset: (mode: InteractiveTemplateResetMode) => void;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
   const [baselineRequest, setBaselineRequest] = useState(0);
+  const [actionDialog, setActionDialog] = useState<
+    "form" | "demo" | null
+  >(null);
   const workspaceRef = useRef<HTMLFormElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const noteDrawerRef = useRef<HTMLElement>(null);
@@ -135,24 +140,25 @@ export function InteractiveTemplateWorkspace({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [noteOpen, wideLayout]);
 
-  const loadDemo = () => {
-    const formWasModified = formRevision !== baselineRevisionRef.current;
-    if (
-      formWasModified &&
-      !window.confirm(
-        "Load synthetic demo data and replace the current form? Changes made since this page was opened or last reset will be overwritten.",
-      )
-    ) {
-      return;
-    }
-
+  const applyDemo = () => {
+    setActionDialog(null);
     pendingBaselineRef.current = { kind: "demo" };
     onLoadDemo();
     setBaselineRequest((request) => request + 1);
   };
 
-  const resetForm = () => {
-    if (!onReset()) return;
+  const loadDemo = () => {
+    const formWasModified = formRevision !== baselineRevisionRef.current;
+    if (formWasModified) {
+      setActionDialog("demo");
+      return;
+    }
+    applyDemo();
+  };
+
+  const resetForm = (mode: InteractiveTemplateResetMode) => {
+    setActionDialog(null);
+    onReset(mode);
     pendingBaselineRef.current = { kind: "reset" };
     setBaselineRequest((request) => request + 1);
   };
@@ -277,10 +283,10 @@ export function InteractiveTemplateWorkspace({
               </button>
               <button
                 type="button"
-                className={destructiveButtonClass}
-                onClick={resetForm}
+                className={secondaryButtonClass}
+                onClick={() => setActionDialog("form")}
               >
-                Clear form
+                New / clear form
               </button>
             </div>
           }
@@ -340,6 +346,69 @@ export function InteractiveTemplateWorkspace({
       <aside className="hidden min-[2304px]:sticky min-[2304px]:top-6 min-[2304px]:col-start-3 min-[2304px]:row-start-1 min-[2304px]:block min-[2304px]:self-start">
         <LocalDraftRail {...draftRecovery} />
       </aside>
+
+      <ActionDialog
+        open={actionDialog === "form"}
+        title="New or clear form?"
+        description={
+          <>
+            Keep this work as a local draft before opening a blank form, or
+            discard it and clear the current form. Local drafts stay in this
+            browser for seven days and are not clinical records.
+          </>
+        }
+        onDismiss={() => setActionDialog(null)}
+      >
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            data-dialog-initial-focus
+            onClick={() => setActionDialog(null)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={destructiveButtonClass}
+            onClick={() => resetForm("clear")}
+          >
+            Clear current form
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            onClick={() => resetForm("new")}
+          >
+            Save draft &amp; start new
+          </button>
+        </div>
+      </ActionDialog>
+
+      <ActionDialog
+        open={actionDialog === "demo"}
+        title="Replace current form with synthetic demo?"
+        description="This replaces the entries in the current form. Deliberately remembered catalogue values are unchanged."
+        onDismiss={() => setActionDialog(null)}
+      >
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            data-dialog-initial-focus
+            onClick={() => setActionDialog(null)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={destructiveButtonClass}
+            onClick={applyDemo}
+          >
+            Replace form
+          </button>
+        </div>
+      </ActionDialog>
     </form>
   );
 }

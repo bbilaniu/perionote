@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openGeneratedNote } from "./helpers/interactiveTemplate";
+import {
+  openFormActionDialog,
+  openGeneratedNote,
+  saveDraftAndStartNew,
+} from "./helpers/interactiveTemplate";
 
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
@@ -193,40 +197,43 @@ test("loading demo data warns before replacing a modified form", async ({
   await page.goto(adultHygieneUrl);
   const patientId = page.locator("#adult-hygiene-patient-id");
   const loadDemo = page.getByRole("button", { name: "Load synthetic demo" });
-  const clearForm = page.getByRole("button", { name: "Clear form" });
-  await expect(clearForm).toHaveClass(/border-red-300/);
-  await expect(clearForm).toHaveClass(/text-red-800/);
+  const formActions = page.getByRole("button", {
+    name: "New / clear form",
+  });
+  await expect(formActions).toBeVisible();
 
   await patientId.fill("KEEP-MY-CHANGES");
 
-  const cancelledDialogPromise = page.waitForEvent("dialog");
-  const cancelledClickPromise = loadDemo.click();
-  const cancelledDialog = await cancelledDialogPromise;
-  expect(cancelledDialog.message()).toContain(
-    "Changes made since this page was opened or last reset will be overwritten.",
+  await loadDemo.click();
+  const demoDialog = page.getByRole("dialog", {
+    name: "Replace current form with synthetic demo?",
+  });
+  await expect(demoDialog).toBeVisible();
+  await expect(demoDialog).toContainText(
+    "This replaces the entries in the current form.",
   );
-  await cancelledDialog.dismiss();
-  await cancelledClickPromise;
+  await demoDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(patientId).toHaveValue("KEEP-MY-CHANGES");
+  await expect(loadDemo).toBeFocused();
 
-  const acceptedDialogPromise = page.waitForEvent("dialog");
-  const acceptedClickPromise = loadDemo.click();
-  const acceptedDialog = await acceptedDialogPromise;
-  await acceptedDialog.accept();
-  await acceptedClickPromise;
+  await loadDemo.click();
+  await demoDialog.getByRole("button", { name: "Replace form" }).click();
   await expect(patientId).toHaveValue("TEST-AH-1001");
 
   await patientId.fill("RESET-THIS-CHANGE");
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain(
-      "Clear this form and start a new note?",
-    );
-    expect(dialog.message()).toContain(
-      "The previous local draft remains available for seven days.",
-    );
-    await dialog.accept();
-  });
-  await clearForm.click();
+  let formDialog = await openFormActionDialog(page);
+  await expect(formDialog).toContainText(
+    "Keep this work as a local draft before opening a blank form",
+  );
+  await page.keyboard.press("Escape");
+  await expect(formDialog).toBeHidden();
+  await expect(patientId).toHaveValue("RESET-THIS-CHANGE");
+  await expect(formActions).toBeFocused();
+
+  formDialog = await openFormActionDialog(page);
+  await formDialog
+    .getByRole("button", { name: "Save draft & start new" })
+    .click();
   await expect(patientId).toHaveValue("");
 
   // A successful reset establishes the new clean baseline, so this is immediate.
@@ -582,13 +589,7 @@ test("Adult Hygiene demo output survives reload and reset preserves its draft", 
   await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain(
-      "Clear this form and start a new note?"
-    );
-    await dialog.accept();
-  });
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await saveDraftAndStartNew(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 10:25"
