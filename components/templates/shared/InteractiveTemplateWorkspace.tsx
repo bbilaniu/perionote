@@ -343,7 +343,7 @@ export function InteractiveTemplateWorkspace({
           </button>,
         )}
       </aside>
-      <aside className="hidden min-[2304px]:sticky min-[2304px]:top-6 min-[2304px]:col-start-3 min-[2304px]:row-start-1 min-[2304px]:block min-[2304px]:self-start">
+      <aside className="hidden min-[2304px]:sticky min-[2304px]:top-6 min-[2304px]:col-start-3 min-[2304px]:row-start-1 min-[2304px]:block min-[2304px]:h-[calc(100dvh-11rem)] min-[2304px]:min-h-0 min-[2304px]:self-start">
         <LocalDraftRail {...draftRecovery} />
       </aside>
 

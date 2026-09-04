@@ -30,7 +30,12 @@ export function GeneratedNotePanel({
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">Generated Note</h2>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300">
+            Live preview
+          </p>
+          <h2 className="mt-1 text-lg font-semibold">Generated Note</h2>
+        </div>
         {headerAction}
       </div>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">

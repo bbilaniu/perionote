@@ -234,7 +234,7 @@ test("ultrawide workspace shows and opens current-form and other-form drafts", a
 
   const rail = page.getByRole("region", { name: "Local drafts" });
   await expect(rail).toBeVisible();
-  await expect(rail.getByText("Open now")).toBeVisible();
+  await expect(rail.getByText("Current", { exact: true })).toBeVisible();
   await expect(rail.getByText("Synthetic recare workfile")).toBeVisible();
   await expect(rail.getByText("Synthetic adult workfile")).toBeVisible();
   await expect(
@@ -267,6 +267,63 @@ test("ultrawide workspace shows and opens current-form and other-form drafts", a
   await expect(
     rail.getByRole("heading", { name: "Other forms" }),
   ).toBeHidden();
+
+  await context.close();
+});
+
+test("ultrawide draft rail keeps its footer visible while long draft lists scroll", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 2560, height: 800 },
+  });
+  const page = await context.newPage();
+
+  await page.goto(recareExamUrl);
+  await seedSyntheticDrafts(
+    page,
+    Array.from({ length: 10 }, (_, index) => ({
+      draftId: `adult-overflow-${index + 1}`,
+      patientId: `Synthetic adult workfile ${index + 1}`,
+      rdh: "Synthetic Adult RDH",
+      savedOffsetMinutes: index + 1,
+    })),
+  );
+  await page.reload();
+
+  const rail = page.getByRole("region", { name: "Local drafts" });
+  const draftLists = rail.getByRole("region", {
+    name: "Saved draft lists",
+  });
+  const viewAllDrafts = rail.getByRole("link", {
+    name: "View all saved drafts (10)",
+  });
+
+  await expect(rail).toBeVisible();
+  await expect(viewAllDrafts).toBeInViewport();
+  await expect
+    .poll(async () => {
+      const box = await viewAllDrafts.boundingBox();
+      return box ? box.y + box.height : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThanOrEqual(784);
+  await expect
+    .poll(() =>
+      draftLists.evaluate(
+        (element) => element.scrollHeight > element.clientHeight,
+      ),
+    )
+    .toBe(true);
+
+  await draftLists.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(
+    rail.getByRole("button", {
+      name: "Open 2021 Adult Hygiene draft for Synthetic adult workfile 10",
+    }),
+  ).toBeInViewport();
+  await expect(viewAllDrafts).toBeInViewport();
 
   await context.close();
 });
