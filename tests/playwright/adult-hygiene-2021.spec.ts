@@ -43,7 +43,7 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
-test("interactive forms keep navigation on the right with persistent note access", async ({
+test("interactive forms keep navigation on the right with a persistent note preview", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -74,8 +74,8 @@ test("interactive forms keep navigation on the right with persistent note access
       name: "Generated note preview",
     });
     await expect(drawer).toBeVisible();
-    const reviewNote = navigation.getByRole("button", { name: "Review note" });
-    await expect(reviewNote).toBeVisible();
+    const reviewNote = navigation.locator("[data-review-note-trigger]");
+    await expect(reviewNote).toBeHidden();
     const workspaceHeader = page
       .locator("h1")
       .locator("xpath=ancestor::header[1]");
@@ -97,8 +97,6 @@ test("interactive forms keep navigation on the right with persistent note access
     expect(workspaceHeaderBox!.x + workspaceHeaderBox!.width).toBeLessThan(
       drawerBox!.x,
     );
-    await reviewNote.click();
-    await expect(drawer.locator("textarea")).toBeFocused();
   }
 });
 
@@ -133,6 +131,60 @@ test("the desktop utility rail opens the note drawer below the docked breakpoint
   await page.keyboard.press("Escape");
   await expect(drawer).not.toBeVisible();
   await expect(reviewNote).toBeFocused();
+});
+
+test("desktop users can drag workspace backgrounds to scroll", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 600 });
+  await page.goto(adultHygieneUrl);
+
+  const form = page.locator("form");
+  await page.evaluate(() => window.scrollTo(0, 600));
+  const initialScrollY = await page.evaluate(() => window.scrollY);
+
+  await form.dispatchEvent("pointerdown", {
+    pointerId: 1,
+    pointerType: "mouse",
+    button: 0,
+    clientY: 300,
+  });
+  await form.dispatchEvent("pointermove", {
+    pointerId: 1,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+  await form.dispatchEvent("pointerup", {
+    pointerId: 1,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThanOrEqual(initialScrollY + 120);
+
+  const scrollBeforeInputDrag = await page.evaluate(() => window.scrollY);
+  const input = page.locator("input").first();
+  await input.dispatchEvent("pointerdown", {
+    pointerId: 2,
+    pointerType: "mouse",
+    button: 0,
+    clientY: 300,
+  });
+  await input.dispatchEvent("pointermove", {
+    pointerId: 2,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+  await input.dispatchEvent("pointerup", {
+    pointerId: 2,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+  expect(await page.evaluate(() => window.scrollY)).toBe(
+    scrollBeforeInputDrag,
+  );
 });
 
 test("loading demo data warns before replacing a modified form", async ({

@@ -81,7 +81,7 @@ test("section links update the URL and active location", async ({ page }) => {
   ).toBeInViewport();
 });
 
-test("desktop Review note stays pinned while the section list scrolls", async ({
+test("desktop Review note stays pinned while the section list follows form progress", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1100, height: 500 });
@@ -91,12 +91,16 @@ test("desktop Review note stays pinned while the section list scrolls", async ({
   const reviewNote = navigation.getByRole("button", { name: "Review note" });
   const sectionList = navigation.locator("[data-section-list]");
 
-  await page.evaluate(() => window.scrollTo(0, 1600));
-  const sectionListScrollTop = await sectionList.evaluate((list) => {
-    list.scrollTop = list.scrollHeight;
-    return list.scrollTop;
-  });
-  expect(sectionListScrollTop).toBeGreaterThan(0);
+  await page.evaluate(() =>
+    window.scrollTo(0, document.documentElement.scrollHeight),
+  );
+  await expect
+    .poll(() =>
+      sectionList.evaluate(
+        (list) => list.scrollHeight - list.clientHeight - list.scrollTop,
+      ),
+    )
+    .toBeLessThanOrEqual(1);
   await expect(reviewNote).toBeVisible();
   await expect(reviewNote).toBeInViewport();
 

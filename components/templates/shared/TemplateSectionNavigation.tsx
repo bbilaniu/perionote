@@ -80,6 +80,7 @@ export function TemplateSectionNavigation({
   const [showScrollCue, setShowScrollCue] = useState(false);
   const mobileDialogRef = useRef<HTMLDialogElement>(null);
   const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const desktopSectionListRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef(sections[0]?.id ?? "");
   const lastScrollRef = useRef({ position: 0, time: 0 });
   const cueTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -114,6 +115,37 @@ export function TemplateSectionNavigation({
       const atPageEnd =
         window.scrollY + window.innerHeight >=
         document.documentElement.scrollHeight - 2;
+      const sectionList = desktopSectionListRef.current;
+      if (sectionList) {
+        const firstSectionTop =
+          availableSections[0].getBoundingClientRect().top + currentPosition;
+        const lastSectionBottom =
+          availableSections[availableSections.length - 1]
+            .getBoundingClientRect()
+            .bottom + currentPosition;
+        const templateScrollStart = Math.max(
+          0,
+          firstSectionTop - activationLine,
+        );
+        const templateScrollEnd = Math.max(
+          templateScrollStart,
+          lastSectionBottom - window.innerHeight,
+        );
+        const templateProgress =
+          templateScrollEnd === templateScrollStart
+            ? Number(atPageEnd)
+            : Math.min(
+                1,
+                Math.max(
+                  0,
+                  (currentPosition - templateScrollStart) /
+                    (templateScrollEnd - templateScrollStart),
+                ),
+              );
+        const maximumListScroll =
+          sectionList.scrollHeight - sectionList.clientHeight;
+        sectionList.scrollTop = templateProgress * maximumListScroll;
+      }
       let nextActive = availableSections[0];
 
       if (atPageEnd) {
@@ -224,7 +256,7 @@ export function TemplateSectionNavigation({
         {onReviewNote ? (
           <button
             type="button"
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 xl:hidden dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
             aria-controls={noteDrawerId}
             aria-expanded={noteExpanded}
             data-review-note-trigger
@@ -236,14 +268,18 @@ export function TemplateSectionNavigation({
         <div
           className={
             onReviewNote
-              ? "mt-3 flex min-h-0 flex-1 flex-col border-t border-slate-200 pt-3 dark:border-slate-800"
+              ? "mt-3 flex min-h-0 flex-1 flex-col border-t border-slate-200 pt-3 xl:mt-0 xl:border-t-0 xl:pt-0 dark:border-slate-800"
               : "flex min-h-0 flex-1 flex-col"
           }
         >
           <p className="shrink-0 px-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             On this form
           </p>
-          <div className="mt-2 min-h-0 overflow-y-auto" data-section-list>
+          <div
+            ref={desktopSectionListRef}
+            className="template-section-scrollbar mt-2 min-h-0 overflow-y-auto"
+            data-section-list
+          >
             <SectionLinks
               sections={sections}
               activeId={activeId}

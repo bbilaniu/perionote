@@ -2,6 +2,37 @@ import { test, expect } from "@playwright/test";
 import packageInfo from "@/package.json";
 import { openGeneratedNote } from "./helpers/interactiveTemplate";
 
+test("homepage presents the primary clinical workflows", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(
+    page.getByRole("heading", { name: "Create and manage hygiene notes" }),
+  ).toBeVisible();
+  for (const linkName of [
+    "Clinical templates",
+    "Standalone forms",
+    "Saved drafts",
+    "Catalogues",
+  ]) {
+    await expect(
+      page.getByRole("main").getByRole("link", { name: new RegExp(linkName) }),
+    ).toBeVisible();
+  }
+  await expect(
+    page.getByRole("banner").getByRole("link", { name: "HygieneNote" }),
+  ).toHaveAttribute("href", "/");
+});
+
+test("primary navigation identifies the current area", async ({ page }) => {
+  await page.goto("/templates/clinic");
+
+  await expect(
+    page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { name: "Clinical templates" }),
+  ).toHaveAttribute("aria-current", "page");
+});
+
 test("template library index separates clinic and interactive templates", async ({
   page,
 }) => {

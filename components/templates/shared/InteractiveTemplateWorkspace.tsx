@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type FormEventHandler,
+  type PointerEventHandler,
   type ReactNode,
 } from "react";
 import type { TemplateSectionNavigationItem } from "@/lib/templates/sectionNavigation";
@@ -19,6 +20,44 @@ const destructiveButtonClass =
 
 export const interactiveTemplateClearFormWarning =
   "Clear this form and start a new note?\n\nThe previous local draft remains available for seven days.";
+
+const dragScrollExcludedSelector = [
+  "a",
+  "button",
+  "input",
+  "textarea",
+  "select",
+  "option",
+  "label",
+  "summary",
+  "img",
+  "svg",
+  "p",
+  "span",
+  "legend",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "li",
+  "dt",
+  "dd",
+  "pre",
+  "code",
+  "td",
+  "th",
+  "[contenteditable='true']",
+  "[data-drag-scroll-disabled]",
+  "[role='button']",
+  "[role='checkbox']",
+  "[role='link']",
+  "[role='option']",
+  "[role='radio']",
+].join(",");
+
+const dragScrollThreshold = 6;
 
 export function InteractiveTemplateWorkspace({
   presentation,
@@ -47,6 +86,12 @@ export function InteractiveTemplateWorkspace({
   const workspaceRef = useRef<HTMLFormElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const noteDrawerRef = useRef<HTMLElement>(null);
+  const dragScrollRef = useRef<{
+    pointerId: number;
+    startY: number;
+    startScrollY: number;
+    dragging: boolean;
+  } | null>(null);
   const baselineRevisionRef = useRef(formRevision);
   const pendingBaselineRef = useRef<{ kind: "demo" | "reset" } | null>(null);
 
@@ -141,12 +186,73 @@ export function InteractiveTemplateWorkspace({
     });
   };
 
+  const startDragScroll: PointerEventHandler<HTMLFormElement> = (event) => {
+    if (
+      event.pointerType !== "mouse" ||
+      event.button !== 0 ||
+      !(event.target instanceof Element) ||
+      event.target.closest(dragScrollExcludedSelector)
+    ) {
+      return;
+    }
+
+    dragScrollRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startScrollY: window.scrollY,
+      dragging: false,
+    };
+
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // The pointer may no longer be active by the time capture is requested.
+    }
+  };
+
+  const continueDragScroll: PointerEventHandler<HTMLFormElement> = (event) => {
+    const dragScroll = dragScrollRef.current;
+    if (!dragScroll || dragScroll.pointerId !== event.pointerId) return;
+
+    const deltaY = event.clientY - dragScroll.startY;
+    if (!dragScroll.dragging && Math.abs(deltaY) < dragScrollThreshold) return;
+
+    dragScroll.dragging = true;
+    event.currentTarget.dataset.dragScrolling = "true";
+    event.preventDefault();
+    window.scrollTo(0, dragScroll.startScrollY - deltaY);
+  };
+
+  const finishDragScroll: PointerEventHandler<HTMLFormElement> = (event) => {
+    const dragScroll = dragScrollRef.current;
+    if (!dragScroll || dragScroll.pointerId !== event.pointerId) return;
+
+    dragScrollRef.current = null;
+    delete event.currentTarget.dataset.dragScrolling;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const cancelDragScroll: PointerEventHandler<HTMLFormElement> = (event) => {
+    const dragScroll = dragScrollRef.current;
+    if (!dragScroll || dragScroll.pointerId !== event.pointerId) return;
+
+    dragScrollRef.current = null;
+    delete event.currentTarget.dataset.dragScrolling;
+  };
+
   return (
     <form
       ref={workspaceRef}
-      className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)]"
+      className="grid min-w-0 items-start gap-6 data-[drag-scrolling=true]:cursor-grabbing data-[drag-scrolling=true]:select-none xl:grid-cols-[minmax(0,1fr)_24rem] 2xl:grid-cols-[minmax(0,1fr)_minmax(30rem,0.8fr)]"
       autoComplete="off"
       onSubmit={submitForm}
+      onLostPointerCapture={cancelDragScroll}
+      onPointerCancel={cancelDragScroll}
+      onPointerDown={startDragScroll}
+      onPointerMove={continueDragScroll}
+      onPointerUp={finishDragScroll}
     >
       <div className="min-w-0 space-y-4">
         <InteractiveTemplateHeader
