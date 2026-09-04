@@ -9,6 +9,8 @@ test("theme listbox persists explicit choices and follows system changes", async
 
   const theme = page.getByRole("button", { name: "Theme" });
   await expect(theme).toHaveAttribute("data-value", "system");
+  await expect(theme).toContainText("Theme");
+  await expect(theme).toContainText("System");
   await expect(page.locator("select[aria-label='Theme']")).toHaveCount(0);
 
   await theme.click();

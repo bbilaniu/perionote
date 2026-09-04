@@ -9,7 +9,7 @@ test("homepage presents the primary clinical workflows", async ({ page }) => {
     page.getByRole("heading", { name: "Create and manage hygiene notes" }),
   ).toBeVisible();
   for (const linkName of [
-    "Clinical templates",
+    "Clinical forms",
     "Standalone forms",
     "Saved drafts",
     "Catalogues",
@@ -29,7 +29,15 @@ test("primary navigation identifies the current area", async ({ page }) => {
   await expect(
     page
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Clinical templates" }),
+      .getByRole("link", { name: "Clinical forms" }),
+  ).toHaveAttribute("aria-current", "page");
+
+  await page.goto("/catalogues");
+
+  await expect(
+    page
+      .getByRole("navigation", { name: "Primary navigation" })
+      .getByRole("link", { name: "Settings" }),
   ).toHaveAttribute("aria-current", "page");
 });
 
@@ -84,7 +92,7 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   await page.goto("/templates/clinic");
 
   await expect(
-    page.getByRole("heading", { name: "Clinical Templates" }),
+    page.getByRole("heading", { name: "Clinical Forms" }),
   ).toBeVisible();
   await expect(
     page
@@ -2046,7 +2054,7 @@ test("clinic template library follows the clinical menu and opens a template", a
   await page.goto("/templates/clinic");
 
   await expect(
-    page.getByRole("heading", { name: "Clinical Templates" }),
+    page.getByRole("heading", { name: "Clinical Forms" }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Hygiene", exact: true }),
