@@ -47,6 +47,35 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
+test("interactive workspace emphasizes copying over utility actions", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(adultHygieneUrl);
+
+  const copyNote = page.getByRole("button", { name: "Copy note" });
+  const loadDemo = page.getByRole("button", { name: "Load synthetic demo" });
+  const newOrClear = page.getByRole("button", { name: "New / clear form" });
+
+  await expect(copyNote).toHaveClass(/bg-sky-700/);
+  await expect(copyNote).toHaveClass(/min-h-11/);
+  await expect(newOrClear).toHaveClass(/border-slate-300/);
+  await expect(loadDemo).toHaveClass(/border-transparent/);
+  await expect(loadDemo).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+
+  const [copyBox, loadDemoBox, newOrClearBox] = await Promise.all([
+    copyNote.boundingBox(),
+    loadDemo.boundingBox(),
+    newOrClear.boundingBox(),
+  ]);
+  expect(copyBox).not.toBeNull();
+  expect(loadDemoBox).not.toBeNull();
+  expect(newOrClearBox).not.toBeNull();
+  expect(copyBox!.height).toBeGreaterThanOrEqual(44);
+  expect(loadDemoBox!.height).toBe(copyBox!.height);
+  expect(newOrClearBox!.height).toBe(copyBox!.height);
+});
+
 test("interactive forms keep navigation on the right with a persistent note preview", async ({
   page,
 }) => {

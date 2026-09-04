@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { formControlClass } from "@/components/forms/controlStyles";
 
 const buttonClass =
-  "rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60";
 
 export function GeneratedNotePanel({
   textareaId,
@@ -55,7 +55,7 @@ export function GeneratedNotePanel({
       <div className="mt-4 flex shrink-0 items-center gap-3">
         <button
           type="submit"
-          className={`${buttonClass} shrink-0 bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
+          className={`${buttonClass} shrink-0 bg-sky-700 text-white hover:bg-sky-800 dark:bg-sky-600 dark:hover:bg-sky-500`}
           disabled={copyDisabled}
         >
           {copyLabel}
