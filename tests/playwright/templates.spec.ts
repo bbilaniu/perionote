@@ -360,6 +360,37 @@ test("2026 Adult Hygiene uses its own route and draft storage", async ({
   ).toBe(false);
 });
 
+test("generated note keeps copy feedback beside its action", async ({
+  page,
+}) => {
+  await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+  await openGeneratedNote(page);
+
+  const preview = page.getByRole("complementary", {
+    name: "Generated note preview",
+  });
+  const copyButton = preview.getByRole("button", {
+    name: "Copy complete note",
+  });
+  const copyStatus = preview.getByRole("status");
+  const generatedPanel = copyButton.locator("xpath=ancestor::section[1]");
+  const [buttonBox, statusBox, panelBox] = await Promise.all([
+    copyButton.boundingBox(),
+    copyStatus.boundingBox(),
+    generatedPanel.boundingBox(),
+  ]);
+
+  expect(buttonBox).not.toBeNull();
+  expect(statusBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
+  expect(Math.abs(buttonBox!.y - statusBox!.y)).toBeLessThan(
+    buttonBox!.height,
+  );
+  expect(
+    panelBox!.y + panelBox!.height - (buttonBox!.y + buttonBox!.height),
+  ).toBeLessThanOrEqual(22);
+});
+
 test("2026 Adult Hygiene merges night guard into the occlusal splint control", async ({
   page,
 }) => {

@@ -47,22 +47,22 @@ export function GeneratedNotePanel({
         value={value}
         placeholder={placeholder}
       />
-      <div className="mt-4">
+      <div className="mt-4 flex items-center gap-3">
         <button
           type="submit"
-          className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
+          className={`${buttonClass} shrink-0 bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
           disabled={copyDisabled}
         >
           {copyLabel}
         </button>
+        <p
+          className="min-h-5 min-w-0 flex-1 text-sm text-slate-700 dark:text-slate-300"
+          role="status"
+          aria-live="polite"
+        >
+          {statusMessage}
+        </p>
       </div>
-      <p
-        className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-        role="status"
-        aria-live="polite"
-      >
-        {statusMessage}
-      </p>
     </section>
   );
 }
