@@ -38,7 +38,7 @@ const managementCards = [
     action: "Continue saved drafts",
   },
   {
-    href: "/catalogues",
+    href: "/settings",
     eyebrow: "Reusable content",
     title: "Catalogues",
     description:

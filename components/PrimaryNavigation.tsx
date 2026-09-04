@@ -22,7 +22,7 @@ const navigationItems = [
     compact: false,
     utility: false,
   },
-  { href: "/catalogues", label: "Settings", compact: false, utility: true },
+  { href: "/settings", label: "Settings", compact: false, utility: true },
 ] as const;
 
 export function PrimaryNavigation() {

@@ -32,13 +32,22 @@ test("primary navigation identifies the current area", async ({ page }) => {
       .getByRole("link", { name: "Clinical forms" }),
   ).toHaveAttribute("aria-current", "page");
 
-  await page.goto("/catalogues");
+  await page.goto("/settings");
 
   await expect(
     page
       .getByRole("navigation", { name: "Primary navigation" })
       .getByRole("link", { name: "Settings" }),
   ).toHaveAttribute("aria-current", "page");
+});
+
+test("legacy catalogues route forwards to settings", async ({ page }) => {
+  await page.goto("/catalogues");
+
+  await expect(page).toHaveURL(/\/settings\/?$/);
+  await expect(
+    page.getByRole("heading", { name: "Catalogues", exact: true }),
+  ).toBeVisible();
 });
 
 test("template library index separates clinic and interactive templates", async ({
