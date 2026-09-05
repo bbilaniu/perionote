@@ -1,16 +1,19 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname
-});
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
 const config = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextVitals,
+  ...nextTypescript,
+  {
+    // Next.js 16 adds these diagnostics to the recommended preset. Keep them
+    // visible while existing hydration and draft-lifecycle code is reviewed;
+    // the framework upgrade preserves the previous lint gate.
+    rules: {
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
+      "react-hooks/purity": "warn",
+    },
+  },
   {
     ignores: [
       ".next/**",

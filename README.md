@@ -78,11 +78,17 @@ Use the npm scripts instead of invoking `next dev` directly.
 Builds use a temporary source copy inside `.next-build/`, with the repository as
 the dependency-resolution root for both Webpack and Turbopack. The wrapper
 removes that copy afterward and replaces `out/` only after a successful export.
-Build flags are forwarded to Next.js; to opt into Turbopack on Next.js 15:
+Next.js 16 uses Turbopack for development and production builds by default.
+Build flags are forwarded to Next.js; to use Webpack for a build:
 
 ```bash
-npm run build -- --turbopack
+npm run build -- --webpack
 ```
+
+The Next.js 16 lint preset introduces additional React diagnostics. The
+`set-state-in-effect`, `refs`, and `purity` rules currently report warnings while
+existing storage hydration and draft-lifecycle patterns are reviewed. Existing
+Hooks ordering and dependency checks retain their prior enforcement.
 
 WebKit is an optional compatibility check:
 
