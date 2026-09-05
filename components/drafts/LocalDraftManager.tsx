@@ -10,6 +10,7 @@ import {
   type RefObject,
 } from "react";
 import { useRouter } from "next/navigation";
+import { ActionDialog } from "@/components/ActionDialog";
 import { selectInteractiveDraftForCurrentTab } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   filterDraftListMetadata,
@@ -71,6 +72,8 @@ const openButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-lg bg-sky-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-600 dark:hover:bg-sky-500 dark:focus-visible:ring-offset-slate-900";
 const deleteButtonClass =
   "inline-flex min-h-11 items-center justify-center rounded-lg border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950 dark:focus-visible:ring-offset-slate-900";
+const cancelButtonClass =
+  "inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:ring-offset-slate-900";
 
 function formattedDateTime(value: string): string {
   return dateTimeFormatter.format(new Date(value));
@@ -291,6 +294,9 @@ export function LocalDraftManager() {
   const [sortKey, setSortKey] = useState<DraftSortKey>("lastSavedAt");
   const [sortDirection, setSortDirection] =
     useState<SortDirection>("descending");
+  const [pendingDeleteDraft, setPendingDeleteDraft] =
+    useState<DraftListMetadata | null>(null);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const deleteButtonRefs = useRef<DeleteButtonRefs>({
@@ -298,6 +304,7 @@ export function LocalDraftManager() {
     mobile: new Map(),
   });
   const pendingFocusDraftId = useRef<string | null | undefined>(undefined);
+  const restoreDeleteAllDialogFocusRef = useRef(true);
 
   const normalizedDrafts = useMemo(
     () => drafts.map(normalizeDraftListMetadata),
@@ -375,12 +382,9 @@ export function LocalDraftManager() {
     }
   };
 
-  const deleteDraft = (draft: DraftListMetadata) => {
-    const templateLabel = isInteractiveDraftTemplateId(draft.templateId)
-      ? interactiveDraftTemplates[draft.templateId].label
-      : "unavailable template";
-    if (!window.confirm(`Delete the ${templateLabel} local draft?`)) return;
-
+  const confirmDeleteDraft = () => {
+    const draft = pendingDeleteDraft;
+    if (!draft) return;
     const rowIndex = visibleDrafts.findIndex(
       ({ draftId }) => draftId === draft.draftId,
     );
@@ -390,6 +394,7 @@ export function LocalDraftManager() {
       null;
 
     try {
+      setPendingDeleteDraft(null);
       setActionMessage("");
       deleteInteractiveDraft(window.localStorage, draft.templateId, draft.draftId);
       refreshDrafts();
@@ -401,17 +406,12 @@ export function LocalDraftManager() {
     }
   };
 
-  const deleteAllDrafts = () => {
-    const countLabel = `${drafts.length} ${drafts.length === 1 ? "draft" : "drafts"}`;
-    if (
-      !window.confirm(
-        `Delete all saved local drafts? This permanently removes all ${countLabel}—every HygieneNote recovery draft in this browser profile—and cannot be undone. Open interactive forms in other tabs may save a new draft again.`,
-      )
-    ) {
-      return;
-    }
+  const confirmDeleteAllDrafts = () => {
     try {
       const deletedCount = deleteAllInteractiveDrafts(window.localStorage);
+      pendingFocusDraftId.current = null;
+      restoreDeleteAllDialogFocusRef.current = false;
+      setDeleteAllDialogOpen(false);
       refreshDrafts();
       setActionMessage(
         deletedCount === 1
@@ -419,6 +419,7 @@ export function LocalDraftManager() {
           : `Deleted ${deletedCount} saved local drafts.`,
       );
     } catch {
+      setDeleteAllDialogOpen(false);
       setStorageError(
         "The saved drafts could not all be deleted. Clear this site's browser data to remove them.",
       );
@@ -599,7 +600,7 @@ export function LocalDraftManager() {
                     <td className="min-w-0 px-3 py-2 text-slate-700 dark:text-slate-300"><ProfessionalValue draft={draft} role="rda" /></td>
                     <td className="min-w-0 px-3 py-2 text-slate-700 dark:text-slate-300"><LastSavedValue draft={draft} /></td>
                     <td className="px-3 py-2">
-                      <DraftActions draft={draft} layout="desktop" refs={deleteButtonRefs} onOpen={openDraft} onDelete={deleteDraft} />
+                      <DraftActions draft={draft} layout="desktop" refs={deleteButtonRefs} onOpen={openDraft} onDelete={setPendingDeleteDraft} />
                     </td>
                   </tr>
                 ))}
@@ -642,7 +643,7 @@ export function LocalDraftManager() {
                     <p className="mt-2 text-xs text-amber-800 dark:text-amber-200">This app version cannot open the template that created this draft.</p>
                   ) : null}
                   <div className="mt-3">
-                    <DraftActions draft={draft} layout="mobile" refs={deleteButtonRefs} onOpen={openDraft} onDelete={deleteDraft} />
+                    <DraftActions draft={draft} layout="mobile" refs={deleteButtonRefs} onOpen={openDraft} onDelete={setPendingDeleteDraft} />
                   </div>
                 </li>
               );
@@ -661,12 +662,81 @@ export function LocalDraftManager() {
             type="button"
             className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-red-950"
             disabled={!drafts.length}
-            onClick={deleteAllDrafts}
+            onClick={() => {
+              restoreDeleteAllDialogFocusRef.current = true;
+              setDeleteAllDialogOpen(true);
+            }}
           >
             Delete all drafts
           </button>
         </div>
       </section>
+
+      <ActionDialog
+        open={Boolean(pendingDeleteDraft)}
+        title="Delete this saved draft?"
+        description={
+          <>
+            This permanently removes the local recovery draft
+            {pendingDeleteDraft?.patientId
+              ? " for patient ID " + pendingDeleteDraft.patientId
+              : ""}
+            . This cannot be undone.
+          </>
+        }
+        onDismiss={() => setPendingDeleteDraft(null)}
+      >
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className={cancelButtonClass}
+            data-dialog-initial-focus
+            onClick={() => setPendingDeleteDraft(null)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            onClick={confirmDeleteDraft}
+          >
+            Delete draft
+          </button>
+        </div>
+      </ActionDialog>
+
+      <ActionDialog
+        open={deleteAllDialogOpen}
+        title="Delete all saved drafts?"
+        description={
+          <>
+            This permanently removes all {drafts.length}{" "}
+            {drafts.length === 1 ? "draft" : "drafts"} from this browser
+            profile and cannot be undone. Interactive forms open in other tabs
+            may save a new draft again.
+          </>
+        }
+        onDismiss={() => setDeleteAllDialogOpen(false)}
+        restoreFocusOnClose={restoreDeleteAllDialogFocusRef.current}
+      >
+        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            className={cancelButtonClass}
+            data-dialog-initial-focus
+            onClick={() => setDeleteAllDialogOpen(false)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="inline-flex min-h-11 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            onClick={confirmDeleteAllDrafts}
+          >
+            Delete all drafts
+          </button>
+        </div>
+      </ActionDialog>
     </section>
   );
 }

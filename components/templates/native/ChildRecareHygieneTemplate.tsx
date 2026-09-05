@@ -15,11 +15,10 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
@@ -633,14 +632,12 @@ export function ChildRecareHygieneTemplate({
     );
   }
 
-  function resetForm() {
-    if (
-      !isEmptyForm(form) &&
-      !window.confirm(interactiveTemplateClearFormWarning)
-    ) {
-      return false;
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
     }
-    localDraft.beginNewDraft();
     setForm({
       ...createDefaultChildRecareHygieneForm(),
       dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
@@ -651,6 +648,7 @@ export function ChildRecareHygieneTemplate({
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
     return true;
   }
 
@@ -670,15 +668,17 @@ export function ChildRecareHygieneTemplate({
         setCopyMessage("Synthetic demo data loaded.");
       }}
       onReset={resetForm}
-      draftRecovery={
-        <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-        />
-      }
+      draftRecovery={{
+        templateId,
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
       generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="child-recare-summary"

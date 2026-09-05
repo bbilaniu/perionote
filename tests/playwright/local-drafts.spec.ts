@@ -1,5 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
-import { openGeneratedNote } from "./helpers/interactiveTemplate";
+import {
+  clearCurrentForm,
+  openGeneratedNote,
+  saveDraftAndStartNew,
+} from "./helpers/interactiveTemplate";
 import {
   INTERACTIVE_DRAFT_STORAGE_PREFIX,
   interactiveDraftStorageKey,
@@ -54,6 +58,15 @@ async function seedSyntheticDrafts(
   await page.evaluate((entries) => {
     for (const entry of entries) window.localStorage.setItem(entry.key, entry.value);
   }, values);
+}
+
+async function deleteDraftThroughDialog(page: Page, name: RegExp) {
+  await page.getByRole("button", { name }).click();
+  const dialog = page.getByRole("dialog", {
+    name: "Delete this saved draft?",
+  });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Delete draft", exact: true }).click();
 }
 
 test("Adult Hygiene autosaves after ten seconds and restores its tab after reload", async ({
@@ -154,8 +167,7 @@ test("restoring another draft first checkpoints the current form", async ({
   await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await saveDraftAndStartNew(page);
   await page.locator("#recare-patient-id").fill("Synthetic draft B unsaved");
   await page.locator("#recare-rdh").fill("Synthetic RDH B");
 
@@ -170,6 +182,186 @@ test("restoring another draft first checkpoints the current form", async ({
     "Synthetic draft B unsaved",
   );
   await expect(page.locator("#recare-rdh")).toHaveValue("Synthetic RDH B");
+});
+
+test("clearing the current form discards its saved recovery draft", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  await page
+    .locator("#adult-hygiene-patient-id")
+    .fill("Synthetic draft to discard");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await clearCurrentForm(page);
+
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
+  expect(
+    await page.evaluate(
+      (prefix) =>
+        Object.keys(window.localStorage).filter((key) => key.startsWith(prefix))
+          .length,
+      INTERACTIVE_DRAFT_STORAGE_PREFIX,
+    ),
+  ).toBe(0);
+});
+
+test("ultrawide workspace shows and opens current-form and other-form drafts", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 2560, height: 1000 },
+  });
+  const page = await context.newPage();
+
+  await page.goto(adultHygieneUrl);
+  await page
+    .locator("#adult-hygiene-patient-id")
+    .fill("Synthetic adult workfile");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic Adult RDH");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await page.goto(recareExamUrl);
+  await page.locator("#recare-patient-id").fill("Synthetic recare workfile");
+  await page.locator("#recare-rdh").fill("Synthetic Recare RDH");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+
+  await saveDraftAndStartNew(page);
+
+  const rail = page.getByRole("region", { name: "Local Drafts" });
+  await expect(rail).toBeVisible();
+  await expect(rail.getByText("Current", { exact: true })).toBeVisible();
+  await expect(rail.getByText("Current", { exact: true })).toHaveCSS(
+    "text-transform",
+    "uppercase",
+  );
+  await expect(rail.getByText("Synthetic recare workfile")).toBeVisible();
+  await expect(rail.getByText("Synthetic adult workfile")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Local draft recovery" })
+      .getByText(/other local draft for this template/),
+  ).toBeHidden();
+
+  const generatedNote = page
+    .getByRole("heading", { name: "Generated Note", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  const [generatedNoteBox, railBox] = await Promise.all([
+    generatedNote.boundingBox(),
+    rail.boundingBox(),
+  ]);
+  expect(generatedNoteBox).not.toBeNull();
+  expect(railBox).not.toBeNull();
+  expect(Math.abs(generatedNoteBox!.height - railBox!.height)).toBeLessThanOrEqual(
+    1,
+  );
+  await expect(generatedNote.locator("textarea")).toHaveClass(
+    /workspace-scrollbar/,
+  );
+
+  await rail
+    .getByRole("button", {
+      name: "Open draft for Synthetic recare workfile",
+    })
+    .click();
+  await expect(page.locator("#recare-patient-id")).toHaveValue(
+    "Synthetic recare workfile",
+  );
+
+  await rail
+    .getByRole("button", {
+      name: /Open 2021 Adult Hygiene draft for Synthetic adult workfile/,
+    })
+    .click();
+  await expect(page).toHaveURL(new RegExp(adultHygieneUrl + "/?$"));
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue(
+    "Synthetic adult workfile",
+  );
+
+  await page.setViewportSize({ width: 2560, height: 700 });
+  await expect(rail).toBeVisible();
+  await expect(
+    rail.getByRole("heading", { name: "Other forms" }),
+  ).toBeHidden();
+
+  await context.close();
+});
+
+test("ultrawide draft rail keeps its footer visible while long draft lists scroll", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 2560, height: 800 },
+  });
+  const page = await context.newPage();
+
+  await page.goto(recareExamUrl);
+  await seedSyntheticDrafts(
+    page,
+    Array.from({ length: 10 }, (_, index) => ({
+      draftId: `adult-overflow-${index + 1}`,
+      patientId: `Synthetic adult workfile ${index + 1}`,
+      rdh: "Synthetic Adult RDH",
+      savedOffsetMinutes: index + 1,
+    })),
+  );
+  await page.reload();
+
+  const rail = page.getByRole("region", { name: "Local Drafts" });
+  const draftLists = rail.getByRole("region", {
+    name: "Saved draft lists",
+  });
+  const viewAllDrafts = rail.getByRole("link", {
+    name: "View all saved drafts (10)",
+  });
+
+  await expect(rail).toBeVisible();
+  await expect(viewAllDrafts).toBeInViewport();
+  await expect
+    .poll(async () => {
+      const box = await viewAllDrafts.boundingBox();
+      return box ? box.y + box.height : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThanOrEqual(784);
+  await expect
+    .poll(() =>
+      draftLists.evaluate(
+        (element) => element.scrollHeight > element.clientHeight,
+      ),
+    )
+    .toBe(true);
+
+  await draftLists.evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(
+    rail.getByRole("button", {
+      name: "Open 2021 Adult Hygiene draft for Synthetic adult workfile 10",
+    }),
+  ).toBeInViewport();
+  await expect(viewAllDrafts).toBeInViewport();
+
+  await context.close();
+});
+
+test("draft rail stays out of the standard desktop workspace", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 2000, height: 1000 });
+  await page.goto(recareExamUrl);
+
+  await expect(
+    page.getByRole("region", { name: "Local Drafts" }),
+  ).toBeHidden();
+  await expect(
+    page
+      .getByRole("region", { name: "Local draft recovery" })
+      .getByRole("link", { name: "View all saved drafts" }),
+  ).toBeVisible();
 });
 
 test("Recare copy saves independent drafts for multiple open tabs", async ({
@@ -238,13 +430,7 @@ test("saved drafts page identifies, opens, and deletes a local draft", async ({
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
 
-  page.once("dialog", (dialog) => {
-    expect(dialog.message()).toContain(
-      "previous local draft remains available for seven days",
-    );
-    return dialog.accept();
-  });
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await saveDraftAndStartNew(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-dentist")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-rda")).toHaveValue("");
@@ -293,12 +479,13 @@ test("saved drafts page identifies, opens, and deletes a local draft", async ({
 
   await page.goto("/drafts");
   await page.getByRole("searchbox", { name: "Search saved drafts" }).fill("private draft patient");
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: /Delete draft:.*Synthetic private draft patient/ }).click();
+  await deleteDraftThroughDialog(
+    page,
+    /Delete draft:.*Synthetic private draft patient/,
+  );
   await expect(page.getByRole("heading", { name: "No saved drafts match your search." })).toBeVisible();
   await page.getByRole("button", { name: "Clear search" }).last().click();
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: /Delete draft:.*ZZZ-DECOY/ }).click();
+  await deleteDraftThroughDialog(page, /Delete draft:.*ZZZ-DECOY/);
   await expect(
     page.getByRole("heading", { name: "No saved drafts" }),
   ).toBeVisible();
@@ -315,8 +502,7 @@ test("saved drafts page warns separately before deleting all drafts", async ({
   await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
 
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Clear form" }).click();
+  await saveDraftAndStartNew(page);
   await page.locator("#adult-hygiene-patient-id").fill("Synthetic draft two");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH two");
   await openGeneratedNote(page);
@@ -328,19 +514,28 @@ test("saved drafts page warns separately before deleting all drafts", async ({
     page.getByText(/permanently removes every local recovery draft/),
   ).toBeVisible();
 
-  page.once("dialog", (dialog) => {
-    expect(dialog.message()).toContain("cannot be undone");
-    expect(dialog.message()).toContain("other tabs may save a new draft again");
-    expect(dialog.message()).toContain("all 2 drafts");
-    return dialog.accept();
-  });
   await page.getByRole("searchbox", { name: "Search saved drafts" }).fill("one");
   await expect(page.getByText("1 of 2 drafts")).toBeVisible();
   await page.getByRole("button", { name: "Delete all drafts" }).click();
+  const deleteAllDialog = page.getByRole("dialog", {
+    name: "Delete all saved drafts?",
+  });
+  await expect(deleteAllDialog).toContainText(
+    "permanently removes all 2 drafts",
+  );
+  await expect(deleteAllDialog).toContainText(
+    "Interactive forms open in other tabs may save a new draft again.",
+  );
+  await deleteAllDialog
+    .getByRole("button", { name: "Delete all drafts" })
+    .click();
   await expect(page.getByText("Deleted 2 saved local drafts.")).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "No saved drafts" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Saved local drafts" }),
+  ).toBeFocused();
 });
 
 test("saved drafts search and sorting keep stable actions attached to the correct draft", async ({
@@ -404,8 +599,7 @@ test("saved drafts search and sorting keep stable actions attached to the correc
     })),
   ).toEqual({ local: false, session: false });
 
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: /Delete draft:.*00123-A/ }).click();
+  await deleteDraftThroughDialog(page, /Delete draft:.*00123-A/);
   const noMatchHeading = page.getByRole("heading", { name: "No saved drafts match your search." });
   await expect(noMatchHeading).toBeVisible();
   await expect(page.getByRole("heading", { name: "Saved local drafts" })).toBeFocused();
@@ -418,8 +612,7 @@ test("saved drafts search and sorting keep stable actions attached to the correc
   await expect(page.getByText("Must not be inferred")).toHaveCount(0);
   const legacyRow = table.getByRole("row").filter({ hasText: "LEGACY-9" });
   await expect(legacyRow.getByText("—", { exact: true })).toHaveCount(3);
-  page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: /Delete draft:.*LEGACY-9/ }).click();
+  await deleteDraftThroughDialog(page, /Delete draft:.*LEGACY-9/);
   await expect(page.getByRole("button", { name: /Delete draft:.*A-10/ })).toBeFocused();
 });
 

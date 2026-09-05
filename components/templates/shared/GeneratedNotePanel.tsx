@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { formControlClass } from "@/components/forms/controlStyles";
 
 const buttonClass =
-  "rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex min-h-11 items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60";
 
 export function GeneratedNotePanel({
   textareaId,
@@ -28,9 +28,14 @@ export function GeneratedNotePanel({
   headerAction?: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm xl:flex xl:h-[calc(100dvh-11rem)] xl:min-h-0 xl:flex-col dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">Generated Note</h2>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-sky-800 dark:text-sky-300">
+            Live preview
+          </p>
+          <h2 className="mt-1 text-lg font-semibold">Generated Note</h2>
+        </div>
         {headerAction}
       </div>
       <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
@@ -42,15 +47,15 @@ export function GeneratedNotePanel({
       </label>
       <textarea
         id={textareaId}
-        className={`mt-4 min-h-[34rem] resize-y py-2 font-mono leading-6 ${formControlClass()}`}
+        className={`workspace-scrollbar mt-4 min-h-[34rem] resize-y py-2 font-mono leading-6 xl:min-h-0 xl:flex-1 xl:resize-none ${formControlClass()}`}
         readOnly
         value={value}
         placeholder={placeholder}
       />
-      <div className="mt-4 flex items-center gap-3">
+      <div className="mt-4 flex shrink-0 items-center gap-3">
         <button
           type="submit"
-          className={`${buttonClass} shrink-0 bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
+          className={`${buttonClass} shrink-0 bg-sky-700 text-white hover:bg-sky-800 dark:bg-sky-600 dark:hover:bg-sky-500`}
           disabled={copyDisabled}
         >
           {copyLabel}

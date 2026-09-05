@@ -26,10 +26,10 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
 import {
-  interactiveTemplateClearFormWarning,
+  interactiveTemplateUnloadWarning,
   InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
@@ -180,7 +180,6 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning = interactiveTemplateClearFormWarning;
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
@@ -3006,7 +3005,7 @@ export function AdultHygiene2021Template({
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adultHygieneDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -3140,15 +3139,18 @@ export function AdultHygiene2021Template({
     setCopyMessage("Synthetic demo data loaded.");
   }
 
-  function resetForm() {
-    if (!window.confirm(adultHygieneDiscardWarning)) return false;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
+    }
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
     return true;
   }
 
@@ -3192,15 +3194,17 @@ export function AdultHygiene2021Template({
       }}
       onLoadDemo={loadDemo}
       onReset={resetForm}
-      draftRecovery={
-        <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-        />
-      }
+      draftRecovery={{
+        templateId: "adult-hygiene-2021",
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
       generatedNote={(headerAction) => (
         <GeneratedNotePanel
           textareaId="adult-hygiene-summary"
