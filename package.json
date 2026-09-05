@@ -5,6 +5,9 @@
   "engines": {
     "node": ">=24 <25"
   },
+  "volta": {
+    "node": "24.18.0"
+  },
   "scripts": {
     "dev": "node scripts/run-next.mjs dev .next-dev",
     "dev:e2e": "node scripts/run-next.mjs dev .next-playwright --port 3100",
