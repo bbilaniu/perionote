@@ -1,3 +1,4 @@
+import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { ChildRecareHygieneForm } from "@/lib/templates/childRecareHygiene";
 import {
   createEmptyCambra123SixAdultAssessment,
@@ -5,6 +6,7 @@ import {
 } from "@/lib/templates/cambra123";
 
 export const childRecareHygieneFixture: ChildRecareHygieneForm = {
+  ...createEmptyOralHygieneMethods(),
   patientId: "TEST-CHILD-1001",
   dentist: "Dr. Example",
   rda: "Example RDA",

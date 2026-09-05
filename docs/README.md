@@ -23,6 +23,8 @@ to reproduce an older implementation.
 - [Adolescent Hygiene interactive mapping](specs/adolescent-hygiene-interactive-template-mapping.md)
 - [Adult Hygiene 2021 interactive mapping](specs/adult-hygiene-2021-interactive-template-mapping.md)
 - [Adult Hygiene 2026 unified encounter](specs/adult-hygiene-2026-unified-encounter.md)
+- [Oral hygiene methods used at home](specs/oral-hygiene-methods.md)
+- [Rapid Entry v1 and chairside usability checklist](specs/rapid-entry-v1.md)
 - [Periodontal classification decision table](specs/periodontal-classification-decision-table.md)
 - [Recare Exam interactive mapping](specs/recare-exam-interactive-template-mapping.md)
 

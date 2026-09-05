@@ -1,5 +1,7 @@
 "use client";
 
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useId,
@@ -92,6 +94,7 @@ const treatmentRowRemoveButtonClass =
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
 const recareDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   radiographs: "",
   chiefConcern: "",
   structuredExtraoralFindings: {
@@ -149,6 +152,7 @@ const recareExamSections = createTemplateSectionNavigation([
   "Consent, Medical History, and Sterilization",
   "Records and Chief Concern",
   "Clinical Exam",
+  "Oral Hygiene",
   "Occlusion & Habits",
   "Appliances and Relevant History",
   "Odontogram",
@@ -2712,6 +2716,10 @@ export function RecareExamTemplate({
                 if (values.length) updateField("intraoralStatus", "findings");
               }}
             />
+          </Section>
+
+          <Section title="Oral Hygiene">
+            <OralHygieneMethodsControl value={form} onChange={updateField} />
           </Section>
 
           <Section title="Occlusion & Habits">

@@ -1,6 +1,8 @@
+import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { AdolescentHygieneForm } from "@/lib/templates/adolescentHygiene";
 
 export const adolescentHygieneFixture: AdolescentHygieneForm = {
+  ...createEmptyOralHygieneMethods(),
   patientId: "TEST-ADOLESCENT-001",
   dentist: "Dr. Example",
   rdh: "Example RDH",

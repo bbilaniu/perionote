@@ -109,6 +109,9 @@ Caries Detected : YES/NO
 
 • Intraoral Images- YES/NO
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 • OHI Reviewed
 Flossing Technique:
 Brushing Technique:
@@ -155,6 +158,9 @@ Miele Sterilization Codes Scanned:
 • Calculus- NO/YES  (If yes where- )
 
 • Intraoral Images- YES/NO
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 • OHI Reviewed
 Flossing Technique:
@@ -216,6 +222,9 @@ HYGIENE
 Hygiene area of concern
 Plaque, stain, calculus, and bleeding
 Periodontal and gingival assessment
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 Oral hygiene education and goals
 Treatment completed and local anesthesia
 Information relayed to parent or legal guardian
@@ -264,6 +273,9 @@ Health/Gingivitis: [SELECT/INSERT: HEALTH]
 
 Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
 Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -356,6 +368,9 @@ Health/Gingivitis: [SELECT/INSERT: HEALTH]
 Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
 Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
 OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]
@@ -443,6 +458,9 @@ Do they wear Retainers? Fixed or removable?
 
 EOE/IOE:
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 Gingival Assessment:`,
   },
   {
@@ -467,6 +485,9 @@ Health/Gingivitis: [SELECT/INSERT: HEALTH]
 
 Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
 Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -555,6 +576,9 @@ Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
 Do they have Partial Dentures
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 is there anything they would like to improve with their smile/teeth?
 
 Additional Comments-
@@ -600,6 +624,9 @@ PSR Max/Man:
 Plaque (none)(light)(moderate)(heavy) in 03, 04, 05, 06, 07, 08
 Stain (none)(light)(moderate)(heavy) in 03, 04, 05, 06, 07, 08
 Calculus (none)(light)(moderate)(heavy) in 03, 04, 05, 06, 07, 08
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 Oral Hygiene (Excellent)(V.Good)(Good)(fair)(poor)
 Compliance (Excellent)(V.Good)(Good)(fair)(poor)

@@ -1,7 +1,9 @@
+import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { AdultHygiene2026Form } from "@/lib/templates/adultHygiene2026";
 import { createEmptyCambra123SixAdultAssessment } from "@/lib/templates/cambra123";
 
 export const adultHygiene2026Fixture: AdultHygiene2026Form = {
+  ...createEmptyOralHygieneMethods(),
   patientId: "TEST-AH-1001",
   noteLastRecallDate: "2026-01-15",
   dentist: "Dr. Example",

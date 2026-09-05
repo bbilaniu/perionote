@@ -1,3 +1,7 @@
+import {
+  createEmptyOralHygieneMethods,
+  type OralHygieneMethods,
+} from "@/lib/templates/oralHygieneMethods";
 import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
 import {
   createEmptyLocalAnesthesiaValue,
@@ -18,7 +22,7 @@ export type ChildOcclusionAssessment =
   | "molar-classification";
 export type ChildCambra123Instrument = "" | "0-6" | "6-adult";
 
-export interface ChildRecareHygieneForm {
+export interface ChildRecareHygieneForm extends OralHygieneMethods {
   patientId: string;
   dentist: string;
   rda: string;
@@ -91,6 +95,7 @@ export interface ChildRecareHygieneForm {
 export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
   const localAnesthesia = createEmptyLocalAnesthesiaValue();
   return {
+    ...createEmptyOralHygieneMethods(),
     patientId: "",
     dentist: "",
     rda: "",

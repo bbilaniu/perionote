@@ -1,3 +1,4 @@
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import {
   type AdultHygiene2026Output,
   type AdultHygiene2026Form,
@@ -1021,6 +1022,7 @@ export function buildAdultHygiene2026Summary(
         ]
       : []),
     cariesRisk,
+    formatOralHygieneMethods(form),
     ...(includesHygiene ? [oralHygieneAndEducation] : []),
     dentalTreatmentOptions,
     hygieneTreatmentOptions,
