@@ -78,6 +78,7 @@ export function InteractiveTemplateWorkspace({
   onLoadDemo,
   onReset,
   compactNavigation = false,
+  footerAction,
 }: {
   presentation: TemplatePresentation;
   sections: readonly TemplateSectionNavigationItem[];
@@ -89,6 +90,7 @@ export function InteractiveTemplateWorkspace({
   onLoadDemo: () => void;
   onReset: (mode: InteractiveTemplateResetMode) => boolean;
   compactNavigation?: boolean;
+  footerAction?: ReactNode;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
@@ -341,7 +343,7 @@ export function InteractiveTemplateWorkspace({
 
           <div className="min-w-0 max-w-full space-y-6">
             {children}
-            <ReturnToTopLink />
+            <ReturnToTopLink leadingAction={footerAction} />
           </div>
         </div>
       </div>

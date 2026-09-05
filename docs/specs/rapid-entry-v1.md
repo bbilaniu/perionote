@@ -19,6 +19,12 @@ periodontal classification, radiographs, education, and completed-care controls
 retain their existing handlers. Rapid presentation options on shared controls
 leave the other templates' behavior unchanged. The existing section navigator
 uses a horizontal layout in Rapid Entry to leave more width for clinical choices.
+Gingival option groups and periodontal diagnosis, extent, stage, grade, and
+status groups each use the full available width. Options wrap as needed, with
+override reasons and comments underneath their corresponding group. Structured
+measurements remain expandable. Detailed retains its two-column layout.
+The final Open Detailed action shares the bottom navigation row with Return to
+top, wrapping on narrow screens.
 Caries Risk Assessment uses the same flat presentation as other primary Rapid
 sections. Treatment completed today retains its shared card.
 

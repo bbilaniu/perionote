@@ -433,6 +433,44 @@ for (const width of [1600, 390]) {
     ).not.toBeVisible();
     await expect(group(page, "Periodontitis stage")).toBeVisible();
     await expect(group(page, "Periodontitis grade")).toBeVisible();
+    const periodontalSection = rapid.getByRole("region", {
+      name: "Gingiva and Periodontal Assessment",
+      exact: true,
+    });
+    const sectionWidth = (await periodontalSection.boundingBox())!.width;
+    for (const label of [
+      "Periodontal diagnosis category",
+      "Periodontitis extent/distribution",
+      "Periodontitis stage",
+      "Periodontitis grade",
+      "Current periodontal status",
+    ]) {
+      expect(
+        (await group(page, label).boundingBox())!.width,
+      ).toBeGreaterThanOrEqual(sectionWidth - 2);
+    }
+    await choose(page, "Periodontitis grade", "Grade C: rapid rate");
+    const overrideReason = rapid.getByRole("textbox", {
+      name: "Grade override reason",
+      exact: true,
+    });
+    await overrideReason.fill("Synthetic documented rationale");
+    const gradeBox = (await group(page, "Periodontitis grade").boundingBox())!;
+    expect((await overrideReason.boundingBox())!.y).toBeGreaterThan(
+      gradeBox.y + gradeBox.height,
+    );
+    const statusBox = (await group(
+      page,
+      "Current periodontal status",
+    ).boundingBox())!;
+    expect(
+      (await rapid
+        .getByRole("textbox", {
+          name: "Periodontal status comment",
+          exact: true,
+        })
+        .boundingBox())!.y,
+    ).toBeGreaterThan(statusBox.y + statusBox.height);
     await rapid
       .getByRole("region", {
         name: "Periodontitis classification",
@@ -535,6 +573,38 @@ for (const width of [1600, 390]) {
     await expect(summary).not.toHaveValue(
       /Final clinician caries-risk category: High\.|SYNTHETIC-STERI-002|Dyclonine 1% rinse/,
     );
+    const openDetailed = page.getByRole("button", {
+      name: "Open Detailed for additional findings and follow-up",
+      exact: true,
+    });
+    const returnToTop = page.getByRole("link", {
+      name: "Return to top",
+      exact: true,
+    });
+    await openDetailed.scrollIntoViewIfNeeded();
+    if (width >= 1280) {
+      const detailBox = (await openDetailed.boundingBox())!;
+      const topBox = (await returnToTop.boundingBox())!;
+      expect(Math.abs(detailBox.y - topBox.y)).toBeLessThanOrEqual(1);
+      expect(topBox.x).toBeGreaterThan(detailBox.x + detailBox.width);
+    }
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
+    await returnToTop
+      .locator("..")
+      .screenshot({ path: testInfo.outputPath(`rapid-footer-${width}.png`) });
+    await returnToTop.click();
+    await expect(page.locator("#template-top")).toBeFocused();
+    const noteBeforeSwitch = await summary.inputValue();
+    await openDetailed.click();
+    await expect(
+      page.getByRole("radio", { name: "Detailed", exact: true }),
+    ).toBeChecked();
+    await expect(page.locator("#adult-hygiene-entry-mode")).toBeInViewport();
+    await expect(summary).toHaveValue(noteBeforeSwitch);
   });
 }
 

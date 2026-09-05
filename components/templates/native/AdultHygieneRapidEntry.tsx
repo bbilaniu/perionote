@@ -541,9 +541,6 @@ export function AdultHygieneRapidEntry({
           value={form.additionalNotes}
           onChange={(value) => onChange("additionalNotes", value)}
         />
-        <button type="button" className={rapidActionClass} onClick={onDetailed}>
-          Open Detailed for additional findings and follow-up
-        </button>
       </Section>
     </div>
   );

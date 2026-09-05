@@ -1584,6 +1584,9 @@ export function PeriodontalClassificationControl({
   }
 
   const ClassificationChoice = rapid ? RapidChoice : FixedChoiceListbox;
+  const classificationLayoutClass = rapid
+    ? "grid gap-3"
+    : "grid gap-3 md:grid-cols-2";
   const diagnosisControls = (
     <section
       className="space-y-3"
@@ -1592,7 +1595,7 @@ export function PeriodontalClassificationControl({
       <h3 id="periodontal-diagnosis-heading" className="font-semibold">
         Diagnosis and distribution
       </h3>
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className={classificationLayoutClass}>
         <ClassificationChoice
           id="adult-hygiene-periodontal-diagnosis"
           label="Periodontal diagnosis category"
@@ -1646,7 +1649,7 @@ export function PeriodontalClassificationControl({
               <legend className="font-semibold">
                 Periodontal assessment findings
               </legend>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className={classificationLayoutClass}>
                 <GingivalCandidateFieldTarget
                   id="bop-percentage"
                   activeId={highlightedMissingField}
@@ -1777,7 +1780,7 @@ export function PeriodontalClassificationControl({
               {stageEvidenceGroups.map(({ value: group, label }) => (
                 <div key={group} className={evidenceSectionClass}>
                   <h3 className={evidenceSectionHeadingClass}>{label}</h3>
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className={classificationLayoutClass}>
                     {group === "complexity" ? (
                       <>
                         <label className="block text-sm font-medium">
@@ -1980,7 +1983,7 @@ export function PeriodontalClassificationControl({
                 <h3 className={evidenceSectionHeadingClass}>
                   Progression evidence
                 </h3>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   {periodontalGradeCriterionCatalogue
                     .filter((criterion) => criterion.input === "measurement")
                     .map((criterion) => (
@@ -2024,7 +2027,7 @@ export function PeriodontalClassificationControl({
 
               <div className={evidenceSectionClass}>
                 <h3 className={evidenceSectionHeadingClass}>Grade modifiers</h3>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   <div>
                     <ClassificationChoice
                       id="adult-hygiene-smoking-modifier"
@@ -2289,7 +2292,7 @@ export function PeriodontalClassificationControl({
               </div>
 
               <div className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   <ClassificationChoice
                     id="adult-hygiene-periodontitis-stage"
                     label="Periodontitis stage"
@@ -2315,7 +2318,7 @@ export function PeriodontalClassificationControl({
                     />
                   ) : null}
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   <ClassificationChoice
                     id="adult-hygiene-periodontitis-grade"
                     label="Periodontitis grade"
@@ -2414,7 +2417,7 @@ export function PeriodontalClassificationControl({
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   <ClassificationChoice
                     id="adult-hygiene-health-gingivitis-context"
                     label={gingivalContextLabel}
@@ -2479,7 +2482,7 @@ export function PeriodontalClassificationControl({
               ) : null}
 
               {isPeriodontitisDiagnosis ? (
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   <ClassificationChoice
                     id="adult-hygiene-periodontal-status"
                     label="Current periodontal status"
@@ -2700,7 +2703,7 @@ function GingivalDescriptionControl({
           </p>
         ) : null}
         {assessment.status === "findings" ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4">
             {gingivalDescriptionCatalog.dimensions.flatMap((dimension) => {
               const groups: readonly GingivalChoiceGroupDefinition[] =
                 gingivalChoiceGroupDefinitions[
@@ -3210,6 +3213,13 @@ export function AdultHygiene2026Template({
   function changeEntryMode(mode: EntryMode) {
     setEntryMode(mode);
     try { window.localStorage.setItem(rapidEntryPreferenceKey, mode); } catch { /* Optional UI preference. */ }
+  }
+
+  function openDetailedEntry() {
+    changeEntryMode("detailed");
+    requestAnimationFrame(() =>
+      document.getElementById("adult-hygiene-entry-mode")?.scrollIntoView({ block: "start" }),
+    );
   }
 
   function updateRapidEntryField<K extends keyof AdultHygiene2026Form>(key: K, value: AdultHygiene2026Form[K]) {
@@ -4252,6 +4262,11 @@ export function AdultHygiene2026Template({
   return (
     <InteractiveTemplateWorkspace
       compactNavigation={rapid}
+      footerAction={rapid ? (
+        <button type="button" className={rapidActionClass} onClick={openDetailedEntry}>
+          Open Detailed for additional findings and follow-up
+        </button>
+      ) : undefined}
       presentation={presentation}
       sections={rapid ? rapidEntrySections : templateSections}
       formRevision={JSON.stringify(form)}
@@ -4320,7 +4335,7 @@ export function AdultHygiene2026Template({
         gingivalControls={<GingivalDescriptionControl rapid value={form.gingivalDescription} onChange={(value) => updateField("gingivalDescription", value)} />}
         periodontalControls={<PeriodontalClassificationControl rapid value={form.periodontalClassification} onChange={(value) => updateField("periodontalClassification", value)} />}
         onExtraoralStatusChange={changeExtraoralStatus} onIntraoralStatusChange={changeIntraoralStatus}
-        onDetailed={() => { changeEntryMode("detailed"); requestAnimationFrame(() => document.getElementById("adult-hygiene-entry-mode")?.scrollIntoView({ block: "start" })); }}
+        onDetailed={openDetailedEntry}
       /> : <>
 
           <Section title="Patient and Visit Context">
