@@ -1,5 +1,23 @@
 # hygienenote
 
+## 1.0.0
+
+### Major Changes
+
+- 6aa6e04: Add Rapid Entry to 2026 Adult Hygiene with direct clinical selections, shared Detailed state and drafts, and the existing Complete, Hygiene and Recare outputs. Expose periodontal diagnosis and distribution before any findings are entered, classification controls for the selected diagnosis with expandable measurements, sterilization codes, vitals readings, caries-risk category radios, and the Dyclonine rinse action directly. Arrange brushing and flossing in separate full-width rows and use a flat Caries Risk Assessment section in Rapid Entry. Include conditional detail controls, keyboard support, and a chairside usability checklist.
+
+### Minor Changes
+
+- 6aa6e04: Add multiselect toothbrush and flossing type questions to every interactive form and hygiene/recare source template. Preserve selections in clinical drafts, support older drafts, and include patient-reported methods in every note projection without changing education or treatment selections.
+
+### Patch Changes
+
+- 4e2f4cd: Add a keyboard-accessible Return to top link at the bottom of every template and make the compact Review note buttons blue.
+- a354138: Place Rapid Entry's Open Detailed action alongside Return to top in the bottom navigation row, with responsive wrapping on narrow screens.
+- e9b2a9e: Keep the active Rapid Entry section visible in the horizontal navigation strip when scrolling down or back up through the form.
+- a354138: Use full-width rows for gingival and periodontal option groups in Rapid Entry, with override reasons and comments below their associated choices. Preserve expandable measurements and the Detailed-mode layout.
+- 741e28c: Create a protected archive branch from each published release tag so Cloudflare can build historical version previews.
+
 ## 0.15.0
 
 ### Minor Changes
