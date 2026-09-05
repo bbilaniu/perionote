@@ -75,6 +75,15 @@ npx playwright install chromium
 directories so they can run without corrupting one another's generated files.
 Use the npm scripts instead of invoking `next dev` directly.
 
+Builds use a temporary source copy inside `.next-build/`, with the repository as
+the dependency-resolution root for both Webpack and Turbopack. The wrapper
+removes that copy afterward and replaces `out/` only after a successful export.
+Build flags are forwarded to Next.js; to opt into Turbopack on Next.js 15:
+
+```bash
+npm run build -- --turbopack
+```
+
 WebKit is an optional compatibility check:
 
 ```bash
