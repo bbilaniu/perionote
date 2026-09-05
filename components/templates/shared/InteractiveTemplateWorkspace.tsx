@@ -164,7 +164,9 @@ export function InteractiveTemplateWorkspace({
     const resetSucceeded = onReset(mode);
     if (!resetSucceeded) {
       setResetError(
-        "The current form could not be saved, so it was not cleared. Copy the note before trying again.",
+        mode === "new"
+          ? "The current form could not be saved, so it was not cleared. Copy the note before trying again."
+          : "The current draft could not be discarded, so the form was not cleared. Copy the note before trying again.",
       );
       return;
     }

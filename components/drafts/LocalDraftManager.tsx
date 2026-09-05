@@ -304,6 +304,7 @@ export function LocalDraftManager() {
     mobile: new Map(),
   });
   const pendingFocusDraftId = useRef<string | null | undefined>(undefined);
+  const restoreDeleteAllDialogFocusRef = useRef(true);
 
   const normalizedDrafts = useMemo(
     () => drafts.map(normalizeDraftListMetadata),
@@ -407,8 +408,10 @@ export function LocalDraftManager() {
 
   const confirmDeleteAllDrafts = () => {
     try {
-      setDeleteAllDialogOpen(false);
       const deletedCount = deleteAllInteractiveDrafts(window.localStorage);
+      pendingFocusDraftId.current = null;
+      restoreDeleteAllDialogFocusRef.current = false;
+      setDeleteAllDialogOpen(false);
       refreshDrafts();
       setActionMessage(
         deletedCount === 1
@@ -416,6 +419,7 @@ export function LocalDraftManager() {
           : `Deleted ${deletedCount} saved local drafts.`,
       );
     } catch {
+      setDeleteAllDialogOpen(false);
       setStorageError(
         "The saved drafts could not all be deleted. Clear this site's browser data to remove them.",
       );
@@ -658,7 +662,10 @@ export function LocalDraftManager() {
             type="button"
             className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-red-950"
             disabled={!drafts.length}
-            onClick={() => setDeleteAllDialogOpen(true)}
+            onClick={() => {
+              restoreDeleteAllDialogFocusRef.current = true;
+              setDeleteAllDialogOpen(true);
+            }}
           >
             Delete all drafts
           </button>
@@ -710,6 +717,7 @@ export function LocalDraftManager() {
           </>
         }
         onDismiss={() => setDeleteAllDialogOpen(false)}
+        restoreFocusOnClose={restoreDeleteAllDialogFocusRef.current}
       >
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button

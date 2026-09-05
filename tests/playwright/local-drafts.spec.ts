@@ -533,6 +533,9 @@ test("saved drafts page warns separately before deleting all drafts", async ({
   await expect(
     page.getByRole("heading", { name: "No saved drafts" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Saved local drafts" }),
+  ).toBeFocused();
 });
 
 test("saved drafts search and sorting keep stable actions attached to the correct draft", async ({

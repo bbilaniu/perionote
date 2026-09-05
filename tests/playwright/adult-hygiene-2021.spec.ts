@@ -4,6 +4,7 @@ import {
   openGeneratedNote,
   saveDraftAndStartNew,
 } from "./helpers/interactiveTemplate";
+import { INTERACTIVE_DRAFT_STORAGE_PREFIX } from "@/lib/templates/localDrafts";
 
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
@@ -293,6 +294,40 @@ test("a failed local draft save does not clear the current form", async ({
     "The current form could not be saved, so it was not cleared.",
   );
   await expect(patientId).toHaveValue("KEEP-UNSAVED-WORK");
+});
+
+test("a failed local draft discard does not clear the current form", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const patientId = page.locator("#adult-hygiene-patient-id");
+  await patientId.fill("KEEP-SAVED-WORK");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await page.evaluate(() => {
+    Storage.prototype.removeItem = () => {
+      throw new DOMException("Storage unavailable", "QuotaExceededError");
+    };
+  });
+
+  const formDialog = await openFormActionDialog(page);
+  await formDialog
+    .getByRole("button", { name: "Clear current form" })
+    .click();
+
+  await expect(formDialog).toBeVisible();
+  await expect(formDialog.getByRole("alert")).toContainText(
+    "The current draft could not be discarded, so the form was not cleared.",
+  );
+  await expect(patientId).toHaveValue("KEEP-SAVED-WORK");
+  expect(
+    await page.evaluate(
+      (prefix) =>
+        Object.keys(window.localStorage).filter((key) => key.startsWith(prefix))
+          .length,
+      INTERACTIVE_DRAFT_STORAGE_PREFIX,
+    ),
+  ).toBe(1);
 });
 
 test("mobile section navigation stays compact and opens as a side sheet", async ({

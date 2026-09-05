@@ -45,6 +45,7 @@ export function selectInteractiveDraftForCurrentTab(
 }
 
 export type LocalDraftSaveResult = "saved" | "removed" | "skipped" | "failed";
+export type LocalDraftDiscardResult = "discarded" | "failed";
 
 export function useLocalInteractiveDraft<T>({
   templateId,
@@ -150,7 +151,7 @@ export function useLocalInteractiveDraft<T>({
     return saveResult;
   }, [refreshRecoverableDrafts, saveNow, templateId]);
 
-  const discardAndBeginNewDraft = useCallback(() => {
+  const discardAndBeginNewDraft = useCallback((): LocalDraftDiscardResult => {
     try {
       if (draftIdRef.current) {
         deleteInteractiveDraft(
@@ -167,10 +168,12 @@ export function useLocalInteractiveDraft<T>({
       setRestoredAt(null);
       setStorageError("");
       refreshRecoverableDrafts();
+      return "discarded";
     } catch {
       setStorageError(
         "The current draft could not be discarded from local storage.",
       );
+      return "failed";
     }
   }, [refreshRecoverableDrafts, templateId]);
 

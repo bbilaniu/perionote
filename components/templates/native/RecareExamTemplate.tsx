@@ -2324,7 +2324,7 @@ export function RecareExamTemplate({
     if (mode === "new") {
       if (localDraft.beginNewDraft() === "failed") return false;
     } else {
-      localDraft.discardAndBeginNewDraft();
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
     }
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());

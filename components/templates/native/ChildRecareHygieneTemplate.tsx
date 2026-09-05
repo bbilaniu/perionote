@@ -636,7 +636,7 @@ export function ChildRecareHygieneTemplate({
     if (mode === "new") {
       if (localDraft.beginNewDraft() === "failed") return false;
     } else {
-      localDraft.discardAndBeginNewDraft();
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
     }
     setForm({
       ...createDefaultChildRecareHygieneForm(),
