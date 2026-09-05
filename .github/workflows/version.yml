@@ -38,9 +38,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  release-tag:
+    name: Tag versioned release
+    needs: changesets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout released commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git bot identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create and push release tag if version changed
+        run: bash scripts/tag-release.sh
+
   sync-beta:
     name: Fast-forward beta after main update
-    needs: changesets
+    needs: release-tag
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
