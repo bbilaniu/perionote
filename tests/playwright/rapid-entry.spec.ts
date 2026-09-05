@@ -14,6 +14,56 @@ const group = (page: Page, name: string) =>
 const choose = (page: Page, name: string, option: string) =>
   group(page, name).getByRole("radio", { name: option, exact: true }).check();
 
+test("desktop Rapid navigation reveals the active link while scrolling down and back up", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 1536, height: 900 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await openRapid(page);
+  // Exercise overflow with the larger default text size supported by browsers.
+  await page.addStyleTag({ content: "html { font-size: 20px; }" });
+  const navigation = page.getByRole("navigation", { name: "Form sections" });
+  const sectionList = navigation.locator("[data-section-list]");
+  await expect
+    .poll(() => sectionList.evaluate((list) => list.scrollWidth - list.clientWidth))
+    .toBeGreaterThan(1);
+
+  for (const [id, label] of [
+    ["education-and-treatment", "OHE / Treatment"],
+    ["recommendations", "Next Visit"],
+    ["oral-hygiene", "Oral Hygiene"],
+    ["visit", "Visit"],
+  ]) {
+    // Scroll the form directly: clicking a link would let browser focus reveal it
+    // and hide a regression in page-scroll synchronization.
+    const pagePosition = await page.locator(`#template-section-${id}`).evaluate((section) => {
+      window.scrollTo({
+        top: section.getBoundingClientRect().top + window.scrollY - 140,
+        behavior: "instant",
+      });
+      return window.scrollY;
+    });
+    const link = navigation.getByRole("link", { name: label, exact: true });
+    await expect(link).toHaveAttribute("aria-current", "location");
+    await expect
+      .poll(() => link.evaluate((activeLink) => {
+        const list = activeLink.closest("[data-section-list]")!;
+        const listBounds = list.getBoundingClientRect();
+        const linkBounds = activeLink.getBoundingClientRect();
+        return Math.max(listBounds.left - linkBounds.left, linkBounds.right - listBounds.right);
+      }), { message: `${label} should fit within the navigation strip` })
+      .toBeLessThanOrEqual(1);
+    expect(await page.evaluate(() => window.scrollY)).toBeCloseTo(pagePosition, 0);
+
+    if (id === "recommendations") {
+      await expect.poll(() => sectionList.evaluate((list) => list.scrollLeft)).toBeGreaterThan(0);
+      await page.screenshot({ path: testInfo.outputPath("rapid-navigation-next-visit.png") });
+    }
+  }
+
+  await expect.poll(() => sectionList.evaluate((list) => list.scrollLeft)).toBe(0);
+});
+
 test("routine encounter uses direct choices and existing generated outputs", async ({
   page,
 }, testInfo) => {

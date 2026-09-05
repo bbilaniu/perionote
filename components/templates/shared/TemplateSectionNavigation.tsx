@@ -120,7 +120,7 @@ export function TemplateSectionNavigation({
         window.scrollY + window.innerHeight >=
         document.documentElement.scrollHeight - 2;
       const sectionList = desktopSectionListRef.current;
-      if (sectionList) {
+      if (sectionList && !compact) {
         const firstSectionTop =
           availableSections[0].getBoundingClientRect().top + currentPosition;
         const lastSectionBottom =
@@ -165,6 +165,23 @@ export function TemplateSectionNavigation({
         }
       }
 
+      if (sectionList && compact) {
+        const activeLink = sectionList.querySelector<HTMLAnchorElement>(
+          `a[href="#${nextActive.id}"]`,
+        );
+        if (activeLink) {
+          const listBounds = sectionList.getBoundingClientRect();
+          const linkBounds = activeLink.getBoundingClientRect();
+
+          // Reveal the active link without scrolling the page or moving focus.
+          if (linkBounds.left < listBounds.left) {
+            sectionList.scrollLeft += linkBounds.left - listBounds.left;
+          } else if (linkBounds.right > listBounds.right) {
+            sectionList.scrollLeft += linkBounds.right - listBounds.right;
+          }
+        }
+      }
+
       if (activeIdRef.current !== nextActive.id) {
         if (scrollVelocity >= 1) {
           setShowScrollCue(true);
@@ -194,7 +211,7 @@ export function TemplateSectionNavigation({
       if (animationFrame) window.cancelAnimationFrame(animationFrame);
       if (cueTimeoutRef.current) clearTimeout(cueTimeoutRef.current);
     };
-  }, [sections]);
+  }, [compact, sections]);
 
   useEffect(() => {
     const dialog = mobileDialogRef.current;

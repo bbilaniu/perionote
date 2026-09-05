@@ -19,6 +19,8 @@ periodontal classification, radiographs, education, and completed-care controls
 retain their existing handlers. Rapid presentation options on shared controls
 leave the other templates' behavior unchanged. The existing section navigator
 uses a horizontal layout in Rapid Entry to leave more width for clinical choices.
+When its links overflow, the strip scrolls horizontally to reveal the active
+section as the user moves down or back up the form, without moving the page.
 Gingival option groups and periodontal diagnosis, extent, stage, grade, and
 status groups each use the full available width. Options wrap as needed, with
 override reasons and comments underneath their corresponding group. Structured
