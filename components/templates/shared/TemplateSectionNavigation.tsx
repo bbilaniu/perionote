@@ -257,7 +257,7 @@ export function TemplateSectionNavigation({
         {onReviewNote ? (
           <button
             type="button"
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 xl:hidden dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 xl:hidden dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
             aria-controls={noteDrawerId}
             aria-expanded={noteExpanded}
             data-review-note-trigger
@@ -322,7 +322,7 @@ export function TemplateSectionNavigation({
           {onReviewNote ? (
             <button
               type="button"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:bg-sky-700 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
               aria-controls={noteDrawerId}
               aria-expanded={noteExpanded}
               data-review-note-trigger

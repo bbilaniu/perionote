@@ -52,8 +52,84 @@ test("each interactive template exposes section navigation", async ({
     await expect(
       navigation.getByRole("link", { name: template.section, exact: true })
     ).toBeVisible();
+    await expect(page.getByRole("link", { name: "Return to top" })).toHaveAttribute(
+      "href",
+      "#template-top",
+    );
   }
 });
+
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 1440, height: 900 },
+]) {
+  for (const url of [
+    "/templates/clinic/adult-hygiene-2026/interactive",
+    "/templates/clinic/adult-hygiene-2026",
+    "/templates/dental-hygiene-note-webform",
+  ]) {
+    test(`Return to top restores scroll and keyboard focus on ${url} at ${viewport.width}px`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize(viewport);
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page.goto(`${url}?navigation-test=111`);
+
+      const patientId = page.locator("#adult-hygiene-patient-id");
+      if (url.endsWith("/interactive")) {
+        await patientId.fill("TEST-NAV-111");
+      }
+
+      await page.evaluate(() =>
+        window.scrollTo(0, document.documentElement.scrollHeight),
+      );
+      const returnToTop = page.getByRole("link", { name: "Return to top" });
+      await expect(returnToTop).toBeInViewport();
+      await returnToTop.focus();
+      if (url.endsWith("/interactive")) {
+        await page.screenshot({ path: testInfo.outputPath("return-to-top.png") });
+      }
+      await page.keyboard.press("Enter");
+
+      await expect(page).toHaveURL(/\?navigation-test=111#template-top$/);
+      await expect(page.locator("#template-top")).toBeFocused();
+      await expect
+        .poll(() =>
+          page.locator("#template-top").evaluate((top) =>
+            Math.abs(top.getBoundingClientRect().top),
+          ),
+        )
+        .toBeLessThanOrEqual(1);
+      await page.keyboard.press("Tab");
+      await expect(page.locator("#template-top :focus")).toBeInViewport();
+      if (url.endsWith("/interactive")) {
+        await expect(patientId).toHaveValue("TEST-NAV-111");
+      }
+    });
+  }
+}
+
+for (const width of [390, 1100]) {
+  for (const colorScheme of ["light", "dark"] as const) {
+    test(`Review note is blue and opens the preview at ${width}px in ${colorScheme} mode`, async ({
+      page,
+    }, testInfo) => {
+      await page.setViewportSize({ width, height: 844 });
+      await page.emulateMedia({ colorScheme });
+      await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+
+      const reviewNote = page.getByRole("button", { name: "Review note" });
+      await expect(reviewNote).toHaveCSS("background-color", "rgb(3, 105, 161)");
+      await expect(reviewNote).toHaveCSS("color", "rgb(255, 255, 255)");
+      await page.screenshot({ path: testInfo.outputPath("review-note.png") });
+      await reviewNote.click();
+      await expect(reviewNote).toHaveAttribute("aria-expanded", "true");
+      await expect(
+        page.getByRole("complementary", { name: "Generated note preview" }),
+      ).toBeVisible();
+    });
+  }
+}
 
 test("section links update the URL and active location", async ({ page }) => {
   await page.goto("/templates/clinic/recare-exam/interactive");

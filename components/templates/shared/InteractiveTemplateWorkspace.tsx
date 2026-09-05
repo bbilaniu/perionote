@@ -15,6 +15,7 @@ import { InteractiveTemplateHeader } from "@/components/templates/shared/Interac
 import { LocalDraftRail } from "@/components/templates/shared/LocalDraftRail";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
+import { ReturnToTopLink } from "@/components/templates/shared/ReturnToTopLink";
 import type { LocalDraftWorkspaceState } from "@/components/templates/shared/localDraftWorkspace";
 
 const secondaryButtonClass =
@@ -335,7 +336,10 @@ export function InteractiveTemplateWorkspace({
             noteDrawerId="generated-note-drawer"
           />
 
-          <div className="min-w-0 max-w-full space-y-6">{children}</div>
+          <div className="min-w-0 max-w-full space-y-6">
+            {children}
+            <ReturnToTopLink />
+          </div>
         </div>
       </div>
 
