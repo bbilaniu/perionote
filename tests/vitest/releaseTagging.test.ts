@@ -6,6 +6,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 const projectRoot = process.cwd();
 const temporaryDirectories: string[] = [];
+// Real Git and npm subprocesses need headroom when the full suite runs in parallel.
+const integrationTestTimeout = 30_000;
 
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
@@ -92,7 +94,7 @@ function archiveRelease(cwd: string) {
   return { status: result.status, output: `${result.stdout}${result.stderr}` };
 }
 
-describe("release tagging with local Git remotes", () => {
+describe("release tagging with local Git remotes", { timeout: integrationTestTimeout }, () => {
   it("skips ordinary pushes even with a misleading commit title and a pending major changeset", () => {
     const { cwd, remote } = fixture();
     writeFileSync(path.join(cwd, ".changeset/feature.md"), '---\n"hygienenote": major\n---\n\nSynthetic feature.\n');
@@ -192,7 +194,7 @@ describe("release tagging with local Git remotes", () => {
   });
 });
 
-describe("release archive branches with local Git remotes", () => {
+describe("release archive branches with local Git remotes", { timeout: integrationTestTimeout }, () => {
   it("archives the tagged commit after main advances and accepts a retry", () => {
     const { cwd, remote } = fixture();
     writeVersion(cwd, "1.0.0");
