@@ -41,3 +41,7 @@ fi
 
 git push origin "refs/tags/${tag}"
 echo "Release tag ${tag} points to ${head_commit}."
+
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+fi

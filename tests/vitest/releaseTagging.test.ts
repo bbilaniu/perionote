@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { chmodSync, copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -63,7 +63,7 @@ function fixture() {
   mkdirSync(path.join(cwd, ".changeset"));
   mkdirSync(path.join(cwd, "scripts"));
   copyFileSync(path.join(projectRoot, ".changeset/config.json"), path.join(cwd, ".changeset/config.json"));
-  for (const file of ["check-versioning.mjs", "tag-release.sh"]) {
+  for (const file of ["check-versioning.mjs", "tag-release.sh", "archive-release.sh"]) {
     copyFileSync(path.join(projectRoot, "scripts", file), path.join(cwd, "scripts", file));
   }
   writeFileSync(path.join(cwd, ".gitignore"), "node_modules/\n");
@@ -75,7 +75,20 @@ function fixture() {
 }
 
 function tagRelease(cwd: string) {
-  const result = spawnSync("bash", ["scripts/tag-release.sh"], { cwd, encoding: "utf8" });
+  const result = spawnSync("bash", ["scripts/tag-release.sh"], {
+    cwd,
+    encoding: "utf8",
+    env: { ...process.env, GITHUB_OUTPUT: path.join(cwd, ".git/action-output") },
+  });
+  return { status: result.status, output: `${result.stdout}${result.stderr}` };
+}
+
+function archiveRelease(cwd: string) {
+  const result = spawnSync("bash", ["scripts/archive-release.sh"], {
+    cwd,
+    encoding: "utf8",
+    env: { ...process.env, GITHUB_STEP_SUMMARY: path.join(cwd, ".git/action-summary") },
+  });
   return { status: result.status, output: `${result.stdout}${result.stderr}` };
 }
 
@@ -90,6 +103,7 @@ describe("release tagging with local Git remotes", () => {
     expect(result.output).toContain("version unchanged");
     expect(git(remote, "tag", "--list")).toBe("");
     expect(git(cwd, "tag", "--list")).toBe("");
+    expect(existsSync(path.join(cwd, ".git/action-output"))).toBe(false);
   });
 
   it("tags the version PR merge commit despite a custom title and can rerun safely", () => {
@@ -108,6 +122,7 @@ describe("release tagging with local Git remotes", () => {
     expect(git(remote, "rev-parse", "refs/tags/v1.0.0^{commit}")).toBe(releaseCommit);
     expect(git(remote, "cat-file", "-t", "refs/tags/v1.0.0")).toBe("tag");
     expect(git(remote, "tag", "--list")).toBe("v1.0.0");
+    expect(readFileSync(path.join(cwd, ".git/action-output"), "utf8")).toBe("tag=v1.0.0\n");
 
     // Simulate another runner discovering the existing tag from origin.
     git(cwd, "tag", "-d", "v1.0.0");
@@ -174,5 +189,90 @@ describe("release tagging with local Git remotes", () => {
     writeFileSync(path.join(cwd, ".changeset/feature.md"), '---\n"hygienenote": major\n---\n\nSynthetic feature.\n');
     const result = spawnSync(process.execPath, ["scripts/check-versioning.mjs"], { cwd, encoding: "utf8" });
     expect(result.status, result.stderr).toBe(0);
+  });
+});
+
+describe("release archive branches with local Git remotes", () => {
+  it("archives the tagged commit after main advances and accepts a retry", () => {
+    const { cwd, remote } = fixture();
+    writeVersion(cwd, "1.0.0");
+    const releaseCommit = commit(cwd, "Next release");
+    const tag = tagRelease(cwd);
+    expect(tag.status, tag.output).toBe(0);
+    writeFileSync(path.join(cwd, "later.txt"), "Later development\n");
+    const laterCommit = commit(cwd, "Later work on main");
+    git(cwd, "push", "origin", "main");
+    git(cwd, "checkout", "--detach", releaseCommit);
+
+    const firstRun = archiveRelease(cwd);
+    expect(firstRun.status, firstRun.output).toBe(0);
+    expect(git(remote, "rev-parse", "refs/heads/archive/v1.0.0")).toBe(releaseCommit);
+    expect(git(remote, "rev-parse", "refs/heads/main")).toBe(laterCommit);
+    const summary = readFileSync(path.join(cwd, ".git/action-summary"), "utf8");
+    expect(summary).toContain("archive/v1.0.0");
+    expect(summary).toContain(releaseCommit);
+    expect(summary).toContain("separate Workers Build");
+
+    const retry = archiveRelease(cwd);
+    expect(retry.status, retry.output).toBe(0);
+    expect(git(remote, "rev-parse", "refs/heads/archive/v1.0.0")).toBe(releaseCommit);
+  });
+
+  it("refuses an archive branch pointing to another commit", () => {
+    const { cwd, remote } = fixture();
+    const originalCommit = git(cwd, "rev-parse", "HEAD");
+    writeVersion(cwd, "1.0.0");
+    commit(cwd, "Next release");
+    const tag = tagRelease(cwd);
+    expect(tag.status, tag.output).toBe(0);
+    git(cwd, "push", "origin", `${originalCommit}:refs/heads/archive/v1.0.0`);
+
+    const result = archiveRelease(cwd);
+    expect(result.status, result.output).not.toBe(0);
+    expect(result.output).toContain("already points to");
+    expect(git(remote, "rev-parse", "refs/heads/archive/v1.0.0")).toBe(originalCommit);
+  });
+
+  it("requires a published tag, even when a local tag exists", () => {
+    const { cwd, remote } = fixture();
+    writeVersion(cwd, "1.0.0");
+    commit(cwd, "Next release");
+    git(cwd, "tag", "-a", "v1.0.0", "-m", "Unpublished tag");
+
+    const result = archiveRelease(cwd);
+    expect(result.status, result.output).not.toBe(0);
+    expect(git(remote, "branch", "--list", "archive/*")).toBe("");
+  });
+
+  it("refuses to archive a checkout that differs from the published tag", () => {
+    const { cwd, remote } = fixture();
+    writeVersion(cwd, "1.0.0");
+    commit(cwd, "Next release");
+    const tag = tagRelease(cwd);
+    expect(tag.status, tag.output).toBe(0);
+    writeFileSync(path.join(cwd, "later.txt"), "Later development\n");
+    commit(cwd, "Unreleased work");
+
+    const result = archiveRelease(cwd);
+    expect(result.status, result.output).not.toBe(0);
+    expect(result.output).toContain("not checked-out commit");
+    expect(git(remote, "branch", "--list", "archive/*")).toBe("");
+  });
+
+  it("does not overwrite a branch created concurrently with the archive push", () => {
+    const { cwd, remote } = fixture();
+    const originalCommit = git(cwd, "rev-parse", "HEAD");
+    writeVersion(cwd, "1.0.0");
+    commit(cwd, "Next release");
+    const tag = tagRelease(cwd);
+    expect(tag.status, tag.output).toBe(0);
+    const hook = path.join(cwd, ".git/hooks/pre-push");
+    writeFileSync(hook, '#!/usr/bin/env bash\ngit --git-dir="../origin.git" update-ref refs/heads/archive/v1.0.0 refs/heads/main\n');
+    chmodSync(hook, 0o700);
+    git(cwd, "config", "core.hooksPath", ".git/hooks");
+
+    const result = archiveRelease(cwd);
+    expect(result.status, result.output).not.toBe(0);
+    expect(git(remote, "rev-parse", "refs/heads/archive/v1.0.0")).toBe(originalCommit);
   });
 });
