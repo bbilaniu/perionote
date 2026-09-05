@@ -77,6 +77,7 @@ export function InteractiveTemplateWorkspace({
   onSubmit,
   onLoadDemo,
   onReset,
+  compactNavigation = false,
 }: {
   presentation: TemplatePresentation;
   sections: readonly TemplateSectionNavigationItem[];
@@ -87,6 +88,7 @@ export function InteractiveTemplateWorkspace({
   onSubmit: FormEventHandler<HTMLFormElement>;
   onLoadDemo: () => void;
   onReset: (mode: InteractiveTemplateResetMode) => boolean;
+  compactNavigation?: boolean;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
@@ -328,8 +330,9 @@ export function InteractiveTemplateWorkspace({
           onRestore={draftRecovery.onRestore}
         />
 
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13rem]">
+        <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 ${compactNavigation ? "" : "lg:grid-cols-[minmax(0,1fr)_13rem]"}`}>
           <TemplateSectionNavigation
+            compact={compactNavigation}
             sections={sections}
             onReviewNote={reviewNote}
             noteExpanded={noteOpen || wideLayout}

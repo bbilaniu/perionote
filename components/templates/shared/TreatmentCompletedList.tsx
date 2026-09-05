@@ -153,6 +153,7 @@ export function TreatmentCompletedList({
   radiographsHref,
   onChange,
   showHeading = true,
+  rapid = false,
 }: {
   entries: AdultHygieneTreatmentCompletedEntry[];
   oheRecap?: string;
@@ -162,6 +163,7 @@ export function TreatmentCompletedList({
   radiographsHref?: string;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
   showHeading?: boolean;
+  rapid?: boolean;
 }) {
   const { findEquivalent, getItems, rememberValue, storageStatus } =
     useCatalogues();
@@ -343,6 +345,19 @@ export function TreatmentCompletedList({
           {showAddCare ? "Close completed care catalogue" : "Add completed care"}
         </button>
       </div>
+
+      {rapid ? <fieldset className="space-y-2">
+        <legend className="text-sm font-semibold">Common completed care</legend>
+        <div className="flex flex-wrap gap-2">
+          {catalogueItems.filter((item) => isCompletedCareCatalogueMetadata(item.metadata) &&
+            ["scaling", "polish", "ohe", "product-application", "fmp"].includes(item.metadata.procedure)).slice(0, 8).map((item) => {
+            const preview = createTreatmentEntryFromCatalogueItem(item, "preview", oheRecap);
+            const added = preview && entries.some((entry) => treatmentCompletedEntryIdentity(entry) === treatmentCompletedEntryIdentity(preview));
+            return <button key={item.id} type="button" className={`${rowButtonClass} min-h-11`} disabled={Boolean(added)}
+              onClick={() => addCatalogueCare(item)}>{item.label}{added ? " added" : ""}</button>;
+          })}
+        </div>
+      </fieldset> : null}
 
       {showAddCare ? (
         <div

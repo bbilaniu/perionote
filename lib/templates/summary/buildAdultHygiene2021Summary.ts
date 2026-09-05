@@ -1,3 +1,4 @@
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import {
   type AdultHygiene2021Form,
   orderTreatmentToothAreas,
@@ -707,6 +708,7 @@ export function buildAdultHygiene2021Summary(
     patientSpecificGradeEvidence,
     periodontalDiagnosis,
     cariesRisk,
+    formatOralHygieneMethods(form),
     oralHygieneAndEducation,
     treatment,
     appliancesAndHistory,

@@ -1,5 +1,7 @@
 "use client";
 
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useMemo,
@@ -57,6 +59,7 @@ const templateId = "child-recare-exam-hygiene-notes";
 const emptyForm = createEmptyChildRecareHygieneForm();
 const emptySerializedForm = JSON.stringify(emptyForm);
 const childDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   "cambra123ZeroToSixAssessment.yesItemIds": "",
   "cambra123SixAdultAssessment.yesItemIds": "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
@@ -1040,6 +1043,7 @@ export function ChildRecareHygieneTemplate({
           </Section>
 
           <Section title="Hygiene assessment and treatment">
+            <OralHygieneMethodsControl value={form} onChange={updateField} />
             <div className="grid gap-4 md:grid-cols-2">
               <StatusControl
                 id="child-recare-disclosed"

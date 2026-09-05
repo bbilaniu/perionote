@@ -1,5 +1,7 @@
 "use client";
 
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useMemo,
@@ -67,6 +69,7 @@ const inputClass = `mt-1 ${formControlClass()}`;
 const adolescentDraftExemplar = createEmptyAdolescentHygieneForm();
 const emptyAdolescentDraft = JSON.stringify(adolescentDraftExemplar);
 const adolescentDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   "periodontalClassification.stageBasis": { criterionId: "" },
   "periodontalClassification.gradeBasis": { criterionId: "" },
   "periodontalClassification.gingivalHealth.reducedPeriodontiumBases": "",
@@ -799,24 +802,30 @@ export function AdolescentHygieneTemplate({
           </Section>
 
           <Section title="Oral Hygiene Instruction">
-            <div className="grid gap-4 md:grid-cols-2">
-              <StaticSuggestionCombobox
-                id="adolescent-flossing-frequency"
-                label="Flossing frequency"
-                value={form.flossingFrequency}
-                suggestions={flossingFrequencyChoices}
-                onChange={(value) => updateField("flossingFrequency", value)}
-                placeholder="Select or enter a flossing frequency"
-              />
-              <StaticSuggestionCombobox
-                id="adolescent-brushing-frequency"
-                label="Brushing frequency"
-                value={form.brushingFrequency}
-                suggestions={brushingFrequencyChoices}
-                onChange={(value) => updateField("brushingFrequency", value)}
-                placeholder="Select or enter a brushing frequency"
-              />
-            </div>
+            <OralHygieneMethodsControl
+              value={form}
+              onChange={updateField}
+              brushingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adolescent-brushing-frequency"
+                  label="Brushing frequency"
+                  value={form.brushingFrequency}
+                  suggestions={brushingFrequencyChoices}
+                  onChange={(value) => updateField("brushingFrequency", value)}
+                  placeholder="Select or enter a brushing frequency"
+                />
+              }
+              flossingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adolescent-flossing-frequency"
+                  label="Flossing frequency"
+                  value={form.flossingFrequency}
+                  suggestions={flossingFrequencyChoices}
+                  onChange={(value) => updateField("flossingFrequency", value)}
+                  placeholder="Select or enter a flossing frequency"
+                />
+              }
+            />
             <FixedChoiceMultiCombobox
               id="adolescent-ohi-techniques"
               label="OHI techniques reviewed"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { RapidDisclosure } from "@/components/forms/RapidChoiceControls";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
@@ -58,11 +59,13 @@ export function RadiographsTakenControl({
   onChange,
   idPrefix = "adult-hygiene",
   linkToTreatment = true,
+  rapid = false,
 }: {
   values: string[];
   onChange: (values: string[]) => void;
   idPrefix?: string;
   linkToTreatment?: boolean;
+  rapid?: boolean;
 }) {
   const { findEquivalent, getItems, rememberValue, storageStatus } =
     useCatalogues();
@@ -223,6 +226,80 @@ export function RadiographsTakenControl({
   );
   const fieldsetId = `${idPrefix}-radiographs`;
 
+  const customTypeControls = (
+      <fieldset className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
+        <legend className="px-1 text-sm font-semibold">
+          Add a radiograph type
+        </legend>
+        <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(8rem,1fr)]">
+          <div>
+            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-label`}>
+              Type name
+            </label>
+            <input
+              id={`${fieldsetId}-new-label`}
+              className={`mt-1 ${formControlClass()}`}
+              value={newTypeLabel}
+              placeholder="e.g. Occlusal view"
+              onChange={(event) => setNewTypeLabel(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-code`}>
+              Short code
+            </label>
+            <input
+              id={`${fieldsetId}-new-code`}
+              className={`mt-1 ${formControlClass()}`}
+              value={newTypeCode}
+              placeholder="e.g. OCC"
+              onChange={(event) => setNewTypeCode(event.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-quantity`}>
+              Default images
+            </label>
+            <input
+              id={`${fieldsetId}-new-quantity`}
+              type="number"
+              min={1}
+              step={1}
+              className={`mt-1 ${formControlClass()}`}
+              value={newTypeQuantity}
+              onChange={(event) => setNewTypeQuantity(event.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={!newTypeLabel.trim() || !newTypeCode.trim()}
+            onClick={() => addRadiographType(false)}
+          >
+            Add for this encounter
+          </button>
+          <button
+            type="button"
+            className={secondaryButtonClass}
+            disabled={
+              !newTypeLabel.trim() ||
+              !newTypeCode.trim() ||
+              storageStatus !== "ready"
+            }
+            onClick={() => addRadiographType(true)}
+          >
+            Remember and add
+          </button>
+        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
+          {message ||
+            "Remembered types become reusable catalogue entries; the image count remains encounter-specific."}
+        </p>
+      </fieldset>
+  );
+
   return (
     <fieldset
       id={fieldsetId}
@@ -308,77 +385,7 @@ export function RadiographsTakenControl({
         })}
       </div>
 
-      <fieldset className="space-y-3 border-t border-slate-200 pt-4 dark:border-slate-700">
-        <legend className="px-1 text-sm font-semibold">
-          Add a radiograph type
-        </legend>
-        <div className="grid gap-3 md:grid-cols-[minmax(0,2fr)_minmax(7rem,1fr)_minmax(8rem,1fr)]">
-          <div>
-            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-label`}>
-              Type name
-            </label>
-            <input
-              id={`${fieldsetId}-new-label`}
-              className={`mt-1 ${formControlClass()}`}
-              value={newTypeLabel}
-              placeholder="e.g. Occlusal view"
-              onChange={(event) => setNewTypeLabel(event.target.value)}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-code`}>
-              Short code
-            </label>
-            <input
-              id={`${fieldsetId}-new-code`}
-              className={`mt-1 ${formControlClass()}`}
-              value={newTypeCode}
-              placeholder="e.g. OCC"
-              onChange={(event) => setNewTypeCode(event.target.value)}
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium" htmlFor={`${fieldsetId}-new-quantity`}>
-              Default images
-            </label>
-            <input
-              id={`${fieldsetId}-new-quantity`}
-              type="number"
-              min={1}
-              step={1}
-              className={`mt-1 ${formControlClass()}`}
-              value={newTypeQuantity}
-              onChange={(event) => setNewTypeQuantity(event.target.value)}
-            />
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            disabled={!newTypeLabel.trim() || !newTypeCode.trim()}
-            onClick={() => addRadiographType(false)}
-          >
-            Add for this encounter
-          </button>
-          <button
-            type="button"
-            className={secondaryButtonClass}
-            disabled={
-              !newTypeLabel.trim() ||
-              !newTypeCode.trim() ||
-              storageStatus !== "ready"
-            }
-            onClick={() => addRadiographType(true)}
-          >
-            Remember and add
-          </button>
-        </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400" aria-live="polite">
-          {message ||
-            "Remembered types become reusable catalogue entries; the image count remains encounter-specific."}
-        </p>
-      </fieldset>
+      {rapid ? <RapidDisclosure label="Other radiograph types">{customTypeControls}</RapidDisclosure> : customTypeControls}
 
       {otherValues.length ? (
         <div className="space-y-2 border-t border-slate-200 pt-4 dark:border-slate-700">

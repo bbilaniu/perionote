@@ -1,3 +1,4 @@
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   AdolescentDocumentationStatus,
   AdolescentHygieneForm,
@@ -261,6 +262,7 @@ export function buildAdolescentHygieneSummary(
     group(patientSpecificStageEvidence),
     group(patientSpecificGradeEvidence),
     group(periodontalDiagnosis),
+    group(formatOralHygieneMethods(form)),
     group(ohi),
     group(appliances),
     group(treatment),

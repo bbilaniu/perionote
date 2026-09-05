@@ -1,3 +1,7 @@
+import {
+  createEmptyOralHygieneMethods,
+  type OralHygieneMethods,
+} from "@/lib/templates/oralHygieneMethods";
 import type {
   DocumentationStatus,
   ExamStatus,
@@ -208,7 +212,7 @@ export const standardOheStatement =
 export const standardHygieneGoal =
   "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
-export interface AdultHygiene2026Form {
+export interface AdultHygiene2026Form extends OralHygieneMethods {
   patientId: string;
   noteLastRecallDate: string;
   dentist: string;
@@ -332,6 +336,7 @@ export interface AdultHygiene2026Form {
 
 export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
   return {
+    ...createEmptyOralHygieneMethods(),
     patientId: "",
     noteLastRecallDate: "",
     dentist: "",

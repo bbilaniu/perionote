@@ -1,4 +1,6 @@
 "use client";
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { createEmptyOralHygieneMethods, formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import React, { useEffect, useId, useMemo, useState } from "react";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
@@ -558,6 +560,7 @@ function prettyLabel(key) {
 
 export function buildInitialForm(fixture) {
   const form = {
+    ...createEmptyOralHygieneMethods(),
     date: getTodayDateString(),
     providerName: "",
     patientConcerns: "",
@@ -1585,6 +1588,7 @@ export function buildSummaryText(form, selectedFindings) {
     formatDepositLine("Extrinsic Stain", form.extrinsicStain),
     formatPeriodontalDiagnosis(),
     formatCariesRisk(),
+    ...formatOralHygieneMethods(form),
     formatOhe(),
     formatRecommendations(),
   ].filter(Boolean);
@@ -2048,6 +2052,7 @@ const VERY_SHORT_DEFAULT_OPEN_SECTIONS = {
   deposits: true,
   periodontalStatus: true,
   cariesRisk: false,
+  oralHygiene: true,
   ohe: false,
   recommendations: false,
   treatmentDoneToday: true,
@@ -2068,6 +2073,7 @@ const importedTemplateSections = [
   ["deposits", "Calculus and Biofilm Deposits"],
   ["periodontalStatus", "Periodontal Status"],
   ["cariesRisk", "Caries Risk"],
+  ["oralHygiene", "Oral Hygiene"],
   ["ohe", "Oral Health Education (OHE)"],
   ["recommendations", "Recommendations"],
   ["treatmentDoneToday", "Treatment Done Today"],
@@ -3575,6 +3581,18 @@ export function GingivalDescriptionWebformImportedTemplate({
                   onChange={(cariesRiskNotes) =>
                     setForm((current) => ({ ...current, cariesRiskNotes }))
                   }
+                />
+              </SectionCard>
+
+              <SectionCard
+                id={getSectionId("oralHygiene")}
+                title="Oral Hygiene"
+                open={!isVeryShort || openSections.oralHygiene}
+                onToggle={isVeryShort ? () => toggleSection("oralHygiene") : undefined}
+              >
+                <OralHygieneMethodsControl
+                  value={form}
+                  onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))}
                 />
               </SectionCard>
 

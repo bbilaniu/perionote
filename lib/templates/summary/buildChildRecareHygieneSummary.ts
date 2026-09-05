@@ -1,3 +1,4 @@
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   ChildDocumentationStatus,
   ChildExamStatus,
@@ -270,7 +271,14 @@ export function buildChildRecareHygieneSummary(
     sentence("Booked", form.bookedDate),
   ]);
 
-  return [header, dentist, cariesRisk, hygiene, followUp]
+  return [
+    header,
+    dentist,
+    cariesRisk,
+    section(formatOralHygieneMethods(form)),
+    hygiene,
+    followUp,
+  ]
     .filter(Boolean)
     .join("\n\n");
 }

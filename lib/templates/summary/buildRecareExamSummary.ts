@@ -1,3 +1,4 @@
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   DocumentationStatus,
   ExamStatus,
@@ -636,6 +637,7 @@ export function buildRecareExamSummary(
     chiefConcernSection,
     extraoralSection,
     tmjSection,
+    formatOralHygieneMethods(form),
     intraoralAndOcclusion,
     appliancesAndHistory,
     patientRequests,
