@@ -15,6 +15,7 @@ import { InteractiveTemplateHeader } from "@/components/templates/shared/Interac
 import { LocalDraftRail } from "@/components/templates/shared/LocalDraftRail";
 import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
+import { ReturnToTopLink } from "@/components/templates/shared/ReturnToTopLink";
 import type { LocalDraftWorkspaceState } from "@/components/templates/shared/localDraftWorkspace";
 
 const secondaryButtonClass =
@@ -76,6 +77,8 @@ export function InteractiveTemplateWorkspace({
   onSubmit,
   onLoadDemo,
   onReset,
+  compactNavigation = false,
+  footerAction,
 }: {
   presentation: TemplatePresentation;
   sections: readonly TemplateSectionNavigationItem[];
@@ -86,6 +89,8 @@ export function InteractiveTemplateWorkspace({
   onSubmit: FormEventHandler<HTMLFormElement>;
   onLoadDemo: () => void;
   onReset: (mode: InteractiveTemplateResetMode) => boolean;
+  compactNavigation?: boolean;
+  footerAction?: ReactNode;
 }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [wideLayout, setWideLayout] = useState(false);
@@ -327,15 +332,19 @@ export function InteractiveTemplateWorkspace({
           onRestore={draftRecovery.onRestore}
         />
 
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[minmax(0,1fr)_13rem]">
+        <div className={`grid min-w-0 grid-cols-[minmax(0,1fr)] items-start gap-6 ${compactNavigation ? "" : "lg:grid-cols-[minmax(0,1fr)_13rem]"}`}>
           <TemplateSectionNavigation
+            compact={compactNavigation}
             sections={sections}
             onReviewNote={reviewNote}
             noteExpanded={noteOpen || wideLayout}
             noteDrawerId="generated-note-drawer"
           />
 
-          <div className="min-w-0 max-w-full space-y-6">{children}</div>
+          <div className="min-w-0 max-w-full space-y-6">
+            {children}
+            <ReturnToTopLink leadingAction={footerAction} />
+          </div>
         </div>
       </div>
 

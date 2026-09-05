@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FullPageLink } from "@/components/FullPageLink";
 import { notFound } from "next/navigation";
 import CopyTemplateButton from "@/components/clinic-templates/CopyTemplateButton";
+import { ReturnToTopLink } from "@/components/templates/shared/ReturnToTopLink";
 import { getClinicConversionBySourceSlug } from "@/components/clinic-templates/conversionRegistry";
 import {
   clinicTemplateRegistry,
@@ -86,6 +87,7 @@ export default async function ClinicTemplatePage({
           {template.content}
         </pre>
       </div>
+      <ReturnToTopLink />
     </article>
   );
 }

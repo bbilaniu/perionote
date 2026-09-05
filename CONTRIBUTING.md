@@ -22,6 +22,7 @@ Run the checks proportional to the change:
 
 ```bash
 npm run lint
+npm run versioning:check
 npm run test
 npm run build
 npm run test:e2e
@@ -60,6 +61,9 @@ For the uncommon case of importing a standalone legacy template, follow
 [`docs/legacy-imports.md`](./docs/legacy-imports.md).
 
 ## Documentation
+
+See the [Changesets and release workflow](.changeset/README.md) for version PRs,
+automatic release tags, and release retry behavior.
 
 - Update a specification when the current behavior contract changes.
 - Add an ADR for a consequential architecture decision.

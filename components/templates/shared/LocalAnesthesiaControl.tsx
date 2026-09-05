@@ -1,5 +1,6 @@
 "use client";
 
+import { RapidDisclosure } from "@/components/forms/RapidChoiceControls";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
@@ -58,7 +59,9 @@ function newEntry(route: LocalAnesthesiaRoute): LocalAnesthesiaEntry {
 export function LocalAnesthesiaControl({
   value,
   onChange,
+  rapid = false,
 }: {
+  rapid?: boolean;
   value: LocalAnesthesiaValue;
   onChange: (value: LocalAnesthesiaValue) => void;
 }) {
@@ -147,7 +150,18 @@ export function LocalAnesthesiaControl({
     });
   }
 
-  return (
+  const dyclonineAction = (
+    <button
+      type="button"
+      className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
+      disabled={!dyclonine || hasDyclonineRinse}
+      onClick={applyDyclonineRinse}
+    >
+      {hasDyclonineRinse ? "Dyclonine rinse applied" : "Apply Dyclonine rinse"}
+    </button>
+  );
+
+  const anesthesiaDetails = (
     <fieldset
       className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700"
       aria-label="Local anesthesia"
@@ -175,16 +189,7 @@ export function LocalAnesthesiaControl({
               ? "Benzocaine topical applied"
               : "Apply Benzocaine topical"}
           </button>
-          <button
-            type="button"
-            className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
-            disabled={!dyclonine || hasDyclonineRinse}
-            onClick={applyDyclonineRinse}
-          >
-            {hasDyclonineRinse
-              ? "Dyclonine rinse applied"
-              : "Apply Dyclonine rinse"}
-          </button>
+          {!rapid ? dyclonineAction : null}
         </div>
       </div>
 
@@ -477,5 +482,22 @@ export function LocalAnesthesiaControl({
         </div>
       ) : null}
     </fieldset>
+  );
+
+  return rapid ? (
+    <div className="space-y-2">
+      {dyclonineAction}
+      <RapidDisclosure
+        label="Local anesthesia"
+        documented={Boolean(
+          value.localAnesthesiaEntries.length ||
+            value.localAnesthesiaNotes.trim(),
+        )}
+      >
+        {anesthesiaDetails}
+      </RapidDisclosure>
+    </div>
+  ) : (
+    anesthesiaDetails
   );
 }

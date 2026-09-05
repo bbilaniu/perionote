@@ -1,3 +1,7 @@
+import {
+  createEmptyOralHygieneMethods,
+  type OralHygieneMethods,
+} from "@/lib/templates/oralHygieneMethods";
 import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygiene2021";
 import {
   createEmptyLocalAnesthesiaValue,
@@ -22,7 +26,7 @@ export type AdolescentRetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
-export interface AdolescentHygieneForm {
+export interface AdolescentHygieneForm extends OralHygieneMethods {
   patientId: string;
   dentist: string;
   rdh: string;
@@ -81,6 +85,7 @@ export interface AdolescentHygieneForm {
 export function createEmptyAdolescentHygieneForm(): AdolescentHygieneForm {
   const localAnesthesia = createEmptyLocalAnesthesiaValue();
   return {
+    ...createEmptyOralHygieneMethods(),
     patientId: "",
     dentist: "",
     rdh: "",

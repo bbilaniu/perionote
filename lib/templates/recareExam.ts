@@ -1,3 +1,7 @@
+import {
+  createEmptyOralHygieneMethods,
+  type OralHygieneMethods,
+} from "@/lib/templates/oralHygieneMethods";
 export type DocumentationStatus = "not-documented" | "no" | "yes";
 
 export type PremedicationStatus =
@@ -42,7 +46,7 @@ import type { RecareIntraoralFinding } from "@/lib/templates/recareIntraoralCata
 export type { RecareExtraoralFinding } from "@/lib/templates/extraoralObservationsCatalog";
 import type { RecareExtraoralFinding } from "@/lib/templates/extraoralObservationsCatalog";
 
-export interface RecareExamForm {
+export interface RecareExamForm extends OralHygieneMethods {
   patientId: string;
   dentist: string;
   rda: string;
@@ -111,6 +115,7 @@ export interface RecareExamForm {
 
 export function createEmptyRecareExamForm(): RecareExamForm {
   return {
+    ...createEmptyOralHygieneMethods(),
     patientId: "",
     dentist: "",
     rda: "",

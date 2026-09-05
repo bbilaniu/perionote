@@ -1,5 +1,7 @@
 "use client";
 
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useMemo,
@@ -183,6 +185,7 @@ const stageEvidenceGroups = [
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   patientChiefConcern: "",
   plaqueAreas: "",
   stainAreas: "",
@@ -3581,24 +3584,30 @@ export function AdultHygiene2021Template({
                 placeholder="Optional comment"
               />
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <StaticSuggestionCombobox
-                id="adult-hygiene-flossing"
-                label="Flossing frequency"
-                value={form.flossingFrequency}
-                suggestions={flossingFrequencyChoices}
-                onChange={(value) => updateField("flossingFrequency", value)}
-                placeholder="Select or enter a flossing frequency"
-              />
-              <StaticSuggestionCombobox
-                id="adult-hygiene-brushing"
-                label="Brushing frequency"
-                value={form.brushingFrequency}
-                suggestions={brushingFrequencyChoices}
-                onChange={(value) => updateField("brushingFrequency", value)}
-                placeholder="Select or enter a brushing frequency"
-              />
-            </div>
+            <OralHygieneMethodsControl
+              value={form}
+              onChange={updateField}
+              brushingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adult-hygiene-brushing"
+                  label="Brushing frequency"
+                  value={form.brushingFrequency}
+                  suggestions={brushingFrequencyChoices}
+                  onChange={(value) => updateField("brushingFrequency", value)}
+                  placeholder="Select or enter a brushing frequency"
+                />
+              }
+              flossingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adult-hygiene-flossing"
+                  label="Flossing frequency"
+                  value={form.flossingFrequency}
+                  suggestions={flossingFrequencyChoices}
+                  onChange={(value) => updateField("flossingFrequency", value)}
+                  placeholder="Select or enter a flossing frequency"
+                />
+              }
+            />
             <OheEducationControl
               value={form}
               standardStatement={standardOheStatement}

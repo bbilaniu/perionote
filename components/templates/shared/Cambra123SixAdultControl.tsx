@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  RapidChoice,
+  RapidDisclosure,
+} from "@/components/forms/RapidChoiceControls";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import {
   DropdownChevron,
@@ -138,7 +142,9 @@ export function Cambra123SixAdultControl({
   value,
   legacy,
   onChange,
+  rapid = false,
 }: {
+  rapid?: boolean;
   value: Cambra123SixAdultAssessment;
   legacy: { level: string; factors: readonly string[]; notes: string };
   onChange: (value: Cambra123SixAdultAssessment) => void;
@@ -156,12 +162,12 @@ export function Cambra123SixAdultControl({
   const factorsSummary = showLegacy
     ? "Legacy documentation"
     : hasAssessment
-      ? `${yesCount} Yes · Score ${signedScore} · ${
-          value.finalRiskLevel
-            ? value.finalRiskLevel
-            : `${result.suggestedLevel} (Suggested)`
-        }`
-      : "Not calculated";
+    ? `${yesCount} Yes · Score ${signedScore} · ${
+        value.finalRiskLevel
+          ? value.finalRiskLevel
+          : `${result.suggestedLevel} (Suggested)`
+      }`
+    : "Not calculated";
 
   useEffect(() => {
     if (hasAssessment) setFactorsOpen(true);
@@ -205,7 +211,28 @@ export function Cambra123SixAdultControl({
     setFactorsOpen(false);
   }
 
-  return (
+  const RiskChoice = rapid ? RapidChoice : FixedChoiceListbox;
+  const finalCategoryControl = (
+    <>
+      <RiskChoice
+        id="adult-hygiene-cambra-final-risk-level"
+        label="Final clinician caries-risk category"
+        value={value.finalRiskLevel}
+        options={riskLevelOptions}
+        onChange={(finalRiskLevel) =>
+          onChange({ ...value, completionStatus: "complete", finalRiskLevel })
+        }
+      />
+      {value.completionStatus === "complete" && !value.finalRiskLevel ? (
+        <p className="self-end text-sm font-medium text-amber-800 dark:text-amber-200">
+          Select the clinician&apos;s final category before treating this as a
+          completed clinical record.
+        </p>
+      ) : null}
+    </>
+  );
+
+  const assessmentDetails = (
     <div className="space-y-5">
       <CollapsibleFieldset
         id="adult-hygiene-cambra-assessment-factors"
@@ -227,8 +254,8 @@ export function Cambra123SixAdultControl({
               {value.completionStatus === "complete"
                 ? "Calculated"
                 : value.completionStatus === "in-progress"
-                  ? "Started"
-                  : "Not started"}
+                ? "Started"
+                : "Not started"}
             </span>
           </div>
         </div>
@@ -276,11 +303,7 @@ export function Cambra123SixAdultControl({
         ) : null}
 
         <div className="grid gap-4 xl:grid-cols-2">
-          <ItemGroup
-            kind="protective"
-            value={value}
-            onToggle={toggleItem}
-          />
+          <ItemGroup kind="protective" value={value} onToggle={toggleItem} />
           <div className="space-y-4">
             <ItemGroup
               kind="risk"
@@ -383,21 +406,7 @@ export function Cambra123SixAdultControl({
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <FixedChoiceListbox
-          id="adult-hygiene-cambra-final-risk-level"
-          label="Final clinician caries-risk category"
-          value={value.finalRiskLevel}
-          options={riskLevelOptions}
-          onChange={(finalRiskLevel) =>
-            onChange({ ...value, completionStatus: "complete", finalRiskLevel })
-          }
-        />
-        {value.completionStatus === "complete" && !value.finalRiskLevel ? (
-          <p className="self-end text-sm font-medium text-amber-800 dark:text-amber-200">
-            Select the clinician&apos;s final category before treating this as a
-            completed clinical record.
-          </p>
-        ) : null}
+        {!rapid ? finalCategoryControl : null}
         <div className="md:col-span-2">
           <label
             className="text-sm font-medium"
@@ -433,5 +442,21 @@ export function Cambra123SixAdultControl({
         the final determination with the clinician.
       </p>
     </div>
+  );
+
+  return rapid ? (
+    <div className="space-y-4">
+      {finalCategoryControl}
+      <RapidDisclosure
+        label="Caries risk assessment details"
+        documented={Boolean(
+          value.yesItemIds.length || value.notes.trim() || showLegacy,
+        )}
+      >
+        {assessmentDetails}
+      </RapidDisclosure>
+    </div>
+  ) : (
+    assessmentDetails
   );
 }
