@@ -93,6 +93,13 @@ export function EditableCombobox<
     }
   }, [closeSignal]);
 
+  useEffect(() => {
+    // Focus can reach the server-rendered input before onFocus is attached.
+    if (!disabled && document.activeElement === internalInputRef.current) {
+      setOpen(true);
+    }
+  }, [disabled]);
+
   const describedBy = [
     helpText ? helpId : null,
     error ? errorId : null,

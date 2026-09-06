@@ -21,6 +21,8 @@ const config = [
       "node_modules/**",
       "out/**",
       "coverage/**",
+      "test-results/**",
+      "playwright-report/**",
       "next-env.d.ts",
     ]
   }
