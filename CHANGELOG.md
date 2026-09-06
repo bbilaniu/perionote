@@ -1,5 +1,12 @@
 # hygienenote
 
+## 1.0.1
+
+### Patch Changes
+
+- dc5744e: Open combobox suggestions when the input received focus before the page finished initializing.
+- aae8862: Upgrade Next.js and React to current patched releases, with Turbopack for development and static production builds.
+
 ## 1.0.0
 
 ### Major Changes
