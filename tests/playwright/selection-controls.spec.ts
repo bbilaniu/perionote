@@ -92,6 +92,55 @@ test("clinic interactive list controls use one closed-state affordance without c
   ).toBeNull();
 });
 
+test("chief concern suggestions preserve focus received before hydration", async ({
+  page,
+}) => {
+  let releaseScripts = () => {};
+  const scriptsReady = new Promise<void>((resolve) => {
+    releaseScripts = resolve;
+  });
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await scriptsReady;
+    await route.continue();
+  });
+
+  const chiefConcern = page.getByRole("combobox", {
+    name: "Patient's chief concern",
+    exact: true,
+  });
+  try {
+    await page.goto(recareExamUrl, { waitUntil: "commit" });
+    await chiefConcern.focus();
+    await expect(chiefConcern).toBeFocused();
+    await expect(chiefConcern).toHaveAttribute("aria-expanded", "false");
+  } finally {
+    releaseScripts();
+  }
+
+  await expect(page.locator("#recare-note-started")).toHaveValue(
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+  );
+  await expect(chiefConcern).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByRole("option", {
+      name: "Food catches between teeth Starter",
+      exact: true,
+    }),
+  ).toBeVisible();
+
+  await chiefConcern.press("Escape");
+  await expect(chiefConcern).toBeFocused();
+  await expect(chiefConcern).toHaveAttribute("aria-expanded", "false");
+
+  await chiefConcern.press("ArrowDown");
+  await chiefConcern.press("Enter");
+  await expect(
+    page.getByRole("list", { name: "Patient's chief concern selected values" }),
+  ).toContainText("Nothing");
+  await expect(chiefConcern).toBeFocused();
+  await expect(chiefConcern).toHaveAttribute("aria-expanded", "false");
+});
+
 test("Recare and Adult Hygiene share the chief concern catalogue and Nothing rule", async ({
   page,
 }) => {
@@ -131,7 +180,10 @@ test("Recare and Adult Hygiene share the chief concern catalogue and Nothing rul
   );
 
   await recareChiefConcern.fill("Shared custom concern");
-  await page.getByRole("button", { name: "Remember and add" }).click();
+  await recareChiefConcern
+    .locator("xpath=ancestor::*[@data-editable-combobox][1]")
+    .getByRole("button", { name: "Remember and add", exact: true })
+    .click();
   await expect(selectedRecareConcerns).not.toContainText("Nothing");
   await expect(selectedRecareConcerns).toContainText("Shared custom concern");
   await page

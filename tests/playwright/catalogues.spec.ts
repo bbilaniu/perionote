@@ -7,7 +7,7 @@ import {
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
-async function reloadDiscardingForm(page: Page) {
+async function reloadAcceptingWarning(page: Page) {
   const dialogPromise = page.waitForEvent("dialog");
   const reloadPromise = page.reload();
   const dialog = await dialogPromise;
@@ -20,6 +20,8 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   page,
 }) => {
   await page.goto("/settings");
+  await expect(page.getByRole("button", { name: "Export catalogue", exact: true }))
+    .toBeEnabled({ timeout: 15_000 });
 
   const providerGroup = page.getByRole("region", {
     name: "Provider roles catalogues",
@@ -71,6 +73,12 @@ test("catalogue manager groups related catalogues into keyboard-accessible tabs"
   const additionalFindingsTab = occlusionGroup.getByRole("tab", {
     name: /Additional occlusal findings/,
   });
+  const terminalPlaneTab = occlusionGroup.getByRole("tab", {
+    name: /Terminal plane/,
+  });
+  await expect(terminalPlaneTab).toHaveAttribute("aria-selected", "true");
+  await terminalPlaneTab.press("ArrowRight");
+  await expect(molarTab).toBeFocused();
   await expect(molarTab).toHaveAttribute("aria-selected", "true");
   await expect(molarTab).toContainText("3");
   await skeletalTab.click();
@@ -239,7 +247,7 @@ test("saved providers can prefill new notes without changing restored drafts", a
   await expect(
     page.getByText("Enter at least one of Dentist, RDA, or RDH."),
   ).toBeVisible();
-  await reloadDiscardingForm(page);
+  await reloadAcceptingWarning(page);
   await expect(recareDentist).toHaveValue("");
   await expect(recareRda).toHaveValue("");
   await expect(recareRdh).toHaveValue("");
@@ -302,7 +310,10 @@ test("Recare Exam offers public occlusion seeds and remembers providers explicit
   await dentist.fill("Synthetic Dentist");
   await page.getByRole("button", { name: "Remember this value" }).click();
 
-  await reloadDiscardingForm(page);
+  // Reload can restore an autosaved draft; clear the encounter explicitly.
+  await clearCurrentForm(page);
+  await expect(dentist).toHaveValue("");
+  await page.reload();
 
   await expect(dentist).toHaveValue("");
   await page
@@ -345,10 +356,10 @@ test("Adult Hygiene documents catalogue-backed caries risk factors", async ({
     .fill("Synthetic rationale reviewed");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Caries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.$/,
+    /^Caries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.$/m,
   );
 
-  await reloadDiscardingForm(page);
+  await reloadAcceptingWarning(page);
   await expect(
     page.getByRole("list", { name: "Caries risk factors selected values" }),
   ).toContainText("Synthetic local dry-mouth factor");
@@ -372,7 +383,7 @@ test("typing and demo loading do not silently add catalogue values", async ({
 
   const rda = page.getByRole("combobox", { name: "RDA" });
   await rda.fill("Unsaved Synthetic RDA");
-  await reloadDiscardingForm(page);
+  await reloadAcceptingWarning(page);
 
   await rda.focus();
   await expect(
@@ -380,7 +391,7 @@ test("typing and demo loading do not silently add catalogue values", async ({
   ).toHaveCount(0);
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
-  await reloadDiscardingForm(page);
+  await reloadAcceptingWarning(page);
 
   const dentist = page.getByRole("combobox", { name: "Dentist" });
   await dentist.focus();
@@ -392,6 +403,8 @@ test("typing and demo loading do not silently add catalogue values", async ({
 test("form reset preserves remembered values and catalogue management controls seeds", async ({
   page,
 }) => {
+  // This workflow initializes the form and catalogue across four navigations.
+  test.setTimeout(60_000);
   await page.goto(recareExamUrl);
 
   const rdh = page.getByRole("combobox", { name: "RDH" });
@@ -408,6 +421,9 @@ test("form reset preserves remembered values and catalogue management controls s
   const molarCatalogue = page.locator(
     '[data-catalogue-key="clinical-exam.molar-occlusion"]',
   );
+  await expect(page.getByRole("button", { name: "Export catalogue", exact: true }))
+    .toBeEnabled({ timeout: 15_000 });
+  await page.getByRole("tab", { name: /Molar occlusion/ }).click();
   const classOneRow = molarCatalogue.locator(
     '[data-catalogue-item-id="seed.molar.cl-i"]',
   );
@@ -453,6 +469,9 @@ test("form reset preserves remembered values and catalogue management controls s
   const hiddenClassOneRow = page
     .locator('[data-catalogue-key="clinical-exam.molar-occlusion"]')
     .locator('[data-catalogue-item-id="seed.molar.cl-i"]');
+  await expect(page.getByRole("button", { name: "Export catalogue", exact: true }))
+    .toBeEnabled({ timeout: 15_000 });
+  await page.getByRole("tab", { name: /Molar occlusion/ }).click();
   await expect(
     hiddenClassOneRow.getByRole("button", { name: "Unhide" }),
   ).toBeVisible();

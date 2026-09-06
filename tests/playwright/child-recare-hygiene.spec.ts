@@ -4,13 +4,13 @@ import { openGeneratedNote } from "./helpers/interactiveTemplate";
 const sourceUrl = "/templates/clinic/child-recare-exam-hygiene-notes";
 const interactiveUrl = `${sourceUrl}/interactive`;
 
-test("child recare pilot is discoverable from its source template", async ({
+test("ready child recare conversion is discoverable from its source template", async ({
   page,
 }) => {
   await page.goto(sourceUrl);
 
   const interactiveLink = page.getByRole("link", {
-    name: "Open interactive version · pilot",
+    name: "Open interactive version · ready",
   });
   await expect(interactiveLink).toHaveAttribute("href", `${interactiveUrl}/`);
   await interactiveLink.click();
@@ -22,8 +22,8 @@ test("child recare pilot is discoverable from its source template", async ({
       exact: true,
     }),
   ).toBeVisible();
-  await expect(page.locator('header[data-template-lifecycle="pilot"]')).toContainText(
-    "Pilot interactive conversion",
+  await expect(page.locator('header[data-template-lifecycle="ready"]')).toContainText(
+    "Ready interactive conversion",
   );
 });
 
@@ -266,7 +266,7 @@ test("child recare selects, calculates, and preserves pediatric CAMBRA instrumen
   await expect(factors).toContainText("1 Yes · Score +3 · High");
 });
 
-test("child recare desktop layout gives its header and recovery strip the workspace width", async ({
+test("child recare desktop layout aligns its header and recovery strip with the form column", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -290,16 +290,19 @@ test("child recare desktop layout gives its header and recovery strip the worksp
     const recovery = document.querySelector<HTMLElement>(
       '[aria-label="Local draft recovery"]',
     );
-    const form = document.querySelector<HTMLElement>("main form");
+    const formColumn = header?.parentElement;
+    const note = document.querySelector<HTMLElement>("#generated-note-drawer");
     const date = document.querySelector<HTMLElement>("#child-recare-booked");
     const dateButton = document.querySelector<HTMLElement>(
       '[aria-label="Choose Booked date"]',
     );
-    if (!header || !recovery || !form || !date || !dateButton) {
+    if (!header || !recovery || !formColumn || !note || !date || !dateButton) {
       throw new Error("Expected pediatric form controls were not rendered.");
     }
     return {
-      formWidth: form.getBoundingClientRect().width,
+      formColumnWidth: formColumn.getBoundingClientRect().width,
+      formColumnRight: formColumn.getBoundingClientRect().right,
+      noteLeft: note.getBoundingClientRect().left,
       headerWidth: header.getBoundingClientRect().width,
       recoveryWidth: recovery.getBoundingClientRect().width,
       dateHeight: date.getBoundingClientRect().height,
@@ -307,8 +310,9 @@ test("child recare desktop layout gives its header and recovery strip the worksp
     };
   });
 
-  expect(Math.abs(dimensions.headerWidth - dimensions.formWidth)).toBeLessThan(2);
-  expect(Math.abs(dimensions.recoveryWidth - dimensions.formWidth)).toBeLessThan(2);
+  expect(Math.abs(dimensions.headerWidth - dimensions.formColumnWidth)).toBeLessThan(2);
+  expect(Math.abs(dimensions.recoveryWidth - dimensions.formColumnWidth)).toBeLessThan(2);
+  expect(dimensions.noteLeft).toBeGreaterThan(dimensions.formColumnRight);
   expect(dimensions.dateButtonHeight).toBe(dimensions.dateHeight);
   await expect(page.getByLabel("Booked date", { exact: true })).toBeVisible();
 });
