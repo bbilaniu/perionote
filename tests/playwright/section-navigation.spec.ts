@@ -162,6 +162,11 @@ test("desktop Review note stays pinned while the section list follows form progr
 }) => {
   await page.setViewportSize({ width: 1100, height: 500 });
   await page.goto("/templates/clinic/adult-hygiene-2026/interactive");
+  // Note initialization also confirms the form's client effects have mounted.
+  await expect(page.getByLabel("Note started", { exact: true })).toHaveValue(
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+    { timeout: 15_000 },
+  );
 
   const navigation = page.getByRole("navigation", { name: "Form sections" });
   const reviewNote = navigation.getByRole("button", { name: "Review note" });

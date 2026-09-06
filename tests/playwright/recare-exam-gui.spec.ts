@@ -1293,6 +1293,9 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   page,
 }) => {
   await page.goto(recareExamUrl);
+  await expect(page.locator("#recare-note-started")).toHaveValue(
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+  );
 
   const additionalFindings = page.getByRole("combobox", {
     name: "Additional occlusal findings",
@@ -1525,13 +1528,13 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await firstOptionType.focus();
   await expect(
     page.getByRole("option", {
-      name: "Hygiene maintenance Starter",
+      name: "Extraction (Tooth Ablation) Starter",
       exact: true,
     }),
   ).toBeVisible();
   await page
     .getByRole("option", {
-      name: "Hygiene maintenance Starter",
+      name: "Extraction (Tooth Ablation) Starter",
       exact: true,
     })
     .click();
@@ -1662,7 +1665,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await expect(addPlanItem).toHaveClass(/py-2/);
   await expect(addPlanItem).toHaveClass(/text-sm/);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  1\. Hygiene maintenance\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Hygiene maintenance\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15/,
+    /Treatment Options:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15/,
   );
   const listTreatmentOptions = page.getByLabel(
     "List each treatment option on a separate line in the note",
@@ -1675,7 +1678,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await listTreatmentOptions.uncheck();
   await listTreatmentPlan.uncheck();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options: Hygiene maintenance; Fillings — tooth 36; Fillings — teeth 14, 15\n\nTreatment Plan: Hygiene maintenance; Fillings — tooth 36; Fillings — teeth 14, 15/,
+    /Treatment Options: Extraction \(Tooth Ablation\); Fillings — tooth 36; Fillings — teeth 14, 15\n\nTreatment Plan: Extraction \(Tooth Ablation\); Fillings — tooth 36; Fillings — teeth 14, 15/,
   );
   await listTreatmentOptions.check();
   await listTreatmentPlan.check();
@@ -1704,7 +1707,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   ).toHaveValue("Composite fillings");
   await expect(planRows).toHaveCount(2);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  1\. Hygiene maintenance\n  2\. Composite fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Hygiene maintenance\n  2\. Fillings — teeth 14, 15/,
+    /Treatment Options:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Composite fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Fillings — teeth 14, 15/,
   );
 
   await addOption.click();

@@ -168,6 +168,11 @@ test("clinical catalogue colocates the Recare Exam source and conversion", async
   const originalOnlyCard = page
     .getByRole("article")
     .filter({ hasText: "Local Anesthetic" });
+  await expect(originalOnlyCard).toHaveCount(0);
+  await page
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
   await expect(
     originalOnlyCard.getByRole("link", {
       name: "Open original Local Anesthetic",
@@ -252,6 +257,10 @@ test("clinical template cards follow the selected default destination", async ({
   const originalOnlyCard = page
     .getByRole("article")
     .filter({ hasText: "Local Anesthetic" });
+  await page
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
   await Promise.all([
     page.waitForURL("**/templates/clinic/local-anesthetic/"),
     originalOnlyCard
@@ -2074,11 +2083,15 @@ test("clinic template library follows the clinical menu and opens a template", a
     }),
   ).toBeVisible();
   await expect(
-    page.getByText(
+    page.locator("#periodontal-maintenance").getByText(
       "This category is ready for the clinic's next treatment or referral addendum.",
     ),
   ).toBeVisible();
 
+  await page
+    .getByRole("radiogroup", { name: "Template versions" })
+    .getByRole("radio", { name: "All", exact: true })
+    .click();
   const adultHygieneCard = page
     .getByRole("article")
     .filter({ hasText: "2021 Adult Hygiene" });
@@ -2533,7 +2546,7 @@ test("very short template desktop shell does not leave trailing space after the 
   await page.setViewportSize({ width: 1664, height: 900 });
   await page.goto("/templates/very-short-template");
 
-  const layoutMetrics = await page.locator("main > div.min-h-screen > div").evaluate((root) => {
+  const layoutMetrics = await page.locator("main .min-h-screen > div").evaluate((root) => {
     const children = Array.from(root.children);
     const summary = children[1];
     const rootRect = root.getBoundingClientRect();

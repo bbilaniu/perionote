@@ -71,9 +71,30 @@ Install Chromium once before the browser suite:
 npx playwright install chromium
 ```
 
-`npm run dev`, `npm run build`, and Playwright use separate Next.js output
-directories so they can run without corrupting one another's generated files.
-Use the npm scripts instead of invoking `next dev` directly.
+The browser suite builds the production static export and serves it locally on
+port 3100. Playwright starts and stops that server automatically. It uses six
+browser workers by default; override concurrency with
+`npm run test:e2e -- --workers=2`. Keep port 3100 free when running the suite.
+
+Development and builds use separate Next.js output directories so browser tests
+can build the export while `npm run dev` is running. `npm run dev:e2e` remains
+available for manual testing against a separate development server. Use the npm
+scripts instead of invoking `next dev` directly.
+
+Builds use a temporary source copy inside `.next-build/`, with the repository as
+the dependency-resolution root for both Webpack and Turbopack. The wrapper
+removes that copy afterward and replaces `out/` only after a successful export.
+Next.js 16 uses Turbopack for development and production builds by default.
+Build flags are forwarded to Next.js; to use Webpack for a build:
+
+```bash
+npm run build -- --webpack
+```
+
+The Next.js 16 lint preset introduces additional React diagnostics. The
+`set-state-in-effect`, `refs`, and `purity` rules currently report warnings while
+existing storage hydration and draft-lifecycle patterns are reviewed. Existing
+Hooks ordering and dependency checks retain their prior enforcement.
 
 WebKit is an optional compatibility check:
 
