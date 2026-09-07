@@ -16,7 +16,7 @@ export default function TemplatesIndexPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Link
           href="/templates/clinic"
-          className="group relative rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
+          className="group relative rounded-xl border border-slate-200 bg-white p-6 shadow-xs transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
         >
           <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Clinical library
@@ -35,7 +35,7 @@ export default function TemplatesIndexPage() {
 
         <Link
           href="/templates/interactive"
-          className="group relative rounded-xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
+          className="group relative rounded-xl border border-slate-200 bg-white p-6 shadow-xs transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
         >
           <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Original webforms

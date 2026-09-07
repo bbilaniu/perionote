@@ -166,7 +166,7 @@ function Section({
   return (
     <section
       id={getTemplateSectionId(title)}
-      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
     >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
@@ -278,7 +278,7 @@ function CheckboxField({
     >
       <input
         id={id}
-        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-700 focus:ring-sky-500"
+        className="mt-0.5 h-4 w-4 rounded-sm border-slate-300 text-sky-700 focus:ring-sky-500"
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}

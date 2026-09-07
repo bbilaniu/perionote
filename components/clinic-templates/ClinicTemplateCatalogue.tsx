@@ -32,7 +32,7 @@ type TemplateVisibility = "all" | "interactive";
 type TemplateVersionVisibility = "current" | "all";
 
 const titleLinkClass =
-  "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
+  "rounded-xs outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
 
 export function ClinicTemplateCatalogue({
   groups,
@@ -71,7 +71,7 @@ export function ClinicTemplateCatalogue({
   return (
     <>
       <section
-        className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between dark:border-slate-800 dark:bg-slate-900"
+        className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-xs lg:flex-row lg:items-end lg:justify-between dark:border-slate-800 dark:bg-slate-900"
         aria-labelledby="clinic-template-preferences-heading"
       >
         <div>
@@ -297,7 +297,7 @@ function ClinicTemplateCard({
 
   return (
     <article
-      className="group relative cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
+      className="group relative cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
       onClick={openDefaultFromCard}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">

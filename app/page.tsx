@@ -48,7 +48,7 @@ const managementCards = [
 ] as const;
 
 const cardClass =
-  "group block h-full rounded-xl border p-5 shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
+  "group block h-full rounded-xl border p-5 shadow-xs transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
 
 export default function HomePage() {
   return (

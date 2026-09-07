@@ -79,11 +79,11 @@ export default async function ClinicTemplatePage({
         </div>
       </header>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="border-b border-slate-200 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
           ClearDent source name: {template.sourceTitle}
         </div>
-        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-5 font-sans text-sm leading-6 text-slate-800 dark:text-slate-200">
+        <pre className="overflow-x-auto whitespace-pre-wrap wrap-break-word p-5 font-sans text-sm leading-6 text-slate-800 dark:text-slate-200">
           {template.content}
         </pre>
       </div>

@@ -40,7 +40,7 @@ const secondaryButtonClass =
 const dangerButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const inputClass =
-  "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm outline-none transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900";
+  "w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 shadow-xs outline-hidden transition focus:border-sky-600 focus:ring-2 focus:ring-sky-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-sky-400 dark:focus:ring-sky-900";
 
 const catalogueTabGroups: Array<{
   section: (typeof CATALOGUE_SECTIONS)[number];
@@ -765,7 +765,7 @@ function CatalogueCard({
   return (
     <section
       data-catalogue-key={definition.key}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
     >
       {content}
     </section>
@@ -820,7 +820,7 @@ function CatalogueTabbedCard({
   return (
     <section
       aria-label={`${title} catalogues`}
-      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900"
     >
       <h3 className="text-lg font-semibold">{title}</h3>
       <div
@@ -1109,7 +1109,7 @@ export function CatalogueManager() {
         );
       })}
 
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <h2 className="text-xl font-semibold">Import and export</h2>
         <p className="mt-2 max-w-4xl text-sm text-slate-700 dark:text-slate-300">
           An export is readable JSON and may contain private staff names or

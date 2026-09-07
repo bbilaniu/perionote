@@ -22,7 +22,7 @@ function formatDraftTime(value: string | Date): string {
 }
 
 const openDraftButtonClass =
-  "mt-2 text-sm font-semibold text-sky-800 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline dark:text-sky-200 dark:disabled:text-slate-600";
+  "mt-2 text-sm font-semibold text-sky-800 hover:underline focus-visible:rounded-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline dark:text-sky-200 dark:disabled:text-slate-600";
 
 function DraftIdentity({
   patientId,
@@ -130,7 +130,7 @@ export function LocalDraftRail({
 
   return (
     <section
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900"
       aria-labelledby="local-draft-rail-title"
     >
       <header className="shrink-0 p-4 pb-0">
@@ -181,7 +181,7 @@ export function LocalDraftRail({
           ref={draftListRef}
           role="region"
           aria-label="Saved draft lists"
-          className="workspace-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500"
+          className="workspace-scrollbar h-full min-h-0 overflow-y-auto overscroll-contain px-4 pb-4 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-500"
           data-drag-scroll-disabled
           tabIndex={0}
           onScroll={updateScrollEdges}
@@ -291,13 +291,13 @@ export function LocalDraftRail({
 
         {scrollEdges.above ? (
           <div
-            className="pointer-events-none absolute inset-x-4 top-0 h-5 bg-gradient-to-b from-white to-transparent dark:from-slate-900"
+            className="pointer-events-none absolute inset-x-4 top-0 h-5 bg-linear-to-b from-white to-transparent dark:from-slate-900"
             aria-hidden="true"
           />
         ) : null}
         {scrollEdges.below ? (
           <div
-            className="pointer-events-none absolute inset-x-4 bottom-0 h-7 bg-gradient-to-t from-white to-transparent dark:from-slate-900"
+            className="pointer-events-none absolute inset-x-4 bottom-0 h-7 bg-linear-to-t from-white to-transparent dark:from-slate-900"
             aria-hidden="true"
           />
         ) : null}
@@ -306,7 +306,7 @@ export function LocalDraftRail({
       <footer className="shrink-0 border-t border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <Link
           href="/drafts"
-          className="inline-flex text-sm font-semibold text-sky-800 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-200"
+          className="inline-flex text-sm font-semibold text-sky-800 hover:underline focus-visible:rounded-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-200"
         >
           View all saved drafts
           {summaries.length ? " (" + summaries.length + ")" : ""}

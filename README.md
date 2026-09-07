@@ -47,6 +47,12 @@ docs/                       Current decisions, specifications, and work records
 legacy/imported-jsx         Preserved legacy source material
 ```
 
+## Browser support
+
+The Tailwind CSS 4 interface requires Safari 16.4+, Chrome/Edge 111+, or
+Firefox 128+. Older browsers are not supported. See the
+[Tailwind browser requirements](https://tailwindcss.com/docs/upgrade-guide#browser-requirements).
+
 ## Development
 
 HygieneNote requires Node.js 24 and npm.
@@ -88,10 +94,13 @@ Build flags are forwarded to Next.js; to use Webpack for a build:
 npm run build -- --webpack
 ```
 
-The Next.js 16 lint preset introduces additional React diagnostics. The
-`set-state-in-effect`, `refs`, and `purity` rules currently report warnings while
-existing storage hydration and draft-lifecycle patterns are reviewed. Existing
-Hooks ordering and dependency checks retain their prior enforcement.
+Tailwind configuration lives in `app/globals.css`: explicit source paths,
+class-based dark mode, and theme tokens. The existing application palette is
+retained there so this framework upgrade does not recolor the interface.
+PostCSS uses `@tailwindcss/postcss`, which handles imports and vendor prefixes.
+Source paths are relative to the stylesheet so both development and isolated
+production builds scan the same application files. Keep utility names complete
+in source strings so Tailwind can discover them.
 
 WebKit is an optional compatibility check:
 
