@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import {
   DropdownChevron,
@@ -131,7 +131,7 @@ export function Cambra123ZeroToSixControl({
 }) {
   const result = assessCambra123ZeroToSix(value);
   const hasAssessment = hasCambra123ZeroToSixContent(value);
-  const [factorsOpen, setFactorsOpen] = useState(hasAssessment);
+  const [factorsOpen, setFactorsOpen] = useAutoExpandDisclosure(hasAssessment);
   const yesCount =
     result.protectiveYesCount +
     result.riskYesCount +
@@ -145,10 +145,6 @@ export function Cambra123ZeroToSixControl({
           : `${result.suggestedLevel} (Suggested)`
       }`
     : "Not calculated";
-
-  useEffect(() => {
-    if (hasAssessment) setFactorsOpen(true);
-  }, [hasAssessment]);
 
   function withStartedStatus(
     patch: Partial<Cambra123ZeroToSixAssessment>,

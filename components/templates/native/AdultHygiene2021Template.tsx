@@ -1,5 +1,6 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
 import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
 import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
@@ -1200,31 +1201,20 @@ export function PeriodontalClassificationControl({
   const gradeObservationSummary = documentedObservationSummary(
     gradeObservationCount,
   );
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    hasStructuredObservations,
-  );
-  const [stageEvidenceOpen, setStageEvidenceOpen] = useState(
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      hasStructuredObservations,
+    );
+  const [stageEvidenceOpen, setStageEvidenceOpen] = useAutoExpandDisclosure(
     hasStageSectionObservations,
   );
-  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
-    gradeObservationCount > 0,
+  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useAutoExpandDisclosure(
+    gradeObservationCount,
   );
   const [pendingMissingField, setPendingMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
   const [highlightedMissingField, setHighlightedMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
-
-  useEffect(() => {
-    if (hasStructuredObservations) setStructuredObservationsOpen(true);
-  }, [hasStructuredObservations]);
-
-  useEffect(() => {
-    if (hasStageSectionObservations) setStageEvidenceOpen(true);
-  }, [hasStageSectionObservations]);
-
-  useEffect(() => {
-    if (gradeObservationCount > 0) setGradeEvidenceOpen(true);
-  }, [gradeObservationCount]);
 
   useEffect(() => {
     if (!pendingMissingField || !structuredObservationsOpen) return;
@@ -2402,15 +2392,10 @@ function GingivalDescriptionControl({
     : assessment.status === "wnl"
     ? "WNL"
     : "Not assessed";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function updateFinding(
     optionId: string,
