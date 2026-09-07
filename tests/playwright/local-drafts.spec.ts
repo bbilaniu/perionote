@@ -72,11 +72,12 @@ async function deleteDraftThroughDialog(page: Page, name: RegExp) {
 test("Adult Hygiene autosaves after ten seconds and restores its tab after reload", async ({
   page,
 }) => {
+  await page.clock.install();
   await page.goto(adultHygieneUrl);
   await page.locator("#adult-hygiene-patient-id").fill("Synthetic autosave A");
   await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH");
 
-  await page.waitForTimeout(10_500);
+  await page.clock.runFor(10_000);
 
   const savedDrafts = await page.evaluate(
     (prefix) =>
