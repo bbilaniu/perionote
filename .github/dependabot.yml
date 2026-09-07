@@ -29,3 +29,6 @@ updates:
       # Keep the CLI compatible with the release action until a joint migration.
       - dependency-name: "@changesets/cli"
         update-types: [version-update:semver-major]
+      # ignore-until: 2026-10-28
+      - dependency-name: "@types/node"
+        versions: ["^26.0.0"]
