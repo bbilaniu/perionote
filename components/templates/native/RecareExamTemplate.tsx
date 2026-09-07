@@ -329,6 +329,15 @@ function CheckboxField({
   );
 }
 
+// Allocate a new identity only when an action adds or replaces a finding.
+function createToothFinding(optionId: string): RecareToothFinding {
+  return {
+    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    optionId,
+    toothAreas: [],
+  };
+}
+
 type TeethAssessmentForm = Pick<
   RecareExamForm,
   "teethStatus" | "toothFindings" | "additionalToothFindings"
@@ -363,11 +372,6 @@ export function TeethAssessment({
       shouldAutoExpandStructuredObservations,
     );
 
-  const createFinding = (optionId: string): RecareToothFinding => ({
-    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    optionId,
-    toothAreas: [],
-  });
   function setStatus(next: ExamStatus) {
     if (next === "wnl") {
       if (
@@ -379,7 +383,7 @@ export function TeethAssessment({
         return;
       onChange({
         teethStatus: "wnl",
-        toothFindings: recareToothWnlOptionIds.map(createFinding),
+        toothFindings: recareToothWnlOptionIds.map(createToothFinding),
         additionalToothFindings: "",
       });
     } else if (next === "not-assessed") {
@@ -407,7 +411,7 @@ export function TeethAssessment({
       return;
     onChange({
       teethStatus: "findings",
-      toothFindings: recareToothWnlOptionIds.map(createFinding),
+      toothFindings: recareToothWnlOptionIds.map(createToothFinding),
       additionalToothFindings: "",
     });
   }
@@ -434,7 +438,7 @@ export function TeethAssessment({
       teethStatus: "findings",
       toothFindings: [
         ...findings.filter((item) => !conflicts.has(item.optionId)),
-        createFinding(optionId),
+        createToothFinding(optionId),
       ],
     });
   }

@@ -80,18 +80,19 @@ export function EditableCombobox<
   const [activeIndex, setActiveIndex] = useState(-1);
   const [selectionMessage, setSelectionMessage] = useState("");
 
-  useEffect(() => {
-    setActiveIndex((index) =>
-      index >= suggestions.length ? suggestions.length - 1 : index,
-    );
-  }, [suggestions.length]);
+  // Keep keyboard selection within the rendered list when suggestions shrink.
+  if (activeIndex >= suggestions.length) {
+    setActiveIndex(suggestions.length - 1);
+  }
 
-  useEffect(() => {
+  const [previousCloseSignal, setPreviousCloseSignal] = useState(closeSignal);
+  if (closeSignal !== previousCloseSignal) {
+    setPreviousCloseSignal(closeSignal);
     if (closeSignal !== undefined) {
       setOpen(false);
       setActiveIndex(-1);
     }
-  }, [closeSignal]);
+  }
 
   useEffect(() => {
     // Focus can reach the server-rendered input before onFocus is attached.
