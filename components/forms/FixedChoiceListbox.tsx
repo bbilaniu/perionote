@@ -207,7 +207,7 @@ export function FixedChoiceListbox<TValue extends string>({
             tabIndex={-1}
             aria-label={`${label} options`}
             aria-activedescendant={`${listboxId}-option-${activeIndex}`}
-            className={`absolute top-full z-50 mt-1 max-h-60 overflow-auto rounded-xl border border-slate-300 bg-white p-1 shadow-xl outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 ${
+            className={`absolute top-full z-50 mt-1 max-h-60 overflow-auto rounded-xl border border-slate-300 bg-white p-1 shadow-xl outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:bg-slate-950 ${
               compact
                 ? "right-0 w-max min-w-full max-w-[calc(100vw-2rem)]"
                 : "left-0 right-0"

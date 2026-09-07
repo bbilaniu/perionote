@@ -2,6 +2,32 @@ import { expect, test } from "@playwright/test";
 
 const themeStorageKey = "hygienenote-theme";
 
+test("dark dental observation buttons retain readable hover colors", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/templates/clinic/recare-exam/interactive/");
+  await expect(page.locator("html")).toHaveClass(/dark/);
+
+  const observations = page.getByRole("group", {
+    name: "Structured dental observations",
+    exact: true,
+  });
+  await observations
+    .getByRole("button", { name: /Structured dental observations/ })
+    .click();
+  const caries = observations.getByRole("button", {
+    name: "Caries",
+    exact: true,
+  });
+  await caries.hover();
+  await caries.evaluate(async (element) => {
+    await Promise.all(element.getAnimations().map((animation) => animation.finished));
+  });
+  await expect(caries).toHaveCSS("background-color", "rgb(15, 23, 42)");
+  await expect(caries).toHaveCSS("color", "rgb(241, 245, 249)");
+});
+
 test("theme listbox persists explicit choices and follows system changes", async ({
   page,
 }) => {
@@ -17,6 +43,8 @@ test("theme listbox persists explicit choices and follows system changes", async
   await page.getByRole("option", { name: "Dark", exact: true }).click();
   await expect(theme).toHaveAttribute("data-value", "dark");
   await expect(page.locator("html")).toHaveClass(/dark/);
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(2, 6, 23)");
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(241, 245, 249)");
   await expect
     .poll(() =>
       page.evaluate((storageKey) => localStorage.getItem(storageKey), themeStorageKey),
@@ -35,6 +63,8 @@ test("theme listbox persists explicit choices and follows system changes", async
   await options.press("Enter");
   await expect(theme).toHaveAttribute("data-value", "light");
   await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(248, 250, 252)");
+  await expect(page.locator("body")).toHaveCSS("color", "rgb(15, 23, 42)");
 
   await theme.click();
   await page.getByRole("option", { name: "System", exact: true }).click();

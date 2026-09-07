@@ -33,7 +33,7 @@ function SectionLinks({
             <a
               href={`#${section.id}`}
               aria-current={isActive ? "location" : undefined}
-              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${horizontal ? "min-h-11 whitespace-nowrap" : ""} ${
+              className={`flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 ${horizontal ? "min-h-11 whitespace-nowrap" : ""} ${
                 isActive
                   ? "bg-sky-100 text-sky-950 dark:bg-sky-900/70 dark:text-sky-100"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
@@ -274,13 +274,13 @@ export function TemplateSectionNavigation({
       <nav
         aria-label="Form sections"
         className={compact
-          ? "sticky top-2 z-20 hidden min-w-0 max-w-full self-start overflow-hidden rounded-xl border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur lg:block dark:border-slate-800 dark:bg-slate-900/95"
-          : "sticky top-6 order-2 hidden max-h-[calc(100vh-3rem)] self-start overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur lg:flex lg:flex-col dark:border-slate-800 dark:bg-slate-900/95"}
+          ? "sticky top-2 z-20 hidden min-w-0 max-w-full self-start overflow-hidden rounded-xl border border-slate-200 bg-white/95 p-2 shadow-xs backdrop-blur-sm lg:block dark:border-slate-800 dark:bg-slate-900/95"
+          : "sticky top-6 order-2 hidden max-h-[calc(100vh-3rem)] self-start overflow-hidden rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-xs backdrop-blur-sm lg:flex lg:flex-col dark:border-slate-800 dark:bg-slate-900/95"}
       >
         {onReviewNote ? (
           <button
             type="button"
-            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 xl:hidden dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+            className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-xs transition hover:bg-sky-800 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 xl:hidden dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
             aria-controls={noteDrawerId}
             aria-expanded={noteExpanded}
             data-review-note-trigger
@@ -322,7 +322,7 @@ export function TemplateSectionNavigation({
           <button
             ref={mobileTriggerRef}
             type="button"
-            className={`flex min-h-12 min-w-0 max-w-full items-center gap-2 rounded-xl border bg-white/95 px-3 py-2 text-left shadow-lg backdrop-blur transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:bg-slate-900/95 ${
+            className={`flex min-h-12 min-w-0 max-w-full items-center gap-2 rounded-xl border bg-white/95 px-3 py-2 text-left shadow-lg backdrop-blur-sm transition focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:bg-slate-900/95 ${
               showScrollCue
                 ? "border-sky-500 ring-2 ring-sky-200 dark:border-sky-400 dark:ring-sky-900"
                 : "border-slate-200 dark:border-slate-800"
@@ -346,7 +346,7 @@ export function TemplateSectionNavigation({
           {onReviewNote ? (
             <button
               type="button"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-sky-800 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:hover:bg-sky-600 dark:focus-visible:ring-offset-slate-950"
               aria-controls={noteDrawerId}
               aria-expanded={noteExpanded}
               data-review-note-trigger
@@ -372,13 +372,13 @@ export function TemplateSectionNavigation({
           if (event.target === event.currentTarget) setMobileOpen(false);
         }}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/95">
           <h2 id="mobile-form-sections-title" className="font-semibold">
             On this form
           </h2>
           <button
             type="button"
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 px-3 text-sm font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:hover:bg-slate-800"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-slate-300 px-3 text-sm font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:hover:bg-slate-800"
             onClick={() => setMobileOpen(false)}
           >
             Close

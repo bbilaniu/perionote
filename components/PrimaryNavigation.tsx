@@ -46,7 +46,7 @@ export function PrimaryNavigation() {
             }`}
           >
             <Link
-              className={`relative inline-flex px-0.5 py-2 text-sm font-medium transition after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:transition-colors focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              className={`relative inline-flex px-0.5 py-2 text-sm font-medium transition after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:transition-colors focus-visible:rounded-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 ${
               active
                   ? "text-sky-950 after:bg-sky-700 dark:text-sky-100 dark:after:bg-sky-400"
                   : "text-chart-accent after:bg-transparent hover:text-sky-950 hover:after:bg-sky-300 dark:text-sky-300 dark:hover:text-sky-100 dark:hover:after:bg-sky-700"

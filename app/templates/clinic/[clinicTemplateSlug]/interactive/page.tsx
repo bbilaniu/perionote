@@ -49,12 +49,14 @@ export default async function ClinicConversionPage({
 
   return (
     <section className="space-y-5">
-      <FullPageLink
-        href={`/templates/clinic/${sourceTemplate.slug}/`}
-        className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300"
-      >
-        ← Original {sourceTemplate.title} template
-      </FullPageLink>
+      <div>
+        <FullPageLink
+          href={`/templates/clinic/${sourceTemplate.slug}/`}
+          className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300"
+        >
+          ← Original {sourceTemplate.title} template
+        </FullPageLink>
+      </div>
       <ConversionComponent
         fixture={conversion.fixture}
         summary={conversion.summary}

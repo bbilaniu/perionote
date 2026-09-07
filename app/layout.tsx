@@ -73,7 +73,7 @@ export default function RootLayout({
             <div className="mx-auto flex max-w-[112rem] flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-4 sm:flex-nowrap sm:px-6">
               <Link
                 href="/"
-                className="rounded-sm text-lg font-semibold tracking-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                className="rounded-xs text-lg font-semibold tracking-tight focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500"
               >
                 HygieneNote
               </Link>
