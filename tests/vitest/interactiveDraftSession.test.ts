@@ -40,7 +40,7 @@ function runtime(patientId = ""): InteractiveDraftRuntime<Form> {
 beforeEach(() => {
   vi.useFakeTimers();
   vi.stubGlobal("window", Object.assign(new EventTarget(), {
-    name: "",
+    name: "hygienenote-interactive-draft-tab-v1:synthetic-tab",
     localStorage: makeStorage(),
     sessionStorage: makeStorage(),
     setInterval: globalThis.setInterval,
@@ -57,6 +57,7 @@ describe("interactive draft sessions", () => {
   it("keeps render reads inert and restores only when subscribed", () => {
     const draft = writeInteractiveDraft(window.localStorage, {
       templateId, draftId: "saved", form: { patientId: "Saved patient" }, startedAt: new Date(),
+      ownerTabId: "synthetic-tab",
     });
     selectInteractiveDraftForCurrentTab(templateId, draft.draftId);
     const getItem = vi.spyOn(window.localStorage, "getItem");
@@ -132,6 +133,7 @@ describe("interactive draft sessions", () => {
   it("keeps the selected draft's data when checkpointing immediately after an explicit restore", () => {
     writeInteractiveDraft(window.localStorage, {
       templateId, draftId: "other", form: { patientId: "Other patient" }, startedAt: new Date(),
+      ownerTabId: "synthetic-tab",
     });
     const session = createInteractiveDraftSession<Form>(templateId);
     session.updateRuntime(runtime("Current patient"));
@@ -158,6 +160,72 @@ describe("interactive draft sessions", () => {
     window.dispatchEvent(Object.assign(new Event("storage"), { key: interactiveDraftStorageKey(templateId, "another-tab") }));
     expect(session.getSnapshot().recoverableDrafts.map(({ draftId }) => draftId)).toEqual(["another-tab"]);
     stop();
+  });
+
+  it.each(["another-tab", undefined])("copies a selected draft owned by %s before autosaving or discarding", (ownerTabId) => {
+    const source = writeInteractiveDraft(window.localStorage, {
+      templateId, draftId: "source", ownerTabId,
+      form: { patientId: "Original patient" }, startedAt: new Date(),
+    });
+    selectInteractiveDraftForCurrentTab(templateId, source.draftId);
+    const session = createInteractiveDraftSession<Form>(templateId);
+    const current = runtime();
+    session.updateRuntime(current);
+    const stop = session.subscribe(vi.fn());
+    const copyId = session.getSnapshot().currentDraftId;
+    expect(copyId).not.toBe(source.draftId);
+    expect(current.onRestore).toHaveBeenCalledWith(expect.objectContaining({
+      draftId: copyId, ownerTabId: "synthetic-tab", form: source.form,
+    }));
+    session.updateRuntime(runtime("Independent edit"));
+    vi.advanceTimersByTime(10_000);
+    expect(readInteractiveDraft(window.localStorage, templateId, copyId, isValidForm)?.form.patientId).toBe("Independent edit");
+    session.discardAndBeginNewDraft();
+    expect(readInteractiveDraft(window.localStorage, templateId, copyId, isValidForm)).toBeUndefined();
+    expect(readInteractiveDraft(window.localStorage, templateId, source.draftId, isValidForm)).toEqual(source);
+    stop();
+  });
+
+  it("checkpoints the current form and copies an explicitly restored foreign draft", () => {
+    const source = writeInteractiveDraft(window.localStorage, {
+      templateId, draftId: "source", ownerTabId: "another-tab",
+      form: { patientId: "Other patient" }, startedAt: new Date(),
+    });
+    const session = createInteractiveDraftSession<Form>(templateId);
+    session.updateRuntime(runtime("Current patient"));
+    const stop = session.subscribe(vi.fn());
+    const previousId = session.getSnapshot().currentDraftId;
+    session.restoreDraft(source.draftId);
+    const copyId = session.getSnapshot().currentDraftId;
+    expect(copyId).not.toBe(source.draftId);
+    expect(copyId).not.toBe(previousId);
+    // A cleanup before React commits must save the restored copy, not the source.
+    stop();
+    expect(readInteractiveDraft(window.localStorage, templateId, copyId, isValidForm)?.form).toEqual(source.form);
+    expect(readInteractiveDraft(window.localStorage, templateId, previousId, isValidForm)?.form.patientId).toBe("Current patient");
+    expect(readInteractiveDraft(window.localStorage, templateId, source.draftId, isValidForm)).toEqual(source);
+  });
+
+  it.each(["getItem", "setItem"] as const)("never writes to the source when %s fails during selection", (method) => {
+    const source = writeInteractiveDraft(window.localStorage, {
+      templateId, draftId: "source", ownerTabId: "another-tab",
+      form: { patientId: "Other patient" }, startedAt: new Date(),
+    });
+    selectInteractiveDraftForCurrentTab(templateId, source.draftId);
+    const getItem = window.localStorage.getItem;
+    const access = vi.spyOn(window.localStorage, method).mockImplementation(() => { throw new Error("Storage unavailable"); });
+    // Let pruning succeed, then fail when initialization reads the selection.
+    if (method === "getItem") access.mockImplementationOnce(getItem);
+    const session = createInteractiveDraftSession<Form>(templateId);
+    const current = runtime("Unsaved edit");
+    session.updateRuntime(current);
+    const stop = session.subscribe(vi.fn());
+    expect(session.getSnapshot().storageError).toBeTruthy();
+    expect(current.onRestore).not.toHaveBeenCalled();
+    access.mockRestore();
+    expect(session.saveNow()).toBe("skipped");
+    stop();
+    expect(readInteractiveDraft(window.localStorage, templateId, source.draftId, isValidForm)).toEqual(source);
   });
 
   it("finishes initialization with a visible error when storage is blocked", () => {
