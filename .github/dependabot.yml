@@ -21,6 +21,8 @@ updates:
     groups:
       next:
         patterns: [next, eslint-config-next]
+      tailwind:
+        patterns: [tailwindcss, "@tailwindcss/*"]
       react:
         patterns: [react, react-dom, "@types/react", "@types/react-dom"]
     ignore:
