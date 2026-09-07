@@ -4,18 +4,16 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useSyncExternalStore,
   useMemo,
   useState,
 } from "react";
 import {
-  CATALOGUE_STORAGE_KEY,
   CatalogueImportPreview,
   CatalogueItem,
   CatalogueItemMetadata,
   CatalogueKey,
   CatalogueOwner,
-  CatalogueValidationError,
   StoredCatalogueStateV1,
   createEmptyCatalogueState,
   deleteUserCatalogueItem,
@@ -25,31 +23,23 @@ import {
   mergeCatalogueStates,
   moveCatalogueItem,
   parseCatalogueState,
-  parseStoredCatalogueJson,
   previewCatalogueImport,
-  readCatalogueState,
   rememberCatalogueValue,
   setCatalogueItemFavorite,
   setCatalogueItemHidden,
   updateUserCatalogueItem,
-  writeCatalogueState,
 } from "@/lib/catalogues/catalogue";
 import {
-  PROVIDER_DEFAULTS_STORAGE_KEY,
   ProviderCatalogueKey,
-  ProviderDefaultsValidationError,
   StoredProviderDefaultsV1,
   clearProviderDefault as clearStoredProviderDefault,
   createEmptyProviderDefaults,
   getProviderDefaultItem,
-  parseStoredProviderDefaultsJson,
-  readProviderDefaults,
   reconcileProviderDefaults,
   setProviderDefault as setStoredProviderDefault,
-  writeProviderDefaults,
 } from "@/lib/catalogues/providerDefaults";
 
-type StorageStatus = "loading" | "ready" | "unavailable" | "invalid";
+import { createCatalogueStore, type StorageStatus } from "@/lib/catalogues/catalogueStore";
 
 type CatalogueContextValue = {
   state: StoredCatalogueStateV1;
@@ -116,158 +106,24 @@ type CatalogueContextValue = {
 
 const CatalogueContext = createContext<CatalogueContextValue | null>(null);
 
-function describeError(error: unknown): string {
-  if (error instanceof CatalogueValidationError || error instanceof Error) {
-    return error.message;
-  }
-  return "The local catalogue could not be updated.";
-}
-
 export function CatalogueProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [state, setState] = useState<StoredCatalogueStateV1>(
-    createEmptyCatalogueState,
+  const [store] = useState(createCatalogueStore);
+  const {
+    state,
+    storageStatus,
+    providerDefaults,
+    providerDefaultsStorageStatus,
+    error,
+  } = useSyncExternalStore(
+    store.subscribe,
+    store.getSnapshot,
+    store.getServerSnapshot,
   );
-  const [storageStatus, setStorageStatus] =
-    useState<StorageStatus>("loading");
-  const [providerDefaults, setProviderDefaults] =
-    useState<StoredProviderDefaultsV1>(createEmptyProviderDefaults);
-  const [providerDefaultsStorageStatus, setProviderDefaultsStorageStatus] =
-    useState<StorageStatus>("loading");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    try {
-      setState(readCatalogueState(window.localStorage));
-      setStorageStatus("ready");
-    } catch (loadError) {
-      setStorageStatus(
-        loadError instanceof CatalogueValidationError
-          ? "invalid"
-          : "unavailable",
-      );
-      setError(describeError(loadError));
-    }
-
-    try {
-      setProviderDefaults(readProviderDefaults(window.localStorage));
-      setProviderDefaultsStorageStatus("ready");
-    } catch (loadError) {
-      setProviderDefaultsStorageStatus(
-        loadError instanceof ProviderDefaultsValidationError
-          ? "invalid"
-          : "unavailable",
-      );
-      setError(describeError(loadError));
-    }
-
-    function handleStorage(event: StorageEvent) {
-      if (event.key === CATALOGUE_STORAGE_KEY) {
-        try {
-          setState(
-            event.newValue
-              ? parseStoredCatalogueJson(event.newValue)
-              : createEmptyCatalogueState(),
-          );
-          setStorageStatus("ready");
-          setError(null);
-        } catch (storageError) {
-          setStorageStatus("invalid");
-          setError(describeError(storageError));
-        }
-      }
-      if (event.key === PROVIDER_DEFAULTS_STORAGE_KEY) {
-        try {
-          setProviderDefaults(
-            event.newValue
-              ? parseStoredProviderDefaultsJson(event.newValue)
-              : createEmptyProviderDefaults(),
-          );
-          setProviderDefaultsStorageStatus("ready");
-          setError(null);
-        } catch (storageError) {
-          setProviderDefaultsStorageStatus("invalid");
-          setError(describeError(storageError));
-        }
-      }
-    }
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  const clearError = useCallback(() => setError(null), []);
-
-  const commit = useCallback(
-    (
-      nextState: StoredCatalogueStateV1,
-      options: { permitRecovery?: boolean } = {},
-    ) => {
-      if (
-        storageStatus !== "ready" &&
-        !options.permitRecovery
-      ) {
-        const message =
-          storageStatus === "invalid"
-            ? "The stored catalogue is invalid. Reset or import a valid catalogue before saving values."
-            : "Browser-local catalogue storage is unavailable.";
-        setError(message);
-        throw new CatalogueValidationError(message);
-      }
-      try {
-        const validatedState = parseCatalogueState(nextState);
-        writeCatalogueState(window.localStorage, validatedState);
-        setState(validatedState);
-        setStorageStatus("ready");
-        setError(null);
-      } catch (saveError) {
-        setError(describeError(saveError));
-        if (!(saveError instanceof CatalogueValidationError)) {
-          setStorageStatus("unavailable");
-        }
-        throw saveError;
-      }
-    },
-    [storageStatus],
-  );
-
-  const commitProviderDefaults = useCallback(
-    (
-      nextState: StoredProviderDefaultsV1,
-      options: { permitRecovery?: boolean } = {},
-    ) => {
-      if (
-        providerDefaultsStorageStatus !== "ready" &&
-        !options.permitRecovery
-      ) {
-        const message =
-          providerDefaultsStorageStatus === "invalid"
-            ? "The stored provider defaults are invalid. Reset the local catalogues before saving defaults."
-            : "Browser-local provider-default storage is unavailable.";
-        setError(message);
-        throw new ProviderDefaultsValidationError(message);
-      }
-      try {
-        const validatedState = parseStoredProviderDefaultsJson(
-          JSON.stringify(nextState),
-        );
-        writeProviderDefaults(window.localStorage, validatedState);
-        setProviderDefaults(validatedState);
-        setProviderDefaultsStorageStatus("ready");
-        setError(null);
-      } catch (saveError) {
-        setError(describeError(saveError));
-        if (!(saveError instanceof ProviderDefaultsValidationError)) {
-          setProviderDefaultsStorageStatus("unavailable");
-        }
-        throw saveError;
-      }
-    },
-    [providerDefaultsStorageStatus],
-  );
+  const { commit, commitProviderDefaults, clearError } = store;
 
   const getItems = useCallback(
     (
