@@ -35,6 +35,7 @@ import {
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
 import {
@@ -2885,14 +2886,14 @@ export function AdultHygiene2021Template({
     class5IndicatorStatus: "yes",
     ppeStatementApplies: true,
   }));
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const {
     providerDefaultsStorageStatus,
     getProviderDefault,
@@ -2936,59 +2937,34 @@ export function AdultHygiene2021Template({
     };
   }
 
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh:
+          current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda:
+          current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh:
-        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda:
-        current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
+  }
 
-  useEffect(() => setStartedAt((current) => current ?? new Date()), []);
-
-  useEffect(() => {
-    if (
-      !form.mieleCodes.trim() ||
-      (form.class5IndicatorStatus === "yes" && form.ppeStatementApplies)
-    ) {
-      return;
-    }
-    setForm((current) =>
-      !current.mieleCodes.trim() ||
-      (current.class5IndicatorStatus === "yes" &&
-        current.ppeStatementApplies)
-        ? current
-        : {
-            ...current,
-            class5IndicatorStatus: "yes",
-            ppeStatementApplies: true,
-          },
-    );
-  }, [
-    form.class5IndicatorStatus,
-    form.mieleCodes,
-    form.ppeStatementApplies,
-  ]);
+  if (
+    form.mieleCodes.trim() &&
+    (form.class5IndicatorStatus !== "yes" || !form.ppeStatementApplies)
+  ) {
+    setForm({ ...form, class5IndicatorStatus: "yes", ppeStatementApplies: true });
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
