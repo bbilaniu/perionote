@@ -94,6 +94,22 @@ export function createInteractiveDraftSession<T>(templateId: string) {
     runtime.onRestore(draft);
   }
 
+  function draftForCurrentTab(draft: InteractiveDraft<T>): InteractiveDraft<T> {
+    const ownerTabId = currentTabMarker();
+    if (draft.ownerTabId === ownerTabId) return draft;
+    // Ownership never transfers between tabs. Copy first, so a failed write
+    // cannot leave this tab editing another tab's storage key. This also
+    // protects drafts created before ownership metadata was introduced.
+    return writeInteractiveDraft(window.localStorage, {
+      templateId,
+      draftId: createInteractiveDraftId(),
+      ownerTabId,
+      form: draft.form,
+      startedAt: new Date(draft.startedAt),
+      now: new Date(draft.savedAt),
+    });
+  }
+
   function refreshRecoverableDrafts() {
     try {
       const drafts = listInteractiveDrafts(
@@ -127,6 +143,7 @@ export function createInteractiveDraftSession<T>(templateId: string) {
       const draft = writeInteractiveDraft(window.localStorage, {
         templateId,
         draftId: snapshot.currentDraftId,
+        ownerTabId: currentTabMarker(),
         form: runtime!.form,
         startedAt: runtime!.startedAt,
       });
@@ -207,9 +224,10 @@ export function createInteractiveDraftSession<T>(templateId: string) {
         refreshRecoverableDrafts();
         return;
       }
-      update({ currentDraftId: draft.draftId });
-      selectInteractiveDraftForCurrentTab(templateId, draft.draftId);
-      applyRestoredDraft(draft);
+      const ownedDraft = draftForCurrentTab(draft);
+      selectInteractiveDraftForCurrentTab(templateId, ownedDraft.draftId);
+      update({ currentDraftId: ownedDraft.draftId });
+      applyRestoredDraft(ownedDraft);
       update({ lastSavedAt: new Date(draft.savedAt) });
       update({ restoredAt: new Date(draft.savedAt) });
       update({ storageError: "" });
@@ -229,22 +247,24 @@ export function createInteractiveDraftSession<T>(templateId: string) {
         window.sessionStorage.getItem(markerKey) === marker
           ? window.sessionStorage.getItem(tabKey)
           : null;
-      const draftId = priorDraftId || createInteractiveDraftId();
+      const draft = priorDraftId
+        ? readInteractiveDraft(
+            window.localStorage,
+            templateId,
+            priorDraftId,
+            runtime!.isValidForm,
+          )
+        : undefined;
+      // Publish a writable ID only after reading/copying and selecting succeed.
+      // A storage error must never attach later autosaves to a foreign key.
+      const ownedDraft = draft ? draftForCurrentTab(draft) : undefined;
+      const draftId = ownedDraft?.draftId ?? createInteractiveDraftId();
+      selectInteractiveDraftForCurrentTab(templateId, draftId);
       update({ currentDraftId: draftId });
-      window.sessionStorage.setItem(tabKey, draftId);
-      window.sessionStorage.setItem(markerKey, marker);
-      if (priorDraftId) {
-        const draft = readInteractiveDraft(
-          window.localStorage,
-          templateId,
-          priorDraftId,
-          runtime!.isValidForm,
-        );
-        if (draft) {
-          applyRestoredDraft(draft);
-          update({ lastSavedAt: new Date(draft.savedAt) });
-          update({ restoredAt: new Date(draft.savedAt) });
-        }
+      if (ownedDraft) {
+        applyRestoredDraft(ownedDraft);
+        update({ lastSavedAt: new Date(ownedDraft.savedAt) });
+        update({ restoredAt: new Date(ownedDraft.savedAt) });
       }
       update({ hydrated: true });
       refreshRecoverableDrafts();

@@ -15,6 +15,8 @@ export type InteractiveDraft<T> = {
   schemaVersion: typeof INTERACTIVE_DRAFT_SCHEMA_VERSION;
   templateId: string;
   draftId: string;
+  // Older drafts have no owner and must be copied before editing.
+  ownerTabId?: string;
   savedAt: string;
   startedAt: string;
   form: T;
@@ -30,7 +32,7 @@ export type InteractiveDraftProfessionalRole =
 
 export type InteractiveDraftSummary = Omit<
   InteractiveDraft<unknown>,
-  "form" | "kind" | "schemaVersion"
+  "form" | "kind" | "schemaVersion" | "ownerTabId"
 > & {
   patientId: string;
   professionals: InteractiveDraftProfessional[];
@@ -152,6 +154,8 @@ function parseDraft<T>(
       value.templateId !== templateId ||
       typeof value.draftId !== "string" ||
       !value.draftId ||
+      (value.ownerTabId !== undefined &&
+        (typeof value.ownerTabId !== "string" || !value.ownerTabId)) ||
       !isValidDate(value.savedAt) ||
       !isValidDate(value.startedAt) ||
       !isValidForm(value.form)
@@ -302,6 +306,7 @@ export function writeInteractiveDraft<T>(
   input: {
     templateId: string;
     draftId: string;
+    ownerTabId?: string;
     form: T;
     startedAt: Date;
     now?: Date;
@@ -313,6 +318,7 @@ export function writeInteractiveDraft<T>(
     schemaVersion: INTERACTIVE_DRAFT_SCHEMA_VERSION,
     templateId: input.templateId,
     draftId: input.draftId,
+    ...(input.ownerTabId ? { ownerTabId: input.ownerTabId } : {}),
     savedAt,
     startedAt: input.startedAt.toISOString(),
     form: input.form,

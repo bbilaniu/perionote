@@ -57,6 +57,7 @@ export function LocalDraftRecovery({
           role="status"
         >
           Restored the draft saved {formatDraftTime(restoredAt)}.
+          {" "}Drafts saved in another tab open as independent copies.
         </p>
       ) : null}
       {storageError ? (
