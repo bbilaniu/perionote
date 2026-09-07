@@ -29,3 +29,7 @@ updates:
       # Keep the CLI compatible with the release action until a joint migration.
       - dependency-name: "@changesets/cli"
         update-types: [version-update:semver-major]
+      # Defer Node 26 types until its planned LTS date: 2026-10-28.
+      # Remove this rule on that date; Dependabot ignores do not expire.
+      - dependency-name: "@types/node"
+        versions: ["^26.0.0"]
