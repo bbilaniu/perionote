@@ -92,6 +92,46 @@ test("clinic interactive list controls use one closed-state affordance without c
   ).toBeNull();
 });
 
+test("editable combobox keeps keyboard selection valid after hiding an option and closes after adding free text", async ({
+  page,
+}) => {
+  await page.goto(recareExamUrl);
+  const input = page.getByRole("combobox", {
+    name: "Patient's chief concern",
+    exact: true,
+  });
+  const control = input.locator(
+    "xpath=ancestor::*[@data-editable-combobox][1]",
+  );
+  await input.focus();
+  await input.press("ArrowUp");
+  const options = control.getByRole("option");
+  const originalCount = await options.count();
+  expect(originalCount).toBeGreaterThan(1);
+  await expect(input).toHaveAttribute(
+    "aria-activedescendant",
+    (await options.last().getAttribute("id"))!,
+  );
+
+  await control.getByRole("button", { name: /^Hide .* from suggestions$/ }).last().click();
+  await expect(options).toHaveCount(originalCount - 1);
+  await expect(input).toBeFocused();
+  await expect(input).toHaveAttribute(
+    "aria-activedescendant",
+    (await options.last().getAttribute("id"))!,
+  );
+  await input.press("Enter");
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await expect(input).not.toHaveAttribute("aria-activedescendant");
+
+  await input.fill("Synthetic free-text concern");
+  await expect(input).toHaveAttribute("aria-expanded", "true");
+  await control.getByRole("button", { name: "Add to note", exact: true }).click();
+  await expect(control.getByRole("list", { name: "Patient's chief concern selected values" })).toContainText("Synthetic free-text concern");
+  await expect(input).toHaveAttribute("aria-expanded", "false");
+  await expect(input).not.toHaveAttribute("aria-activedescendant");
+});
+
 test("chief concern suggestions preserve focus received before hydration", async ({
   page,
 }) => {
