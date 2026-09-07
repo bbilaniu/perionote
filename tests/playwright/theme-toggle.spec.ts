@@ -85,3 +85,33 @@ test("compact theme listbox remains within the narrow header and supports touch"
 
   await context.close();
 });
+
+test("explicit theme survives system changes when browser storage is blocked", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new DOMException("Storage blocked", "SecurityError");
+      },
+    });
+  });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/templates/clinic");
+  const theme = page.getByRole("button", { name: "Theme" });
+  await theme.click();
+  await page.getByRole("option", { name: "Dark", exact: true }).click();
+  await expect(theme).toHaveAttribute("data-value", "dark");
+  await expect(page.locator("html")).toHaveClass(/dark/);
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+
+  await theme.click();
+  await page.getByRole("option", { name: "System", exact: true }).click();
+  await expect(page.locator("html")).not.toHaveClass(/dark/);
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(page.locator("html")).toHaveClass(/dark/);
+});
