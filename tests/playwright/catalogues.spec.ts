@@ -334,10 +334,13 @@ test("Adult Hygiene documents catalogue-backed caries risk factors", async ({
 }) => {
   await page.goto(adultHygieneUrl);
 
-  await page
-    .getByRole("button", { name: "Caries risk level", exact: true })
-    .click();
+  const riskLevel = page.getByRole("button", {
+    name: "Caries risk level",
+    exact: true,
+  });
+  await riskLevel.click();
   await page.getByRole("option", { name: "Moderate", exact: true }).click();
+  await expect(riskLevel).toBeFocused();
 
   const factors = page.getByRole("combobox", {
     name: "Caries risk factors",
