@@ -1,5 +1,6 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
 import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
 import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
@@ -357,15 +358,10 @@ export function TeethAssessment({
         } documented`
       : "Not assessed";
   const shouldAutoExpandStructuredObservations = status === "findings";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   const createFinding = (optionId: string): RecareToothFinding => ({
     id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -1385,16 +1381,12 @@ export function StructuredExtraoralObservations({
     ? `${additionalAssessedCount} of ${additionalStatuses.length} additional exams assessed`
     : "Not assessed";
   const shouldAutoExpand = status === "findings" || documentedFindingCount > 0;
-  const [open, setOpen] = useState(shouldAutoExpand);
+  const [open, setOpen] = useAutoExpandDisclosure(shouldAutoExpand);
   const otherExtraoralOptions = recareExtraoralOptions.filter(
     (option) =>
       option.id !== "eoe.tmj_clicking" &&
       option.id !== "eoe.palpable_lymph_nodes",
   );
-
-  useEffect(() => {
-    if (shouldAutoExpand) setOpen(true);
-  }, [shouldAutoExpand]);
 
   function patch(optionId: string, changes: Partial<RecareExtraoralFinding>) {
     onChange(
@@ -1602,15 +1594,10 @@ export function StructuredIntraoralFindings({
     ? "WNL"
     : "Not assessed";
   const shouldAutoExpandStructuredObservations = status === "findings";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
     onChange(

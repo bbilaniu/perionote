@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  clearCurrentForm,
   openFormActionDialog,
   openGeneratedNote,
   saveDraftAndStartNew,
@@ -730,6 +731,19 @@ test("Adult Hygiene expands populated structured observations", async ({
   await expect(structuredGingivalObservations).toContainText(
     "2 observations documented"
   );
+
+  // A populated section can stay manually collapsed through unrelated edits.
+  await structuredPeriodontalObservations.click();
+  await structuredGingivalObservations.click();
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic disclosure check");
+  await expect(structuredPeriodontalObservations).toHaveAttribute("aria-expanded", "false");
+  await expect(structuredGingivalObservations).toHaveAttribute("aria-expanded", "false");
+
+  // Clearing and repopulating the form starts a new auto-expansion transition.
+  await clearCurrentForm(page);
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute("aria-expanded", "true");
+  await expect(structuredGingivalObservations).toHaveAttribute("aria-expanded", "true");
 });
 
 test("Adult Hygiene keeps WNL gingival observations collapsed", async ({
