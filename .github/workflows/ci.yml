@@ -3,32 +3,79 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, beta]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # Do not interrupt main's release/deployment jobs after validation.
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   quality:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      pages-artifact: github-pages-${{ github.sha }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version-file: package.json
           cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Check versioning
-        run: npm run versioning:check
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
 
-      - name: Lint
-        run: npm run lint
+      - name: Validate and test production export
+        run: npm run ci:local
+        timeout-minutes: 22
 
-      - name: Unit tests
-        run: npm run test
+      - name: Upload browser diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: playwright-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore
 
-      - name: Build
-        run: npm run build
+      - name: Upload validated Pages artifact
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          name: github-pages-${{ github.sha }}-${{ github.run_attempt }}
+          path: ./out
+          retention-days: 7
+
+  deploy:
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/deploy-pages.yml
+    with:
+      artifact-name: ${{ needs.quality.outputs.pages-artifact }}
+
+  version:
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/version.yml

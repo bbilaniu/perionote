@@ -1,12 +1,10 @@
 name: Version
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: version
@@ -15,38 +13,46 @@ concurrency:
 jobs:
   changesets:
     name: Create version pull request
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: write
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
-          cache: npm
+          node-version-file: package.json
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
 
       - name: Create or update version pull request
-        uses: changesets/action@v1
+        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0 (CLI v2 compatible)
         with:
           version: npm run version
           title: Version Packages
           commit: Version Packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
 
   release-tag:
     name: Tag versioned release
     needs: changesets
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Checkout released commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -56,10 +62,10 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
-          cache: npm
+          node-version-file: package.json
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
@@ -71,18 +77,22 @@ jobs:
   archive-release:
     name: Create archive branch from release tag
     needs: release-tag
-    if: needs.release-tag.outputs.tag != ''
+    if: needs.release-tag.outputs.tag != '' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout released commit
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24
+          node-version-file: package.json
+          package-manager-cache: false
 
       - name: Create and verify archive branch
         run: bash scripts/archive-release.sh
@@ -90,15 +100,16 @@ jobs:
   sync-beta:
     name: Fast-forward beta after main update
     needs: release-tag
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
       - name: Fast-forward beta to main
-        run: |
-          git fetch origin beta
-          git merge-base --is-ancestor origin/beta HEAD
-          git push origin HEAD:beta
+        run: bash scripts/sync-beta.sh
