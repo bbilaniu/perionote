@@ -526,6 +526,12 @@ test("saved drafts page warns separately before deleting all drafts", async ({
   await expect(deleteAllDialog).toContainText(
     "Interactive forms open in other tabs may save a new draft again.",
   );
+  await deleteAllDialog.press("Escape");
+  await expect(deleteAllDialog).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Delete all drafts" })).toBeFocused();
+  await expect(page.getByText("1 of 2 drafts")).toBeVisible();
+
+  await page.getByRole("button", { name: "Delete all drafts" }).click();
   await deleteAllDialog
     .getByRole("button", { name: "Delete all drafts" })
     .click();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   createInteractiveDraftId,
   deleteInteractiveDraft,
@@ -78,11 +78,15 @@ export function useLocalInteractiveDraft<T>({
   const [hydrated, setHydrated] = useState(false);
   const [currentDraftId, setCurrentDraftId] = useState("");
 
-  formRef.current = form;
-  startedAtRef.current = startedAt;
-  isEmptyRef.current = isEmpty;
-  isValidFormRef.current = isValidForm;
-  onRestoreRef.current = onRestore;
+  // Autosave and navigation cleanup must see the latest committed form, never
+  // values from a render that React might interrupt or discard.
+  useLayoutEffect(() => {
+    formRef.current = form;
+    startedAtRef.current = startedAt;
+    isEmptyRef.current = isEmpty;
+    isValidFormRef.current = isValidForm;
+    onRestoreRef.current = onRestore;
+  }, [form, startedAt, isEmpty, isValidForm, onRestore]);
 
   const refreshRecoverableDrafts = useCallback(() => {
     try {

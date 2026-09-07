@@ -304,7 +304,8 @@ export function LocalDraftManager() {
     mobile: new Map(),
   });
   const pendingFocusDraftId = useRef<string | null | undefined>(undefined);
-  const restoreDeleteAllDialogFocusRef = useRef(true);
+  const [restoreDeleteAllDialogFocus, setRestoreDeleteAllDialogFocus] =
+    useState(true);
 
   const normalizedDrafts = useMemo(
     () => drafts.map(normalizeDraftListMetadata),
@@ -410,7 +411,7 @@ export function LocalDraftManager() {
     try {
       const deletedCount = deleteAllInteractiveDrafts(window.localStorage);
       pendingFocusDraftId.current = null;
-      restoreDeleteAllDialogFocusRef.current = false;
+      setRestoreDeleteAllDialogFocus(false);
       setDeleteAllDialogOpen(false);
       refreshDrafts();
       setActionMessage(
@@ -663,7 +664,7 @@ export function LocalDraftManager() {
             className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-red-950"
             disabled={!drafts.length}
             onClick={() => {
-              restoreDeleteAllDialogFocusRef.current = true;
+              setRestoreDeleteAllDialogFocus(true);
               setDeleteAllDialogOpen(true);
             }}
           >
@@ -717,7 +718,7 @@ export function LocalDraftManager() {
           </>
         }
         onDismiss={() => setDeleteAllDialogOpen(false)}
-        restoreFocusOnClose={restoreDeleteAllDialogFocusRef.current}
+        restoreFocusOnClose={restoreDeleteAllDialogFocus}
       >
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button

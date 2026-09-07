@@ -110,7 +110,7 @@ export function InteractiveTemplateWorkspace({
   } | null>(null);
   const baselineRevisionRef = useRef(formRevision);
   const pendingBaselineRef = useRef<{ kind: "demo" | "reset" } | null>(null);
-  const restoreDialogFocusRef = useRef(true);
+  const [restoreDialogFocus, setRestoreDialogFocus] = useState(true);
 
   useEffect(() => {
     const wideLayoutQuery = window.matchMedia("(min-width: 1280px)");
@@ -176,7 +176,7 @@ export function InteractiveTemplateWorkspace({
       return;
     }
 
-    restoreDialogFocusRef.current = false;
+    setRestoreDialogFocus(false);
     setResetError("");
     setActionDialog(null);
     pendingBaselineRef.current = { kind: "reset" };
@@ -184,13 +184,13 @@ export function InteractiveTemplateWorkspace({
   };
 
   const dismissActionDialog = () => {
-    restoreDialogFocusRef.current = true;
+    setRestoreDialogFocus(true);
     setResetError("");
     setActionDialog(null);
   };
 
   const openFormActionDialog = () => {
-    restoreDialogFocusRef.current = true;
+    setRestoreDialogFocus(true);
     setResetError("");
     setActionDialog("form");
   };
@@ -394,7 +394,7 @@ export function InteractiveTemplateWorkspace({
           </>
         }
         onDismiss={dismissActionDialog}
-        restoreFocusOnClose={restoreDialogFocusRef.current}
+        restoreFocusOnClose={restoreDialogFocus}
       >
         {resetError ? (
           <p
