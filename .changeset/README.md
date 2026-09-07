@@ -15,9 +15,10 @@ the release-note entry before merge when the change should appear in the
 changelog.
 
 Do not run `npm run version` on a feature branch. After changesets reach
-`main`, the Version workflow opens or updates a `Version Packages` pull
-request. Merging that pull request consumes the pending entries, updates the
-private application version, and updates `CHANGELOG.md` and `package-lock.json`.
+`main`, CI first validates the merged commit, then calls the Version workflow
+to open or update a `Version Packages` pull request. Merging that pull request
+consumes the pending entries, updates the private application version, and
+updates `CHANGELOG.md` and `package-lock.json`.
 
 When that version update is merged into `main`, the Version workflow validates
 the package and lockfile versions, the latest changelog heading, and the absence
@@ -28,9 +29,12 @@ separately; an ordinary commit at the end of a batch push does not trigger taggi
 
 Rerunning the workflow accepts a tag already pointing to the same commit and
 refuses to move an existing tag to another commit. If tagging fails, fix the
-cause and rerun the failed workflow at the original release commit. The `beta`
-branch fast-forwards after tagging succeeds; ordinary pushes with no version
-change skip tagging and still sync `beta`.
+cause and rerun the failed jobs in the original CI run at the release commit.
+The `beta` branch fast-forwards to that validated commit after tagging succeeds;
+ordinary pushes with no version change skip tagging and still sync `beta`.
+Synchronization skips superseded main commits and refuses a divergent Beta.
+A bot push made with `GITHUB_TOKEN` does not trigger another Actions run; the
+main commit has already passed the quality gate. Human pushes to Beta run CI.
 
 After a release tag is published, a separate archive job creates
 `archive/vX.Y.Z` at that tag's exact commit. It checks the published tag against
@@ -57,7 +61,10 @@ specific tag; contributors should normally let the workflow perform this step.
 
 This repository does not publish an npm package or automatically create GitHub
 Release entries. Git tags record source versions; GitHub Pages deployment
-remains controlled by `deploy-pages.yml` and is independent of tagging.
+uses the validated artifact through the reusable `deploy-pages.yml` workflow.
+Both Pages and versioning depend on CI quality; Pages remains independent of
+tagging. Manual CI dispatch validates the selected commit and can deploy only
+main; it does not run versioning. See [CI and release gates](../docs/ci.md).
 
 ## Cloudflare archive previews
 

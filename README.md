@@ -59,10 +59,7 @@ npm run dev
 Common checks:
 
 ```bash
-npm run lint
-npm run test
-npm run build
-npm run test:e2e
+npm run ci:local
 ```
 
 Install Chromium once before the browser suite:
@@ -116,5 +113,6 @@ see [CONTRIBUTING.md](./CONTRIBUTING.md). Released changes are recorded in
 ## Deployment
 
 The app is configured as a static Next.js export. The GitHub Pages workflow
-builds `out/` and publishes it from `main`; the repository's custom domain is
-recorded in `CNAME`.
+publishes the exact `out/` artifact validated by CI on `main`. Versioning and
+automatic Beta synchronization also wait for validation. The repository's custom
+domain is recorded in `CNAME`. See [CI and release gates](docs/ci.md).

@@ -21,12 +21,18 @@ values in fixtures, screenshots, examples, and tests.
 Run the checks proportional to the change:
 
 ```bash
-npm run lint
-npm run versioning:check
-npm run test
-npm run build
-npm run test:e2e
+npm ci
+npx playwright install chromium
+npm run ci:local
 ```
+
+`ci:local` checks version metadata, runs lint with no warnings and unit tests,
+builds the production export once, then tests that export with Chromium. On Linux,
+use `npx playwright install --with-deps chromium` for browser system dependencies.
+`npm run test:e2e` remains a standalone command that builds before testing;
+`npm run test:e2e:built` requires an existing `out/` export.
+Use `CI=true npm run ci:local` to match CI worker, retry, and flaky-test settings.
+See [CI and release gates](docs/ci.md) for artifacts and hosted verification.
 
 - Unit tests are required for state, formatter, catalogue, and summary logic.
 - Playwright coverage is required for new or changed user workflows.
