@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -171,7 +170,17 @@ function CatalogueItemRow({
     : undefined;
   const isDefaultProvider = defaultProvider?.id === item.id;
 
-  useEffect(() => {
+  const [previousItem, setPreviousItem] = useState({
+    label: item.label,
+    metadata: item.metadata,
+  });
+  // Reset the editable fields before rendering updated catalogue data, while
+  // keeping this row mounted so its focused control and status message survive.
+  if (
+    item.label !== previousItem.label ||
+    item.metadata !== previousItem.metadata
+  ) {
+    setPreviousItem({ label: item.label, metadata: item.metadata });
     setDraftLabel(item.label);
     setDraftRadiographCode(
       isRadiographCatalogueMetadata(item.metadata) ? item.metadata.code : "",
@@ -186,7 +195,7 @@ function CatalogueItemRow({
         ? item.metadata.category
         : "other",
     );
-  }, [item.label, item.metadata]);
+  }
 
   function draftMetadata(): CatalogueItemMetadata | undefined {
     if (definition.key === "imaging.radiographs") {

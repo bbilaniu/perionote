@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  useCallback,
   useEffect,
   useId,
   useMemo,
@@ -11,6 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { ActionDialog } from "@/components/ActionDialog";
+import { useLocalDraftSummaries } from "@/components/templates/shared/useLocalDraftSummaries";
 import { selectInteractiveDraftForCurrentTab } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   filterDraftListMetadata,
@@ -30,8 +30,6 @@ import {
 import {
   deleteAllInteractiveDrafts,
   deleteInteractiveDraft,
-  listInteractiveDraftSummaries,
-  type InteractiveDraftSummary,
 } from "@/lib/templates/localDrafts";
 
 const dateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
@@ -286,10 +284,14 @@ function DraftActions({
 
 export function LocalDraftManager() {
   const router = useRouter();
-  const [drafts, setDrafts] = useState<InteractiveDraftSummary[]>([]);
-  const [storageError, setStorageError] = useState("");
+  const { summaries: drafts, loaded, unavailable } = useLocalDraftSummaries();
+  const [actionError, setActionError] = useState("");
+  const storageError =
+    actionError ||
+    (unavailable
+      ? "Local draft storage is unavailable in this browser. Existing drafts cannot be listed here."
+      : "");
   const [actionMessage, setActionMessage] = useState("");
-  const [loaded, setLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortKey, setSortKey] = useState<DraftSortKey>("lastSavedAt");
   const [sortDirection, setSortDirection] =
@@ -304,7 +306,8 @@ export function LocalDraftManager() {
     mobile: new Map(),
   });
   const pendingFocusDraftId = useRef<string | null | undefined>(undefined);
-  const restoreDeleteAllDialogFocusRef = useRef(true);
+  const [restoreDeleteAllDialogFocus, setRestoreDeleteAllDialogFocus] =
+    useState(true);
 
   const normalizedDrafts = useMemo(
     () => drafts.map(normalizeDraftListMetadata),
@@ -320,37 +323,6 @@ export function LocalDraftManager() {
       ),
     [normalizedDrafts, searchQuery, sortDirection, sortKey],
   );
-
-  const refreshDrafts = useCallback(() => {
-    try {
-      setDrafts(listInteractiveDraftSummaries(window.localStorage));
-      setStorageError("");
-    } catch {
-      setStorageError(
-        "Local draft storage is unavailable in this browser. Existing drafts cannot be listed here.",
-      );
-    } finally {
-      setLoaded(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshDrafts();
-    const handleStorage = (event: StorageEvent) => {
-      if (!event.key || event.key.startsWith("hygienenote.interactive-draft.")) {
-        refreshDrafts();
-      }
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") refreshDrafts();
-    };
-    window.addEventListener("storage", handleStorage);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [refreshDrafts]);
 
   useEffect(() => {
     if (pendingFocusDraftId.current === undefined) return;
@@ -378,7 +350,7 @@ export function LocalDraftManager() {
       selectInteractiveDraftForCurrentTab(draft.templateId, draft.draftId);
       router.push(interactiveDraftTemplates[draft.templateId].href);
     } catch {
-      setStorageError("The selected local draft could not be opened.");
+      setActionError("The selected local draft could not be opened.");
     }
   };
 
@@ -397,10 +369,10 @@ export function LocalDraftManager() {
       setPendingDeleteDraft(null);
       setActionMessage("");
       deleteInteractiveDraft(window.localStorage, draft.templateId, draft.draftId);
-      refreshDrafts();
+      setActionError("");
     } catch {
       pendingFocusDraftId.current = undefined;
-      setStorageError(
+      setActionError(
         "The local draft could not be deleted. Clear this site's browser data to remove it.",
       );
     }
@@ -410,9 +382,9 @@ export function LocalDraftManager() {
     try {
       const deletedCount = deleteAllInteractiveDrafts(window.localStorage);
       pendingFocusDraftId.current = null;
-      restoreDeleteAllDialogFocusRef.current = false;
+      setRestoreDeleteAllDialogFocus(false);
       setDeleteAllDialogOpen(false);
-      refreshDrafts();
+      setActionError("");
       setActionMessage(
         deletedCount === 1
           ? "Deleted 1 saved local draft."
@@ -420,7 +392,7 @@ export function LocalDraftManager() {
       );
     } catch {
       setDeleteAllDialogOpen(false);
-      setStorageError(
+      setActionError(
         "The saved drafts could not all be deleted. Clear this site's browser data to remove them.",
       );
     }
@@ -663,7 +635,7 @@ export function LocalDraftManager() {
             className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-red-950"
             disabled={!drafts.length}
             onClick={() => {
-              restoreDeleteAllDialogFocusRef.current = true;
+              setRestoreDeleteAllDialogFocus(true);
               setDeleteAllDialogOpen(true);
             }}
           >
@@ -717,7 +689,7 @@ export function LocalDraftManager() {
           </>
         }
         onDismiss={() => setDeleteAllDialogOpen(false)}
-        restoreFocusOnClose={restoreDeleteAllDialogFocusRef.current}
+        restoreFocusOnClose={restoreDeleteAllDialogFocus}
       >
         <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button

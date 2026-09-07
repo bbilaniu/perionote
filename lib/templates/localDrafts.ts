@@ -7,6 +7,8 @@ export const INTERACTIVE_DRAFT_STORAGE_PREFIX =
   "hygienenote.interactive-draft.v1.";
 export const INTERACTIVE_DRAFT_SCHEMA_VERSION = 1;
 export const INTERACTIVE_DRAFT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+export const INTERACTIVE_DRAFT_CHANGE_EVENT =
+  "hygienenote:interactive-drafts-changed";
 
 export type InteractiveDraft<T> = {
   kind: "hygienenote.interactive-draft";
@@ -35,10 +37,20 @@ export type InteractiveDraftSummary = Omit<
   availableProfessionalRoles: InteractiveDraftProfessionalRole[];
 };
 
-type StorageLike = Pick<
+export type InteractiveDraftStorage = Pick<
   Storage,
   "getItem" | "setItem" | "removeItem" | "key" | "length"
 >;
+
+type StorageLike = InteractiveDraftStorage;
+
+function notifyDraftChange(storage: StorageLike): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent(INTERACTIVE_DRAFT_CHANGE_EVENT, { detail: storage }),
+    );
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -245,6 +257,22 @@ export function listInteractiveDraftSummaries(
   now = Date.now(),
 ): InteractiveDraftSummary[] {
   pruneInteractiveDrafts(storage, now);
+  return collectInteractiveDraftSummaries(storage, now, true);
+}
+
+/** Read renderable metadata without pruning or otherwise writing to storage. */
+export function readInteractiveDraftSummaries(
+  storage: StorageLike,
+  now = Date.now(),
+): InteractiveDraftSummary[] {
+  return collectInteractiveDraftSummaries(storage, now, false);
+}
+
+function collectInteractiveDraftSummaries(
+  storage: StorageLike,
+  now: number,
+  removeInvalid: boolean,
+): InteractiveDraftSummary[] {
   const summaries: InteractiveDraftSummary[] = [];
   const keys: string[] = [];
   for (let index = 0; index < storage.length; index += 1) {
@@ -256,10 +284,11 @@ export function listInteractiveDraftSummaries(
     const summary = parseDraftSummary(raw);
     if (
       summary &&
-      key === interactiveDraftStorageKey(summary.templateId, summary.draftId)
+      key === interactiveDraftStorageKey(summary.templateId, summary.draftId) &&
+      Date.parse(summary.savedAt) >= now - INTERACTIVE_DRAFT_RETENTION_MS
     ) {
       summaries.push(summary);
-    } else if (!hasUnsupportedDraftSchema(raw)) {
+    } else if (removeInvalid && !hasUnsupportedDraftSchema(raw)) {
       storage.removeItem(key);
     }
   }
@@ -292,6 +321,7 @@ export function writeInteractiveDraft<T>(
     interactiveDraftStorageKey(input.templateId, input.draftId),
     JSON.stringify(draft),
   );
+  notifyDraftChange(storage);
   return draft;
 }
 
@@ -301,6 +331,7 @@ export function deleteInteractiveDraft(
   draftId: string,
 ): void {
   storage.removeItem(interactiveDraftStorageKey(templateId, draftId));
+  notifyDraftChange(storage);
 }
 
 export function deleteAllInteractiveDrafts(storage: StorageLike): number {
@@ -310,6 +341,7 @@ export function deleteAllInteractiveDrafts(storage: StorageLike): number {
     if (key?.startsWith(INTERACTIVE_DRAFT_STORAGE_PREFIX)) keys.push(key);
   }
   for (const key of keys) storage.removeItem(key);
+  notifyDraftChange(storage);
   return keys.length;
 }
 

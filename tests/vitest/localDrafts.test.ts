@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   deleteAllInteractiveDrafts,
   INTERACTIVE_DRAFT_RETENTION_MS,
@@ -9,8 +9,13 @@ import {
   matchesDraftShape,
   pruneInteractiveDrafts,
   readInteractiveDraft,
+  readInteractiveDraftSummaries,
   writeInteractiveDraft,
 } from "@/lib/templates/localDrafts";
+import {
+  createDraftSummarySnapshotReader,
+  getServerDraftSummarySnapshot,
+} from "@/lib/templates/localDraftSummaryStore";
 
 class MemoryStorage implements Storage {
   private readonly values = new Map<string, string>();
@@ -46,6 +51,40 @@ const isExampleForm = (value: unknown): value is ExampleForm =>
   matchesDraftShape(value, emptyForm, { selected: "" });
 
 describe("interactive local drafts", () => {
+  it("reads valid summaries without deleting expired, malformed, or mismatched records", () => {
+    const storage = new MemoryStorage();
+    const now = Date.parse("2026-08-05T17:00:00.000Z");
+    for (const [draftId, savedAt] of [
+      ["retained", now],
+      ["expired", now - INTERACTIVE_DRAFT_RETENTION_MS - 1],
+    ] as const) {
+      writeInteractiveDraft(storage, {
+        templateId: "synthetic-template",
+        draftId,
+        form: emptyForm,
+        startedAt: new Date(savedAt),
+        now: new Date(savedAt),
+      });
+    }
+    storage.setItem(`${INTERACTIVE_DRAFT_STORAGE_PREFIX}broken`, "not-json");
+    storage.setItem(
+      interactiveDraftStorageKey("synthetic-template", "mismatched"),
+      storage.getItem(interactiveDraftStorageKey("synthetic-template", "retained"))!,
+    );
+    storage.setItem("unrelated", "retained");
+    const removeItem = vi.spyOn(storage, "removeItem");
+    const setItem = vi.spyOn(storage, "setItem");
+
+    expect(readInteractiveDraftSummaries(storage, now).map(({ draftId }) => draftId)).toEqual(["retained"]);
+    expect(removeItem).not.toHaveBeenCalled();
+    expect(setItem).not.toHaveBeenCalled();
+    expect(storage.length).toBe(5);
+
+    expect(listInteractiveDraftSummaries(storage, now).map(({ draftId }) => draftId)).toEqual(["retained"]);
+    expect(storage.length).toBe(2);
+    expect(storage.getItem("unrelated")).toBe("retained");
+  });
+
   it("round-trips versioned form state and sorts recoverable drafts", () => {
     const storage = new MemoryStorage();
     const older = writeInteractiveDraft(storage, {
@@ -365,5 +404,71 @@ describe("interactive local drafts", () => {
       ),
     ).toEqual([]);
     expect(storage.getItem(key)).not.toBeNull();
+  });
+});
+
+describe("draft summary snapshots", () => {
+  it("keeps snapshots stable until displayed metadata changes", () => {
+    const storage = new MemoryStorage();
+    const now = new Date();
+    const save = (patientId: string, selected: string[]) => writeInteractiveDraft(storage, {
+      templateId: "adult-hygiene-2021",
+      draftId: "snapshot",
+      form: { patientId, selected },
+      startedAt: now,
+      now,
+    });
+    const getSnapshot = createDraftSummarySnapshotReader(() => storage);
+    const empty = getSnapshot();
+    expect(empty).toEqual({ summaries: [], loaded: true, unavailable: false });
+    expect(getSnapshot()).toBe(empty);
+
+    save("Synthetic A", ["clinical detail"]);
+    const saved = getSnapshot();
+    expect(saved).not.toBe(empty);
+    expect(getSnapshot()).toBe(saved);
+    expect(saved.summaries[0].patientId).toBe("Synthetic A");
+    expect(JSON.stringify(saved)).not.toContain("clinical detail");
+    save("Synthetic A", ["changed clinical detail"]);
+    storage.setItem("unrelated", "changed");
+    expect(getSnapshot()).toBe(saved);
+
+    save("Synthetic B", []);
+    const updated = getSnapshot();
+    expect(updated).not.toBe(saved);
+    expect(updated.summaries[0].patientId).toBe("Synthetic B");
+    expect(saved.summaries[0].patientId).toBe("Synthetic A");
+    storage.clear();
+    expect(getSnapshot().summaries).toEqual([]);
+  });
+
+  it("reports blocked storage and recovers with a fresh snapshot", () => {
+    const storage = new MemoryStorage();
+    let blocked = false;
+    const getSnapshot = createDraftSummarySnapshotReader(() => {
+      if (blocked) throw new Error("Storage access denied");
+      return storage;
+    });
+    const available = getSnapshot();
+    blocked = true;
+    const unavailable = getSnapshot();
+    expect(unavailable).toEqual({ summaries: [], loaded: true, unavailable: true });
+    expect(getSnapshot()).toBe(unavailable);
+    blocked = false;
+    expect(getSnapshot()).toEqual(available);
+    expect(getSnapshot()).not.toBe(unavailable);
+  });
+
+  it("provides a stable hydration snapshot without opening browser storage", () => {
+    const getStorage = vi.fn(() => new MemoryStorage());
+    const getSnapshot = createDraftSummarySnapshotReader(getStorage);
+    const server = getServerDraftSummarySnapshot();
+    expect(server).toEqual({ summaries: [], loaded: false, unavailable: false });
+    expect(getServerDraftSummarySnapshot()).toBe(server);
+    expect(getStorage).not.toHaveBeenCalled();
+    expect(getSnapshot().loaded).toBe(true);
+    expect(getStorage).toHaveBeenCalledOnce();
+    expect(getServerDraftSummarySnapshot()).toBe(server);
+    expect(server.loaded).toBe(false);
   });
 });

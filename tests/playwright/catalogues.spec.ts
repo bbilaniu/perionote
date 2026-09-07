@@ -489,14 +489,24 @@ test("catalogue export and import transfer local values without a network reques
 }) => {
   await page.goto("/settings");
   await page.waitForLoadState("networkidle");
+  const pageOrigin = new URL(page.url()).origin;
+  const navigationUrls = new Set(await page.locator("a[href]").evaluateAll(
+    (links) => links.map((link) => (link as HTMLAnchorElement).href),
+  ));
   const networkRequests: string[] = [];
   page.on("request", (request) => {
+    const url = new URL(request.url());
     const isApplicationRequest =
       request.resourceType() === "fetch" || request.resourceType() === "xhr";
-    const isDevelopmentTooling = new URL(request.url()).pathname.startsWith(
-      "/_next/",
+    const isDevelopmentTooling = url.origin === pageOrigin && url.pathname.startsWith("/_next/");
+    // Next's static router can prefetch after networkidle: HEAD a linked page,
+    // then GET its RSC segments. These requests carry no catalogue payload.
+    const isNavigationPrefetch = url.origin === pageOrigin && !request.postData() && (
+      (request.method() === "HEAD" && navigationUrls.has(url.href)) ||
+      (request.method() === "GET" && request.headers()["rsc"] === "1" &&
+        request.headers()["next-router-prefetch"] !== undefined)
     );
-    if (isApplicationRequest && !isDevelopmentTooling) {
+    if (isApplicationRequest && !isDevelopmentTooling && !isNavigationPrefetch) {
       networkRequests.push(request.url());
     }
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
 import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
 import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
@@ -57,6 +58,7 @@ import {
   type InteractiveTemplateResetMode,
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
@@ -328,6 +330,15 @@ function CheckboxField({
   );
 }
 
+// Allocate a new identity only when an action adds or replaces a finding.
+function createToothFinding(optionId: string): RecareToothFinding {
+  return {
+    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    optionId,
+    toothAreas: [],
+  };
+}
+
 type TeethAssessmentForm = Pick<
   RecareExamForm,
   "teethStatus" | "toothFindings" | "additionalToothFindings"
@@ -357,21 +368,11 @@ export function TeethAssessment({
         } documented`
       : "Not assessed";
   const shouldAutoExpandStructuredObservations = status === "findings";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
-
-  const createFinding = (optionId: string): RecareToothFinding => ({
-    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    optionId,
-    toothAreas: [],
-  });
   function setStatus(next: ExamStatus) {
     if (next === "wnl") {
       if (
@@ -383,7 +384,7 @@ export function TeethAssessment({
         return;
       onChange({
         teethStatus: "wnl",
-        toothFindings: recareToothWnlOptionIds.map(createFinding),
+        toothFindings: recareToothWnlOptionIds.map(createToothFinding),
         additionalToothFindings: "",
       });
     } else if (next === "not-assessed") {
@@ -411,7 +412,7 @@ export function TeethAssessment({
       return;
     onChange({
       teethStatus: "findings",
-      toothFindings: recareToothWnlOptionIds.map(createFinding),
+      toothFindings: recareToothWnlOptionIds.map(createToothFinding),
       additionalToothFindings: "",
     });
   }
@@ -438,7 +439,7 @@ export function TeethAssessment({
       teethStatus: "findings",
       toothFindings: [
         ...findings.filter((item) => !conflicts.has(item.optionId)),
-        createFinding(optionId),
+        createToothFinding(optionId),
       ],
     });
   }
@@ -1385,16 +1386,12 @@ export function StructuredExtraoralObservations({
     ? `${additionalAssessedCount} of ${additionalStatuses.length} additional exams assessed`
     : "Not assessed";
   const shouldAutoExpand = status === "findings" || documentedFindingCount > 0;
-  const [open, setOpen] = useState(shouldAutoExpand);
+  const [open, setOpen] = useAutoExpandDisclosure(shouldAutoExpand);
   const otherExtraoralOptions = recareExtraoralOptions.filter(
     (option) =>
       option.id !== "eoe.tmj_clicking" &&
       option.id !== "eoe.palpable_lymph_nodes",
   );
-
-  useEffect(() => {
-    if (shouldAutoExpand) setOpen(true);
-  }, [shouldAutoExpand]);
 
   function patch(optionId: string, changes: Partial<RecareExtraoralFinding>) {
     onChange(
@@ -1602,15 +1599,10 @@ export function StructuredIntraoralFindings({
     ? "WNL"
     : "Not assessed";
   const shouldAutoExpandStructuredObservations = status === "findings";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
     onChange(
@@ -1990,14 +1982,14 @@ export function RecareExamTemplate({
   const [form, setForm] = useState<RecareExamForm>(() =>
     createEmptyRecareExamForm(),
   );
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const treatmentEntrySequence = useRef(0);
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
@@ -2024,35 +2016,25 @@ export function RecareExamTemplate({
     };
   }
 
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
-
-  useEffect(() => {
-    setStartedAt((current) => current ?? new Date());
-  }, []);
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {

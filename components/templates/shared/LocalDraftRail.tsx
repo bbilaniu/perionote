@@ -9,10 +9,8 @@ import {
   interactiveDraftTemplates,
   isInteractiveDraftTemplateId,
 } from "@/lib/templates/interactiveDraftTemplates";
-import {
-  listInteractiveDraftSummaries,
-  type InteractiveDraftSummary,
-} from "@/lib/templates/localDrafts";
+import type { InteractiveDraftSummary } from "@/lib/templates/localDrafts";
+import { useLocalDraftSummaries } from "@/components/templates/shared/useLocalDraftSummaries";
 
 function formatDraftTime(value: string | Date): string {
   const date = typeof value === "string" ? new Date(value) : value;
@@ -56,49 +54,13 @@ export function LocalDraftRail({
   onSaveCurrent,
 }: LocalDraftWorkspaceState) {
   const router = useRouter();
-  const [summaries, setSummaries] = useState<InteractiveDraftSummary[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const { summaries, loaded } = useLocalDraftSummaries();
   const [openError, setOpenError] = useState("");
   const draftListRef = useRef<HTMLDivElement>(null);
   const [scrollEdges, setScrollEdges] = useState({
     above: false,
     below: false,
   });
-
-  const refreshDrafts = useCallback(() => {
-    try {
-      setSummaries(listInteractiveDraftSummaries(window.localStorage));
-    } catch {
-      setSummaries([]);
-    } finally {
-      setLoaded(true);
-    }
-  }, []);
-
-  useEffect(() => {
-    refreshDrafts();
-    const handleStorage = (event: StorageEvent) => {
-      if (
-        !event.key ||
-        event.key.startsWith("hygienenote.interactive-draft.")
-      ) {
-        refreshDrafts();
-      }
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") refreshDrafts();
-    };
-    window.addEventListener("storage", handleStorage);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      window.removeEventListener("storage", handleStorage);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [refreshDrafts]);
-
-  useEffect(() => {
-    refreshDrafts();
-  }, [currentDraftId, drafts, lastSavedAt, refreshDrafts]);
 
   const summaryById = useMemo(
     () => new Map(summaries.map((draft) => [draft.draftId, draft])),

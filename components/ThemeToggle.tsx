@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 
 type Theme = "light" | "dark" | "system";
@@ -31,6 +31,18 @@ function writeStoredTheme(theme: Theme): void {
   }
 }
 
+function subscribeToStoredTheme(onChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === storageKey) onChange();
+  };
+  window.addEventListener("storage", handleStorage);
+  return () => window.removeEventListener("storage", handleStorage);
+}
+
+function getServerTheme(): Theme {
+  return "system";
+}
+
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
   if (theme === "system") {
@@ -43,26 +55,31 @@ function applyTheme(theme: Theme) {
 }
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>("system");
+  const storedTheme = useSyncExternalStore(
+    subscribeToStoredTheme,
+    readStoredTheme,
+    getServerTheme,
+  );
+  // Keep a selection usable for this page even when localStorage is blocked.
+  const [selectedTheme, setSelectedTheme] = useState<Theme | null>(null);
+  const theme = selectedTheme ?? storedTheme;
 
   useEffect(() => {
-    const initialTheme = readStoredTheme();
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
+    applyTheme(theme);
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const onMediaChange = () => {
-      if (readStoredTheme() === "system") {
+      if (theme === "system") {
         applyTheme("system");
       }
     };
 
     media.addEventListener("change", onMediaChange);
     return () => media.removeEventListener("change", onMediaChange);
-  }, []);
+  }, [theme]);
 
   const handleChange = (nextTheme: Theme) => {
-    setTheme(nextTheme);
+    setSelectedTheme(nextTheme);
     writeStoredTheme(nextTheme);
     applyTheme(nextTheme);
   };

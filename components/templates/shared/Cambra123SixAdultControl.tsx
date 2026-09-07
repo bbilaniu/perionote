@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
 import {
   RapidChoice,
   RapidDisclosure,
@@ -152,7 +152,7 @@ export function Cambra123SixAdultControl({
   const result = assessCambra123SixAdult(value);
   const hasAssessment = hasCambra123SixAdultContent(value);
   const showLegacy = !hasAssessment && legacyContentPresent(legacy);
-  const [factorsOpen, setFactorsOpen] = useState(hasAssessment);
+  const [factorsOpen, setFactorsOpen] = useAutoExpandDisclosure(hasAssessment);
   const yesCount =
     result.protectiveYesCount +
     result.riskYesCount +
@@ -168,10 +168,6 @@ export function Cambra123SixAdultControl({
           : `${result.suggestedLevel} (Suggested)`
       }`
     : "Not calculated";
-
-  useEffect(() => {
-    if (hasAssessment) setFactorsOpen(true);
-  }, [hasAssessment]);
 
   function withStartedStatus(
     patch: Partial<Cambra123SixAdultAssessment>,

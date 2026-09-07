@@ -38,6 +38,15 @@ const removeButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const inputClass = `mt-1 ${formControlClass()}`;
 
+// Called only by the actions that add completed care.
+function nextEntryId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(16).slice(2)
+  }`;
+}
+
 function QuantityStepper({
   id,
   label,
@@ -174,14 +183,6 @@ export function TreatmentCompletedList({
   const [rememberCustomCare, setRememberCustomCare] = useState(false);
   const [addCareMessage, setAddCareMessage] = useState("");
   const catalogueItems = getItems("hygiene-treatment.completed");
-
-  function nextEntryId(prefix: string): string {
-    return `${prefix}-${Date.now()}-${
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : Math.random().toString(16).slice(2)
-    }`;
-  }
 
   function addCatalogueCare(item: CatalogueItem) {
     const added = createTreatmentEntryFromCatalogueItem(

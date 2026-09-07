@@ -1,5 +1,6 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
 import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
 import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
@@ -12,7 +13,7 @@ import {
 } from "react";
 import { AdultHygieneRapidEntry } from "@/components/templates/native/AdultHygieneRapidEntry";
 import { RapidChoice, RapidDisclosure, rapidActionClass } from "@/components/forms/RapidChoiceControls";
-import { rapidEntrySections, rapidEntryPreferenceKey, updateRapidField, type EntryMode } from "@/lib/templates/rapidEntry";
+import { rapidEntrySections, updateRapidField } from "@/lib/templates/rapidEntry";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
@@ -43,6 +44,8 @@ import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnest
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
+import { useRapidEntryMode } from "@/components/templates/shared/useRapidEntryMode";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   ExamFinding,
@@ -1279,31 +1282,20 @@ export function PeriodontalClassificationControl({
   const gradeObservationSummary = documentedObservationSummary(
     gradeObservationCount,
   );
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    hasStructuredObservations,
-  );
-  const [stageEvidenceOpen, setStageEvidenceOpen] = useState(
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      hasStructuredObservations,
+    );
+  const [stageEvidenceOpen, setStageEvidenceOpen] = useAutoExpandDisclosure(
     hasStageSectionObservations,
   );
-  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
-    gradeObservationCount > 0,
+  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useAutoExpandDisclosure(
+    gradeObservationCount,
   );
   const [pendingMissingField, setPendingMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
   const [highlightedMissingField, setHighlightedMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
-
-  useEffect(() => {
-    if (hasStructuredObservations) setStructuredObservationsOpen(true);
-  }, [hasStructuredObservations]);
-
-  useEffect(() => {
-    if (hasStageSectionObservations) setStageEvidenceOpen(true);
-  }, [hasStageSectionObservations]);
-
-  useEffect(() => {
-    if (gradeObservationCount > 0) setGradeEvidenceOpen(true);
-  }, [gradeObservationCount]);
 
   useEffect(() => {
     if (!pendingMissingField || !structuredObservationsOpen) return;
@@ -2547,15 +2539,10 @@ function GingivalDescriptionControl({
     : assessment.status === "wnl"
     ? "WNL"
     : "Not assessed";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function updateFinding(
     optionId: string,
@@ -3154,9 +3141,9 @@ export function AdultHygiene2026Template({
     class5IndicatorStatus: "yes",
     ppeStatementApplies: true,
   }));
-  const [entryMode, setEntryMode] = useState<EntryMode>("detailed");
+  const [entryMode, changeEntryMode] = useRapidEntryMode(!isAdolescent);
   const rapid = !isAdolescent && entryMode === "rapid";
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
@@ -3165,7 +3152,7 @@ export function AdultHygiene2026Template({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
     useCatalogues();
 
@@ -3203,18 +3190,6 @@ export function AdultHygiene2026Template({
     },
   });
 
-  useEffect(() => {
-    if (isAdolescent) return;
-    try {
-      if (window.localStorage.getItem(rapidEntryPreferenceKey) === "rapid") setEntryMode("rapid");
-    } catch { /* The interface remains usable when preferences cannot be stored. */ }
-  }, [isAdolescent]);
-
-  function changeEntryMode(mode: EntryMode) {
-    setEntryMode(mode);
-    try { window.localStorage.setItem(rapidEntryPreferenceKey, mode); } catch { /* Optional UI preference. */ }
-  }
-
   function openDetailedEntry() {
     changeEntryMode("detailed");
     requestAnimationFrame(() =>
@@ -3240,52 +3215,32 @@ export function AdultHygiene2026Template({
     };
   }
 
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
+  }
 
-  useEffect(() => setStartedAt((current) => current ?? new Date()), []);
-
-  useEffect(() => {
-    if (
-      !form.mieleCodes.trim() ||
-      (form.class5IndicatorStatus === "yes" && form.ppeStatementApplies)
-    ) {
-      return;
-    }
-    setForm((current) =>
-      !current.mieleCodes.trim() ||
-      (current.class5IndicatorStatus === "yes" && current.ppeStatementApplies)
-        ? current
-        : {
-            ...current,
-            class5IndicatorStatus: "yes",
-            ppeStatementApplies: true,
-          },
-    );
-  }, [form.class5IndicatorStatus, form.mieleCodes, form.ppeStatementApplies]);
+  if (
+    form.mieleCodes.trim() &&
+    (form.class5IndicatorStatus !== "yes" || !form.ppeStatementApplies)
+  ) {
+    setForm({ ...form, class5IndicatorStatus: "yes", ppeStatementApplies: true });
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
@@ -4257,7 +4212,6 @@ export function AdultHygiene2026Template({
               }}
             />
   );
-
 
   return (
     <InteractiveTemplateWorkspace
