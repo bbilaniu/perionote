@@ -414,6 +414,53 @@ test("Recare copy saves independent drafts for multiple open tabs", async ({
   );
 });
 
+test("saved drafts and the draft rail update across tabs without reloading", async ({
+  context,
+  page,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 2560, height: 1000 });
+  await page.goto(adultHygieneUrl);
+  const manager = await context.newPage();
+  await manager.goto("/drafts");
+  await expect(manager.getByRole("heading", { name: "No saved drafts", exact: true })).toBeVisible();
+
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic live draft");
+  await page.locator("#adult-hygiene-rdh").fill("Synthetic RDH");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+  const savedRow = manager.getByRole("table", { name: "Saved local drafts" })
+    .getByRole("row").filter({ hasText: "Synthetic live draft" });
+  await expect(savedRow).toBeVisible();
+
+  await saveDraftAndStartNew(page);
+  const rail = page.getByRole("region", { name: "Local Drafts" });
+  await expect(rail.getByRole("button", { name: "Open draft for Synthetic live draft", exact: true })).toBeVisible();
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic current form");
+  await deleteDraftThroughDialog(manager, /Delete draft:.*Synthetic live draft/);
+  await expect(savedRow).toHaveCount(0);
+  await expect(rail.getByRole("button", { name: "Open draft for Synthetic live draft", exact: true })).toHaveCount(0);
+  await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("Synthetic current form");
+  await manager.close();
+});
+
+test("saved drafts report blocked storage after hydration", async ({ page }) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get() {
+        throw new DOMException("Storage access denied", "SecurityError");
+      },
+    });
+  });
+  await page.goto("/drafts");
+  await expect(page.getByText("Local draft storage is unavailable in this browser. Existing drafts cannot be listed here.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No saved drafts", exact: true })).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
 test("saved drafts page identifies, opens, and deletes a local draft", async ({
   context,
   page,
