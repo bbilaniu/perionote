@@ -36,9 +36,13 @@ and the validation step has twenty-two minutes within a thirty-minute job.
 Release jobs have ten-minute limits; Pages has an eight-minute action timeout
 within a ten-minute job. Cancellation can prevent diagnostic upload.
 
-PR/Beta runs cancel superseded runs. Main runs serialize without interrupting
-active publication. GitHub concurrency can replace pending runs; branch-tip
-checks prevent an old rerun from knowingly promoting a superseded commit.
+PR/Beta runs cancel superseded runs. Concurrency groups include the event type
+and PR number or ref. Main pushes serialize without interruption; manual
+dispatches use a separate group so they cannot replace a pending main push and
+skip its versioning/Beta synchronization. Pages deployments still share their
+deployment lock across event types. Within each group, GitHub concurrency can
+replace pending runs; branch-tip checks prevent an old rerun from knowingly
+promoting a superseded commit.
 These checks are not a transaction with subsequent changes to main, but every
 published artifact and every automatic Beta target has passed validation.
 
@@ -108,8 +112,11 @@ No application behavior changed. WebKit was not run; it remains advisory.
 ## Hosted verification still required
 
 Check PR (including fork/Dependabot), main, Beta, and manual-dispatch runs; confirm
-failed quality skips both downstream workflows. Inspect failure diagnostics and
-Linux browser runtime. Verify same-run Pages artifact consumption, failed-job
+failed quality skips both downstream workflows. With a main push active and a
+second main push pending, dispatch CI manually on main and confirm the pending
+push survives and runs versioning/Beta synchronization after validation.
+Inspect failure diagnostics and Linux browser runtime. Verify same-run Pages
+artifact consumption, failed-job
 retry artifact selection, Pages environment/OIDC authorization, Changesets PR
 creation, release/archive operations, and the bot Beta push. Local runs cannot
 verify GitHub's job scheduler, token/environment permissions, artifact service,

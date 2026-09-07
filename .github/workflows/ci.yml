@@ -10,7 +10,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # Manual dispatches must not replace pending pushes that run versioning/Beta sync.
+  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
   # Do not interrupt main's release/deployment jobs after validation.
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
