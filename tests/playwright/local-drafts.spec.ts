@@ -371,16 +371,6 @@ test("Recare copy saves independent drafts for multiple open tabs", async ({
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const firstPage = await context.newPage();
   await firstPage.goto(recareExamUrl);
-  const copiedTabSession = await firstPage.evaluate(() =>
-    Object.entries(window.sessionStorage),
-  );
-  const secondPage = await context.newPage();
-  await secondPage.addInitScript((entries) => {
-    for (const [key, value] of entries)
-      window.sessionStorage.setItem(key, value);
-  }, copiedTabSession);
-  await secondPage.goto(recareExamUrl);
-
   await firstPage.locator("#recare-patient-id").fill("Synthetic tab A");
   await firstPage.locator("#recare-rdh").fill("Synthetic RDH A");
   await openGeneratedNote(firstPage);
@@ -388,6 +378,13 @@ test("Recare copy saves independent drafts for multiple open tabs", async ({
   await expect(
     firstPage.getByText("Note copied.", { exact: true }),
   ).toBeVisible();
+
+  // A real opener copies sessionStorage once; an init script would replay it
+  // on reload and overwrite this tab's own draft selection.
+  const popup = firstPage.waitForEvent("popup");
+  await firstPage.evaluate((url) => window.open(url, "_blank"), recareExamUrl);
+  const secondPage = await popup;
+  await expect(secondPage.locator("#recare-patient-id")).toHaveValue("");
 
   await secondPage.locator("#recare-patient-id").fill("Synthetic tab B");
   await secondPage.locator("#recare-rdh").fill("Synthetic RDH B");
