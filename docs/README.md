@@ -14,6 +14,7 @@ to reproduce an older implementation.
 ## Current guidance
 
 - [Contributing](../CONTRIBUTING.md)
+- [CI and release gates](ci.md)
 - [Legacy template imports](legacy-imports.md)
 - [Outstanding clinical review](clinical-review.md)
 - [Architecture decisions](adr/README.md)
