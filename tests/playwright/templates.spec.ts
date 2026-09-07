@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import packageInfo from "@/package.json";
+import packageInfo from "@/package.json" with { type: "json" };
 import {
   openFormActionDialog,
   openGeneratedNote,
