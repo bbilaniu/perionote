@@ -1,5 +1,11 @@
 # hygienenote
 
+## 1.0.3
+
+### Patch Changes
+
+- 1e58b1c: Migrate the interface to Tailwind CSS 4 while preserving existing colors, control styling, and class-based dark mode. Supported browsers are Safari 16.4+, Chrome/Edge 111+, and Firefox 128+.
+
 ## 1.0.2
 
 ### Patch Changes
