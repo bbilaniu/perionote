@@ -102,6 +102,18 @@ describe("interactive draft sessions", () => {
     expect(write).not.toHaveBeenCalled();
   });
 
+  it("preserves the snapshot when autosaving an unchanged empty form", () => {
+    const session = createInteractiveDraftSession<Form>(templateId);
+    session.updateRuntime(runtime());
+    const stop = session.subscribe(vi.fn());
+    const initialized = session.getSnapshot();
+
+    vi.advanceTimersByTime(30_000);
+
+    expect(session.getSnapshot()).toBe(initialized);
+    stop();
+  });
+
   it("preserves current identity and form when saving before a reset or restore fails", () => {
     const session = createInteractiveDraftSession<Form>(templateId);
     const current = runtime("Unsaved edit");

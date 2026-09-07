@@ -76,6 +76,10 @@ export function createInteractiveDraftSession<T>(templateId: string) {
   const listeners = new Set<() => void>();
   const notify = () => listeners.forEach((listener) => listener());
   function update(patch: Partial<Snapshot<T>>) {
+    const changed = (Object.keys(patch) as (keyof Snapshot<T>)[]).some(
+      (key) => !Object.is(snapshot[key], patch[key]),
+    );
+    if (!changed) return;
     snapshot = { ...snapshot, ...patch };
   }
 
