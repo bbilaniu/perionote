@@ -1,5 +1,18 @@
 # hygienenote
 
+## 1.0.2
+
+### Patch Changes
+
+- 8b9f606: Keep draft autosave callbacks synchronized with committed form state and preserve dialog focus restoration without reading refs during render.
+- 86a71ec: Synchronize automatic expansion of assessment disclosures before rendering their contents, while preserving manual collapse and reopening when new assessment data arrives.
+- 681cd4b: Keep saved-draft lists synchronized with browser storage through subscriptions, including saves and deletions in the same tab or another tab. Read cached metadata snapshots during rendering and prune expired or invalid records outside rendering.
+- 64d34b2: Initialize note timestamps and saved entry preferences without effect-driven state updates. Apply provider defaults once after draft recovery, and keep sterilization fields consistent before rendering.
+- a096187: Keep editable-combobox keyboard selection and close requests synchronized before rendering, and separate action-only finding and completed-care ID factories from component rendering.
+- 5cac212: Hydrate the theme selector from browser storage without an effect-driven state reset, keep explicit themes stable when storage is blocked, and synchronize catalogue editing fields before rendering changed items.
+- b104f98: Load and update local catalogues and provider defaults through storage subscriptions. Preserve validation and recovery behavior, and refresh both settings when another tab clears local storage.
+- 7242d6c: Manage draft initialization, recovery, autosave, and navigation checkpoints through a subscribed browser session. Keep restored form data attached to its selected draft during subscription cleanup.
+
 ## 1.0.1
 
 ### Patch Changes
