@@ -31,4 +31,4 @@ updates:
         update-types: [version-update:semver-major]
       # ignore-until: 2026-10-28
       - dependency-name: "@types/node"
-        versions: ["^26.0.0"]
+        versions: ["^25.0.0", "^26.0.0", "^27.0.0"]
