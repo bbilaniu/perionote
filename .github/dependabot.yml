@@ -9,10 +9,6 @@ updates:
     groups:
       actions:
         patterns: ["*"]
-    ignore:
-      # Action v2 requires Changesets CLI v3; migrate them together separately.
-      - dependency-name: changesets/action
-        update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /
@@ -28,9 +24,6 @@ updates:
       react:
         patterns: [react, react-dom, "@types/react", "@types/react-dom"]
     ignore:
-      # Keep the CLI compatible with the release action until a joint migration.
-      - dependency-name: "@changesets/cli"
-        update-types: [version-update:semver-major]
       # TypeScript 7.0 lacks the compiler API needed by ESLint; reassess with 7.1.
       - dependency-name: "typescript"
         versions: [">=7.0.0 <7.1.0"]

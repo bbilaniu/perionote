@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
@@ -33,12 +35,15 @@ jobs:
         run: npm ci
 
       - name: Create or update version pull request
-        uses: changesets/action@a45c4d594aa4e2c509dc14a9f2b3b67ba3780d0d # v1.9.0 (CLI v2 compatible)
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          version: npm run version
-          title: Version Packages
-          commit: Version Packages
+          version-script: npm run version
+          pr-title: Version Packages
+          commit-message: Version Packages
           github-token: ${{ github.token }}
+          # The release-tag job owns tagging after the version PR is merged.
+          create-github-releases: false
+          push-git-tags: false
 
   release-tag:
     name: Tag versioned release

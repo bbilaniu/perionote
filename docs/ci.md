@@ -56,10 +56,10 @@ not restore dependency caches. PR code receives neither deployment credentials
 nor release permissions, including fork and Dependabot PRs.
 
 Actions are pinned to upstream release SHAs: checkout 7.0.1, setup-node 7.0.0,
-upload-artifact 7.0.1, upload-pages-artifact 5.0.0, deploy-pages 5.0.0, and
-Changesets action 1.9.0. Changesets action v2 requires CLI v3, so its major update
-and the CLI major update are deferred for a coordinated migration. See the
-[upstream migration notes](https://github.com/changesets/action/blob/v2.1.2/CHANGELOG.md).
+upload-artifact 7.0.1, upload-pages-artifact 5.0.0, deploy-pages 5.0.1,
+create-pull-request 8.1.1, and Changesets action 2.1.2. Changesets CLI 3.0.2
+and the action were migrated together; their former major-version ignores have
+been removed. Review future majors for compatibility before merging.
 Weekly Dependabot version-update PRs target `beta` for Actions and npm, with five
 open PRs per ecosystem. Next/config and React/types updates are grouped. Updates
 are reviewed through the same PR gate; no automatic merging is configured.
@@ -71,6 +71,30 @@ version-update PRs against beta for validation before promotion to main. CI
 already covers these PRs and beta pushes. Security updates, if enabled, still
 target main; the options in these beta-targeted entries do not apply to them.
 See GitHub's [`target-branch` reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#target-branch).
+
+## Changesets v3 release behavior
+
+The version action uses `version-script`, `pr-title`, and `commit-message`, with
+the token passed explicitly through `github-token`. It pushes version commits
+through the GitHub API; its checkout does not persist Git credentials. It has no
+publish script, and GitHub release creation and tag pushing are explicitly
+disabled on this step. The existing release-tag job creates the annotated tag
+with `changeset git-tag` after the version PR is merged and validated.
+
+Private-package versioning and tagging remain explicitly enabled in the v4
+Changesets configuration schema. The action skips version generation when no
+non-empty changesets exist, handling CLI v3's nonzero exit for an empty release.
+The version script still updates the npm lockfile after consuming changesets.
+See the [CLI migration guide](https://github.com/changesets/changesets/blob/main/site/guide/migration.md)
+and [action migration notes](https://github.com/changesets/action/blob/v2.1.2/CHANGELOG.md).
+
+Local Git integration tests exercise real CLI version generation, private-app
+changelog and lockfile updates, changeset consumption, annotated tags, retries,
+archive branches, and Beta synchronization. Hosted verification must still
+confirm version PR creation and updates through the GitHub API, token permissions,
+workflow approval, and a subsequent release on main. Ordinary pushes with no
+changesets should skip version generation and continue through the existing
+release and Beta gates.
 
 ## Temporary Dependabot ignores
 
