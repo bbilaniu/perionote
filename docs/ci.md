@@ -50,7 +50,7 @@ published artifact and every automatic Beta target has passed validation.
 
 Default permissions are `contents: read`. Validation does not persist checkout
 credentials. Pages alone receives `pages: write` and `id-token: write`; version
-PR creation alone receives `pull-requests: write`. Release/tag/archive/Beta jobs
+and Dependabot expiry PR creation receive `pull-requests: write`. Release/tag/archive/Beta jobs
 receive `contents: write` for their specific Git operations. Privileged jobs do
 not restore dependency caches. PR code receives neither deployment credentials
 nor release permissions, including fork and Dependabot PRs.
@@ -64,6 +64,61 @@ Weekly Dependabot PRs target the default branch for Actions and npm, with five
 open PRs per ecosystem. Next/config and React/types updates are grouped. Updates
 are reviewed through the same PR gate; no automatic merging is configured.
 Node is selected from package.json, matching the local Volta pin.
+
+## Temporary Dependabot ignores
+
+Put an expiry annotation immediately before an `ignore` entry, at the same
+indentation, with no intervening blank line or comment:
+
+```yaml
+      # ignore-until: 2026-10-28
+      - dependency-name: "@types/node"
+        versions: ["^26.0.0"]
+```
+
+`dependabot-expiry.yml` runs daily at 08:37 UTC and supports manual dispatch on
+the default branch. It compares the current UTC calendar date using `>=`, so a
+delayed or missed run catches expired dates on its next run. GitHub schedules
+are best effort, not exact-time guarantees. The workflow must reach the default
+branch before scheduled runs start.
+
+The built-in-only preflight skips dependency installation when nothing is due.
+When a date is due, `npm ci --ignore-scripts` installs locked dependencies and a
+YAML parser validates the annotations and resulting edit. Only expired entries
+and any resulting empty `ignore` key are removed. Future/undated rules, unrelated comments,
+quoting, and line endings are preserved. Invalid dates, misplaced annotations,
+and unsupported annotated flow mappings/anchors fail without writing the file.
+The annotation belongs to a whole ignore entry, not an individual version range.
+
+The workflow creates or updates one PR from the reserved branch
+`automation/expired-dependabot-ignores`, committing only `.github/dependabot.yml`.
+It never merges or upgrades dependencies. Review and merge the removal PR before
+Dependabot can propose those updates again on its regular schedule. If an update
+needs more time, extend the date on the default branch; the next check updates
+the pending PR or closes it when no removals remain. Avoid manual edits to this
+automation-owned branch. Bot-command ignores stored separately by Dependabot
+are not managed by this workflow.
+
+PR creation uses `GITHUB_TOKEN` with job-scoped contents/PR write permission and
+a five-minute timeout. Checkout credentials are not persisted, and no privileged
+dependency cache is restored. On 2026-09-07, the repository's Actions setting
+already allowed PR creation; no setting was changed. GitHub-created PR workflow
+runs may require **Approve workflows to run**, as with version PRs. Scheduling,
+PR creation/update/closure, and that approval path still require hosted testing.
+
+Preview a date locally without modifying the configuration:
+
+```bash
+node scripts/expire-dependabot-ignores.mjs --preview --date 2026-10-28
+npm run test -- tests/vitest/dependabotExpiry.test.ts
+```
+
+`--check` performs only the dependency-free annotation preflight; `--preview`
+performs full validation. `--write` applies the validated edit locally. The
+workflow always uses the actual UTC date; it exposes no date-override input.
+
+See [GitHub scheduling](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)
+and [token-triggered PR workflow approval](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow#triggering-a-workflow-from-a-workflow).
 
 ## Live settings inspected on 2026-09-07
 
