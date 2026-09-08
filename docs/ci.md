@@ -60,10 +60,17 @@ upload-artifact 7.0.1, upload-pages-artifact 5.0.0, deploy-pages 5.0.0, and
 Changesets action 1.9.0. Changesets action v2 requires CLI v3, so its major update
 and the CLI major update are deferred for a coordinated migration. See the
 [upstream migration notes](https://github.com/changesets/action/blob/v2.1.2/CHANGELOG.md).
-Weekly Dependabot PRs target the default branch for Actions and npm, with five
+Weekly Dependabot version-update PRs target `beta` for Actions and npm, with five
 open PRs per ecosystem. Next/config and React/types updates are grouped. Updates
 are reviewed through the same PR gate; no automatic merging is configured.
 Node is selected from package.json, matching the local Volta pin.
+
+Dependabot reads this configuration from the default branch (`main`), so changes
+must reach main before they take effect. It checks beta's manifests and opens
+version-update PRs against beta for validation before promotion to main. CI
+already covers these PRs and beta pushes. Security updates, if enabled, still
+target main; the options in these beta-targeted entries do not apply to them.
+See GitHub's [`target-branch` reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#target-branch).
 
 ## Temporary Dependabot ignores
 
