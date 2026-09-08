@@ -23,7 +23,7 @@
     "test:e2e:webkit": "playwright test --project=webkit",
     "changeset": "changeset",
     "version": "changeset version && npm install --package-lock-only",
-    "release": "changeset tag",
+    "release": "changeset git-tag",
     "versioning:check": "node scripts/check-versioning.mjs",
     "catalogue:from-cleardent": "node scripts/transform-cleardent-catalogue.mjs",
     "codex:patches:prepare": "node scripts/codex-patch-branches.mjs prepare",
@@ -37,7 +37,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.1",
+    "@changesets/cli": "^3.0.2",
     "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.0.0",

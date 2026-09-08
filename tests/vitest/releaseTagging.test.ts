@@ -5,6 +5,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 const projectRoot = process.cwd();
+const projectScripts = JSON.parse(readFileSync(path.join(projectRoot, "package.json"), "utf8")).scripts;
 const temporaryDirectories: string[] = [];
 // Real Git and npm subprocesses need headroom when the full suite runs in parallel.
 const integrationTestTimeout = 30_000;
@@ -29,7 +30,8 @@ function writeVersion(cwd: string, version: string) {
     version,
     private: true,
     scripts: {
-      release: "changeset tag",
+      version: projectScripts.version,
+      release: projectScripts.release,
       "versioning:check": "node scripts/check-versioning.mjs",
     },
   });
@@ -95,6 +97,30 @@ function archiveRelease(cwd: string) {
 }
 
 describe("release tagging with local Git remotes", { timeout: integrationTestTimeout }, () => {
+  it("consumes a changeset for the private app, updates version metadata, and tags the release", () => {
+    const { cwd, remote } = fixture();
+    writeFileSync(path.join(cwd, ".changeset/feature.md"), '---\n"hygienenote": patch\n---\n\nSynthetic migration regression.\n');
+    commit(cwd, "Add a synthetic patch changeset");
+
+    const version = spawnSync("npm", ["run", "version"], {
+      cwd,
+      encoding: "utf8",
+      env: { ...process.env, npm_config_offline: "true", npm_config_audit: "false", npm_config_fund: "false" },
+    });
+    expect(version.status, `${version.stdout}${version.stderr}`).toBe(0);
+    expect(JSON.parse(readFileSync(path.join(cwd, "package.json"), "utf8")).version).toBe("0.15.1");
+    const lock = JSON.parse(readFileSync(path.join(cwd, "package-lock.json"), "utf8"));
+    expect(lock.version).toBe("0.15.1");
+    expect(lock.packages[""].version).toBe("0.15.1");
+    expect(readFileSync(path.join(cwd, "CHANGELOG.md"), "utf8")).toContain("Synthetic migration regression.");
+    expect(existsSync(path.join(cwd, ".changeset/feature.md"))).toBe(false);
+
+    const releaseCommit = commit(cwd, "Version Packages");
+    const result = tagRelease(cwd);
+    expect(result.status, result.output).toBe(0);
+    expect(git(remote, "rev-parse", "refs/tags/v0.15.1^{commit}")).toBe(releaseCommit);
+  });
+
   it("skips ordinary pushes even with a misleading commit title and a pending major changeset", () => {
     const { cwd, remote } = fixture();
     writeFileSync(path.join(cwd, ".changeset/feature.md"), '---\n"hygienenote": major\n---\n\nSynthetic feature.\n');

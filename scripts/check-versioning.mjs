@@ -30,8 +30,8 @@ try {
   if (config.privatePackages?.version !== true || config.privatePackages?.tag !== true) {
     errors.push("Changesets must enable versioning and tagging private packages.");
   }
-  if (pkg.scripts?.release !== "changeset tag") {
-    errors.push('The release script must be "changeset tag".');
+  if (pkg.scripts?.release !== "changeset git-tag") {
+    errors.push('The release script must be "changeset git-tag".');
   }
 
   if (process.argv.includes("--release")) {

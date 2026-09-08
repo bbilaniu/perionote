@@ -56,7 +56,7 @@ build can be retried for the same branch and commit from the Cloudflare dashboar
 
 Run `npm run versioning:check` locally to check version metadata. CI also runs
 this check and permits pending changesets during development. The workflow uses
-`npm run release` (`changeset tag`) to create the local tag before pushing that
+`npm run release` (`changeset git-tag`) to create the local tag before pushing that
 specific tag; contributors should normally let the workflow perform this step.
 
 This repository does not publish an npm package or automatically create GitHub
