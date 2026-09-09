@@ -3716,6 +3716,7 @@ export function AdultHygiene2026Template({
       getItems("hygiene-treatment.completed"),
       () => createTreatmentCompletedEntry().id,
       oheRecap,
+      form.fmpDone,
     ).filter(
       (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
     );
