@@ -4,6 +4,7 @@ import {
   createStandardTreatmentEntriesFromCatalogue,
   createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentCompletedEntries,
+  mergeStandardTreatmentEntries,
   standardTreatmentCompletedPreset,
   syncDerivedOheTreatmentDetails,
   syncRadiographTreatmentEntries,
@@ -99,6 +100,84 @@ describe("structured adult hygiene treatment", () => {
       .toMatchObject({ quantity: "3", instrumentation: ["hand", "power"] });
     expect(entries.find((entry) => entry.procedureKind === "ohe"))
       .toMatchObject({ details: "Current OHE recap", procedureSource: "ohe" });
+  });
+
+  it.each([
+    "NO, COMPLETED WITHIN A YEAR",
+    "NO, IN ORTHO",
+    "NO, NOT APPLICABLE",
+    "NO, RAN OUT OF TIME - WILL EVALUATE AT NEXT VISIT",
+    "  no, deferred  ",
+    "Not completed",
+  ])("omits FMP from standard care when FMP done is %s", (fmpDone) => {
+    const catalogue = listCatalogueItems(
+      createEmptyCatalogueState(),
+      "hygiene-treatment.completed",
+    ).map((item) =>
+      item.id === "seed.hygiene-treatment.completed.fmp"
+        ? { ...item, label: "Renamed periodontal charting" }
+        : item,
+    );
+    let sequence = 0;
+    const entries = createStandardTreatmentEntriesFromCatalogue(
+      catalogue,
+      () => `standard-${sequence++}`,
+      "Current OHE recap",
+      fmpDone,
+    );
+
+    expect(entries.map((entry) => entry.catalogueItemId)).toEqual([
+      "seed.hygiene-treatment.completed.scaling",
+      "seed.hygiene-treatment.completed.selective-polish",
+      "seed.hygiene-treatment.completed.ohe",
+      "seed.hygiene-treatment.completed.fluoride-varnish-application",
+    ]);
+    expect(format(entries)).not.toContain("Renamed periodontal charting");
+    expect(format(entries)).toContain("Current OHE recap");
+  });
+
+  it.each(["", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"])(
+    "includes FMP in standard care when FMP done is %s",
+    (fmpDone) => {
+      const entries = createStandardTreatmentEntriesFromCatalogue(
+        listCatalogueItems(createEmptyCatalogueState(), "hygiene-treatment.completed"),
+        () => "standard-fmp",
+        "",
+        fmpDone,
+      );
+
+      expect(format(entries)).toContain("FMP — full mouth");
+    },
+  );
+
+  it("removes stale standard FMP while preserving manually entered care", () => {
+    const standardFmp: AdultHygieneTreatmentCompletedEntry = {
+      id: "standard-fmp",
+      treatmentType: "FMP",
+      toothAreas: ["full mouth"],
+      catalogueItemId: "seed.hygiene-treatment.completed.fmp",
+      procedureSource: "standard-treatment",
+    };
+    const manualFmp: AdultHygieneTreatmentCompletedEntry = {
+      ...standardFmp,
+      id: "manual-fmp",
+      procedureSource: undefined,
+    };
+    const scaling: AdultHygieneTreatmentCompletedEntry = {
+      id: "scaling",
+      treatmentType: "Scaling",
+      toothAreas: ["full mouth"],
+      procedureKind: "scaling",
+      procedureSource: "standard-treatment",
+    };
+
+    expect(
+      mergeStandardTreatmentEntries(
+        [standardFmp, manualFmp, scaling],
+        [scaling],
+        "NO, IN ORTHO",
+      ),
+    ).toEqual([manualFmp, scaling]);
   });
 
   it("keeps legacy free-text treatment rows unchanged", () => {

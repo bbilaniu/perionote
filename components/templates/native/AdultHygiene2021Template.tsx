@@ -62,8 +62,8 @@ import {
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  mergeStandardTreatmentEntries,
   syncDerivedOheTreatmentDetails,
-  treatmentCompletedEntryIdentity,
 } from "@/lib/templates/adultHygieneTreatment";
 import type {
   DocumentationStatus,
@@ -3128,23 +3128,21 @@ export function AdultHygiene2021Template({
   }
 
   function applyStandardTreatment() {
-    const existingKeys = new Set(
-      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
-    );
     const oheRecap = buildOheTreatmentRecap(form);
     const additions = createStandardTreatmentEntriesFromCatalogue(
       getItems("hygiene-treatment.completed"),
       () => createTreatmentCompletedEntry().id,
       oheRecap,
-    ).filter(
-      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+      form.fmpDone,
     );
-    if (additions.length) {
-      updateField("treatmentCompleted", [
-        ...form.treatmentCompleted,
-        ...additions,
-      ]);
-    }
+    updateField(
+      "treatmentCompleted",
+      mergeStandardTreatmentEntries(
+        form.treatmentCompleted,
+        additions,
+        form.fmpDone,
+      ),
+    );
   }
 
   return (
