@@ -84,6 +84,7 @@ import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  mergeStandardTreatmentEntries,
   migrateLegacyDesensitizerToTreatmentCompleted,
   recareExamTreatmentPreset,
   syncDerivedOheTreatmentDetails,
@@ -3708,24 +3709,21 @@ export function AdultHygiene2026Template({
   }
 
   function applyStandardTreatment() {
-    const existingKeys = new Set(
-      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
-    );
     const oheRecap = buildOheTreatmentRecap(form);
     const additions = createStandardTreatmentEntriesFromCatalogue(
       getItems("hygiene-treatment.completed"),
       () => createTreatmentCompletedEntry().id,
       oheRecap,
       form.fmpDone,
-    ).filter(
-      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
     );
-    if (additions.length) {
-      updateField("treatmentCompleted", [
-        ...form.treatmentCompleted,
-        ...additions,
-      ]);
-    }
+    updateField(
+      "treatmentCompleted",
+      mergeStandardTreatmentEntries(
+        form.treatmentCompleted,
+        additions,
+        form.fmpDone,
+      ),
+    );
   }
 
   function applyRecareExam() {

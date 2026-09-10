@@ -4,6 +4,7 @@ import {
   createStandardTreatmentEntriesFromCatalogue,
   createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentCompletedEntries,
+  mergeStandardTreatmentEntries,
   standardTreatmentCompletedPreset,
   syncDerivedOheTreatmentDetails,
   syncRadiographTreatmentEntries,
@@ -148,6 +149,36 @@ describe("structured adult hygiene treatment", () => {
       expect(format(entries)).toContain("FMP — full mouth");
     },
   );
+
+  it("removes stale standard FMP while preserving manually entered care", () => {
+    const standardFmp: AdultHygieneTreatmentCompletedEntry = {
+      id: "standard-fmp",
+      treatmentType: "FMP",
+      toothAreas: ["full mouth"],
+      catalogueItemId: "seed.hygiene-treatment.completed.fmp",
+      procedureSource: "standard-treatment",
+    };
+    const manualFmp: AdultHygieneTreatmentCompletedEntry = {
+      ...standardFmp,
+      id: "manual-fmp",
+      procedureSource: undefined,
+    };
+    const scaling: AdultHygieneTreatmentCompletedEntry = {
+      id: "scaling",
+      treatmentType: "Scaling",
+      toothAreas: ["full mouth"],
+      procedureKind: "scaling",
+      procedureSource: "standard-treatment",
+    };
+
+    expect(
+      mergeStandardTreatmentEntries(
+        [standardFmp, manualFmp, scaling],
+        [scaling],
+        "NO, IN ORTHO",
+      ),
+    ).toEqual([manualFmp, scaling]);
+  });
 
   it("keeps legacy free-text treatment rows unchanged", () => {
     expect(

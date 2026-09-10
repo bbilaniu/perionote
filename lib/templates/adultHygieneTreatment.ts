@@ -222,6 +222,34 @@ export function createStandardTreatmentEntriesFromCatalogue(
   });
 }
 
+export function mergeStandardTreatmentEntries(
+  existing: readonly AdultHygieneTreatmentCompletedEntry[],
+  additions: readonly AdultHygieneTreatmentCompletedEntry[],
+  fmpDone = "",
+): AdultHygieneTreatmentCompletedEntry[] {
+  const fmpNotCompleted = /^(?:no\b|not\s+(?:completed|done)\b)/.test(
+    normalized(fmpDone),
+  );
+  const retained = fmpNotCompleted
+    ? existing.filter(
+        (entry) =>
+          !(
+            entry.catalogueItemId ===
+              "seed.hygiene-treatment.completed.fmp" &&
+            entry.procedureSource === "standard-treatment"
+          ),
+      )
+    : [...existing];
+  const existingKeys = new Set(retained.map(treatmentCompletedEntryIdentity));
+
+  return [
+    ...retained,
+    ...additions.filter(
+      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+    ),
+  ];
+}
+
 function normalized(value: string): string {
   return value.normalize("NFKC").trim().toLocaleLowerCase("en-CA");
 }
