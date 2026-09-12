@@ -1,5 +1,17 @@
 # hygienenote
 
+## 1.1.0
+
+### Minor Changes
+
+- 582fbc3: Add Rapid Entry and Detailed modes to 2026 Adolescent Hygiene, sharing encounter data and guardian communication while remembering the template's entry mode independently.
+
+### Patch Changes
+
+- 1bb7599: Add an NP exam button beside Recare exam in the existing clinical templates. The action records a Dentist NP Exam in completed care and generated notes without adding duplicates on repeated clicks.
+- 582fbc3: Changed wording to clarify availability of additional options. Exposed the comment field for Cambra123 in fast entry mode.
+- 1bb7599: Skip FMP when applying standard treatment if FMP done is marked No or not completed in the adult 2021 and adult/adolescent 2026 clinical templates.
+
 ## 1.0.4
 
 ### Patch Changes
