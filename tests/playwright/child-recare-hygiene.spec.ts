@@ -185,7 +185,7 @@ test("child standard pediatric care keeps the recare exam separate", async ({
   await expect(completedCare.locator(":scope > li")).toHaveCount(4);
 
   const applyRecare = page.getByRole("button", {
-    name: "Apply recare exam",
+    name: "Recare exam",
     exact: true,
   });
   await applyRecare.click();

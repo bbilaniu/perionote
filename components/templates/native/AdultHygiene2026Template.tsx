@@ -84,6 +84,7 @@ import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  mergeStandardTreatmentEntries,
   migrateLegacyDesensitizerToTreatmentCompleted,
   recareExamTreatmentPreset,
   syncDerivedOheTreatmentDetails,
@@ -3141,8 +3142,10 @@ export function AdultHygiene2026Template({
     class5IndicatorStatus: "yes",
     ppeStatementApplies: true,
   }));
-  const [entryMode, changeEntryMode] = useRapidEntryMode(!isAdolescent);
-  const rapid = !isAdolescent && entryMode === "rapid";
+  const [entryMode, changeEntryMode] = useRapidEntryMode(
+    `hygienenote.${templateId}.entry-mode.v1`,
+  );
+  const rapid = entryMode === "rapid";
   const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
@@ -3708,23 +3711,21 @@ export function AdultHygiene2026Template({
   }
 
   function applyStandardTreatment() {
-    const existingKeys = new Set(
-      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
-    );
     const oheRecap = buildOheTreatmentRecap(form);
     const additions = createStandardTreatmentEntriesFromCatalogue(
       getItems("hygiene-treatment.completed"),
       () => createTreatmentCompletedEntry().id,
       oheRecap,
-    ).filter(
-      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+      form.fmpDone,
     );
-    if (additions.length) {
-      updateField("treatmentCompleted", [
-        ...form.treatmentCompleted,
-        ...additions,
-      ]);
-    }
+    updateField(
+      "treatmentCompleted",
+      mergeStandardTreatmentEntries(
+        form.treatmentCompleted,
+        additions,
+        form.fmpDone,
+      ),
+    );
   }
 
   function applyRecareExam() {
@@ -4213,6 +4214,28 @@ export function AdultHygiene2026Template({
             />
   );
 
+  const guardianCommunicationControls = isAdolescent ? (
+    <Section title="Communication with Parent or Legal Guardian" flat={rapid}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <FixedChoiceListbox
+          id="adolescent-hygiene-2026-guardian-communication"
+          label="Information relayed"
+          value={form.guardianCommunicationStatus ?? "not-documented"}
+          options={documentationStatusOptions}
+          onChange={(value) => updateField("guardianCommunicationStatus", value)}
+        />
+        {form.guardianCommunicationStatus === "yes" ? (
+          <TextField
+            id="adolescent-hygiene-2026-guardian-communication-details"
+            label="Communication details"
+            value={form.guardianCommunicationDetails ?? ""}
+            onChange={(value) => updateField("guardianCommunicationDetails", value)}
+          />
+        ) : null}
+      </div>
+    </Section>
+  ) : null;
+
   return (
     <InteractiveTemplateWorkspace
       compactNavigation={rapid}
@@ -4276,16 +4299,20 @@ export function AdultHygiene2026Template({
       )}
     >
 
-      {!isAdolescent ? <div className="space-y-2" id="adult-hygiene-entry-mode">
+      <div className="space-y-2" id="adult-hygiene-entry-mode">
         <RapidChoice label="Entry mode" value={entryMode} options={[
           { value: "rapid", label: "Rapid Entry" }, { value: "detailed", label: "Detailed" },
         ]} onChange={changeEntryMode} />
         <p className="text-sm text-slate-600 dark:text-slate-400">Use direct choices for routine visits. Both modes share this note and local draft.</p>
-      </div> : null}
+      </div>
       {rapid ? <AdultHygieneRapidEntry form={form} onChange={updateRapidEntryField}
         patientIdRef={patientIdRef} dentistRef={dentistRef} patientIdError={patientIdError} providerError={providerError}
         visitDetails={visitDetails} vitalsControls={vitalsControls} extraoralControls={extraoralControls} intraoralControls={intraoralControls}
         recordsControls={recordsControls} educationControls={educationControls} treatmentControls={treatmentControls} cariesControls={cariesControls}
+        guardianCommunicationControls={guardianCommunicationControls}
+        examinationOutputDescription={isAdolescent
+          ? "EOE and IOE are included in Combined and Dentist notes."
+          : "EOE and IOE are included in Complete and Recare notes."}
         gingivalControls={<GingivalDescriptionControl rapid value={form.gingivalDescription} onChange={(value) => updateField("gingivalDescription", value)} />}
         periodontalControls={<PeriodontalClassificationControl rapid value={form.periodontalClassification} onChange={(value) => updateField("periodontalClassification", value)} />}
         onExtraoralStatusChange={changeExtraoralStatus} onIntraoralStatusChange={changeIntraoralStatus}
@@ -4943,33 +4970,7 @@ export function AdultHygiene2026Template({
 
           {treatmentControls}
 
-          {isAdolescent ? (
-            <Section title="Communication with Parent or Legal Guardian">
-              <div className="grid gap-4 md:grid-cols-2">
-                <FixedChoiceListbox
-                  id="adolescent-hygiene-2026-guardian-communication"
-                  label="Information relayed"
-                  value={
-                    form.guardianCommunicationStatus ?? "not-documented"
-                  }
-                  options={documentationStatusOptions}
-                  onChange={(value) =>
-                    updateField("guardianCommunicationStatus", value)
-                  }
-                />
-                {form.guardianCommunicationStatus === "yes" ? (
-                  <TextField
-                    id="adolescent-hygiene-2026-guardian-communication-details"
-                    label="Communication details"
-                    value={form.guardianCommunicationDetails ?? ""}
-                    onChange={(value) =>
-                      updateField("guardianCommunicationDetails", value)
-                    }
-                  />
-                ) : null}
-              </div>
-            </Section>
-          ) : null}
+          {guardianCommunicationControls}
 
           <Section title="Intervals and Follow-up">
             <div className="grid gap-3 md:grid-cols-2">

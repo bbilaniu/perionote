@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useCallback, useState, useSyncExternalStore } from "react";
 import { rapidEntryPreferenceKey, type EntryMode } from "@/lib/templates/rapidEntry";
 
-function readMode(): EntryMode {
+function readMode(preferenceKey: string): EntryMode {
   try {
-    return window.localStorage.getItem(rapidEntryPreferenceKey) === "rapid"
+    return window.localStorage.getItem(preferenceKey) === "rapid"
       ? "rapid"
       : "detailed";
   } catch {
@@ -14,30 +14,31 @@ function readMode(): EntryMode {
 }
 
 const getServerMode = (): EntryMode => "detailed";
-const subscribeDisabled = () => () => {};
-
-function subscribe(onChange: () => void) {
-  const handleStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key === rapidEntryPreferenceKey) onChange();
-  };
-  window.addEventListener("storage", handleStorage);
-  return () => window.removeEventListener("storage", handleStorage);
-}
-
-export function useRapidEntryMode(enabled: boolean) {
+export function useRapidEntryMode(preferenceKey = rapidEntryPreferenceKey) {
+  const subscribe = useCallback((onChange: () => void) => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === null || event.key === preferenceKey) onChange();
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, [preferenceKey]);
+  const getSnapshot = useCallback(() => readMode(preferenceKey), [preferenceKey]);
   const storedMode = useSyncExternalStore(
-    enabled ? subscribe : subscribeDisabled,
-    enabled ? readMode : getServerMode,
+    subscribe,
+    getSnapshot,
     getServerMode,
   );
-  const [selection, setSelection] = useState<EntryMode | null>(null);
+  const [selection, setSelection] = useState<{
+    key: string;
+    mode: EntryMode;
+  } | null>(null);
   function changeEntryMode(mode: EntryMode) {
-    setSelection(mode);
+    setSelection({ key: preferenceKey, mode });
     try {
-      window.localStorage.setItem(rapidEntryPreferenceKey, mode);
+      window.localStorage.setItem(preferenceKey, mode);
     } catch {
       // The selection remains usable for this page when storage is blocked.
     }
   }
-  return [selection ?? storedMode, changeEntryMode] as const;
+  return [selection?.key === preferenceKey ? selection.mode : storedMode, changeEntryMode] as const;
 }

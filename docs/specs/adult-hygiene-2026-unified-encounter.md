@@ -95,7 +95,7 @@ available. Changing these values maintains source-linked entries at the start
 of Treatment completed today; linked entries can only be removed by changing
 the Records source.
 
-An explicit **Apply recare exam** action adds one idempotent **Dentist Recare
+An explicit **Recare exam** action adds one idempotent **Dentist Recare
 Exam** entry after linked radiographs. It records the completed service but does
 not infer normal EOE/IOE findings. The Recare-only output continues to omit the
 Treatment completed today block; Complete and Hygiene outputs include it.

@@ -10,6 +10,7 @@ export type HygieneProcedureKind =
   | "polish"
   | "radiograph"
   | "recare-exam"
+  | "np-exam"
   | "ohe"
   | "product-application";
 
@@ -17,6 +18,7 @@ export type HygieneInstrumentationMethod = "hand" | "power";
 export type HygieneProcedureSource =
   | "radiographs"
   | "recare-exam"
+  | "np-exam"
   | "standard-treatment"
   | "ohe";
 export type RadiographType = "BW" | "PA" | "PAN";
@@ -119,6 +121,14 @@ export const recareExamTreatmentPreset = {
   careCategory: "exam",
 } as const satisfies AdultHygieneTreatmentPresetEntry;
 
+export const npExamTreatmentPreset = {
+  treatmentType: "Dentist NP Exam",
+  toothAreas: [],
+  procedureKind: "np-exam",
+  procedureSource: "np-exam",
+  careCategory: "exam",
+} as const satisfies AdultHygieneTreatmentPresetEntry;
+
 export function createTreatmentEntryFromCatalogueItem(
   item: CatalogueItem,
   id: string,
@@ -184,9 +194,16 @@ export function createStandardTreatmentEntriesFromCatalogue(
   items: readonly CatalogueItem[],
   createId: () => string,
   oheRecap = "",
+  fmpDone = "",
 ): AdultHygieneTreatmentCompletedEntry[] {
+  const fmpNotCompleted = /^(?:no\b|not\s+(?:completed|done)\b)/.test(
+    normalized(fmpDone),
+  );
   const itemsById = new Map(items.map((item) => [item.id, item]));
   return standardTreatmentCatalogueItemIds.flatMap((itemId) => {
+    if (fmpNotCompleted && itemId === "seed.hygiene-treatment.completed.fmp") {
+      return [];
+    }
     const item = itemsById.get(itemId);
     if (!item) return [];
     const entry = createTreatmentEntryFromCatalogueItem(
@@ -203,6 +220,34 @@ export function createStandardTreatmentEntriesFromCatalogue(
       },
     ];
   });
+}
+
+export function mergeStandardTreatmentEntries(
+  existing: readonly AdultHygieneTreatmentCompletedEntry[],
+  additions: readonly AdultHygieneTreatmentCompletedEntry[],
+  fmpDone = "",
+): AdultHygieneTreatmentCompletedEntry[] {
+  const fmpNotCompleted = /^(?:no\b|not\s+(?:completed|done)\b)/.test(
+    normalized(fmpDone),
+  );
+  const retained = fmpNotCompleted
+    ? existing.filter(
+        (entry) =>
+          !(
+            entry.catalogueItemId ===
+              "seed.hygiene-treatment.completed.fmp" &&
+            entry.procedureSource === "standard-treatment"
+          ),
+      )
+    : [...existing];
+  const existingKeys = new Set(retained.map(treatmentCompletedEntryIdentity));
+
+  return [
+    ...retained,
+    ...additions.filter(
+      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+    ),
+  ];
 }
 
 function normalized(value: string): string {
@@ -224,6 +269,7 @@ export function inferredHygieneProcedureKind(
   const treatment = normalized(entry.treatmentType);
   if (/(?:\bscale\b|\bscaling\b)/.test(treatment)) return "scaling";
   if (/\bpolish/.test(treatment)) return "polish";
+  if (/\b(?:np|new patient)\s+exam\b/.test(treatment)) return "np-exam";
   if (/\b(rec|recall|recare).*exam|dentist.*exam|dds.*exam/.test(treatment)) {
     return "recare-exam";
   }
@@ -360,6 +406,9 @@ export function formatAdultHygieneTreatmentEntry(
   }
   if (entry.procedureKind === "recare-exam") {
     return entry.treatmentType.trim() || "Dentist Recare Exam";
+  }
+  if (entry.procedureKind === "np-exam") {
+    return entry.treatmentType.trim() || "Dentist NP Exam";
   }
   if (entry.procedureKind === "ohe") {
     const details = entry.details?.trim();

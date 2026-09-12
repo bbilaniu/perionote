@@ -1,6 +1,6 @@
 # Rapid Entry v1
 
-Status: implemented in the **2026 Adult Hygiene** workspace; chairside speed and
+Status: implemented in the **2026 Adult Hygiene** and **2026 Adolescent Hygiene** workspaces; chairside speed and
 clinical acceptance remain to be evaluated with the checklist below.
 
 ## Architecture
@@ -10,7 +10,7 @@ The Entry mode switch selects Rapid Entry or Detailed within
 instance. There is no second encounter schema, translation on mode changes,
 new record type, or draft migration. Detailed remains the initial mode until
 chairside testing supports changing that default. The selected interface mode
-is remembered locally, separately from encounter data. Storage failures do not
+is remembered locally for each template, separately from encounter data. Storage failures do not
 prevent mode changes.
 
 `AdultHygieneRapidEntry` provides native radio and checkbox choices, optional
@@ -77,6 +77,11 @@ behavior are unchanged. Complete includes the combined encounter. Hygiene
 omits EOE/IOE; Recare omits hygiene findings and completed hygiene treatment,
 as specified by the existing output contract.
 
+The adolescent workspace uses the same entry controls and encounter state with
+its own draft and entry-mode preference. Its outputs retain the Combined,
+Dentist and Hygienist labels. Parent or legal guardian communication stays
+available in both modes, following completed care in Rapid Entry.
+
 The separate **2021 Adult Hygiene** and standalone **Recare Exam** workspaces
 have independent schemas, draft IDs and generators. The repository has no
 general Common Form adapter exporting a 2026 encounter into those workspaces.
@@ -127,7 +132,7 @@ not implement a Rapid-specific generator.
    options before making Rapid Entry the initial default.
 
 Automated coverage: `tests/vitest/rapidEntry.test.ts` and
-`tests/playwright/rapid-entry.spec.ts`, plus the existing state, output,
+`tests/playwright/rapid-entry.spec.ts` and `tests/playwright/adolescent-hygiene-2026.spec.ts`, plus the existing state, output,
 catalogue, draft, navigation and Detailed-workflow regression suites.
 
 ## Implementation verification

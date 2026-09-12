@@ -1961,7 +1961,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   }
 
   await page
-    .getByRole("button", { name: "Add completed care", exact: true })
+    .getByRole("button", { name: "All treatment options...", exact: true })
     .click();
   await page
     .getByRole("button", {
