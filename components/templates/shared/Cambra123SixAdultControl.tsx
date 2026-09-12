@@ -228,6 +228,26 @@ export function Cambra123SixAdultControl({
     </>
   );
 
+  const notesControl = (
+    <div className="md:col-span-2">
+      <label
+        className="text-sm font-medium"
+        htmlFor="adult-hygiene-cambra-notes"
+      >
+        CAMBRA123 notes
+      </label>
+      <textarea
+        id="adult-hygiene-cambra-notes"
+        className={`${formControlClass()} mt-1 min-h-24 resize-y`}
+        value={value.notes}
+        placeholder="Document clinical judgment, counseling, or management rationale."
+        onChange={(event) =>
+          onChange(withStartedStatus({ notes: event.target.value }))
+        }
+      />
+    </div>
+  );
+
   const assessmentDetails = (
     <div className="space-y-5">
       <CollapsibleFieldset
@@ -401,26 +421,12 @@ export function Cambra123SixAdultControl({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        {!rapid ? finalCategoryControl : null}
-        <div className="md:col-span-2">
-          <label
-            className="text-sm font-medium"
-            htmlFor="adult-hygiene-cambra-notes"
-          >
-            CAMBRA123 notes
-          </label>
-          <textarea
-            id="adult-hygiene-cambra-notes"
-            className={`${formControlClass()} mt-1 min-h-24 resize-y`}
-            value={value.notes}
-            placeholder="Document clinical judgment, counseling, or management rationale."
-            onChange={(event) =>
-              onChange(withStartedStatus({ notes: event.target.value }))
-            }
-          />
+      {!rapid ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {finalCategoryControl}
+          {notesControl}
         </div>
-      </div>
+      ) : null}
 
       {hasAssessment ? (
         <button
@@ -443,6 +449,7 @@ export function Cambra123SixAdultControl({
   return rapid ? (
     <div className="space-y-4">
       {finalCategoryControl}
+      {notesControl}
       <RapidDisclosure
         label="Caries risk assessment details"
         documented={Boolean(

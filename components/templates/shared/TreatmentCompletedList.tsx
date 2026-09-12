@@ -376,7 +376,7 @@ export function TreatmentCompletedList({
           aria-controls="adult-hygiene-add-completed-care"
           onClick={() => setShowAddCare((current) => !current)}
         >
-          {showAddCare ? "Close completed care catalogue" : "Add completed care"}
+          {showAddCare ? "Close completed care catalogue" : "All treatment options..."}
         </button>
       </div>
 

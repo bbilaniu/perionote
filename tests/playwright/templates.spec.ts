@@ -1092,7 +1092,7 @@ test("2026 Adult Hygiene filters structured SDF and desensitizer products", asyn
     exact: true,
   });
   await completedCare
-    .getByRole("button", { name: "Add completed care", exact: true })
+    .getByRole("button", { name: "All treatment options...", exact: true })
     .click();
   await completedCare
     .getByRole("button", { name: "SDF application", exact: true })
