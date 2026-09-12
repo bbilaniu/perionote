@@ -227,6 +227,8 @@ export function AdultHygieneRapidEntry({
   educationControls,
   treatmentControls,
   cariesControls,
+  guardianCommunicationControls,
+  examinationOutputDescription,
   onExtraoralStatusChange,
   onIntraoralStatusChange,
   onDetailed,
@@ -247,6 +249,8 @@ export function AdultHygieneRapidEntry({
   educationControls: ReactNode;
   treatmentControls: ReactNode;
   cariesControls: ReactNode;
+  guardianCommunicationControls?: ReactNode;
+  examinationOutputDescription: string;
   onExtraoralStatusChange: (value: ExamStatus) => void;
   onIntraoralStatusChange: (value: ExamStatus) => void;
   onDetailed: () => void;
@@ -437,7 +441,7 @@ export function AdultHygieneRapidEntry({
           />
         </div>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          EOE and IOE are included in Complete and Recare notes.
+          {examinationOutputDescription}
         </p>
         <RapidDisclosure
           label="EOE structures and findings"
@@ -487,6 +491,7 @@ export function AdultHygieneRapidEntry({
           {educationControls}
         </RapidDisclosure>
         {treatmentControls}
+        {guardianCommunicationControls}
       </Section>
       <Section title="Recommendations">
         <NativeChoiceControl
