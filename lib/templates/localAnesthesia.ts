@@ -2,6 +2,18 @@ import { formatTime24Value } from "@/lib/templates/date";
 
 export type LocalAnesthesiaRoute = "injection" | "topical" | "rinse";
 
+export const cetacaineLiquidProductLabel =
+  "Cetacaine® liquid (benzocaine 14%, butamben 2%, tetracaine HCl 2%)";
+
+// Keep small topical amounts visible while retaining the existing 5.0 mL style.
+export function formatLocalAnesthesiaTotal(amount: number): string {
+  return amount.toLocaleString("en-CA", {
+    useGrouping: false,
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 10,
+  });
+}
+
 export interface LocalAnesthesiaEntry {
   id: string;
   route: LocalAnesthesiaRoute;
@@ -117,7 +129,7 @@ export function formatLocalAnesthesiaSummary(
   }
 
   totals.forEach((amount, product) => {
-    detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+    detailLines.push(`Total: ${product} ${formatLocalAnesthesiaTotal(amount)} ml`);
   });
   if (value.localAnesthesiaEntries.length > 0) {
     if (value.localAnesthesiaNoAdverseReactions) {

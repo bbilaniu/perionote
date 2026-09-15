@@ -2,12 +2,52 @@ import { describe, expect, it } from "vitest";
 import {
   createEmptyChildRecareHygieneForm,
   hasRequiredChildRecareHygieneFields,
+  withChildRadiographsTaken,
 } from "@/lib/templates/childRecareHygiene";
 import { childRecareHygieneFixture } from "@/lib/templates/fixtures/childRecareHygiene.fixture";
 import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
 import { isValidChildRecareHygieneForm } from "@/components/templates/native/ChildRecareHygieneTemplate";
 
 describe("buildChildRecareHygieneSummary", () => {
+  it("synchronizes taken radiographs while preserving unrelated completed care", () => {
+    const manualCare = {
+      id: "manual-care",
+      treatmentType: "Synthetic completed care",
+      toothAreas: [],
+    };
+    const initial = { ...createEmptyChildRecareHygieneForm(), treatmentCompleted: [manualCare] };
+    const selected = withChildRadiographsTaken(initial, ["2 BW", "3 PA", "PAN", "1 OCC"]);
+    expect(selected.treatmentCompleted).toHaveLength(5);
+    expect(withChildRadiographsTaken(selected, selected.radiographsTaken)).toEqual(selected);
+    const combined = buildChildRecareHygieneSummary(selected);
+    expect(combined).toContain("Radiographs: 2 BW; 3 PA; PAN; 1 OCC.");
+    expect(combined).toContain("Treatment completed today: 2 BW; 3 PA; PAN; 1 OCC; Synthetic completed care");
+    const dentist = buildChildRecareHygieneSummary(selected, { output: "dentist" });
+    expect(dentist).toContain("Radiographs: 2 BW; 3 PA; PAN; 1 OCC.");
+    expect(dentist).not.toContain("Treatment completed today:");
+    const hygienist = buildChildRecareHygieneSummary(selected, { output: "hygienist" });
+    expect(hygienist).toContain("Treatment completed today: 2 BW; 3 PA; PAN; 1 OCC; Synthetic completed care");
+
+    const edited = withChildRadiographsTaken(selected, ["1 BW"]);
+    expect(buildChildRecareHygieneSummary(edited)).toContain("Treatment completed today: 1 BW; Synthetic completed care");
+    expect(edited.treatmentCompleted).toHaveLength(2);
+    expect(withChildRadiographsTaken(edited, []).treatmentCompleted).toEqual([manualCare]);
+    expect(initial.radiographsTaken).toEqual([]);
+  });
+
+  it("preserves legacy radiograph text without marking it as completed treatment", () => {
+    const legacy = { ...createEmptyChildRecareHygieneForm() } as Record<string, unknown>;
+    delete legacy.radiographsTaken;
+    legacy.radiographs = "Prior bitewings reviewed; none taken today";
+    expect(isValidChildRecareHygieneForm(legacy)).toBe(true);
+    const restored = withChildRadiographsTaken({ ...createEmptyChildRecareHygieneForm(), ...legacy }, []);
+    expect(buildChildRecareHygieneSummary(restored)).toContain("Radiographs: Prior bitewings reviewed; none taken today.");
+    expect(restored.treatmentCompleted).toEqual([]);
+    expect(buildChildRecareHygieneSummary(restored, { output: "hygienist" })).not.toContain("Radiographs:");
+    expect(isValidChildRecareHygieneForm({ ...restored, radiographsTaken: [2] })).toBe(false);
+    expect(isValidChildRecareHygieneForm({ ...restored, radiographsTaken: "2 BW" })).toBe(false);
+  });
+
   it("does not infer unanswered clinical findings", () => {
     const summary = buildChildRecareHygieneSummary(
       createEmptyChildRecareHygieneForm(),

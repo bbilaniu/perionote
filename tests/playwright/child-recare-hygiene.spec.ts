@@ -4,6 +4,93 @@ import { openGeneratedNote } from "./helpers/interactiveTemplate";
 const sourceUrl = "/templates/clinic/child-recare-exam-hygiene-notes";
 const interactiveUrl = `${sourceUrl}/interactive`;
 
+for (const width of [1600, 390]) {
+  test(`child radiographs update completed care and note outputs at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto(interactiveUrl);
+    const radiographs = page.getByRole("group", { name: "Radiographs taken today", exact: true });
+    const preview = page.locator("#child-recare-summary");
+    const care = page.getByRole("list", { name: "Treatment completed today entries", exact: true });
+    await expect(radiographs.getByRole("checkbox", { name: "Bitewings (BW)", exact: true })).not.toBeChecked();
+    await expect(preview).not.toHaveValue(/Radiographs:|Treatment completed today:/);
+    await radiographs.getByText("Bitewings (BW)", { exact: true }).click();
+    await page.locator("#child-recare-radiographs-bw-quantity").fill("2");
+    await radiographs.getByText("Periapicals (PA)", { exact: true }).click();
+    await radiographs.getByText("Panoramic (PAN)", { exact: true }).click();
+    await radiographs.getByLabel("Type name", { exact: true }).fill("Synthetic occlusal view");
+    await radiographs.getByLabel("Short code", { exact: true }).fill("OCC");
+    await radiographs.getByLabel("Default images", { exact: true }).fill("1");
+    await radiographs.getByRole("button", { name: "Add for this encounter", exact: true }).click();
+    await expect(preview).toHaveValue(/Radiographs: 2 BW; 3 PA; PAN; 1 OCC\./);
+    await expect(preview).toHaveValue(/Treatment completed today: 2 BW; 3 PA; PAN; 1 OCC/);
+    await expect(care.locator(":scope > li")).toHaveCount(4);
+    await radiographs.screenshot({ path: testInfo.outputPath(`child-radiographs-${width}.png`) });
+    await page.getByRole("button", { name: "Apply standard pediatric care", exact: true }).click();
+    await expect(care.locator(":scope > li")).toHaveCount(8);
+    const editLink = care.getByRole("link", { name: "Edit radiographs", exact: true }).first();
+    await expect(editLink).toHaveAttribute("href", "#child-recare-radiographs");
+    await editLink.click();
+    await expect(radiographs).toBeInViewport();
+    await radiographs.getByRole("button", { name: "Increase BW images", exact: true }).click();
+    await radiographs.getByText("Periapicals (PA)", { exact: true }).click();
+    await expect(preview).toHaveValue(/Treatment completed today: 3 BW; PAN; 1 OCC;/);
+    await expect(preview).not.toHaveValue(/3 PA/);
+    await expect(care.locator(":scope > li")).toHaveCount(7);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+    await openGeneratedNote(page);
+    await page.getByRole("radio", { name: "Dentist", exact: true }).check();
+    await expect(preview).toHaveValue(/Radiographs: 3 BW; PAN; 1 OCC\./);
+    await expect(preview).not.toHaveValue(/Treatment completed today:/);
+    await page.getByRole("radio", { name: "Hygienist", exact: true }).check();
+    await expect(preview).toHaveValue(/Treatment completed today: 3 BW; PAN; 1 OCC;/);
+    await expect(preview).not.toHaveValue(/DENTAL EXAM/);
+  });
+}
+
+test("child radiograph selections and linked care restore together", async ({ page }) => {
+  await page.clock.install();
+  await page.goto(interactiveUrl);
+  await page.locator("#child-recare-patient-id").fill("SYNTHETIC-CHILD-XRAYS");
+  const radiographs = page.getByRole("group", { name: "Radiographs taken today", exact: true });
+  await radiographs.getByText("Bitewings (BW)", { exact: true }).click();
+  await page.locator("#child-recare-radiographs-bw-quantity").fill("2");
+  await page.clock.runFor(10_000);
+  await page.reload();
+  await expect(page.locator("#child-recare-radiographs-bw-quantity")).toHaveValue("2");
+  await expect(page.locator("#child-recare-summary")).toHaveValue(/Treatment completed today: 2 BW/);
+  await expect(page.getByRole("list", { name: "Treatment completed today entries", exact: true })
+    .locator(":scope > li")).toHaveCount(1);
+  await radiographs.getByText("Bitewings (BW)", { exact: true }).click();
+  await expect(page.locator("#child-recare-summary")).not.toHaveValue(/Radiographs:|Treatment completed today:/);
+});
+
+test("child legacy radiograph text restores without creating completed X-rays", async ({ page }) => {
+  await page.clock.install();
+  await page.goto(interactiveUrl);
+  await page.locator("#child-recare-patient-id").fill("SYNTHETIC-CHILD-LEGACY-XRAYS");
+  await page.clock.runFor(10_000);
+  // Emulate a pre-upgrade draft after the outgoing page has checkpointed it.
+  await page.addInitScript(() => {
+    for (const key of Object.keys(localStorage)) {
+      if (!key.startsWith("hygienenote.interactive-draft.v1.child-recare-exam-hygiene-notes.")) continue;
+      const draft = JSON.parse(localStorage.getItem(key)!);
+      if (draft.form.patientId !== "SYNTHETIC-CHILD-LEGACY-XRAYS") continue;
+      delete draft.form.radiographsTaken;
+      draft.form.radiographs = "Prior bitewings reviewed; none taken today";
+      localStorage.setItem(key, JSON.stringify(draft));
+    }
+  });
+  await page.reload();
+  await expect(page.getByLabel("Previous radiograph documentation", { exact: true }))
+    .toHaveValue("Prior bitewings reviewed; none taken today");
+  await expect(page.locator("#child-recare-summary")).toHaveValue(/Radiographs: Prior bitewings reviewed; none taken today\./);
+  await expect(page.locator("#child-recare-summary")).not.toHaveValue(/Treatment completed today:/);
+  const radiographs = page.getByRole("group", { name: "Radiographs taken today", exact: true });
+  await expect(radiographs.getByRole("checkbox", { name: "Bitewings (BW)", exact: true })).not.toBeChecked();
+});
+
 test("ready child recare conversion is discoverable from its source template", async ({
   page,
 }) => {

@@ -2,7 +2,7 @@ import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { patientChiefConcernSeedValues } from "@/lib/templates/patientChiefConcern";
 import { cariesRiskFactorSeedValues } from "@/lib/templates/cariesRisk";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
-import type { LocalAnesthesiaRoute } from "@/lib/templates/localAnesthesia";
+import { cetacaineLiquidProductLabel, type LocalAnesthesiaRoute } from "@/lib/templates/localAnesthesia";
 
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
 export const CATALOGUE_EXPORT_FORMAT = "hygienenote-catalogue";
@@ -105,7 +105,7 @@ export type PolishingProductCatalogueMetadata = {
 export type LocalAnestheticCatalogueMetadata = {
   kind: "local-anesthetic";
   route: LocalAnesthesiaRoute;
-  defaultAmountMl: number;
+  defaultAmountMl?: number;
   defaultDurationSeconds?: number;
 };
 
@@ -520,6 +520,15 @@ const anestheticSeeds: CatalogueSeed[] = [
       kind: "local-anesthetic",
       route: "topical",
       defaultAmountMl: 1.7,
+    },
+  },
+  {
+    id: "seed.hygiene-treatment.anesthetic.cetacaine-liquid",
+    label: cetacaineLiquidProductLabel,
+    metadata: {
+      kind: "local-anesthetic",
+      route: "topical",
+      // Record the amount used; the 24 g bottle is not a treatment dose.
     },
   },
   {
@@ -1069,11 +1078,6 @@ function parseCatalogueItemMetadata(
       value,
       "defaultAmountMl",
     );
-    if (!defaultAmountMl) {
-      throw new CatalogueValidationError(
-        "Local-anesthetic defaultAmountMl is required.",
-      );
-    }
     const defaultDurationSeconds = readOptionalPositiveNumber(
       value,
       "defaultDurationSeconds",
@@ -1081,7 +1085,7 @@ function parseCatalogueItemMetadata(
     return {
       kind: "local-anesthetic",
       route,
-      defaultAmountMl,
+      ...(defaultAmountMl === undefined ? {} : { defaultAmountMl }),
       ...(defaultDurationSeconds === undefined
         ? {}
         : { defaultDurationSeconds }),
