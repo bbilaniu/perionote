@@ -2,6 +2,7 @@
 import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
 import { createEmptyOralHygieneMethods, formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import React, { useEffect, useId, useMemo, useState } from "react";
+import { cetacaineLiquidProductLabel, formatLocalAnesthesiaTotal } from "@/lib/templates/localAnesthesia";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
 import { Time24Input } from "@/components/forms/Time24Input";
@@ -446,6 +447,7 @@ const LOCAL_ANESTHETIC_INJECTION_PRODUCT_OPTIONS = [
 const LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS = [
   "Benzocaine 20% paste",
   "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+  cetacaineLiquidProductLabel,
   "Dyclonine 1% solution",
 ];
 const LOCAL_ANESTHETIC_DEFAULT_AMOUNTS_BY_PRODUCT = {
@@ -1502,7 +1504,7 @@ export function buildSummaryText(form, selectedFindings) {
     });
 
     totals.forEach((amount, product) => {
-      detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+      detailLines.push(`Total: ${product} ${formatLocalAnesthesiaTotal(amount)} ml`);
     });
 
     if (form.localAnesthesiaEntries.length > 0) {
@@ -4056,7 +4058,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                                   ] ?? "";
                                 updateLocalAnesthesiaEntry(index, {
                                   anestheticProduct,
-                                  amountMl: entry.amountMl || defaultAmount,
+                                  amountMl: defaultAmount ? entry.amountMl || defaultAmount : "",
                                 });
                               }}
                             >
