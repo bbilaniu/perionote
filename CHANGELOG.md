@@ -1,5 +1,12 @@
 # hygienenote
 
+## 1.1.1
+
+### Patch Changes
+
+- c182f87: Add Cetacaine liquid to topical anesthetic choices, with clinician-entered amounts and support for small fractional volumes in anesthetic totals.
+- 7714a56: Add shared radiograph type and image-count controls to the child recare template and synchronize selected X-rays with Treatment completed today. Preserve older saved radiograph text without inferring completed procedures.
+
 ## 1.1.0
 
 ### Minor Changes
