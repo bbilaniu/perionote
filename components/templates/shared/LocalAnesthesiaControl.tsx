@@ -363,7 +363,7 @@ export function LocalAnesthesiaControl({
                           product: item?.label ?? "",
                           catalogueItemId: item?.id,
                           amountMl: metadata
-                            ? String(metadata.defaultAmountMl)
+                            ? String(metadata.defaultAmountMl ?? "")
                             : entry.amountMl,
                           durationSeconds: metadata?.defaultDurationSeconds
                             ? String(metadata.defaultDurationSeconds)
@@ -378,7 +378,7 @@ export function LocalAnesthesiaControl({
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step={entry.route === "topical" ? "0.01" : "0.1"}
                       className={`mt-1 ${inputClass}`}
                       value={entry.amountMl}
                       onChange={(event) =>

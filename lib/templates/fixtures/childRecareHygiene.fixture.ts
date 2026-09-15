@@ -1,5 +1,6 @@
 import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { ChildRecareHygieneForm } from "@/lib/templates/childRecareHygiene";
+import { syncRadiographTreatmentEntries } from "@/lib/templates/adultHygieneTreatment";
 import {
   createEmptyCambra123SixAdultAssessment,
   createEmptyCambra123ZeroToSixAssessment,
@@ -23,7 +24,8 @@ export const childRecareHygieneFixture: ChildRecareHygieneForm = {
   medicalHistory: "Reviewed; no changes reported",
   premedicationStatus: "no",
   premedicationDetails: "",
-  radiographs: "2 bitewings",
+  radiographs: "",
+  radiographsTaken: ["2 BW"],
   intraoralPhotosStatus: "yes",
   intraoralPhotosDetails: "Occlusal views acquired",
   extraoralStatus: "wnl",
@@ -59,7 +61,7 @@ export const childRecareHygieneFixture: ChildRecareHygieneForm = {
   polishDetails: "Enamel Pro® Prophy Paste with Fluoride (Strawberry)",
   fluorideStatus: "yes",
   fluorideDetails: "Oral Science Inc. FluoriMax 2.5% NaF Varnish",
-  treatmentCompleted: [],
+  treatmentCompleted: syncRadiographTreatmentEntries([], ["2 BW"]),
   localAnesthesiaNoContraindication: false,
   localAnesthesiaEntries: [],
   localAnesthesiaNoAdverseReactions: false,

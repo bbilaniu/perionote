@@ -198,7 +198,8 @@ export function buildChildRecareHygieneSummary(
   const dentist = includesDentist
     ? section([
         "DENTAL EXAM",
-        sentence("Radiographs", form.radiographs),
+        sentence("Radiographs", [form.radiographs, ...(form.radiographsTaken ?? [])]
+          .filter(Boolean).join("; ")),
         statusSentence(
           "Intraoral photos",
           form.intraoralPhotosStatus,

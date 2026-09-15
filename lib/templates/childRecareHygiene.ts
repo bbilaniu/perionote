@@ -2,7 +2,10 @@ import {
   createEmptyOralHygieneMethods,
   type OralHygieneMethods,
 } from "@/lib/templates/oralHygieneMethods";
-import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygieneTreatment";
+import {
+  syncRadiographTreatmentEntries,
+  type AdultHygieneTreatmentCompletedEntry,
+} from "@/lib/templates/adultHygieneTreatment";
 import {
   createEmptyLocalAnesthesiaValue,
   type LocalAnesthesiaEntry,
@@ -40,7 +43,9 @@ export interface ChildRecareHygieneForm extends OralHygieneMethods {
   medicalHistory: string;
   premedicationStatus: ChildDocumentationStatus;
   premedicationDetails: string;
+  /** Legacy free text, retained without inferring radiographs taken today. */
   radiographs: string;
+  radiographsTaken: string[];
   intraoralPhotosStatus: ChildDocumentationStatus;
   intraoralPhotosDetails: string;
   extraoralStatus: ChildExamStatus;
@@ -113,6 +118,7 @@ export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
     premedicationStatus: "not-documented",
     premedicationDetails: "",
     radiographs: "",
+    radiographsTaken: [],
     intraoralPhotosStatus: "not-documented",
     intraoralPhotosDetails: "",
     extraoralStatus: "not-assessed",
@@ -159,6 +165,20 @@ export function createEmptyChildRecareHygieneForm(): ChildRecareHygieneForm {
     hygieneInterval: "",
     nextVisit: "",
     bookedDate: "",
+  };
+}
+
+export function withChildRadiographsTaken(
+  form: ChildRecareHygieneForm,
+  radiographsTaken: string[],
+): ChildRecareHygieneForm {
+  return {
+    ...form,
+    radiographsTaken,
+    treatmentCompleted: syncRadiographTreatmentEntries(
+      form.treatmentCompleted,
+      radiographsTaken,
+    ),
   };
 }
 

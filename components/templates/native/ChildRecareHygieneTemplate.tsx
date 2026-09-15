@@ -21,6 +21,7 @@ import {
 } from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { PediatricCambra123Control } from "@/components/templates/shared/PediatricCambra123Control";
+import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
 import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
@@ -35,6 +36,7 @@ import type {
 import {
   createEmptyChildRecareHygieneForm,
   hasRequiredChildRecareHygieneFields,
+  withChildRadiographsTaken,
 } from "@/lib/templates/childRecareHygiene";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
@@ -60,6 +62,7 @@ const emptyForm = createEmptyChildRecareHygieneForm();
 const emptySerializedForm = JSON.stringify(emptyForm);
 const childDraftArrayItemShapes = {
   ...oralHygieneMethodsDraftArrayItemShapes,
+  radiographsTaken: "",
   "cambra123ZeroToSixAssessment.yesItemIds": "",
   "cambra123SixAdultAssessment.yesItemIds": "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
@@ -416,7 +419,7 @@ export function ChildRecareHygieneTemplate({
         draft.form,
         "occlusionAssessment",
       );
-      setForm({
+      setForm(withChildRadiographsTaken({
         ...emptyForm,
         ...draft.form,
         cambra123ZeroToSixAssessment: copyCambra123ZeroToSixAssessment(
@@ -430,7 +433,7 @@ export function ChildRecareHygieneTemplate({
         ...(!hasOcclusionAssessment && draft.form.molarOcclusion.trim()
           ? { occlusionAssessment: "molar-classification" as const }
           : {}),
-      });
+      }, draft.form.radiographsTaken ?? []));
       setStartedAt(new Date(draft.startedAt));
       setPatientIdError("");
       setProviderError("");
@@ -645,7 +648,7 @@ export function ChildRecareHygieneTemplate({
           void copyNote();
       }}
       onLoadDemo={() => {
-        setForm({ ...fixture });
+        setForm(withChildRadiographsTaken({ ...fixture }, fixture.radiographsTaken));
         setPatientIdError("");
         setProviderError("");
         setCopyMessage("Synthetic demo data loaded.");
@@ -866,13 +869,23 @@ export function ChildRecareHygieneTemplate({
             title="Records and dental exam"
             description="Document only assessed findings; unanswered controls are omitted from the note."
           >
-            <div className="grid gap-4 md:grid-cols-2">
+            <RadiographsTakenControl
+              idPrefix="child-recare"
+              values={form.radiographsTaken}
+              onChange={(values) => {
+                setForm((current) => withChildRadiographsTaken(current, values));
+                setCopyMessage("");
+              }}
+            />
+            {form.radiographs.trim() ? (
               <TextField
-                id="child-recare-radiographs"
-                label="Radiographs"
+                id="child-recare-legacy-radiographs"
+                label="Previous radiograph documentation"
                 value={form.radiographs}
                 onChange={(value) => updateField("radiographs", value)}
               />
+            ) : null}
+            <div className="grid gap-4 md:grid-cols-2">
               <StatusControl
                 id="child-recare-photos"
                 label="Intraoral photos"
@@ -1139,6 +1152,7 @@ export function ChildRecareHygieneTemplate({
               onApplyStandard={applyPediatricStandardCare}
               standardActionLabel="Apply standard pediatric care"
               onApplyRecare={applyRecareExam}
+              radiographsHref="#child-recare-radiographs"
               onChange={(value) => updateField("treatmentCompleted", value)}
             />
             <LocalAnesthesiaControl

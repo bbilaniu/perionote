@@ -1,12 +1,37 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cetacaineLiquidProductLabel,
   createEmptyLocalAnesthesiaValue,
+  formatLocalAnesthesiaTotal,
   formatLocalAnesthesiaSummary,
   localAnesthesiaLocationChoices,
 } from "@/lib/templates/localAnesthesia";
 
 describe("local anesthesia", () => {
+  it("preserves small topical volumes in details and totals without inventing an amount", () => {
+    const entry = {
+      id: "cetacaine",
+      route: "topical" as const,
+      administrationType: "Sulcular application",
+      toothAreas: ["Q1"],
+      product: cetacaineLiquidProductLabel,
+      amountMl: "",
+      durationSeconds: "",
+      timeAdministered: "09:15",
+    };
+    const value = { ...createEmptyLocalAnesthesiaValue(), localAnesthesiaEntries: [entry] };
+    expect(formatLocalAnesthesiaSummary(value)).toBe("");
+    entry.amountMl = "0.05";
+    expect(formatLocalAnesthesiaSummary(value)).toBe(
+      `Local anesthetic administered:\n  Sulcular application — Q1: ${cetacaineLiquidProductLabel} 0.05 ml (at 09:15)\n  Total: ${cetacaineLiquidProductLabel} 0.05 ml`,
+    );
+    value.localAnesthesiaEntries.push({ ...entry, id: "cetacaine-second", amountMl: "0.1" });
+    expect(formatLocalAnesthesiaSummary(value)).toContain(`Total: ${cetacaineLiquidProductLabel} 0.15 ml`);
+    expect(formatLocalAnesthesiaTotal(0.1 + 0.2)).toBe("0.3");
+    expect(formatLocalAnesthesiaTotal(5)).toBe("5.0");
+  });
+
   it("starts without asserting that contraindications were reviewed", () => {
     const value = createEmptyLocalAnesthesiaValue();
 

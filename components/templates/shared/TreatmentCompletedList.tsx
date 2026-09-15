@@ -584,7 +584,7 @@ export function TreatmentCompletedList({
                   </div>
                   {linkedRadiograph ? (
                     <a
-                      href="#adult-hygiene-radiographs"
+                      href={radiographsHref ?? "#adult-hygiene-radiographs"}
                       className="text-sm font-semibold text-sky-700 hover:underline dark:text-sky-300"
                     >
                       Edit radiographs
