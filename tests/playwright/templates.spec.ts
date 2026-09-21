@@ -832,7 +832,7 @@ test("2026 Adult Hygiene records repeatable vitals in consent and history", asyn
   await section.getByLabel("Systolic").nth(1).fill("136");
   await section.getByLabel("Diastolic").nth(1).fill("84");
   await section.getByLabel("Heart Rate").nth(1).fill("74");
-  await section.getByRole("button", { name: "Clear time" }).nth(1).click();
+  await section.getByLabel("Time").nth(1).fill("");
 
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
     "Vitals reading 1: BP: 142/88 mmHg, HR: 78 bpm (at 09:05)",

@@ -682,6 +682,17 @@ for (const width of [1600, 390]) {
       "",
     );
     await expect(summary).not.toHaveValue(/Vitals reading|BP:|HR:/);
+    await expect(vitals.getByRole("button", { pressed: true })).toHaveCount(0);
+    await vitals.getByRole("button", { name: "Right (R)", exact: true }).click();
+    await vitals.getByRole("button", { name: "Wrist", exact: true }).click();
+    await expect(summary).not.toHaveValue(/BP taken/);
+    const arteryInfo = vitals.getByRole("button", { name: "Wrist artery information" });
+    await arteryInfo.focus();
+    await expect(vitals.getByRole("tooltip", { name: "Radial artery" })).toBeVisible();
+    await arteryInfo.press("Escape");
+    await expect(vitals.getByRole("tooltip", { name: "Radial artery" })).toBeHidden();
+    await arteryInfo.click();
+    await expect(vitals.getByRole("tooltip", { name: "Radial artery" })).toBeVisible();
     await vitals.getByLabel("Systolic", { exact: true }).fill("120");
     await vitals.getByLabel("Diastolic", { exact: true }).fill("80");
     await vitals.getByLabel("Heart Rate", { exact: true }).fill("70");
@@ -689,19 +700,26 @@ for (const width of [1600, 390]) {
     await vitals
       .getByRole("button", { name: "Add reading", exact: true })
       .click();
+    await expect(vitals.getByRole("button", { name: "Right (R)", exact: true }).nth(1)).toHaveAttribute("aria-pressed", "true");
+    await expect(vitals.getByRole("button", { name: "Wrist", exact: true }).nth(1)).toHaveAttribute("aria-pressed", "true");
+    await vitals.getByRole("button", { name: "Left (L)", exact: true }).nth(1).click();
+    await vitals.getByRole("button", { name: "Upper arm", exact: true }).nth(1).click();
+    await expect(vitals.getByRole("button", { name: "Right (R)", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
     await vitals.getByLabel("Systolic", { exact: true }).nth(1).fill("130");
     await vitals.getByLabel("Diastolic", { exact: true }).nth(1).fill("84");
     await vitals.getByLabel("Heart Rate", { exact: true }).nth(1).fill("74");
-    await vitals
-      .getByRole("button", { name: "Clear time", exact: true })
-      .nth(1)
-      .click();
+    await vitals.getByLabel("Time", { exact: true }).nth(1).fill("");
     await expect(vitals.getByLabel("Time", { exact: true }).nth(1)).toHaveValue(
       "",
     );
     await expect(summary).toHaveValue(
-      /Vitals reading 1: BP: 120\/80 mmHg, HR: 70 bpm \(at 09:05\)/,
+      /Vitals reading 1: BP: 120\/80 mmHg, HR: 70 bpm \(at 09:05\) - BP taken on the right wrist \(R\)/,
     );
+    await expect(summary).toHaveValue(/Vitals reading 2: BP: 130\/84 mmHg, HR: 74 bpm - BP taken on the left upper arm \(L\)/);
+    await vitals.getByRole("button", { name: "Add reading", exact: true }).click();
+    await expect(vitals.getByRole("button", { name: "Left (L)", exact: true }).nth(2)).toHaveAttribute("aria-pressed", "true");
+    await expect(vitals.getByRole("button", { name: "Upper arm", exact: true }).nth(2)).toHaveAttribute("aria-pressed", "true");
+    await vitals.getByRole("button", { name: "Remove", exact: true }).nth(2).click();
     await expect(summary).toHaveValue(/Average BP: 125\/82 mmHg, HR: 72 bpm/);
     expect(
       await page.evaluate(
@@ -715,6 +733,7 @@ for (const width of [1600, 390]) {
     await expect(
       vitals.getByLabel("Systolic", { exact: true }).nth(1),
     ).toHaveValue("130");
+    await expect(vitals.getByRole("button", { name: "Upper arm", exact: true }).nth(1)).toHaveAttribute("aria-pressed", "true");
     await page.getByRole("radio", { name: "Rapid Entry", exact: true }).check();
     await page.reload();
     await expect(
@@ -723,6 +742,12 @@ for (const width of [1600, 390]) {
     await expect(
       vitals.getByLabel("Systolic", { exact: true }).nth(1),
     ).toHaveValue("130");
+    await expect(vitals.getByRole("button", { name: "Left (L)", exact: true }).nth(1)).toHaveAttribute("aria-pressed", "true");
+    await expect(vitals.getByRole("button", { name: "Upper arm", exact: true }).nth(1)).toHaveAttribute("aria-pressed", "true");
+    await vitals.getByRole("button", { name: "Left (L)", exact: true }).nth(1).press("Space");
+    await expect(summary).toHaveValue(/BP taken at the upper arm/);
+    await vitals.getByRole("button", { name: "Upper arm", exact: true }).nth(1).click();
+    await expect(summary).not.toHaveValue(/BP taken.*upper arm/);
     await vitals
       .getByRole("button", { name: "Remove", exact: true })
       .nth(1)
