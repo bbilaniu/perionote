@@ -10,10 +10,10 @@
     "node": "24.18.0"
   },
   "scripts": {
-    "dev": "node scripts/run-next.mjs dev .next-dev",
+    "dev": "node scripts/run-next.mjs dev .next-dev --port 3030",
     "dev:e2e": "node scripts/run-next.mjs dev .next-playwright --port 3100",
     "build": "node scripts/build-next.mjs",
-    "start": "next start",
+    "start": "next start --port 3030",
     "lint": "eslint . --max-warnings=0",
     "test": "vitest run",
     "test:watch": "vitest",

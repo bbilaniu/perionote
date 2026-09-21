@@ -62,6 +62,9 @@ npm install
 npm run dev
 ```
 
+Open http://localhost:3030. The `dev` and `start` scripts default to port 3030;
+override it with `-- --port <port>` when needed.
+
 Common checks:
 
 ```bash
