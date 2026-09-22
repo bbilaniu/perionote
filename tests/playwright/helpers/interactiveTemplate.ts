@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export async function openGeneratedNote(page: Page) {
   const drawer = page.getByRole("complementary", {
@@ -20,9 +20,19 @@ export async function saveDraftAndStartNew(page: Page) {
   await dialog
     .getByRole("button", { name: "Save draft & start new" })
     .click();
+  await expect(dialog).toBeHidden();
+  // Reset focuses Patient ID on the next animation frame, after values clear.
+  await expect(
+    page.getByRole("textbox", { name: "Patient ID", exact: true }),
+  ).toBeFocused();
 }
 
 export async function clearCurrentForm(page: Page) {
   const dialog = await openFormActionDialog(page);
   await dialog.getByRole("button", { name: "Clear current form" }).click();
+  await expect(dialog).toBeHidden();
+  // Wait for reset's deferred focus before a caller focuses another control.
+  await expect(
+    page.getByRole("textbox", { name: "Patient ID", exact: true }),
+  ).toBeFocused();
 }
