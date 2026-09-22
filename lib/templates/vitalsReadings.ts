@@ -8,6 +8,8 @@ export interface VitalsReading {
   diastolic: string;
   heartRate: string;
   time: string;
+  arm?: "" | "right" | "left";
+  site?: "" | "upper-arm" | "wrist";
 }
 
 export function getCurrentVitalsTime(date = new Date()): string {
@@ -22,6 +24,19 @@ export function createEmptyVitalsReading(
     diastolic: "",
     heartRate: "",
     time: prefillTime ? getCurrentVitalsTime() : "",
+    arm: "",
+    site: "",
+  };
+}
+
+export function createNextVitalsReading(
+  readings: VitalsReading[],
+): VitalsReading {
+  const previous = readings.findLast(hasValidBloodPressure);
+  return {
+    ...createEmptyVitalsReading(true),
+    arm: previous?.arm ?? "",
+    site: previous?.site ?? "",
   };
 }
 
@@ -34,6 +49,13 @@ function parseNumeric(value: string): number | null {
 
 function formatNumber(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function hasValidBloodPressure(reading: VitalsReading): boolean {
+  return (
+    parseNumeric(reading.systolic) != null &&
+    parseNumeric(reading.diastolic) != null
+  );
 }
 
 export function hasVitalsMeasurement(reading: VitalsReading): boolean {
@@ -70,7 +92,19 @@ export function formatVitalsReading(reading: VitalsReading): string {
 
   const vitals = segments.join(", ");
   const time = formatTime24Value(reading.time);
-  return time ? `${vitals} (at ${time})` : vitals;
+  const timedVitals = time ? `${vitals} (at ${time})` : vitals;
+  if (!hasValidBloodPressure(reading)) return timedVitals;
+
+  const arm = reading.arm === "right" || reading.arm === "left"
+    ? reading.arm
+    : "";
+  const site = reading.site === "upper-arm"
+    ? "upper arm"
+    : reading.site === "wrist" ? "wrist" : "";
+  if (arm) {
+    return `${timedVitals} - BP taken on the ${arm} ${site || "arm"} (${arm === "right" ? "R" : "L"})`;
+  }
+  return site ? `${timedVitals} - BP taken at the ${site}` : timedVitals;
 }
 
 export function formatAverageVitalsReading(

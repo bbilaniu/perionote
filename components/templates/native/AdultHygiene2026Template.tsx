@@ -33,6 +33,7 @@ import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCom
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
 import { Time24Input } from "@/components/forms/Time24Input";
 import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import { BloodPressureLocationControl } from "@/components/templates/shared/BloodPressureLocationControl";
 import {
   interactiveTemplateUnloadWarning,
   InteractiveTemplateWorkspace,
@@ -101,7 +102,7 @@ import { createRecareNormalStructuredIntraoralFindings } from "@/lib/templates/r
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
 import {
-  createEmptyVitalsReading,
+  createNextVitalsReading,
   getCurrentVitalsTime,
   hasVitalsMeasurement,
   type VitalsReading,
@@ -335,7 +336,11 @@ export function isAdultHygieneDraftForm(
     },
     adultHygieneDraftExemplar,
     adultHygieneDraftArrayItemShapes,
-  );
+  ) && (candidate.vitalsReadings === undefined ||
+    (candidate.vitalsReadings as VitalsReading[]).every((reading) =>
+      (reading.arm === undefined || ["", "right", "left"].includes(reading.arm)) &&
+      (reading.site === undefined || ["", "upper-arm", "wrist"].includes(reading.site)),
+    ));
 }
 const gingivalDescriptionStatusOptions: Array<{
   value: GingivalDescriptionStatus;
@@ -3308,7 +3313,7 @@ export function AdultHygiene2026Template({
   function addVitalsReading() {
     updateField("vitalsReadings", [
       ...form.vitalsReadings,
-      createEmptyVitalsReading(true),
+      createNextVitalsReading(form.vitalsReadings),
     ]);
   }
 
@@ -3804,8 +3809,8 @@ export function AdultHygiene2026Template({
           <div
             key={`adult-hygiene-vitals-${readingIndex}`}
             className={rapid
-              ? "space-y-3 border-b border-slate-200 pb-3 dark:border-slate-700"
-              : "space-y-3 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"}
+              ? "space-y-2 border-b border-slate-200 pb-3 dark:border-slate-700"
+              : "space-y-2 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"}
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm font-medium">
@@ -3819,7 +3824,7 @@ export function AdultHygiene2026Template({
                 Remove
               </button>
             </div>
-            <div className="grid gap-3 xs:grid-cols-1 sm:grid-cols-3 md:grid-cols-6">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <TextField
                 id={`adult-hygiene-vitals-systolic-${readingIndex}`}
                 label="Systolic"
@@ -3853,36 +3858,36 @@ export function AdultHygiene2026Template({
                   updateVitalsReading(readingIndex, { heartRate: value })
                 }
               />
-              <TextField
-                id={`adult-hygiene-vitals-time-${readingIndex}`}
-                label="Time"
-                type="time"
-                value={reading.time}
-                onChange={(value) =>
-                  updateVitalsReading(readingIndex, { time: value })
-                }
-              />
-              <button
-                type="button"
-                className={vitalsActionButtonClass}
-                onClick={() =>
-                  updateVitalsReading(readingIndex, {
-                    time: getCurrentVitalsTime(),
-                  })
-                }
-              >
-                Set to now
-              </button>
-              <button
-                type="button"
-                className={vitalsActionButtonClass}
-                onClick={() =>
-                  updateVitalsReading(readingIndex, { time: "" })
-                }
-              >
-                Clear time
-              </button>
+              <div className="flex min-w-0 items-end gap-1">
+                <div className="min-w-0 flex-1">
+                  <TextField
+                    id={`adult-hygiene-vitals-time-${readingIndex}`}
+                    label="Time"
+                    type="time"
+                    value={reading.time}
+                    onChange={(value) =>
+                      updateVitalsReading(readingIndex, { time: value })
+                    }
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Set to now"
+                  className={`${vitalsActionButtonClass} shrink-0`}
+                  onClick={() =>
+                    updateVitalsReading(readingIndex, {
+                      time: getCurrentVitalsTime(),
+                    })
+                  }
+                >
+                  Now
+                </button>
+              </div>
             </div>
+            <BloodPressureLocationControl
+              reading={reading}
+              onChange={(patch) => updateVitalsReading(readingIndex, patch)}
+            />
           </div>
         ))}
       </div>
