@@ -68,6 +68,18 @@ function withTerminalPunctuation(value: string): string {
   return /[.!?]$/.test(cleanValue) ? cleanValue : `${cleanValue}.`;
 }
 
+function indentedSection(heading: string, paragraphs: string[][]): string {
+  const content = paragraphs
+    .map((lines) => lines.filter(Boolean).join("\n"))
+    .filter(Boolean)
+    .join("\n\n");
+  if (!content) return "";
+  return `${heading}\n${content
+    .split("\n")
+    .map((line) => line ? `  ${line}` : "")
+    .join("\n")}`;
+}
+
 function examLine(label: string, status: ExamStatus, findings: string): string {
   if (status === "wnl") return `${label}: WNL.`;
   if (status === "findings" && trimmed(findings)) {
@@ -760,8 +772,10 @@ export function buildAdultHygiene2026Summary(
     form.odontogramUpToDate ? "ODONTOGRAM UP TO DATE" : "",
   ];
 
-  const occlusionAndHabits = [
+  const oralHabits = [
     labelledLine("Oral habits", form.oralHabits),
+  ];
+  const occlusion = [
     form.rightMolarOcclusionNotApplicable
       ? "Molar occlusion—right: N/A."
       : labelledLine("Molar occlusion—right", form.rightMolarOcclusion),
@@ -931,39 +945,44 @@ export function buildAdultHygiene2026Summary(
     occlusalSplintState.useStatus,
   );
 
-  const hygieneAppliancesAndHistory = [
-    occlusalSplint,
-    documentationStatusLine(
-      "Orthodontic history",
-      form.orthodonticHistoryStatus
-    ),
-    retainerLine(form.retainerStatus),
-    labelledLine("Additional Notes", form.additionalNotes),
-  ];
-
-  const recareAppliancesAndHistory = [
-    ownershipUseLine("CPAP", form.cpapStatus, form.cpapUseStatus),
+  const appliances = [
+    includesRecare
+      ? ownershipUseLine("CPAP", form.cpapStatus, form.cpapUseStatus)
+      : "",
     occlusalSplint,
     documentationStatusLine(
       "Orthodontic history",
       form.orthodonticHistoryStatus,
     ),
     retainerLine(form.retainerStatus),
-    documentationStatusLine(
-      "Partial/complete removable dentures",
-      form.removableDenturesStatus,
-      form.removableDenturesComment,
-    ),
-    labelledLine(
-      "Patient-requested smile or dental improvements",
-      form.improvementRequest,
-    ),
-    labelledLine("Additional recare comments", form.recareAdditionalComments),
+    includesRecare
+      ? documentationStatusLine(
+          "Partial/complete removable dentures",
+          form.removableDenturesStatus,
+          form.removableDenturesComment,
+        )
+      : "",
   ];
-
-  const combinedAppliancesAndHistory = [
-    ...recareAppliancesAndHistory,
-    labelledLine("Additional Notes", form.additionalNotes),
+  const appliancesAndHistory = [
+    indentedSection("Appliances and Relevant History", [
+      appliances,
+      [
+        includesRecare
+          ? labelledLine(
+              "Patient-requested smile or dental improvements",
+              form.improvementRequest,
+            )
+          : "",
+      ],
+      [
+        includesRecare
+          ? labelledLine("Additional recare comments", form.recareAdditionalComments)
+          : "",
+        includesHygiene
+          ? labelledLine("Additional Notes", form.additionalNotes)
+          : "",
+      ],
+    ]),
   ];
 
   const hygieneFollowUp = [
@@ -1001,16 +1020,11 @@ export function buildAdultHygiene2026Summary(
           extraoralExam,
           intraoralExam,
           teethAndOdontogram,
-          occlusionAndHabits,
+          oralHabits,
+          [indentedSection("Occlusion:", [occlusion])],
         ]
       : []),
-    ...(includesRecare
-      ? [
-          output === "complete"
-            ? combinedAppliancesAndHistory
-            : recareAppliancesAndHistory,
-        ]
-      : []),
+    ...(includesRecare ? [appliancesAndHistory] : []),
     ...(includesHygiene
       ? [
           hygieneConcerns,
@@ -1033,7 +1047,7 @@ export function buildAdultHygiene2026Summary(
     combinedTreatmentPlan,
     ...(includesHygiene ? [treatmentCompleted] : []),
     ...(includesHygiene ? [guardianCommunication] : []),
-    ...(output === "hygiene" ? [hygieneAppliancesAndHistory] : []),
+    ...(output === "hygiene" ? [appliancesAndHistory] : []),
     ...(output === "complete"
       ? [recareFollowUp, hygieneFollowUp]
       : output === "recare"

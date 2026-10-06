@@ -232,6 +232,8 @@ TMJ: WNL.
       "IOE:",
       "Teeth:",
       "Oral habits:",
+      "Occlusion:",
+      "Appliances and Relevant History",
       "CPAP:",
       "Plaque:",
       "Caries risk category:",
@@ -284,10 +286,11 @@ TMJ: WNL.
       listAdditionalOcclusalFindings: true,
     };
 
-    expect(buildAdultHygiene2026Summary(form)).toContain(
-      `Additional occlusal findings:
-  - Spacing (location: Anterior).
-  - Crowding.`,
+    expect(buildAdultHygiene2026Summary(form)).toBe(
+      `Occlusion:
+  Additional occlusal findings:
+    - Spacing (location: Anterior).
+    - Crowding.`,
     );
   });
 

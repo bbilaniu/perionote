@@ -18,6 +18,108 @@ describe.each([
     buildSummary: buildAdolescentHygiene2026Summary,
   },
 ])("2026 $template output formatting", ({ createForm, buildSummary }) => {
+  it("groups occlusion and appliance history with indented paragraphs in each output", () => {
+    const form = createForm();
+    Object.assign(form, {
+      oralHabits: "Synthetic clenching history",
+      rightMolarOcclusion: "Class I",
+      leftMolarOcclusion: "Class I",
+      skeletalOcclusion: "Class I",
+      overjetMm: "2",
+      overbitePercent: "30",
+      overbiteMm: "3",
+      additionalOcclusalFindings: [
+        { id: "synthetic-crossbite", finding: "Crossbite", locations: ["Posterior", "Left"] },
+      ],
+      cpapStatus: "no",
+      occlusalSplintStatus: "yes",
+      occlusalSplintUseStatus: "yes",
+      orthodonticHistoryStatus: "yes",
+      retainerStatus: "fixed",
+      removableDenturesStatus: "no",
+      improvementRequest: "Synthetic request to discuss whitening",
+      recareAdditionalComments: "Synthetic recare comment",
+      additionalNotes: "Synthetic demonstration data only",
+    });
+    const complete = `Oral habits: Synthetic clenching history.
+
+Occlusion:
+  Molar occlusion—right: Class I.
+  Molar occlusion—left: Class I.
+  Skeletal occlusion: Class I.
+  Overjet: 2 mm.
+  Overbite: 30%; 3 mm.
+  Additional occlusal findings: Crossbite (location: Posterior, Left).
+
+Appliances and Relevant History
+  CPAP: No.
+  Occlusal splint (night guard): Yes; uses.
+  Orthodontic history: Yes.
+  Retainers: Fixed.
+  Partial/complete removable dentures: No.
+
+  Patient-requested smile or dental improvements: Synthetic request to discuss whitening.
+
+  Additional recare comments: Synthetic recare comment.
+  Additional Notes: Synthetic demonstration data only.`;
+
+    expect(buildSummary(form)).toBe(complete);
+    expect(buildSummary(form, { output: "recare" })).toBe(
+      complete.replace("\n  Additional Notes: Synthetic demonstration data only.", ""),
+    );
+    expect(buildSummary(form, { output: "hygiene" })).toBe(`Appliances and Relevant History
+  Occlusal splint (night guard): Yes; uses.
+  Orthodontic history: Yes.
+  Retainers: Fixed.
+
+  Additional Notes: Synthetic demonstration data only.`);
+  });
+
+  it("omits empty headings and gaps when only one history paragraph is documented", () => {
+    const form = createForm();
+    form.oralHabits = "Synthetic habit";
+    expect(buildSummary(form)).toBe("Oral habits: Synthetic habit.");
+
+    form.improvementRequest = "Synthetic request";
+    expect(buildSummary(form)).toBe(`Oral habits: Synthetic habit.
+
+Appliances and Relevant History
+  Patient-requested smile or dental improvements: Synthetic request.`);
+    expect(buildSummary(form, { output: "hygiene" })).toBe("");
+
+    form.oralHabits = "";
+    form.improvementRequest = "";
+    form.additionalNotes = "Synthetic notes";
+    expect(buildSummary(form)).toBe(`Appliances and Relevant History
+  Additional Notes: Synthetic notes.`);
+    expect(buildSummary(form, { output: "recare" })).toBe("");
+  });
+
+  it("nests listed occlusal findings and indents multiline notes without trailing spaces", () => {
+    const form = createForm();
+    form.rightMolarOcclusionNotApplicable = true;
+    form.overjetMm = "0";
+    form.listAdditionalOcclusalFindings = true;
+    form.additionalOcclusalFindings = [
+      { id: "synthetic-spacing", finding: "Spacing", locations: ["Anterior"] },
+      { id: "synthetic-crowding", finding: "Crowding", locations: [] },
+    ];
+    form.recareAdditionalComments = "Synthetic first comment\nSynthetic continuation";
+    form.additionalNotes = "Synthetic note";
+
+    expect(buildSummary(form)).toBe(`Occlusion:
+  Molar occlusion—right: N/A.
+  Overjet: 0 mm.
+  Additional occlusal findings:
+    - Spacing (location: Anterior).
+    - Crowding.
+
+Appliances and Relevant History
+  Additional recare comments: Synthetic first comment
+  Synthetic continuation.
+  Additional Notes: Synthetic note.`);
+  });
+
   it("groups PPE, vitals, caries risk, habits, education, goals, and follow-up", () => {
     const form = createForm();
     Object.assign(form, {

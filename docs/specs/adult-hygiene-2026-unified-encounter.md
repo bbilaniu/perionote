@@ -47,6 +47,17 @@ note modes wherever the corresponding content is included:
   line separates consent/medical history/premedication from the first documented
   vital reading. Readings and their average stay together. Empty vitals add no
   spacing.
+- Oral habits form a separate paragraph before `Occlusion:`. Documented
+  occlusal findings appear below that heading with two-space indentation;
+  listed additional findings retain their nested bullets at four spaces.
+- `Appliances and Relevant History` groups applicable devices and history,
+  patient-requested improvements, and additional comments/notes into up to
+  three paragraphs. Detail lines have two-space indentation, with one blank
+  line between nonempty paragraphs. Empty headings and paragraphs are omitted.
+  Existing inclusion rules still apply: Hygiene/Hygienist includes the splint,
+  orthodontic history, retainers, and additional notes; Recare/Dentist includes
+  CPAP, removable dentures, improvement requests, and recare comments but omits
+  hygiene additional notes. Complete/Combined includes all applicable content.
 - CAMBRA begins with `Caries risk category: {clinician selection}.` (or
   `Not documented.` when no category is selected). The next line is
   `  CAMBRA123 2021, ages 6–adult, score: …`, followed by protective factors,

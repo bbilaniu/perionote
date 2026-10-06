@@ -666,9 +666,10 @@ test("2026 Adult Hygiene keeps each occlusal location editor with its finding", 
     })
     .check();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    `Additional occlusal findings:
-  - Spacing (location: Anterior).
-  - Crowding.`,
+    `Occlusion:
+  Additional occlusal findings:
+    - Spacing (location: Anterior).
+    - Crowding.`,
   );
 });
 
