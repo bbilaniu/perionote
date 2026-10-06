@@ -19,6 +19,7 @@ three notes without duplicating shared clinical facts:
 | Content | Complete | Hygiene | Recare |
 | --- | --- | --- | --- |
 | Patient/team, consent and history | Yes | Yes | Yes |
+| Sterilization and checked PPE statement | Yes | Yes | Yes |
 | Records, EOE/IOE, teeth, odontogram and occlusion | Yes | No | Yes |
 | Hygiene and periodontal assessment | Yes | Yes | No |
 | Caries risk | Yes | Yes | Yes |
@@ -33,6 +34,39 @@ The complete note follows encounter context, records and concern, Recare
 clinical examination, appliances/history, hygiene and periodontal assessment,
 risk, education, coordinated recommendations, treatment completed, then
 separate Recare/dental and hygiene follow-up.
+
+### Generated-note grouping (2026-10-05)
+
+The 2026 Adult and Adolescent templates share these output rules in all three
+note modes wherever the corresponding content is included:
+
+- The checked PPE statement follows sterilization codes, without a leading
+  hyphen. It also appears in Recare/Dentist output and remains documentable
+  when no sterilization codes are entered. It is omitted when unchecked.
+- Documented premedication follows medical history immediately. A single blank
+  line separates consent/medical history/premedication from the first documented
+  vital reading. Readings and their average stay together. Empty vitals add no
+  spacing.
+- CAMBRA begins with `Caries risk category: {clinician selection}.` (or
+  `Not documented.` when no category is selected). The next line is
+  `  CAMBRA123 2021, ages 6–adult, score: …`, followed by protective factors,
+  biological/environmental risk factors, disease indicators, and optional
+  notes. Every detail line has two leading spaces.
+- An untouched CAMBRA assessment is omitted. A started or otherwise filled
+  assessment whose status is not complete says
+  `  CAMBRA123 2021, ages 6–adult: Incomplete.` instead of publishing a score.
+  Documented factors, clinician selection, and notes remain visible. An
+  explicitly completed assessment with no Yes factors still reports its
+  zero score and `None` factor groups; no category is inferred.
+- Oral hygiene compliance and its optional comment precede current flossing
+  and brushing habits in one paragraph. Education starts a separate paragraph,
+  and the hygiene goal starts another.
+- Nonempty paragraphs have one blank line between them, with no trailing
+  spaces or extra gaps from omitted content. Recare and hygiene follow-up
+  remain separate paragraphs.
+
+These are generated-output changes; stored clinical selections, the entry
+forms, and older template versions retain their existing behavior.
 
 ## Terminology and compatibility
 

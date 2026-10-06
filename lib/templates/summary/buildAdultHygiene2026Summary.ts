@@ -211,30 +211,19 @@ function cambra123RiskLines(
       (item) => item.label,
     );
     if (!labels.length && !complete) return "";
-    return `${label}: ${labels.length ? labels.join("; ") : "None"}.`;
+    return `  ${label}: ${labels.length ? labels.join("; ") : "None"}.`;
   };
 
   return [
-    `Caries risk assessment (CAMBRA123 2021, ages 6–adult): ${
-      complete
-        ? "Complete."
-        : assessment.completionStatus === "in-progress"
-          ? "In progress."
-          : "Not started."
-    }`,
+    `Caries risk category: ${assessment.finalRiskLevel || "Not documented"}.`,
+    complete
+      ? `  CAMBRA123 2021, ages 6–adult, score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
+      : "  CAMBRA123 2021, ages 6–adult: Incomplete.",
     selectedLine("Protective factors — Yes", "protective"),
     selectedLine("Biological/environmental risk factors — Yes", "risk"),
     selectedLine("Disease indicators — Yes", "disease-indicator"),
-    complete
-      ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
-      : "",
-    assessment.finalRiskLevel
-      ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
-      : complete
-        ? "Final clinician caries-risk category: Not documented."
-        : "",
     trimmed(assessment.notes)
-      ? `CAMBRA123 notes: ${withTerminalPunctuation(assessment.notes)}`
+      ? `  CAMBRA123 notes: ${withTerminalPunctuation(assessment.notes)}`
       : "",
   ].filter(Boolean);
 }
@@ -685,20 +674,14 @@ export function buildAdultHygiene2026Summary(
     trimmed(form.mieleCodes)
       ? `Sterilization Codes Scanned: ${trimmed(form.mieleCodes)}`
       : "",
+    form.ppeStatementApplies
+      ? "ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
+      : "",
   ];
 
-  const consentAndHistory = [
+  const history = [
     consentLine,
     labelledLine("Medical history reviewed", form.medicalHistoryReview),
-    ...form.vitalsReadings
-      .map((reading, index) => {
-        const line = formatVitalsReading(reading);
-        return line ? `Vitals reading ${index + 1}: ${line}` : "";
-      })
-      .filter(Boolean),
-    form.vitalsReadings.filter(hasValidVitalsMeasurement).length > 1
-      ? formatAverageVitalsReading(form.vitalsReadings)
-      : "",
     form.premedicationStatus === "not-required"
       ? "Premedication Required: No."
       : form.premedicationStatus === "required"
@@ -708,6 +691,24 @@ export function buildAdultHygiene2026Summary(
           )}`
         : "Premedication Required: Yes."
       : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const vitals = [
+    ...form.vitalsReadings
+      .map((reading, index) => {
+        const line = formatVitalsReading(reading);
+        return line ? `Vitals reading ${index + 1}: ${line}` : "";
+      })
+      .filter(Boolean),
+    form.vitalsReadings.filter(hasValidVitalsMeasurement).length > 1
+      ? formatAverageVitalsReading(form.vitalsReadings)
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const consentAndHistory = [
+    [history, vitals].filter(Boolean).join("\n\n"),
   ];
 
   const concerns = [
@@ -852,12 +853,17 @@ export function buildAdultHygiene2026Summary(
     trimmed(form.brushingFrequency),
   ].filter(Boolean);
 
-  const oralHygieneAndEducation = [
+  const oralHygieneHabits = [
     labelledLine("Oral hygiene compliance", form.oralHygieneCompliance),
     labelledLine(
       "Oral hygiene compliance comment",
       form.oralHygieneComplianceComment
     ),
+    currentHabits.length
+      ? `Patient is currently: ${currentHabits.join("; ")}.`
+      : "",
+  ];
+  const oralHygieneEducation = [
     form.homeCareInstructionReviewed
       ? "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY"
       : "",
@@ -872,9 +878,8 @@ export function buildAdultHygiene2026Summary(
       : "",
     oheTopicLine(form.oheTopicsReviewed),
     labelledLine("OHE notes", form.oheNotes),
-    currentHabits.length
-      ? `Patient is currently: ${currentHabits.join("; ")}.`
-      : "",
+  ];
+  const hygieneGoal = [
     labelledLine("Hygiene goal", form.hygieneGoal),
   ];
 
@@ -962,9 +967,6 @@ export function buildAdultHygiene2026Summary(
   ];
 
   const hygieneFollowUp = [
-    form.ppeStatementApplies
-      ? "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
-      : "",
     labelledLine("Recommended Hygiene Interval", form.hygieneInterval),
     labelledLine(
       "Recommended hygiene interval comments",
@@ -1023,7 +1025,9 @@ export function buildAdultHygiene2026Summary(
       : []),
     cariesRisk,
     formatOralHygieneMethods(form),
-    ...(includesHygiene ? [oralHygieneAndEducation] : []),
+    ...(includesHygiene
+      ? [oralHygieneHabits, oralHygieneEducation, hygieneGoal]
+      : []),
     dentalTreatmentOptions,
     hygieneTreatmentOptions,
     combinedTreatmentPlan,

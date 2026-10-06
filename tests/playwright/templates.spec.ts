@@ -1688,8 +1688,8 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await page
     .getByRole("option", { name: "Periodontal health", exact: true })
     .click();
-  await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Periodontal diagnosis:\n\n-ALL PROPER PPE",
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /^Periodontal diagnosis:$/m,
   );
 
   const healthGingivitisClassification = page.getByRole("button", {
@@ -1720,10 +1720,10 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
   await cariesRiskLevel.click();
   await page.getByRole("option", { name: "Low", exact: true }).click();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+    "Caries risk category: Low.",
   );
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "CAMBRA123 score: 0 (Column 1: 0; Column 2: +0; Column 3: +0).",
+    "CAMBRA123 2021, ages 6–adult, score: 0 (Column 1: 0; Column 2: +0; Column 3: +0).",
   );
   page.once("dialog", (dialog) => dialog.accept());
   await page
@@ -1766,13 +1766,10 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
     page.getByRole("heading", { name: "Suggested CAMBRA123 category" }),
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
+    "Caries risk category: High.",
   );
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "CAMBRA123 score: 4 (Column 1: 0; Column 2: +4; Column 3: +0).",
-  );
-  await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "Final clinician caries-risk category: High.",
+    "CAMBRA123 2021, ages 6–adult, score: 4 (Column 1: 0; Column 2: +4; Column 3: +0).",
   );
 
   await cambraFactors.click();
@@ -1787,7 +1784,7 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
       .locator("xpath=.."),
   ).toContainText("Moderate");
   await expect(page.locator("#adult-hygiene-summary")).toContainText(
-    "CAMBRA123 score: 2 (Column 1: 0; Column 2: +2; Column 3: +0).",
+    "CAMBRA123 2021, ages 6–adult, score: 2 (Column 1: 0; Column 2: +2; Column 3: +0).",
   );
   await expect(cambraFactors).toContainText("1 Yes · Score +2 · High");
 });

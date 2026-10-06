@@ -580,7 +580,7 @@ for (const width of [1600, 390]) {
       /Sterilization Codes Scanned: SYNTHETIC-STERI-002/,
     );
     await expect(summary).toHaveValue(
-      /Final clinician caries-risk category: High\./,
+      /Caries risk category: High\./,
     );
     await expect(summary).toHaveValue(
       /Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds/,
@@ -621,7 +621,7 @@ for (const width of [1600, 390]) {
       .click();
     await expect(applyRinse).toBeEnabled();
     await expect(summary).not.toHaveValue(
-      /Final clinician caries-risk category: High\.|SYNTHETIC-STERI-002|Dyclonine 1% rinse/,
+      /Caries risk category: High\.|SYNTHETIC-STERI-002|Dyclonine 1% rinse/,
     );
     const openDetailed = page.getByRole("button", {
       name: "Open Detailed for additional findings and follow-up",
