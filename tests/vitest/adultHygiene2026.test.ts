@@ -232,9 +232,11 @@ TMJ: WNL.
       "IOE:",
       "Teeth:",
       "Oral habits:",
+      "Occlusion:",
+      "Appliances and Relevant History",
       "CPAP:",
       "Plaque:",
-      "Caries risk assessment (CAMBRA123 2021, ages 6–adult)",
+      "Caries risk category:",
       "Oral hygiene compliance:",
       "Dental Treatment Options Discussed:",
       "Hygiene Treatment Options Discussed:",
@@ -284,10 +286,11 @@ TMJ: WNL.
       listAdditionalOcclusalFindings: true,
     };
 
-    expect(buildAdultHygiene2026Summary(form)).toContain(
-      `Additional occlusal findings:
-  - Spacing (location: Anterior).
-  - Crowding.`,
+    expect(buildAdultHygiene2026Summary(form)).toBe(
+      `Occlusion:
+  Additional occlusal findings:
+    - Spacing (location: Anterior).
+    - Crowding.`,
     );
   });
 
@@ -486,23 +489,12 @@ OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
     };
 
     const summary = buildAdultHygiene2026Summary(form);
-    expect(summary).toContain(
-      "Caries risk assessment (CAMBRA123 2021, ages 6–adult): Complete.",
-    );
-    expect(summary).toContain(
-      "Protective factors — Yes: Fluoride toothpaste twice daily or more.",
-    );
-    expect(summary).toContain(
-      "Biological/environmental risk factors — Yes: Frequent snacking (more than 3 times daily); Reduced salivary function (measured low flow rate).",
-    );
-    expect(summary).toContain(
-      "Disease indicators — Yes: New cavities or lesions into dentin (radiographically).",
-    );
-    expect(summary).toContain(
-      "CAMBRA123 score: 6 (Column 1: -1; Column 2: +4; Column 3: +3).",
-    );
-    expect(summary).toContain("Final clinician caries-risk category: Extreme.");
-    expect(summary).toContain("CAMBRA123 notes: Dry-mouth management reviewed.");
+    expect(summary).toBe(`Caries risk category: Extreme.
+  CAMBRA123 2021, ages 6–adult, score: 6 (Column 1: -1; Column 2: +4; Column 3: +3).
+  Protective factors — Yes: Fluoride toothpaste twice daily or more.
+  Biological/environmental risk factors — Yes: Frequent snacking (more than 3 times daily); Reduced salivary function (measured low flow rate).
+  Disease indicators — Yes: New cavities or lesions into dentin (radiographically).
+  CAMBRA123 notes: Dry-mouth management reviewed.`);
     expect(summary).not.toContain("Legacy factor");
     expect(summary).not.toContain("Legacy notes");
   });
