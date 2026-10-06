@@ -1,5 +1,12 @@
 # hygienenote
 
+## 1.2.1
+
+### Patch Changes
+
+- 2cab399: Group 2026 Adult and Adolescent occlusal findings under an indented Occlusion section, separate oral habits, and organize Appliances and Relevant History into indented paragraphs for devices/history, improvement requests, and comments. Omit empty sections and retain each note output's existing content rules.
+- f7e3d4a: Improve generated 2026 Adult and Adolescent notes: place checked PPE with sterilization in every output, keep premedication immediately after medical history with a blank line before vitals, lead CAMBRA with the clinician's risk category and indented details, and group current habits, education, and goals into separate paragraphs. Mark unfinished CAMBRA assessments incomplete without a score and omit untouched assessments.
+
 ## 1.2.0
 
 ### Minor Changes
