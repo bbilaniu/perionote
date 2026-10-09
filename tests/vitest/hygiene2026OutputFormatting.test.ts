@@ -291,6 +291,33 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
   });
 
   describe.each(["complete", "hygiene"] as const)("%s hygiene paragraphs", (output) => {
+    it.each([
+      {
+        description: "LF line endings",
+        goal: "Synthetic first goal line\nSynthetic second goal line\nSynthetic third goal line",
+        expected: "- Hygiene goal: Synthetic first goal line\n  Synthetic second goal line\n  Synthetic third goal line.",
+      },
+      {
+        description: "CRLF line endings",
+        goal: "Synthetic first goal line\r\nSynthetic second goal line\r\nSynthetic third goal line",
+        expected: "- Hygiene goal: Synthetic first goal line\n  Synthetic second goal line\n  Synthetic third goal line.",
+      },
+      {
+        description: "blank lines and existing punctuation",
+        goal: "  Synthetic first goal line\n\nSynthetic second goal line\n  \nSynthetic third goal line!  ",
+        expected: "- Hygiene goal: Synthetic first goal line\n\n  Synthetic second goal line\n\n  Synthetic third goal line!",
+      },
+    ])("keeps a multiline goal within its bullet with $description", ({ goal, expected }) => {
+      const form = createForm();
+      form.hygieneGoal = goal;
+      form.nextVisit = "Synthetic follow-up";
+
+      expect(buildSummary(form, { output })).toBe(
+        `${expected}\n\nNext Hygiene Visit: Synthetic follow-up.`,
+      );
+      expect(buildSummary(form, { output: "recare" })).toBe("");
+    });
+
     it("aligns periodontal details and all overrides beneath the current condition", () => {
       const form = createForm();
       Object.assign(form.periodontalClassification, {

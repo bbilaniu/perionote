@@ -903,7 +903,12 @@ export function buildAdultHygiene2026Summary(
     labelledLine("OHE notes", form.oheNotes),
   ];
   const hygieneGoal = [
-    labelledLine("- Hygiene goal", form.hygieneGoal),
+    labelledLine("- Hygiene goal", form.hygieneGoal)
+      .split(/\r?\n/)
+      .map((line, index) =>
+        line.trim() ? `${index === 0 ? "" : "  "}${line}` : "",
+      )
+      .join("\n"),
   ];
 
   const dentalTreatmentOptions = formatTreatmentEntries(
