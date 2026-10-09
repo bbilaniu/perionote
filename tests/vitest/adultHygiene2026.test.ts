@@ -162,7 +162,7 @@ TMJ: WNL.
 
     const summary = buildAdultHygiene2026Summary(form);
     expect(summary).not.toContain("Periodontal status:");
-    expect(summary).not.toContain("Periodontal status comment:");
+    expect(summary).not.toContain("Perio status comment:");
   });
 
   it("composes complete, hygiene, and recare notes from one encounter", () => {
@@ -467,7 +467,7 @@ OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
         ...createEmptyAdultHygiene2026Form(),
         ...legacyOhe,
       }),
-    ).toContain(expected);
+    ).toContain(expected.replace("\nOH Aids", "\n\nOH Aids"));
   });
 
   it("charts a completed CAMBRA123 assessment and supersedes legacy risk text", () => {

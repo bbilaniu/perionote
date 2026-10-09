@@ -35,7 +35,7 @@ clinical examination, appliances/history, hygiene and periodontal assessment,
 risk, education, coordinated recommendations, treatment completed, then
 separate Recare/dental and hygiene follow-up.
 
-### Generated-note grouping (2026-10-05)
+### Generated-note grouping (2026-10-07)
 
 The 2026 Adult and Adolescent templates share these output rules in all three
 note modes wherever the corresponding content is included:
@@ -58,6 +58,11 @@ note modes wherever the corresponding content is included:
   orthodontic history, retainers, and additional notes; Recare/Dentist includes
   CPAP, removable dentures, improvement requests, and recare comments but omits
   hygiene additional notes. Complete/Combined includes all applicable content.
+- Beneath `Current periodontal condition:`, periodontal diagnosis, status,
+  `Perio status comment:`, and applicable health/gingivitis, stage, and grade
+  override explanations use two-space indentation, including continuation
+  lines. Without a current-condition heading, diagnosis details remain flush
+  left. Existing classification and status inclusion rules are unchanged.
 - CAMBRA begins with `Caries risk category: {clinician selection}.` (or
   `Not documented.` when no category is selected). The next line is
   `  CAMBRA123 2021, ages 6–adult, score: …`, followed by protective factors,
@@ -70,14 +75,18 @@ note modes wherever the corresponding content is included:
   explicitly completed assessment with no Yes factors still reports its
   zero score and `None` factor groups; no category is inferred.
 - Oral hygiene compliance and its optional comment precede current flossing
-  and brushing habits in one paragraph. Education starts a separate paragraph,
-  and the hygiene goal starts another.
+  and brushing habits in one paragraph. Home-care instruction and the remaining
+  education each form separate paragraphs. A documented goal follows in its own
+  paragraph as `- Hygiene goal: …`; an empty or whitespace-only goal adds
+  neither a bullet nor extra blank lines.
+- Treatment completed and local anesthesia form separate paragraphs. Omitting
+  either adds no leading, trailing, or extra blank lines.
 - Nonempty paragraphs have one blank line between them, with no trailing
   spaces or extra gaps from omitted content. Recare and hygiene follow-up
   remain separate paragraphs.
 
 These are generated-output changes; stored clinical selections, the entry
-forms, and older template versions retain their existing behavior.
+forms, note header logic, and older template versions retain their existing behavior.
 
 ## Terminology and compatibility
 

@@ -513,7 +513,7 @@ export function formatPeriodontalClassification(
         )}`
       : "",
     statusCanBeCharted && trimmed(classification.statusComment)
-      ? `Periodontal status comment: ${withTerminalPunctuation(
+      ? `Perio status comment: ${withTerminalPunctuation(
           classification.statusComment
         )}`
       : "",
@@ -848,10 +848,17 @@ export function buildAdultHygiene2026Summary(
   const patientSpecificGradeEvidence = [
     formatPatientSpecificGradeEvidence(form.periodontalClassification),
   ];
-  const periodontalDiagnosis = [
-    healthGingivitisBlock,
-    ...periodontalClassificationLines,
-  ];
+  const [periodontalConditionHeading, ...periodontalConditionDetails] =
+    healthGingivitisBlock.split("\n");
+  const periodontalDiagnosis =
+    form.periodontalClassification.diagnosis === "periodontitis" &&
+    healthGingivitisBlock
+      ? [
+          indentedSection(periodontalConditionHeading, [
+            [...periodontalConditionDetails, ...periodontalClassificationLines],
+          ]),
+        ]
+      : [healthGingivitisBlock, ...periodontalClassificationLines];
   const cariesRisk = hasCambra123SixAdultContent(form.cambra123Assessment)
     ? cambra123RiskLines(form.cambra123Assessment)
     : [
@@ -877,10 +884,12 @@ export function buildAdultHygiene2026Summary(
       ? `Patient is currently: ${currentHabits.join("; ")}.`
       : "",
   ];
-  const oralHygieneEducation = [
+  const homeCareInstruction = [
     form.homeCareInstructionReviewed
       ? "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY"
       : "",
+  ];
+  const oralHygieneEducation = [
     form.ohiAidsReviewed.length
       ? `OH Aids Reviewed/Recommended: ${form.ohiAidsReviewed.join("; ")}`
       : "",
@@ -894,7 +903,12 @@ export function buildAdultHygiene2026Summary(
     labelledLine("OHE notes", form.oheNotes),
   ];
   const hygieneGoal = [
-    labelledLine("Hygiene goal", form.hygieneGoal),
+    labelledLine("- Hygiene goal", form.hygieneGoal)
+      .split(/\r?\n/)
+      .map((line, index) =>
+        line.trim() ? `${index === 0 ? "" : "  "}${line}` : "",
+      )
+      .join("\n"),
   ];
 
   const dentalTreatmentOptions = formatTreatmentEntries(
@@ -927,8 +941,8 @@ export function buildAdultHygiene2026Summary(
         form.desensitizer,
       ),
     ),
-    formatLocalAnesthesiaSummary(form),
   ];
+  const localAnesthesia = [formatLocalAnesthesiaSummary(form)];
 
   const guardianCommunication = [
     documentationStatusLine(
@@ -1040,12 +1054,12 @@ export function buildAdultHygiene2026Summary(
     cariesRisk,
     formatOralHygieneMethods(form),
     ...(includesHygiene
-      ? [oralHygieneHabits, oralHygieneEducation, hygieneGoal]
+      ? [oralHygieneHabits, homeCareInstruction, oralHygieneEducation, hygieneGoal]
       : []),
     dentalTreatmentOptions,
     hygieneTreatmentOptions,
     combinedTreatmentPlan,
-    ...(includesHygiene ? [treatmentCompleted] : []),
+    ...(includesHygiene ? [treatmentCompleted, localAnesthesia] : []),
     ...(includesHygiene ? [guardianCommunication] : []),
     ...(output === "hygiene" ? [appliancesAndHistory] : []),
     ...(output === "complete"

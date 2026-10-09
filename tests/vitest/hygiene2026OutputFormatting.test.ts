@@ -173,9 +173,10 @@ Oral hygiene compliance comment: Synthetic compliance context.
 Patient is currently: Flossing 1x/day; Brushing 2x/day.
 
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
+
 Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
 
-Hygiene goal: Synthetic home-care goal.
+- Hygiene goal: Synthetic home-care goal.
 
 Recommended Recare Interval: 6-month recall.
 Next Dental Visit: Synthetic dental follow-up.
@@ -283,9 +284,124 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
     form.hygieneGoal = "Synthetic goal";
     for (const output of ["complete", "hygiene"] as const) {
       expect(buildSummary(form, { output })).toBe(
-        "Patient is currently: Brushing 2x/day.\n\nHygiene goal: Synthetic goal.",
+        "Patient is currently: Brushing 2x/day.\n\n- Hygiene goal: Synthetic goal.",
       );
     }
     expect(buildSummary(form, { output: "recare" })).toBe("");
+  });
+
+  describe.each(["complete", "hygiene"] as const)("%s hygiene paragraphs", (output) => {
+    it.each([
+      {
+        description: "LF line endings",
+        goal: "Synthetic first goal line\nSynthetic second goal line\nSynthetic third goal line",
+        expected: "- Hygiene goal: Synthetic first goal line\n  Synthetic second goal line\n  Synthetic third goal line.",
+      },
+      {
+        description: "CRLF line endings",
+        goal: "Synthetic first goal line\r\nSynthetic second goal line\r\nSynthetic third goal line",
+        expected: "- Hygiene goal: Synthetic first goal line\n  Synthetic second goal line\n  Synthetic third goal line.",
+      },
+      {
+        description: "blank lines and existing punctuation",
+        goal: "  Synthetic first goal line\n\nSynthetic second goal line\n  \nSynthetic third goal line!  ",
+        expected: "- Hygiene goal: Synthetic first goal line\n\n  Synthetic second goal line\n\n  Synthetic third goal line!",
+      },
+    ])("keeps a multiline goal within its bullet with $description", ({ goal, expected }) => {
+      const form = createForm();
+      form.hygieneGoal = goal;
+      form.nextVisit = "Synthetic follow-up";
+
+      expect(buildSummary(form, { output })).toBe(
+        `${expected}\n\nNext Hygiene Visit: Synthetic follow-up.`,
+      );
+      expect(buildSummary(form, { output: "recare" })).toBe("");
+    });
+
+    it("aligns periodontal details and all overrides beneath the current condition", () => {
+      const form = createForm();
+      Object.assign(form.periodontalClassification, {
+        diagnosis: "periodontitis",
+        extent: "localized",
+        stage: "II",
+        grade: "B",
+        status: "remission-control",
+        statusComment: "Synthetic status comment",
+        stageOverrideReason: "Synthetic stage reason\nSynthetic continuation",
+        gradeOverrideReason: "Synthetic grade reason",
+      });
+      Object.assign(form.periodontalClassification.gingivalHealth, {
+        periodontium: "reduced-treated-periodontitis",
+        context: "inflammation-periodontitis-history",
+        overrideReason: "Synthetic condition reason",
+      });
+      expect(buildSummary(form, { output })).toBe(`Periodontal assessment findings:
+  - Periodontal support: Reduced support (with a history of treated periodontitis).
+
+Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
+  Health/Gingivitis override: Synthetic condition reason.
+  Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
+  Stage override: Synthetic stage reason
+  Synthetic continuation.
+  Grade override: Synthetic grade reason.
+  Periodontal status: Periodontal disease remission/control.
+  Perio status comment: Synthetic status comment.`);
+
+      form.periodontalClassification.gingivalHealth.context = "";
+      form.periodontalClassification.gingivalHealth.periodontium = "";
+      expect(buildSummary(form, { output })).toBe(`Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
+Stage override: Synthetic stage reason
+Synthetic continuation.
+Grade override: Synthetic grade reason.
+Periodontal status: Periodontal disease remission/control.
+Perio status comment: Synthetic status comment.`);
+      expect(buildSummary(form, { output: "recare" })).toBe("");
+    });
+
+    it.each(["", "  \n  "])("omits an empty goal (%j) without leaving a bullet or extra gaps", (goal) => {
+      const form = createForm();
+      form.homeCareInstructionReviewed = true;
+      form.ohiAidsReviewed = ["Synthetic interdental aid"];
+      form.diseaseProcessReviewed = true;
+      form.hygieneGoal = goal;
+      form.nextVisit = "Synthetic follow-up";
+      const instruction = "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY";
+      const education = "OH Aids Reviewed/Recommended: Synthetic interdental aid\nREVIEWED DISEASE PROCESS WITH PATIENT TODAY";
+      const followUp = "Next Hygiene Visit: Synthetic follow-up.";
+      expect(buildSummary(form, { output })).toBe(`${instruction}\n\n${education}\n\n${followUp}`);
+
+      form.homeCareInstructionReviewed = false;
+      expect(buildSummary(form, { output })).toBe(`${education}\n\n${followUp}`);
+      form.ohiAidsReviewed = [];
+      form.diseaseProcessReviewed = false;
+      form.homeCareInstructionReviewed = true;
+      expect(buildSummary(form, { output })).toBe(`${instruction}\n\n${followUp}`);
+      form.homeCareInstructionReviewed = false;
+      expect(buildSummary(form, { output })).toBe(followUp);
+      form.nextVisit = "";
+      expect(buildSummary(form, { output })).toBe("");
+    });
+
+    it("separates treatment and anesthesia and omits gaps when either is absent", () => {
+      const form = createForm();
+      form.treatmentCompleted = [{
+        id: "synthetic-scaling",
+        treatmentType: "Synthetic scaling",
+        toothAreas: ["Q2", "Q3"],
+      }];
+      form.localAnesthesiaNoContraindication = true;
+      const treatment = "Treatment completed today: Synthetic scaling — Q2, Q3";
+      const anesthesia = "Local anesthetic administered: No C/I to LA";
+      expect(buildSummary(form, { output })).toBe(`${treatment}\n\n${anesthesia}`);
+      expect(buildSummary(form, { output: "recare" })).toBe("");
+
+      form.localAnesthesiaNoContraindication = false;
+      expect(buildSummary(form, { output })).toBe(treatment);
+      form.localAnesthesiaNoContraindication = true;
+      form.treatmentCompleted = [];
+      expect(buildSummary(form, { output })).toBe(anesthesia);
+      form.localAnesthesiaNoContraindication = false;
+      expect(buildSummary(form, { output })).toBe("");
+    });
   });
 });
