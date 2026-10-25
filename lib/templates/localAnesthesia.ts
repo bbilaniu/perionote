@@ -100,13 +100,18 @@ export function formatLocalAnesthesiaSummary(
   const detailLines: string[] = [];
   const totals = new Map<string, number>();
 
-  for (const entry of value.localAnesthesiaEntries) {
+  // Normalized HH:mm values sort chronologically. Untimed entries stay in
+  // entry order after timed entries; sorting a copy preserves the form state.
+  const entries = value.localAnesthesiaEntries
+    .map((entry) => ({ entry, time: formatTime24Value(entry.timeAdministered) }))
+    .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+
+  for (const { entry, time } of entries) {
     const product = trimmed(entry.product);
     const amount = trimmed(entry.amountMl);
     const toothAreas = entry.toothAreas.map(trimmed).filter(Boolean);
     const area = toothAreas.join(", ");
     if (!product || !amount) continue;
-    const time = formatTime24Value(entry.timeAdministered);
     const administeredAt = time ? ` (at ${time})` : "";
     if (entry.route === "rinse") {
       const duration = trimmed(entry.durationSeconds);

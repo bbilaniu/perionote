@@ -144,7 +144,60 @@ describe("local anesthesia", () => {
         localAnesthesiaAdequateAchieved: false,
         localAnesthesiaNotes: "",
       }),
-    ).toContain(`  Sulcular application — maxilla: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 20:33)
-  I/O — S2: Articaine 4% with 1:200K epinephrine 1.8 ml (at 20:32)`);
+    ).toContain(`  I/O — S2: Articaine 4% with 1:200K epinephrine 1.8 ml (at 20:32)
+  Sulcular application — maxilla: ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5% 1.7 ml (at 20:33)`);
+  });
+
+  it("orders administrations by time and totals by first use without changing form order", () => {
+    const entries = [
+      { product: "Benzocaine", timeAdministered: "12:50", amountMl: "0.5" },
+      { product: "Articaine", timeAdministered: "12:51", amountMl: "1.8" },
+      { product: "Dyclonine", timeAdministered: "12:40", amountMl: "5" },
+      { product: "Dyclonine", timeAdministered: "13:00", amountMl: "5" },
+    ].map((entry, index) => ({
+      id: String(index),
+      route: "rinse" as const,
+      administrationType: "",
+      toothAreas: ["full mouth"],
+      durationSeconds: "",
+      ...entry,
+    }));
+    const original = structuredClone(entries);
+    const summary = formatLocalAnesthesiaSummary({
+      ...createEmptyLocalAnesthesiaValue(),
+      localAnesthesiaEntries: entries,
+    });
+    expect(summary).toBe(`Local anesthetic administered:
+  Rinse — full mouth: Dyclonine 5 ml (at 12:40)
+  Rinse — full mouth: Benzocaine 0.5 ml (at 12:50)
+  Rinse — full mouth: Articaine 1.8 ml (at 12:51)
+  Rinse — full mouth: Dyclonine 5 ml (at 13:00)
+  Total: Dyclonine 10.0 ml
+  Total: Benzocaine 0.5 ml
+  Total: Articaine 1.8 ml`);
+    expect(entries).toEqual(original);
+  });
+
+  it("normalizes times and preserves entry order for ties and unknown times", () => {
+    const entries = ["", "12:00", "9:05", "09:05", "invalid", "25:00"].map(
+      (timeAdministered, index) => ({
+        id: String(index),
+        route: "rinse" as const,
+        administrationType: "",
+        toothAreas: ["full mouth"],
+        product: `Product ${index}`,
+        amountMl: "1",
+        durationSeconds: "",
+        timeAdministered,
+      }),
+    );
+    const summary = formatLocalAnesthesiaSummary({
+      ...createEmptyLocalAnesthesiaValue(),
+      localAnesthesiaEntries: entries,
+    });
+    expect([...summary.matchAll(/Rinse — full mouth: Product (\d)/g)].map((match) => match[1]))
+      .toEqual(["2", "3", "1", "0", "4", "5"]);
+    expect([...summary.matchAll(/Total: Product (\d)/g)].map((match) => match[1]))
+      .toEqual(["2", "3", "1", "0", "4", "5"]);
   });
 });
