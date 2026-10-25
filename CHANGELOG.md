@@ -1,5 +1,11 @@
 # hygienenote
 
+## 1.2.3
+
+### Patch Changes
+
+- 13e5c8d: Order structured local-anesthesia administrations chronologically and list totals by each product's first administration, keeping all entries and totals within the local-anesthesia section.
+
 ## 1.2.2
 
 ### Patch Changes
