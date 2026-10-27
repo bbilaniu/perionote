@@ -54,8 +54,8 @@ function examSentence(
   return sentence(label, findings) || `${label}: Findings documented.`;
 }
 
-function section(lines: string[]): string {
-  return lines.filter(Boolean).join("\n");
+function section(lines: string[], separator = "\n"): string {
+  return lines.filter(Boolean).join(separator);
 }
 
 function joinConsentSources(values: string[]): string {
@@ -89,28 +89,32 @@ function cambra123ZeroToSixLines(
     );
 
   return [
-    `Caries risk assessment (CAMBRA123 2021, ages 0–6): ${
-      complete
-        ? "Complete."
-        : assessment.completionStatus === "in-progress"
-          ? "In progress."
-          : "Not started."
-    }`,
-    selectedLine("Protective factors — Yes", "protective"),
-    selectedLine("Biological/environmental risk factors — Yes", "risk"),
-    selectedLine("Disease indicators — Yes", "disease-indicator"),
-    assessment.severeOrExtensiveRecentDecay
-      ? "Very High clinical modifier — extensive or severe recent/existing decay: Yes."
-      : "",
-    complete
-      ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
-      : "",
-    assessment.finalRiskLevel
-      ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
-      : complete
-        ? "Final clinician caries-risk category: Not documented."
+    section([
+      `Caries risk assessment (CAMBRA123 2021, ages 0–6): ${
+        complete
+          ? "Complete."
+          : assessment.completionStatus === "in-progress"
+            ? "In progress."
+            : "Not started."
+      }`,
+      selectedLine("Protective factors — Yes", "protective"),
+      selectedLine("Biological/environmental risk factors — Yes", "risk"),
+      selectedLine("Disease indicators — Yes", "disease-indicator"),
+      assessment.severeOrExtensiveRecentDecay
+        ? "Very High clinical modifier — extensive or severe recent/existing decay: Yes."
         : "",
-    sentence("CAMBRA123 notes", assessment.notes),
+      complete
+        ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
+        : "",
+    ]),
+    section([
+      assessment.finalRiskLevel
+        ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
+        : complete
+          ? "Final clinician caries-risk category: Not documented."
+          : "",
+      sentence("CAMBRA123 notes", assessment.notes),
+    ]),
   ].filter(Boolean);
 }
 
@@ -128,25 +132,29 @@ function cambra123SixAdultLines(
     );
 
   return [
-    `Caries risk assessment (CAMBRA123 2021, ages 6–adult): ${
+    section([
+      `Caries risk assessment (CAMBRA123 2021, ages 6–adult): ${
+        complete
+          ? "Complete."
+          : assessment.completionStatus === "in-progress"
+            ? "In progress."
+            : "Not started."
+      }`,
+      selectedLine("Protective factors — Yes", "protective"),
+      selectedLine("Biological/environmental risk factors — Yes", "risk"),
+      selectedLine("Disease indicators — Yes", "disease-indicator"),
       complete
-        ? "Complete."
-        : assessment.completionStatus === "in-progress"
-          ? "In progress."
-          : "Not started."
-    }`,
-    selectedLine("Protective factors — Yes", "protective"),
-    selectedLine("Biological/environmental risk factors — Yes", "risk"),
-    selectedLine("Disease indicators — Yes", "disease-indicator"),
-    complete
-      ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
-      : "",
-    assessment.finalRiskLevel
-      ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
-      : complete
-        ? "Final clinician caries-risk category: Not documented."
+        ? `CAMBRA123 score: ${result.totalScore} (Column 1: ${result.column1Score}; Column 2: +${result.column2Score}; Column 3: +${result.column3Score}).`
         : "",
-    sentence("CAMBRA123 notes", assessment.notes),
+    ]),
+    section([
+      assessment.finalRiskLevel
+        ? `Final clinician caries-risk category: ${assessment.finalRiskLevel}.`
+        : complete
+          ? "Final clinician caries-risk category: Not documented."
+          : "",
+      sentence("CAMBRA123 notes", assessment.notes),
+    ]),
   ].filter(Boolean);
 }
 
@@ -167,33 +175,41 @@ export function buildChildRecareHygieneSummary(
     : form.consentBy;
 
   const header = section([
-    options.startedAt ? formatNoteHeaderLocalTimestamp(options.startedAt) : "",
-    sentence("PATIENT ID", form.patientId),
-    sentence("Dentist", form.dentist),
-    sentence("RDA", form.rda),
-    sentence("RDH", form.rdh),
-    sentence(
-      "Informed verbal consent for treatment today given by",
-      consentSource,
-    ),
-    sentence("Consent details", form.consentDetails),
-    statusSentence(
-      "Class 5 indicator strip checked",
-      form.class5IndicatorStatus,
-    ),
-    sentence("Miele sterilization codes scanned", form.mieleCodes),
-    form.ppeStatementApplies
-      ? "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
-      : "",
-    "Patient presents for a pediatric recall exam and cleaning.",
+    section([
+      options.startedAt ? formatNoteHeaderLocalTimestamp(options.startedAt) : "",
+      sentence("PATIENT ID", form.patientId),
+      sentence("Dentist", form.dentist),
+      sentence("RDA", form.rda),
+      sentence("RDH", form.rdh),
+    ]),
+    section([
+      sentence(
+        "Informed verbal consent for treatment today given by",
+        consentSource,
+      ),
+      sentence("Consent details", form.consentDetails),
+      statusSentence(
+        "Class 5 indicator strip checked",
+        form.class5IndicatorStatus,
+      ),
+      sentence("Miele sterilization codes scanned", form.mieleCodes),
+    ]),
+    section([
+      form.ppeStatementApplies
+        ? "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
+        : "",
+      "Patient presents for a pediatric recall exam and cleaning.",
+    ]),
     sentence("Patient's chief concern", form.chiefConcern),
-    sentence("Medical history reviewed", form.medicalHistory),
-    statusSentence(
-      "Premedication required",
-      form.premedicationStatus,
-      form.premedicationDetails,
-    ),
-  ]);
+    section([
+      sentence("Medical history reviewed", form.medicalHistory),
+      statusSentence(
+        "Premedication required",
+        form.premedicationStatus,
+        form.premedicationDetails,
+      ),
+    ]),
+  ], "\n\n");
 
   const dentist = includesDentist
     ? section([
@@ -229,23 +245,27 @@ export function buildChildRecareHygieneSummary(
 
   const hygiene = includesHygiene
     ? section([
-        "HYGIENE",
-        statusSentence("Disclosed", form.disclosedStatus),
-        sentence("Plaque index", form.plaqueIndex),
-        statusSentence("Calculus", form.calculusStatus, form.calculusLocation),
-        form.ohiReviewed ? "OHI reviewed." : "",
-        sentence("Flossing technique", form.flossingTechnique),
-        sentence("Brushing technique", form.brushingTechnique),
-        statusSentence(
-          "Scaling",
-          form.scalingStatus,
-          form.scalingUnits ? `${form.scalingUnits.trim()} units` : "",
-        ),
-        statusSentence("Polish", form.polishStatus, form.polishDetails),
-        statusSentence("Fluoride", form.fluorideStatus, form.fluorideDetails),
-        formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
-        formatLocalAnesthesiaSummary(form),
-      ])
+        section([
+          "HYGIENE",
+          statusSentence("Disclosed", form.disclosedStatus),
+          sentence("Plaque index", form.plaqueIndex),
+          statusSentence("Calculus", form.calculusStatus, form.calculusLocation),
+          form.ohiReviewed ? "OHI reviewed." : "",
+          sentence("Flossing technique", form.flossingTechnique),
+          sentence("Brushing technique", form.brushingTechnique),
+          statusSentence(
+            "Scaling",
+            form.scalingStatus,
+            form.scalingUnits ? `${form.scalingUnits.trim()} units` : "",
+          ),
+          statusSentence("Polish", form.polishStatus, form.polishDetails),
+          statusSentence("Fluoride", form.fluorideStatus, form.fluorideDetails),
+        ]),
+        section([
+          formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
+          formatLocalAnesthesiaSummary(form),
+        ]),
+      ], "\n\n")
     : "";
 
   const cambraLines =
@@ -255,7 +275,7 @@ export function buildChildRecareHygieneSummary(
         ? cambra123SixAdultLines(form.cambra123SixAdultAssessment)
         : [];
   const cariesRisk = cambraLines.length
-    ? section(["CARIES RISK ASSESSMENT", ...cambraLines])
+    ? section(["CARIES RISK ASSESSMENT", cambraLines.join("\n\n")])
     : "";
 
   const followUp = section([
@@ -266,11 +286,13 @@ export function buildChildRecareHygieneSummary(
     ),
     sentence("Goal for next visit", form.goalForNextVisit),
     sentence("RDH/RDA comments", form.clinicalComments),
-    includesDentist ? sentence("Recall interval", form.recallInterval) : "",
-    includesHygiene ? sentence("Hygiene interval", form.hygieneInterval) : "",
-    sentence("Next visit", form.nextVisit),
-    sentence("Booked", form.bookedDate),
-  ]);
+    section([
+      includesDentist ? sentence("Recall interval", form.recallInterval) : "",
+      includesHygiene ? sentence("Hygiene interval", form.hygieneInterval) : "",
+      sentence("Next visit", form.nextVisit),
+      sentence("Booked", form.bookedDate),
+    ]),
+  ], "\n\n");
 
   return [
     header,
