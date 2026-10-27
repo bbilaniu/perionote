@@ -1,5 +1,11 @@
 # hygienenote
 
+## 1.2.4
+
+### Patch Changes
+
+- c954721: Add blank lines between child recare note sections, before the final caries-risk category and completed treatment, and between follow-up comments while keeping scheduling details together.
+
 ## 1.2.3
 
 ### Patch Changes
