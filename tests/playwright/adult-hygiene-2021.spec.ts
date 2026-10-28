@@ -625,7 +625,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     /OH Aids Reviewed\/Recommended: Synthetic interdental aid/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./
+    /OHE: Caries theory and risk factors\.\n  OHE notes: Demonstrated brushing modifications\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./
@@ -666,7 +666,7 @@ test("Adult Hygiene demo output survives reload and reset preserves its draft", 
     page.getByRole("button", { name: "Caries risk level", exact: true })
   ).toHaveAttribute("data-value", "Moderate");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal status comment: Synthetic periodontal status comment\.\n\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months\. Synthetic diet and home-care factors reviewed\.\n\nOral hygiene compliance: Good\./
+    /Periodontal status comment: Synthetic periodontal status comment\.\n\nCaries Risk\n  Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months\. Synthetic diet and home-care factors reviewed\.\n\nOral Hygiene and Education\n  Oral hygiene compliance: Good\./
   );
 
   await reloadDiscardingForm(page);
@@ -1291,7 +1291,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /^Periodontal diagnosis:$/m
+    /^  Periodontal diagnosis:$/m
   );
 
   await page

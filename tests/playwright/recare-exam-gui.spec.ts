@@ -972,7 +972,7 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   await expect(freeText).toHaveValue("");
   await expect(normalFlow).toBeVisible();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: pink; moist; no lesions; no swelling\.\n  - Tongue: pink; moist; symmetrical; no lesions\.\n  - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n  - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n  - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n  - Saliva: clear; normal flow\./
+    /Intraoral:\n    - Buccal mucosa: pink; moist; no lesions; no swelling\.\n    - Tongue: pink; moist; symmetrical; no lesions\.\n    - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n    - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n    - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n    - Saliva: clear; normal flow\./
   );
 
   const reducedFlow = intraoralObservationCard(
@@ -1103,7 +1103,7 @@ test("Recare Exam IOE quick findings apply the corresponding structured presets"
   ).toHaveValue("Midline");
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured; scalloped lateral borders\.\n  - Floor of mouth: mandibular tori \(location: Bilateral\)\.\n  - Palate \(hard\/soft\): torus palatinus \(location: Midline\)\./,
+    /Intraoral:\n    - Buccal mucosa: linea alba \(location: Bilateral\)\.\n    - Tongue: coated; fissured; scalloped lateral borders\.\n    - Floor of mouth: mandibular tori \(location: Bilateral\)\.\n    - Palate \(hard\/soft\): torus palatinus \(location: Midline\)\./,
   );
 });
 
@@ -1186,7 +1186,7 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
   await expect(freeText).toHaveCount(0);
   await expect(normalFlow).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral: WNL\.\nOverbite: 4 mm\.\n\nCPAP: No\.$/,
+    /Intraoral: WNL\.\n  Overbite: 4 mm\.\n\nAppliances and Relevant History\n  CPAP: No\.$/,
   );
 });
 
@@ -1282,7 +1282,7 @@ test("Recare Exam exposes only supported structured annotations", async ({
   await expect(normalFlowCard).toHaveCount(0);
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: ulcer \(location: Right posterior; measurement: 4 mm; notes: Synthetic note\); linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured\.$/,
+    /Intraoral:\n    - Buccal mucosa: ulcer \(location: Right posterior; measurement: 4 mm; notes: Synthetic note\); linea alba \(location: Bilateral\)\.\n    - Tongue: coated; fissured\.$/,
   );
   await expect(page.locator("#recare-summary")).not.toHaveValue(
     /abnormal|patholog/i,
@@ -1386,7 +1386,7 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     })
     .check();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Additional occlusal findings:\n  - Synthetic edge-to-edge relationship\.\n  - Crossbite \(location: Posterior, Left, tooth 16\)\./,
+    /Additional occlusal findings:\n    - Synthetic edge-to-edge relationship\.\n    - Crossbite \(location: Posterior, Left, tooth 16\)\./,
   );
 
   await additionalFindings.fill("Synthetic functional shift");
