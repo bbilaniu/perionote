@@ -128,7 +128,8 @@ TMJ: WNL.
       form.periodontalClassification.diagnosis = diagnosis;
 
       expect(buildAdultHygiene2026Summary(form)).toBe(
-        "Periodontal diagnosis:",
+        `Periodontal Diagnosis
+  Periodontal diagnosis:`,
       );
     }
 
@@ -138,7 +139,8 @@ TMJ: WNL.
     classified.periodontalClassification.gingivalHealth.context =
       "gingivitis-intact";
     expect(buildAdultHygiene2026Summary(classified)).toBe(
-      "Periodontal diagnosis: GENERALIZED GINGIVITIS - INTACT PERIODONTIUM",
+      `Periodontal Diagnosis
+  Periodontal diagnosis: GENERALIZED GINGIVITIS - INTACT PERIODONTIUM`,
     );
 
     const periodontitis = createEmptyAdultHygiene2026Form();
@@ -147,7 +149,8 @@ TMJ: WNL.
     periodontitis.periodontalClassification.stage = "III";
     periodontitis.periodontalClassification.grade = "B";
     expect(buildAdultHygiene2026Summary(periodontitis)).toBe(
-      "Periodontal diagnosis: MOLAR/INCISOR PATTERN PERIODONTITIS, Stage III, Grade B.",
+      `Periodontal Diagnosis
+  Periodontal diagnosis: MOLAR/INCISOR PATTERN PERIODONTITIS, Stage III, Grade B.`,
     );
   });
 
@@ -451,10 +454,10 @@ TMJ: WNL.
       ],
     };
     const expected = `Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
-OH Aids Reviewed/Recommended: Interdental brush
-REVIEWED DISEASE PROCESS WITH PATIENT TODAY
-Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
-OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
+  OH Aids Reviewed/Recommended: Interdental brush
+  REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+  Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
+  OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
 
     expect(
       buildAdultHygiene2021Summary({
@@ -467,7 +470,7 @@ OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
         ...createEmptyAdultHygiene2026Form(),
         ...legacyOhe,
       }),
-    ).toContain(expected.replace("\nOH Aids", "\n\nOH Aids"));
+    ).toContain(expected.replace("\n  OH Aids", "\n\nOral Hygiene Education\n  OH Aids"));
   });
 
   it("charts a completed CAMBRA123 assessment and supersedes legacy risk text", () => {
@@ -489,12 +492,13 @@ OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
     };
 
     const summary = buildAdultHygiene2026Summary(form);
-    expect(summary).toBe(`Caries risk category: Extreme.
-  CAMBRA123 2021, ages 6–adult, score: 6 (Column 1: -1; Column 2: +4; Column 3: +3).
-  Protective factors — Yes: Fluoride toothpaste twice daily or more.
-  Biological/environmental risk factors — Yes: Frequent snacking (more than 3 times daily); Reduced salivary function (measured low flow rate).
-  Disease indicators — Yes: New cavities or lesions into dentin (radiographically).
-  CAMBRA123 notes: Dry-mouth management reviewed.`);
+    expect(summary).toBe(`Caries Risk
+  Caries risk category: Extreme.
+    CAMBRA123 2021, ages 6–adult, score: 6 (Column 1: -1; Column 2: +4; Column 3: +3).
+    Protective factors — Yes: Fluoride toothpaste twice daily or more.
+    Biological/environmental risk factors — Yes: Frequent snacking (more than 3 times daily); Reduced salivary function (measured low flow rate).
+    Disease indicators — Yes: New cavities or lesions into dentin (radiographically).
+    CAMBRA123 notes: Dry-mouth management reviewed.`);
     expect(summary).not.toContain("Legacy factor");
     expect(summary).not.toContain("Legacy notes");
   });

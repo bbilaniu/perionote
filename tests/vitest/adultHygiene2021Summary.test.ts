@@ -34,8 +34,9 @@ describe("buildAdultHygiene2021Summary", () => {
       bleedingChoice: "None",
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`Plaque: None.
-Bleeding: None.`);
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Hygiene Findings
+  Plaque: None.
+  Bleeding: None.`);
   });
 
   it("starts empty without inferring clinical documentation", () => {
@@ -56,24 +57,29 @@ RDA:
 RDH: Example RDH
 Last Recare Date: 2026-01-15
 
-Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
-Sterilization Codes Scanned: SYNTH-AH-001
+Sterilization
+  Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
+  Sterilization Codes Scanned: SYNTH-AH-001
 
-Informed verbal consent given by PATIENT for treatment today.
-Medical history reviewed: Synthetic history reviewed with no changes.
-Premedication Required: No.
+Consent and Medical History
+  Informed verbal consent given by PATIENT for treatment today.
+  Medical history reviewed: Synthetic history reviewed with no changes.
+  Premedication Required: No.
 
-Patient Chief Concern: Sensitivity to hot and cold; Food catches between teeth.
-Hygiene Area of Concern: Synthetic lower anterior concern.
+Patient Concerns
+  Patient Chief Concern: Sensitivity to hot and cold; Food catches between teeth.
+  Hygiene Area of Concern: Synthetic lower anterior concern.
 
-Plaque: Localized moderate interproximal.
-Stain: Localized slight.
-Calculus: Localized moderate marginal.
-Bleeding: Localized mild.
+Hygiene Findings
+  Plaque: Localized moderate interproximal.
+  Stain: Localized slight.
+  Calculus: Localized moderate marginal.
+  Bleeding: Localized mild.
 
-PSR/Pocketing: 1 2 2 / 2 1 2
-Recession: Synthetic localized recession.
-FMP Done: Synthetic FMP documentation.
+Periodontal Screening
+  PSR/Pocketing: 1 2 2 / 2 1 2
+  Recession: Synthetic localized recession.
+  FMP Done: Synthetic FMP documentation.
 
 Gingival Description:
   - Color: coral pink (extent: generalized).
@@ -104,37 +110,43 @@ Patient-specific grade evidence:
     - Smoking: non-smoker.
     - Diabetes: no diagnosis of diabetes / normoglycemic.
 
-Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
-Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
-Periodontal status: Periodontal disease remission/control.
-Periodontal status comment: Synthetic periodontal status comment.
+Periodontal Diagnosis
+  Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF PERIODONTITIS
+  Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
+  Periodontal status: Periodontal disease remission/control.
+  Periodontal status comment: Synthetic periodontal status comment.
 
-Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.
+Caries Risk
+  Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months. Synthetic diet and home-care factors reviewed.
 
-Oral hygiene compliance: Good.
-Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
-OH Aids Reviewed/Recommended: Synthetic interdental aid; Synthetic brushing aid
-REVIEWED DISEASE PROCESS WITH PATIENT TODAY
-Patient is currently: Flossing 1x/day; Brushing 2x/day.
-Hygiene goal: Synthetic daily interdental cleaning goal.
+Oral Hygiene and Education
+  Oral hygiene compliance: Good.
+  Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
+  OH Aids Reviewed/Recommended: Synthetic interdental aid; Synthetic brushing aid
+  REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+  Patient is currently: Flossing 1x/day; Brushing 2x/day.
+  Hygiene goal: Synthetic daily interdental cleaning goal.
 
-Treatment recommended:
-  - HYGIENE MAINTENANCE
-  - Synthetic follow-up assessment
-Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla
-Anesthetic: Synthetic anesthetic documentation.
-Desensitizer: Synthetic desensitizer documentation.
+Treatment
+  Treatment recommended:
+    - HYGIENE MAINTENANCE
+    - Synthetic follow-up assessment
+  Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing — maxilla
+  Anesthetic: Synthetic anesthetic documentation.
+  Desensitizer: Synthetic desensitizer documentation.
 
-Night guard: Yes; uses.
-Orthodontic history: Yes.
-Retainers: Fixed.
-Additional Notes: Synthetic demonstration data only.
+Appliances and Relevant History
+  Night guard: Yes; uses.
+  Orthodontic history: Yes.
+  Retainers: Fixed.
+  Additional Notes: Synthetic demonstration data only.
 
--ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
-Recommended Recare Interval: 6-month recall.
-Recommended Hygiene Interval: 4-month scale.
-Next visit: Synthetic hygiene follow-up.
-Date Booked: 2026-11-15`);
+Follow-up
+  -ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
+  Recommended Recare Interval: 6-month recall.
+  Recommended Hygiene Interval: 4-month scale.
+  Next visit: Synthetic hygiene follow-up.
+  Date Booked: 2026-11-15`);
     expect(summary).not.toContain("\n\n\n");
     expect(summary).not.toContain("Not documented");
     expect(summary).not.toMatch(
@@ -186,7 +198,8 @@ Date Booked: 2026-11-15`);
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Periodontal diagnosis: LOCALIZED GINGIVITIS - INTACT PERIODONTIUM",
+      `Periodontal Diagnosis
+  Periodontal diagnosis: LOCALIZED GINGIVITIS - INTACT PERIODONTIUM`,
     );
   });
 
@@ -231,7 +244,8 @@ Date Booked: 2026-11-15`);
   Grade modifiers:
     - Smoking: smokes 12 cigarettes/day.
 
-Periodontal diagnosis:`);
+Periodontal Diagnosis
+  Periodontal diagnosis:`);
     expect(summary).not.toContain("GINGIVITIS");
   });
 
@@ -258,14 +272,16 @@ Periodontal diagnosis:`);
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Caries risk: Factors include imported dry-mouth factor and history of active decay in the last 36 months"
+      `Caries Risk
+  Caries risk: Factors include imported dry-mouth factor and history of active decay in the last 36 months`
     );
     expect(
       buildAdultHygiene2021Summary({
         ...createEmptyAdultHygiene2021Form(),
         cariesRiskNotes: "Synthetic rationale only",
       })
-    ).toBe("Caries risk: Synthetic rationale only.");
+    ).toBe(`Caries Risk
+  Caries risk: Synthetic rationale only.`);
   });
 
   it("charts entered structured periodontal observations before classification", () => {
@@ -461,9 +477,11 @@ Patient-specific grade evidence:
       ],
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`Bleeding: Localized mild.
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Hygiene Findings
+  Bleeding: Localized mild.
 
-Recession: Existing unrestricted recession.
+Periodontal Screening
+  Recession: Existing unrestricted recession.
 
 Gingival Description:
   - Color: coral pink; physiologic pigmentation (extent: generalized; notes: normal variation).
@@ -494,9 +512,11 @@ DENTIST:
 RDA: Example RDA
 RDH:
 
-Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today.
+Consent and Medical History
+  Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today.
 
-PSR/Pocketing: 1 _ 3 / _ 2 _`);
+Periodontal Screening
+  PSR/Pocketing: 1 _ 3 / _ 2 _`);
   });
 
   it("keeps hygiene findings and their comments independent", () => {
@@ -513,10 +533,11 @@ PSR/Pocketing: 1 _ 3 / _ 2 _`);
     };
 
     expect(buildAdultHygiene2021Summary(form))
-      .toBe(`Plaque: Localized mild interproximal; Most notable posteriorly.
-Stain: Generalized moderate; Synthetic extrinsic stain note.
-Calculus: Localized moderate marginal; Synthetic calculus note.
-Bleeding: Generalized mild; Synthetic bleeding note.`);
+      .toBe(`Hygiene Findings
+  Plaque: Localized mild interproximal; Most notable posteriorly.
+  Stain: Generalized moderate; Synthetic extrinsic stain note.
+  Calculus: Localized moderate marginal; Synthetic calculus note.
+  Bleeding: Generalized mild; Synthetic bleeding note.`);
   });
 
   it("adds areas only to localized hygiene findings", () => {
@@ -530,9 +551,10 @@ Bleeding: Generalized mild; Synthetic bleeding note.`);
       bleedingAreas: ["mandible"],
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`Plaque: Localized moderate interproximal — areas: Q1, S4, teeth 14–16.
-Stain: Generalized slight.
-Bleeding: Localized mild — areas: mandible.`);
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Hygiene Findings
+  Plaque: Localized moderate interproximal — areas: Q1, S4, teeth 14–16.
+  Stain: Generalized slight.
+  Bleeding: Localized mild — areas: mandible.`);
   });
 
   it("emits a hygiene comment without requiring a structured finding", () => {
@@ -542,7 +564,8 @@ Bleeding: Localized mild — areas: mandible.`);
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Calculus comment: Encounter-specific calculus comment."
+      `Hygiene Findings
+  Calculus comment: Encounter-specific calculus comment.`
     );
   });
 
@@ -580,11 +603,13 @@ Bleeding: Localized mild — areas: mandible.`);
       plaqueChoice: "Localized moderate interproximal",
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`Patient Chief Concern:
-  - Food catches between teeth
-  - Sensitivity to hot and cold
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Patient Concerns
+  Patient Chief Concern:
+    - Food catches between teeth
+    - Sensitivity to hot and cold
 
-Plaque: Localized moderate interproximal.`);
+Hygiene Findings
+  Plaque: Localized moderate interproximal.`);
   });
 
   it("adds optional OHE topics and notes without replacing existing OHE lines", () => {
@@ -603,9 +628,10 @@ Plaque: Localized moderate interproximal.`);
     };
 
     expect(buildAdultHygiene2021Summary(form))
-      .toBe(`REVIEWED DISEASE PROCESS WITH PATIENT TODAY
-OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and risk factors; Importance of maintaining the recommended hygiene interval.
-OHE notes: Demonstrated brushing modifications.`);
+      .toBe(`Oral Hygiene and Education
+  REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+  OHE: Bass brushing; Caries theory and risk factors; Periodontitis theory and risk factors; Importance of maintaining the recommended hygiene interval.
+  OHE notes: Demonstrated brushing modifications.`);
   });
 
   it("emits the reviewed standard and additional OHE wording only when selected", () => {
@@ -618,8 +644,9 @@ OHE notes: Demonstrated brushing modifications.`);
       ],
     };
 
-    expect(buildAdultHygiene2021Summary(form)).toBe(`${standardOheStatement}.
-OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues; Review of importance of maintaining a 4-month recall.`);
+    expect(buildAdultHygiene2021Summary(form)).toBe(`Oral Hygiene and Education
+  ${standardOheStatement}.
+  OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on hard and soft tissues; Review of importance of maintaining a 4-month recall.`);
   });
 
   it("accepts custom flossing and brushing frequencies directly", () => {
@@ -630,7 +657,8 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Patient is currently: Uses floss picks most evenings; Brushes after each meal."
+      `Oral Hygiene and Education
+  Patient is currently: Uses floss picks most evenings; Brushes after each meal.`
     );
   });
 
@@ -657,7 +685,8 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     };
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing"
+      `Treatment
+  Treatment completed today: Synthetic scaling — Q2, Q3, teeth 14–16; Synthetic polishing`
     );
   });
 
@@ -675,7 +704,8 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     ];
 
     expect(buildAdultHygiene2021Summary(form)).toBe(
-      "Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth",
+      `Treatment
+  Treatment completed today: FMP — full mouth; Full mouth scaling with hand and Cavitron instrumentation (3U Scale); Selective polish with Enamel Pro® Prophy Paste with Fluoride (Strawberry) (1U Polish); OHE; Oral Science Inc. FluoriMax 2.5% NaF Varnish application — full mouth`,
     );
   });
 
@@ -700,17 +730,20 @@ OHE: Review of benefits of a bruxism guard, effects of clenching and grinding on
     };
 
     expect(buildAdultHygiene2021Summary(form))
-      .toBe(`Periodontal diagnosis: GENERALIZED PERIODONTITIS, Stage II, Grade B.
-Stage override: Synthetic stage context.
-Grade override: Synthetic grade context.
+      .toBe(`Periodontal Diagnosis
+  Periodontal diagnosis: GENERALIZED PERIODONTITIS, Stage II, Grade B.
+  Stage override: Synthetic stage context.
+  Grade override: Synthetic grade context.
 
-Oral hygiene compliance: Good.
-Oral hygiene compliance comment: Synthetic compliance context.
+Oral Hygiene and Education
+  Oral hygiene compliance: Good.
+  Oral hygiene compliance comment: Synthetic compliance context.
 
-Recommended Recare Interval: 6-month recall.
-Recommended recare interval comments: Synthetic recall context.
-Recommended Hygiene Interval: 4-month scale.
-Recommended hygiene interval comments: Synthetic hygiene context.`);
+Follow-up
+  Recommended Recare Interval: 6-month recall.
+  Recommended recare interval comments: Synthetic recall context.
+  Recommended Hygiene Interval: 4-month scale.
+  Recommended hygiene interval comments: Synthetic hygiene context.`);
   });
 
   it("charts manual stage and grade selections without requiring reasons", () => {
@@ -744,7 +777,8 @@ Patient-specific grade evidence:
   Progression evidence:
     - bone-loss/age ratio 0.5.
 
-Periodontal diagnosis: PERIODONTITIS, Stage IV, Grade C.`);
+Periodontal Diagnosis
+  Periodontal diagnosis: PERIODONTITIS, Stage IV, Grade C.`);
     expect(summary).not.toMatch(/Stage override:|Grade override:/);
   });
 });

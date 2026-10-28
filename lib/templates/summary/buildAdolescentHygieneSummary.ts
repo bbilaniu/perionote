@@ -1,3 +1,4 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
 import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   AdolescentDocumentationStatus,
@@ -256,17 +257,17 @@ export function buildAdolescentHygieneSummary(
 
   return [
     group(header),
-    group(historyAndSterilization),
-    group(findings),
+    formatNoteSection("Consent, Medical History and Sterilization", historyAndSterilization),
+    formatNoteSection("Hygiene Findings", findings),
     group(periodontalAssessmentFindings),
     group(patientSpecificStageEvidence),
     group(patientSpecificGradeEvidence),
-    group(periodontalDiagnosis),
-    group(formatOralHygieneMethods(form)),
-    group(ohi),
-    group(appliances),
-    group(treatment),
-    group(commentsAndScheduling),
+    formatNoteSection("Periodontal Diagnosis", periodontalDiagnosis),
+    formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form)),
+    formatNoteSection("Oral Hygiene and Education", ohi),
+    formatNoteSection("Appliances and Relevant History", appliances),
+    formatNoteSection("Treatment", treatment),
+    formatNoteSection("Comments and Follow-up", commentsAndScheduling),
   ]
     .filter(Boolean)
     .join("\n\n");

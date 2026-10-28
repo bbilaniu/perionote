@@ -1,3 +1,4 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
 import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   ChildDocumentationStatus,
@@ -182,7 +183,7 @@ export function buildChildRecareHygieneSummary(
       sentence("RDA", form.rda),
       sentence("RDH", form.rdh),
     ]),
-    section([
+    formatNoteSection("Consent and Sterilization", [
       sentence(
         "Informed verbal consent for treatment today given by",
         consentSource,
@@ -200,8 +201,10 @@ export function buildChildRecareHygieneSummary(
         : "",
       "Patient presents for a pediatric recall exam and cleaning.",
     ]),
-    sentence("Patient's chief concern", form.chiefConcern),
-    section([
+    formatNoteSection("Patient Concerns", [
+      sentence("Patient's chief concern", form.chiefConcern),
+    ]),
+    formatNoteSection("Medical History", [
       sentence("Medical history reviewed", form.medicalHistory),
       statusSentence(
         "Premedication required",
@@ -212,8 +215,7 @@ export function buildChildRecareHygieneSummary(
   ], "\n\n");
 
   const dentist = includesDentist
-    ? section([
-        "DENTAL EXAM",
+    ? formatNoteSection("DENTAL EXAM", [
         sentence("Radiographs", [form.radiographs, ...(form.radiographsTaken ?? [])]
           .filter(Boolean).join("; ")),
         statusSentence(
@@ -244,9 +246,8 @@ export function buildChildRecareHygieneSummary(
     : "";
 
   const hygiene = includesHygiene
-    ? section([
+    ? formatNoteSection("HYGIENE", [
         section([
-          "HYGIENE",
           statusSentence("Disclosed", form.disclosedStatus),
           sentence("Plaque index", form.plaqueIndex),
           statusSentence("Calculus", form.calculusStatus, form.calculusLocation),
@@ -265,7 +266,7 @@ export function buildChildRecareHygieneSummary(
           formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
           formatLocalAnesthesiaSummary(form),
         ]),
-      ], "\n\n")
+      ])
     : "";
 
   const cambraLines =
@@ -275,7 +276,7 @@ export function buildChildRecareHygieneSummary(
         ? cambra123SixAdultLines(form.cambra123SixAdultAssessment)
         : [];
   const cariesRisk = cambraLines.length
-    ? section(["CARIES RISK ASSESSMENT", cambraLines.join("\n\n")])
+    ? formatNoteSection("CARIES RISK ASSESSMENT", cambraLines)
     : "";
 
   const followUp = section([
@@ -298,9 +299,9 @@ export function buildChildRecareHygieneSummary(
     header,
     dentist,
     cariesRisk,
-    section(formatOralHygieneMethods(form)),
+    formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form)),
     hygiene,
-    followUp,
+    formatNoteSection("Follow-up", [followUp]),
   ]
     .filter(Boolean)
     .join("\n\n");

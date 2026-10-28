@@ -1690,7 +1690,7 @@ test("2026 Adult Hygiene offers transparent periodontal and caries suggestions",
     .getByRole("option", { name: "Periodontal health", exact: true })
     .click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /^Periodontal diagnosis:$/m,
+    /^  Periodontal diagnosis:$/m,
   );
 
   const healthGingivitisClassification = page.getByRole("button", {
@@ -1995,7 +1995,7 @@ test("recare exam demo preserves paragraph spacing and restores its local draft"
     /Occlusal splint \(night guard\): Yes; uses\./,
   );
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Molar occlusion—right: Synthetic Class I\.\nMolar occlusion—left: N\/A\./,
+    /Molar occlusion—right: Synthetic Class I\.\n  Molar occlusion—left: N\/A\./,
   );
 
   const demoPreview = await page.locator("#recare-summary").inputValue();
@@ -2390,7 +2390,7 @@ test("imported webform summary uses preview a formatting", async ({ page }) => {
     "Patient concerns: Sensitivity around lower anterior and occasional bleeding while flossing.",
   );
   expect(summary).toContain(
-    "Medical history update:\n   Med/dent history updated. No new contraindications reported.\n   BP: 118/76 mmHg, HR: 72 bpm (at 09:15)",
+    "Medical history update:\n  Med/dent history updated. No new contraindications reported.\n  BP: 118/76 mmHg, HR: 72 bpm (at 09:15)",
   );
   expect(summary).toContain("Date: 2026-03-09");
   expect(summary).toContain("Provider: Dr. Example");

@@ -54,7 +54,7 @@ describe("buildChildRecareHygieneSummary", () => {
     );
 
     expect(summary).toBe(
-      "Patient presents for a pediatric recall exam and cleaning.\n\nDENTAL EXAM\n\nHYGIENE",
+      "Patient presents for a pediatric recall exam and cleaning.",
     );
     expect(summary).not.toContain("WNL");
     expect(summary).not.toContain("No.");

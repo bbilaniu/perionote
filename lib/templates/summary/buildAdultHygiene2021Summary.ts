@@ -1,3 +1,4 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
 import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import {
   type AdultHygiene2021Form,
@@ -697,22 +698,22 @@ export function buildAdultHygiene2021Summary(
 
   const groups = [
     patientAndTeam,
-    sterilization,
-    consentAndHistory,
-    concerns,
-    hygieneFindings,
-    periodontalScreening,
+    [formatNoteSection("Sterilization", sterilization)],
+    [formatNoteSection("Consent and Medical History", consentAndHistory)],
+    [formatNoteSection("Patient Concerns", concerns)],
+    [formatNoteSection("Hygiene Findings", hygieneFindings)],
+    [formatNoteSection("Periodontal Screening", periodontalScreening)],
     gingivalDescription,
     periodontalAssessmentFindings,
     patientSpecificStageEvidence,
     patientSpecificGradeEvidence,
-    periodontalDiagnosis,
-    cariesRisk,
-    formatOralHygieneMethods(form),
-    oralHygieneAndEducation,
-    treatment,
-    appliancesAndHistory,
-    intervalsAndNextVisit,
+    [formatNoteSection("Periodontal Diagnosis", periodontalDiagnosis)],
+    [formatNoteSection("Caries Risk", cariesRisk)],
+    [formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form))],
+    [formatNoteSection("Oral Hygiene and Education", oralHygieneAndEducation)],
+    [formatNoteSection("Treatment", treatment)],
+    [formatNoteSection("Appliances and Relevant History", appliancesAndHistory)],
+    [formatNoteSection("Follow-up", intervalsAndNextVisit)],
   ]
     .map((group) => group.filter(Boolean))
     .filter((group) => group.length > 0)

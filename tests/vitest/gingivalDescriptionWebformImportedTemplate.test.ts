@@ -195,7 +195,7 @@ describe("buildSummaryText", () => {
     expect(summary).toContain(
       [
         "Patient concerns: Patient presents for hygiene, no other concerns.",
-        "   Blah.",
+        "  Blah.",
       ].join("\n"),
     );
   });
@@ -217,8 +217,8 @@ describe("buildSummaryText", () => {
     expect(summary).toContain(
       [
         "Medical history update:",
-        "   Med/dent history updated. No new contraindications reported.",
-        "   BP: 118/76 mmHg, HR: 72 bpm (at 09:15)",
+        "  Med/dent history updated. No new contraindications reported.",
+        "  BP: 118/76 mmHg, HR: 72 bpm (at 09:15)",
       ].join("\n"),
     );
   });
@@ -233,7 +233,7 @@ describe("buildSummaryText", () => {
     expect(summary).toContain(
       [
         "Medical history update: Patient reports no change.",
-        "   Blah.",
+        "  Blah.",
       ].join("\n"),
     );
   });
@@ -257,9 +257,9 @@ describe("buildSummaryText", () => {
 
     const summary = buildSummaryText(form, []);
 
-    expect(summary).toContain("   BP: 142/88 mmHg, HR: 78 bpm (at 09:05)");
-    expect(summary).toContain("   BP: 136/84 mmHg, HR: 74 bpm (at 09:15)");
-    expect(summary).toContain("   Average BP: 139/86 mmHg, HR: 76 bpm");
+    expect(summary).toContain("  BP: 142/88 mmHg, HR: 78 bpm (at 09:05)");
+    expect(summary).toContain("  BP: 136/84 mmHg, HR: 74 bpm (at 09:15)");
+    expect(summary).toContain("  Average BP: 139/86 mmHg, HR: 76 bpm");
   });
 
   it("omits average line when only one valid reading is present", () => {
@@ -270,7 +270,7 @@ describe("buildSummaryText", () => {
 
     const summary = buildSummaryText(form, []);
 
-    expect(summary).toContain("   BP: 118/76 mmHg, HR: 72 bpm");
+    expect(summary).toContain("  BP: 118/76 mmHg, HR: 72 bpm");
     expect(summary).not.toContain("Average BP:");
   });
 
@@ -306,21 +306,21 @@ describe("buildSummaryText", () => {
 
     expect(summary).toContain("Local anesthetic administered: No C/I to LA");
     expect(summary).toContain(
-      "   Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 09:24)",
+      "  Mucosal application Q3: Benzocaine 20% paste 0.5 ml (at 09:24)",
     );
     expect(summary).toContain(
-      "   IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 09:25)",
+      "  IA/L Q3: Mepivacaine 3% without epinephrine 1.8 ml (at 09:25)",
     );
     expect(summary).toContain(
-      "   Total: Benzocaine 20% paste 0.5 ml",
+      "  Total: Benzocaine 20% paste 0.5 ml",
     );
     expect(summary).toContain(
-      "   Total: Mepivacaine 3% without epinephrine 1.8 ml",
+      "  Total: Mepivacaine 3% without epinephrine 1.8 ml",
     );
-    expect(summary).toContain("   No adverse reactions noted");
-    expect(summary).toContain("   Adequate anesthesia achieved");
+    expect(summary).toContain("  No adverse reactions noted");
+    expect(summary).toContain("  Adequate anesthesia achieved");
     expect(summary).toContain(
-      "   Patient tolerated injections well and post-op instructions reviewed",
+      "  Patient tolerated injections well and post-op instructions reviewed",
     );
   });
 
@@ -353,8 +353,8 @@ describe("buildSummaryText", () => {
     expect(summary).toContain(
       [
         "Continuity of Care",
-        "   DH Re-eval at 4-6 weeks",
-        "   DH Re-care at 6 months interval",
+        "  DH Re-eval at 4-6 weeks",
+        "  DH Re-care at 6 months interval",
       ].join("\n"),
     );
   });

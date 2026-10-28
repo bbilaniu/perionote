@@ -56,13 +56,13 @@ for (const width of [1600, 390]) {
     await page.getByRole("radio", { name: "Dentist", exact: true }).check();
     await expect(summary).toHaveValue(/EOE:/);
     await expect(summary).toHaveValue(
-      /Sterilization Codes Scanned: SYNTH-AH-001\nALL PROPER PPE WAS WORN/,
+      /Sterilization Codes Scanned: SYNTH-AH-001\n  ALL PROPER PPE WAS WORN/,
     );
     await expect(summary).toHaveValue(
-      /Medical history reviewed: Synthetic history reviewed with no changes\.\nPremedication Required: No\.\n\nVitals reading 1:/,
+      /Medical history reviewed: Synthetic history reviewed with no changes\.\n  Premedication Required: No\.\n\n  Vitals reading 1:/,
     );
     await expect(summary).toHaveValue(
-      /Caries risk category: High\.\n {2}CAMBRA123 2021, ages 6–adult, score:/,
+      /Caries risk category: High\.\n {4}CAMBRA123 2021, ages 6–adult, score:/,
     );
     await expect(summary).not.toHaveValue(/Treatment completed today:/);
     await page.getByRole("radio", { name: "Hygienist", exact: true }).check();
