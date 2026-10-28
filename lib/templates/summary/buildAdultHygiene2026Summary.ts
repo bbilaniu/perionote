@@ -1,3 +1,4 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
 import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import {
   type AdultHygiene2026Output,
@@ -69,15 +70,12 @@ function withTerminalPunctuation(value: string): string {
 }
 
 function indentedSection(heading: string, paragraphs: string[][]): string {
-  const content = paragraphs
-    .map((lines) => lines.filter(Boolean).join("\n"))
-    .filter(Boolean)
-    .join("\n\n");
-  if (!content) return "";
-  return `${heading}\n${content
-    .split("\n")
-    .map((line) => line ? `  ${line}` : "")
-    .join("\n")}`;
+  return formatNoteSection(heading, [
+    paragraphs
+      .map((lines) => lines.filter(Boolean).join("\n"))
+      .filter(Boolean)
+      .join("\n\n"),
+  ]);
 }
 
 function examLine(label: string, status: ExamStatus, findings: string): string {
@@ -858,7 +856,10 @@ export function buildAdultHygiene2026Summary(
             [...periodontalConditionDetails, ...periodontalClassificationLines],
           ]),
         ]
-      : [healthGingivitisBlock, ...periodontalClassificationLines];
+      : [formatNoteSection("Periodontal Diagnosis", [
+          healthGingivitisBlock,
+          ...periodontalClassificationLines,
+        ])];
   const cariesRisk = hasCambra123SixAdultContent(form.cambra123Assessment)
     ? cambra123RiskLines(form.cambra123Assessment)
     : [
@@ -1025,25 +1026,25 @@ export function buildAdultHygiene2026Summary(
 
   const groups = [
     patientAndTeam,
-    sterilization,
-    consentAndHistory,
-    concerns,
+    [formatNoteSection("Sterilization and PPE", sterilization)],
+    [formatNoteSection("Consent and Medical History", consentAndHistory)],
+    [formatNoteSection("Patient Concerns", concerns)],
     ...(includesRecare
       ? [
-          records,
+          [formatNoteSection("Records", records)],
           extraoralExam,
           intraoralExam,
           teethAndOdontogram,
-          oralHabits,
+          [formatNoteSection("Oral Habits", oralHabits)],
           [indentedSection("Occlusion:", [occlusion])],
         ]
       : []),
     ...(includesRecare ? [appliancesAndHistory] : []),
     ...(includesHygiene
       ? [
-          hygieneConcerns,
-          hygieneFindings,
-          periodontalScreening,
+          [formatNoteSection("Hygiene Concerns", hygieneConcerns)],
+          [formatNoteSection("Hygiene Findings", hygieneFindings)],
+          [formatNoteSection("Periodontal Screening", periodontalScreening)],
           gingivalDescription,
           periodontalAssessmentFindings,
           patientSpecificStageEvidence,
@@ -1051,22 +1052,37 @@ export function buildAdultHygiene2026Summary(
           periodontalDiagnosis,
         ]
       : []),
-    cariesRisk,
-    formatOralHygieneMethods(form),
+    [formatNoteSection("Caries Risk", cariesRisk)],
+    [formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form))],
     ...(includesHygiene
-      ? [oralHygieneHabits, homeCareInstruction, oralHygieneEducation, hygieneGoal]
+      ? [
+          [formatNoteSection("Oral Hygiene Habits", oralHygieneHabits)],
+          [formatNoteSection("Home Care Instruction", homeCareInstruction)],
+          [formatNoteSection("Oral Hygiene Education", oralHygieneEducation)],
+          [formatNoteSection("Hygiene Goal", hygieneGoal)],
+        ]
       : []),
-    dentalTreatmentOptions,
-    hygieneTreatmentOptions,
-    combinedTreatmentPlan,
-    ...(includesHygiene ? [treatmentCompleted, localAnesthesia] : []),
-    ...(includesHygiene ? [guardianCommunication] : []),
+    [formatNoteSection("Dental Treatment Options", dentalTreatmentOptions)],
+    [formatNoteSection("Hygiene Treatment Options", hygieneTreatmentOptions)],
+    [formatNoteSection("Treatment Plan", combinedTreatmentPlan)],
+    ...(includesHygiene
+      ? [
+          [formatNoteSection("Treatment Completed", treatmentCompleted)],
+          [formatNoteSection("Local Anesthesia", localAnesthesia)],
+        ]
+      : []),
+    ...(includesHygiene
+      ? [[formatNoteSection("Guardian Communication", guardianCommunication)]]
+      : []),
     ...(output === "hygiene" ? [appliancesAndHistory] : []),
     ...(output === "complete"
-      ? [recareFollowUp, hygieneFollowUp]
+      ? [
+          [formatNoteSection("Dental Follow-up", recareFollowUp)],
+          [formatNoteSection("Hygiene Follow-up", hygieneFollowUp)],
+        ]
       : output === "recare"
-        ? [recareFollowUp]
-        : [hygieneFollowUp]),
+        ? [[formatNoteSection("Dental Follow-up", recareFollowUp)]]
+        : [[formatNoteSection("Hygiene Follow-up", hygieneFollowUp)]]),
   ]
     .map((group) => group.filter(Boolean))
     .filter((group) => group.length > 0)

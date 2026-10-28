@@ -116,14 +116,16 @@ DENTIST: Dr. Example
 RDA:
 RDH: Example RDH
 
-Informed verbal consent given by PATIENT for treatment today.
-Medical history reviewed: Synthetic medication list reviewed.
-Premedication required: No.
-Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments.
-Miele Sterilization codes scanned: SYNTH-001
+Consent, Medical History and Sterilization
+  Informed verbal consent given by PATIENT for treatment today.
+  Medical history reviewed: Synthetic medication list reviewed.
+  Premedication required: No.
+  Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments.
+  Miele Sterilization codes scanned: SYNTH-001
 
-Radiographs: 4 BW; 2 PA
-Intraoral photos: No.
+Records
+  Radiographs: 4 BW; 2 PA
+  Intraoral photos: No.
 
 a) Patient's chief concern: Food catches between teeth; Synthetic concern for demonstration.
 
@@ -134,25 +136,28 @@ c) TMJ: Synthetic bilateral clicking without discomfort.
 Masseter palpation: WNL.
 TMJ loading test: WNL.
 
-d) Intraoral:
-  - Tongue: fissured (notes: Synthetic observation).
-  - Saliva: normal flow.
-Oral habits: Synthetic clenching history.
-Molar occlusion—right: Synthetic Class I.
-Molar occlusion—left: N/A.
-Skeletal occlusion: N/A.
-Overjet: 2 mm.
-Overbite: 30%; 3 mm.
-Additional occlusal findings: Crossbite (location: Posterior, Left).
+Intraoral Examination and Occlusion
+  d) Intraoral:
+    - Tongue: fissured (notes: Synthetic observation).
+    - Saliva: normal flow.
+  Oral habits: Synthetic clenching history.
+  Molar occlusion—right: Synthetic Class I.
+  Molar occlusion—left: N/A.
+  Skeletal occlusion: N/A.
+  Overjet: 2 mm.
+  Overbite: 30%; 3 mm.
+  Additional occlusal findings: Crossbite (location: Posterior, Left).
 
-CPAP: No.
-Occlusal splint (night guard): Yes; uses.
-Orthodontic history: Yes.
-Retainers: Fixed.
-Partial/complete removable dentures: No.
+Appliances and Relevant History
+  CPAP: No.
+  Occlusal splint (night guard): Yes; uses.
+  Orthodontic history: Yes.
+  Retainers: Fixed.
+  Partial/complete removable dentures: No.
 
-Patient-requested smile or dental improvements: Synthetic request to discuss whitening.
-Additional comments: Synthetic demonstration data only.
+Patient Requests and Comments
+  Patient-requested smile or dental improvements: Synthetic request to discuss whitening.
+  Additional comments: Synthetic demonstration data only.
 
 ODONTOGRAM UP TO DATE
 
@@ -163,8 +168,9 @@ Treatment Options:
 Treatment Plan:
   1. Hygiene maintenance
 
-Next Visit: Synthetic hygiene maintenance visit
-Date Booked: 2026-08-15`);
+Follow-up
+  Next Visit: Synthetic hygiene maintenance visit
+  Date Booked: 2026-08-15`);
     expect(summary).not.toContain("\n\n\n");
   });
 
@@ -179,8 +185,9 @@ Date Booked: 2026-08-15`);
     };
 
     expect(buildRecareExamSummary(form)).toBe(
-      `Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today. Synthetic consent detail.
-Medical history reviewed: YES- NO CHANGES.`
+      `Consent, Medical History and Sterilization
+  Informed verbal consent given by PATIENT, PARENT and LEGAL GUARDIAN for treatment today. Synthetic consent detail.
+  Medical history reviewed: YES- NO CHANGES.`
     );
   });
 
@@ -210,8 +217,8 @@ Medical history reviewed: YES- NO CHANGES.`
     };
 
     expect(buildRecareExamSummary(form)).toContain(`Additional occlusal findings:
-  - Spacing (location: Anterior).
-  - Crowding.`);
+    - Spacing (location: Anterior).
+    - Crowding.`);
   });
 
   it("renders only meaningful lettered examination sections in source order", () => {
@@ -249,7 +256,8 @@ c) TMJ: WNL.
 Masseter palpation: WNL.
 TMJ loading test: WNL.
 
-d) Intraoral: WNL.
+Intraoral Examination and Occlusion
+  d) Intraoral: WNL.
 
 Treatment Options:
   1. Hygiene maintenance
@@ -257,8 +265,9 @@ Treatment Options:
 Treatment Plan:
   1. Hygiene maintenance
 
-Next Visit: Hygiene maintenance
-Date Booked: 2026-08-15`);
+Follow-up
+  Next Visit: Hygiene maintenance
+  Date Booked: 2026-08-15`);
     expect(summary.indexOf("a)")).toBeLessThan(summary.indexOf("b)"));
     expect(summary.indexOf("b)")).toBeLessThan(summary.indexOf("c)"));
     expect(summary.indexOf("c)")).toBeLessThan(summary.indexOf("d)"));
@@ -288,20 +297,23 @@ Masseter palpation: WNL.`);
         intraoralPhotosStatus: "no",
         intraoralPhotosDetails: "ignored detail",
       }),
-    ).toBe("Intraoral photos: No.");
+    ).toBe(`Records
+  Intraoral photos: No.`);
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         intraoralPhotosStatus: "yes",
       }),
-    ).toBe("Intraoral photos: Yes.");
+    ).toBe(`Records
+  Intraoral photos: Yes.`);
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         intraoralPhotosStatus: "yes",
         intraoralPhotosDetails: "Anterior; right buccal; left buccal",
       }),
-    ).toBe("Intraoral photos: Anterior; right buccal; left buccal.");
+    ).toBe(`Records
+  Intraoral photos: Anterior; right buccal; left buccal.`);
   });
 
   it("formats structured EOE findings in catalogue order", () => {
@@ -389,8 +401,9 @@ Masseter palpation: WNL.`);
         improvementRequest: "Discuss whitening",
         additionalComments: "Patient-specific observation",
       }),
-    ).toBe(`Patient-requested smile or dental improvements: Discuss whitening.
-Additional comments: Patient-specific observation.`);
+    ).toBe(`Patient Requests and Comments
+  Patient-requested smile or dental improvements: Discuss whitening.
+  Additional comments: Patient-specific observation.`);
   });
 
   it("adds removable-dentures comments only to documented Yes output", () => {
@@ -400,14 +413,16 @@ Additional comments: Patient-specific observation.`);
       removableDenturesComment: "Upper partial worn during the day",
     };
     expect(buildRecareExamSummary(withComment)).toBe(
-      "Partial/complete removable dentures: Yes—Upper partial worn during the day.",
+      `Appliances and Relevant History
+  Partial/complete removable dentures: Yes—Upper partial worn during the day.`,
     );
     expect(
       buildRecareExamSummary({
         ...withComment,
         removableDenturesStatus: "no",
       }),
-    ).toBe("Partial/complete removable dentures: No.");
+    ).toBe(`Appliances and Relevant History
+  Partial/complete removable dentures: No.`);
     expect(
       buildRecareExamSummary({
         ...withComment,
@@ -453,11 +468,13 @@ DENTIST:
 RDA: Example RDA
 RDH:
 
-Radiographs: Imported value ZX/7; Imported value ZX/7
+Records
+  Radiographs: Imported value ZX/7; Imported value ZX/7
 
-CPAP: Yes; does not use.
-Occlusal splint (night guard): No.
-Retainers: None.
+Appliances and Relevant History
+  CPAP: Yes; does not use.
+  Occlusal splint (night guard): No.
+  Retainers: None.
 
 Treatment Options:
   1. Second option — teeth 14, 15
@@ -683,7 +700,8 @@ ODONTOGRAM UP TO DATE`);
         structuredIntraoralFindings: undefined,
         intraoralStatus: "wnl",
       })
-    ).toBe("d) Intraoral: WNL.");
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral: WNL.`);
     const hiddenStructuredFinding = {
       optionId: "ioe.saliva.normal_flow",
       structureId: "ioe.saliva",
@@ -701,14 +719,16 @@ ODONTOGRAM UP TO DATE`);
         intraoralStatus: "wnl",
         structuredIntraoralFindings: [hiddenStructuredFinding],
       })
-    ).toBe("d) Intraoral: WNL.");
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral: WNL.`);
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         intraoralStatus: "findings",
         intraoralFindings: "Legacy observation",
       })
-    ).toBe("d) Intraoral: Legacy observation.");
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral: Legacy observation.`);
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
@@ -730,9 +750,10 @@ ODONTOGRAM UP TO DATE`);
           },
         ],
       })
-    ).toBe(`d) Intraoral:
-  - Buccal mucosa: ulcer (location: Right posterior; measurement: 4 mm; notes: Synthetic note).
-  Observations: Free text.`);
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral:
+    - Buccal mucosa: ulcer (location: Right posterior; measurement: 4 mm; notes: Synthetic note).
+    Observations: Free text.`);
   });
 
   it("applies the explicit reviewed normal observations with compact per-structure output", () => {
@@ -773,13 +794,14 @@ ODONTOGRAM UP TO DATE`);
         intraoralStatus: "findings",
         structuredIntraoralFindings,
       })
-    ).toBe(`d) Intraoral:
-  - Buccal mucosa: pink; moist; no lesions; no swelling.
-  - Tongue: pink; moist; symmetrical; no lesions.
-  - Floor of mouth: pink; smooth; no swelling; no discoloration.
-  - Palate (hard/soft): pink; intact; no lesions; no abnormal growths.
-  - Oropharynx: uvula midline; no redness; no swelling; no exudate.
-  - Saliva: clear; normal flow.`);
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral:
+    - Buccal mucosa: pink; moist; no lesions; no swelling.
+    - Tongue: pink; moist; symmetrical; no lesions.
+    - Floor of mouth: pink; smooth; no swelling; no discoloration.
+    - Palate (hard/soft): pink; intact; no lesions; no abnormal growths.
+    - Oropharynx: uvula midline; no redness; no swelling; no exudate.
+    - Saliva: clear; normal flow.`);
   });
 
   it("groups structured observations in catalogue order regardless of selection order", () => {
@@ -808,10 +830,11 @@ ODONTOGRAM UP TO DATE`);
           },
         ],
       })
-    ).toBe(`d) Intraoral:
-  - Buccal mucosa: pink; ulcer (location: Right; notes: monitor).
-  - Tongue: fissured.
-  - Saliva: normal flow.`);
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral:
+    - Buccal mucosa: pink; ulcer (location: Right; notes: monitor).
+    - Tongue: fissured.
+    - Saliva: normal flow.`);
   });
 
   it("formats all IOE quick presets through their structured sections", () => {
@@ -849,11 +872,12 @@ ODONTOGRAM UP TO DATE`);
           },
         ],
       }),
-    ).toBe(`d) Intraoral:
-  - Buccal mucosa: linea alba (location: Bilateral).
-  - Tongue: coated; fissured; scalloped lateral borders.
-  - Floor of mouth: mandibular tori (location: Bilateral).
-  - Palate (hard/soft): torus palatinus (location: Midline).`);
+    ).toBe(`Intraoral Examination and Occlusion
+  d) Intraoral:
+    - Buccal mucosa: linea alba (location: Bilateral).
+    - Tongue: coated; fissured; scalloped lateral borders.
+    - Floor of mouth: mandibular tori (location: Bilateral).
+    - Palate (hard/soft): torus palatinus (location: Midline).`);
   });
 
   it("supports percent, millimetre, and dual overbite output", () => {
@@ -862,20 +886,23 @@ ODONTOGRAM UP TO DATE`);
         ...createEmptyRecareExamForm(),
         overbitePercent: "25",
       })
-    ).toBe("Overbite: 25%.");
+    ).toBe(`Intraoral Examination and Occlusion
+  Overbite: 25%.`);
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         overbiteMm: "2",
       })
-    ).toBe("Overbite: 2 mm.");
+    ).toBe(`Intraoral Examination and Occlusion
+  Overbite: 2 mm.`);
     expect(
       buildRecareExamSummary({
         ...createEmptyRecareExamForm(),
         overbitePercent: "25",
         overbiteMm: "2",
       })
-    ).toBe("Overbite: 25%; 2 mm.");
+    ).toBe(`Intraoral Examination and Occlusion
+  Overbite: 25%; 2 mm.`);
   });
 });
 

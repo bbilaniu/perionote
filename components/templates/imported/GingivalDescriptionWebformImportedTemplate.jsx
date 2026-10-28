@@ -1,4 +1,5 @@
 "use client";
+import { indentNoteText } from "@/lib/templates/summary/formatNoteSection";
 import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
 import { createEmptyOralHygieneMethods, formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import React, { useEffect, useId, useMemo, useState } from "react";
@@ -878,7 +879,7 @@ export function buildSummaryText(form, selectedFindings) {
     String(value ?? "")
       .trim()
       .replace(/[\s\n]+/g, " ");
-  const indentLine = (value) => `   ${value}`;
+  const indentLine = indentNoteText;
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
   const capitalizeSentence = (value) =>
     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";

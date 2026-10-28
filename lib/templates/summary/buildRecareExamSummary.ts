@@ -1,3 +1,4 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
 import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   DocumentationStatus,
@@ -632,15 +633,15 @@ export function buildRecareExamSummary(
 
   const groups = [
     patientAndTeam,
-    consentHistoryAndSterilization,
-    records,
+    [formatNoteSection("Consent, Medical History and Sterilization", consentHistoryAndSterilization)],
+    [formatNoteSection("Records", records)],
     chiefConcernSection,
     extraoralSection,
     tmjSection,
-    formatOralHygieneMethods(form),
-    intraoralAndOcclusion,
-    appliancesAndHistory,
-    patientRequests,
+    [formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form))],
+    [formatNoteSection("Intraoral Examination and Occlusion", intraoralAndOcclusion)],
+    [formatNoteSection("Appliances and Relevant History", appliancesAndHistory)],
+    [formatNoteSection("Patient Requests and Comments", patientRequests)],
     odontogram,
     treatmentBlock(
       "Treatment Options",
@@ -652,7 +653,7 @@ export function buildRecareExamSummary(
       form.treatmentPlan,
       form.listTreatmentPlan
     ),
-    nextVisit,
+    [formatNoteSection("Follow-up", nextVisit)],
   ]
     .map((group) => group.filter(Boolean))
     .filter((group) => group.length > 0)

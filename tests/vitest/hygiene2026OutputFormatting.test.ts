@@ -41,7 +41,8 @@ describe.each([
       recareAdditionalComments: "Synthetic recare comment",
       additionalNotes: "Synthetic demonstration data only",
     });
-    const complete = `Oral habits: Synthetic clenching history.
+    const complete = `Oral Habits
+  Oral habits: Synthetic clenching history.
 
 Occlusion:
   Molar occlusion—right: Class I.
@@ -78,10 +79,11 @@ Appliances and Relevant History
   it("omits empty headings and gaps when only one history paragraph is documented", () => {
     const form = createForm();
     form.oralHabits = "Synthetic habit";
-    expect(buildSummary(form)).toBe("Oral habits: Synthetic habit.");
+    expect(buildSummary(form)).toBe("Oral Habits\n  Oral habits: Synthetic habit.");
 
     form.improvementRequest = "Synthetic request";
-    expect(buildSummary(form)).toBe(`Oral habits: Synthetic habit.
+    expect(buildSummary(form)).toBe(`Oral Habits
+  Oral habits: Synthetic habit.
 
 Appliances and Relevant History
   Patient-requested smile or dental improvements: Synthetic request.`);
@@ -151,38 +153,47 @@ Appliances and Relevant History
       finalRiskLevel: "Moderate",
     };
 
-    expect(buildSummary(form)).toBe(`Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
-Sterilization Codes Scanned: SYNTH-STERI-2026
-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
+    expect(buildSummary(form)).toBe(`Sterilization and PPE
+  Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
+  Sterilization Codes Scanned: SYNTH-STERI-2026
+  ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
 
-Informed verbal consent given by PATIENT for treatment today.
-Medical history reviewed: Synthetic history reviewed.
+Consent and Medical History
+  Informed verbal consent given by PATIENT for treatment today.
+  Medical history reviewed: Synthetic history reviewed.
 
-Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm (at 09:00)
-Vitals reading 2: BP: 124/82 mmHg, HR: 74 bpm (at 09:02)
-Average BP: 122/81 mmHg, HR: 72 bpm
+  Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm (at 09:00)
+  Vitals reading 2: BP: 124/82 mmHg, HR: 74 bpm (at 09:02)
+  Average BP: 122/81 mmHg, HR: 72 bpm
 
-Caries risk category: Moderate.
-  CAMBRA123 2021, ages 6–adult, score: 1 (Column 1: -1; Column 2: +2; Column 3: +0).
-  Protective factors — Yes: Fluoridated water.
-  Biological/environmental risk factors — Yes: Heavy plaque on the teeth.
-  Disease indicators — Yes: None.
+Caries Risk
+  Caries risk category: Moderate.
+    CAMBRA123 2021, ages 6–adult, score: 1 (Column 1: -1; Column 2: +2; Column 3: +0).
+    Protective factors — Yes: Fluoridated water.
+    Biological/environmental risk factors — Yes: Heavy plaque on the teeth.
+    Disease indicators — Yes: None.
 
-Oral hygiene compliance: Fair.
-Oral hygiene compliance comment: Synthetic compliance context.
-Patient is currently: Flossing 1x/day; Brushing 2x/day.
+Oral Hygiene Habits
+  Oral hygiene compliance: Fair.
+  Oral hygiene compliance comment: Synthetic compliance context.
+  Patient is currently: Flossing 1x/day; Brushing 2x/day.
 
-Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
+Home Care Instruction
+  Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
 
-Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
+Oral Hygiene Education
+  Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
 
-- Hygiene goal: Synthetic home-care goal.
+Hygiene Goal
+  - Hygiene goal: Synthetic home-care goal.
 
-Recommended Recare Interval: 6-month recall.
-Next Dental Visit: Synthetic dental follow-up.
+Dental Follow-up
+  Recommended Recare Interval: 6-month recall.
+  Next Dental Visit: Synthetic dental follow-up.
 
-Recommended Hygiene Interval: 4-month scale.
-Next Hygiene Visit: Synthetic hygiene follow-up.`);
+Hygiene Follow-up
+  Recommended Hygiene Interval: 4-month scale.
+  Next Hygiene Visit: Synthetic hygiene follow-up.`);
   });
 
   describe.each(["complete", "hygiene", "recare"] as const)("%s note", (output) => {
@@ -190,14 +201,14 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
       const form = createForm();
       form.ppeStatementApplies = true;
       form.medicalHistoryReview = "Synthetic review";
-      const ppe = "ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES";
+      const ppe = "Sterilization and PPE\n  ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES";
 
       expect(buildSummary(form, { output })).toBe(
-        `${ppe}\n\nMedical history reviewed: Synthetic review.`,
+        `${ppe}\n\nConsent and Medical History\n  Medical history reviewed: Synthetic review.`,
       );
       form.ppeStatementApplies = false;
       expect(buildSummary(form, { output })).toBe(
-        "Medical history reviewed: Synthetic review.",
+        "Consent and Medical History\n  Medical history reviewed: Synthetic review.",
       );
     });
 
@@ -217,10 +228,11 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
           yesItemIds: ["risk.heavy-plaque"],
           notes: "Synthetic review pending",
         };
-        expect(buildSummary(form, { output })).toBe(`Caries risk category: Not documented.
-  CAMBRA123 2021, ages 6–adult: Incomplete.
-  Biological/environmental risk factors — Yes: Heavy plaque on the teeth.
-  CAMBRA123 notes: Synthetic review pending.`);
+        expect(buildSummary(form, { output })).toBe(`Caries Risk
+  Caries risk category: Not documented.
+    CAMBRA123 2021, ages 6–adult: Incomplete.
+    Biological/environmental risk factors — Yes: Heavy plaque on the teeth.
+    CAMBRA123 notes: Synthetic review pending.`);
       },
     );
 
@@ -232,19 +244,21 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
         finalRiskLevel: "High",
         notes: "Synthetic assessment awaiting completion",
       };
-      expect(buildSummary(form, { output })).toBe(`Caries risk category: High.
-  CAMBRA123 2021, ages 6–adult: Incomplete.
-  CAMBRA123 notes: Synthetic assessment awaiting completion.`);
+      expect(buildSummary(form, { output })).toBe(`Caries Risk
+  Caries risk category: High.
+    CAMBRA123 2021, ages 6–adult: Incomplete.
+    CAMBRA123 notes: Synthetic assessment awaiting completion.`);
     });
 
     it("distinguishes an explicitly completed all-No assessment from an untouched one", () => {
       const form = createForm();
       form.cambra123Assessment.completionStatus = "complete";
-      expect(buildSummary(form, { output })).toBe(`Caries risk category: Not documented.
-  CAMBRA123 2021, ages 6–adult, score: 0 (Column 1: 0; Column 2: +0; Column 3: +0).
-  Protective factors — Yes: None.
-  Biological/environmental risk factors — Yes: None.
-  Disease indicators — Yes: None.`);
+      expect(buildSummary(form, { output })).toBe(`Caries Risk
+  Caries risk category: Not documented.
+    CAMBRA123 2021, ages 6–adult, score: 0 (Column 1: 0; Column 2: +0; Column 3: +0).
+    Protective factors — Yes: None.
+    Biological/environmental risk factors — Yes: None.
+    Disease indicators — Yes: None.`);
     });
 
     it("separates vitals from history without adding leading or empty paragraphs", () => {
@@ -253,27 +267,39 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
       form.premedicationStatus = "not-required";
       form.vitalsReadings = [{ systolic: "", diastolic: "", heartRate: "", time: "" }];
       expect(buildSummary(form, { output })).toBe(
-        "Medical history reviewed: Synthetic review.\nPremedication Required: No.",
+        "Consent and Medical History\n  Medical history reviewed: Synthetic review.\n  Premedication Required: No.",
       );
       form.vitalsReadings = [{ systolic: "120", diastolic: "80", heartRate: "70", time: "" }];
       expect(buildSummary(form, { output })).toBe(
-        "Medical history reviewed: Synthetic review.\nPremedication Required: No.\n\nVitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
+        `Consent and Medical History
+  Medical history reviewed: Synthetic review.
+  Premedication Required: No.
+
+  Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm`,
       );
       form.premedicationStatus = "required";
       expect(buildSummary(form, { output })).toBe(
-        "Medical history reviewed: Synthetic review.\nPremedication Required: Yes.\n\nVitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
+        `Consent and Medical History
+  Medical history reviewed: Synthetic review.
+  Premedication Required: Yes.
+
+  Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm`,
       );
       form.premedicationDetails = "Synthetic premedication details";
       expect(buildSummary(form, { output })).toBe(
-        "Medical history reviewed: Synthetic review.\nPremedication Required: Yes—Synthetic premedication details.\n\nVitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
+        `Consent and Medical History
+  Medical history reviewed: Synthetic review.
+  Premedication Required: Yes—Synthetic premedication details.
+
+  Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm`,
       );
       form.medicalHistoryReview = "";
       expect(buildSummary(form, { output })).toBe(
-        "Premedication Required: Yes—Synthetic premedication details.\n\nVitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
+        "Consent and Medical History\n  Premedication Required: Yes—Synthetic premedication details.\n\n  Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
       );
       form.premedicationStatus = "not-documented";
       expect(buildSummary(form, { output })).toBe(
-        "Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
+        "Consent and Medical History\n  Vitals reading 1: BP: 120/80 mmHg, HR: 70 bpm",
       );
     });
   });
@@ -284,7 +310,7 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
     form.hygieneGoal = "Synthetic goal";
     for (const output of ["complete", "hygiene"] as const) {
       expect(buildSummary(form, { output })).toBe(
-        "Patient is currently: Brushing 2x/day.\n\n- Hygiene goal: Synthetic goal.",
+        "Oral Hygiene Habits\n  Patient is currently: Brushing 2x/day.\n\nHygiene Goal\n  - Hygiene goal: Synthetic goal.",
       );
     }
     expect(buildSummary(form, { output: "recare" })).toBe("");
@@ -295,17 +321,17 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
       {
         description: "LF line endings",
         goal: "Synthetic first goal line\nSynthetic second goal line\nSynthetic third goal line",
-        expected: "- Hygiene goal: Synthetic first goal line\n  Synthetic second goal line\n  Synthetic third goal line.",
+        expected: "Hygiene Goal\n  - Hygiene goal: Synthetic first goal line\n    Synthetic second goal line\n    Synthetic third goal line.",
       },
       {
         description: "CRLF line endings",
         goal: "Synthetic first goal line\r\nSynthetic second goal line\r\nSynthetic third goal line",
-        expected: "- Hygiene goal: Synthetic first goal line\n  Synthetic second goal line\n  Synthetic third goal line.",
+        expected: "Hygiene Goal\n  - Hygiene goal: Synthetic first goal line\n    Synthetic second goal line\n    Synthetic third goal line.",
       },
       {
         description: "blank lines and existing punctuation",
         goal: "  Synthetic first goal line\n\nSynthetic second goal line\n  \nSynthetic third goal line!  ",
-        expected: "- Hygiene goal: Synthetic first goal line\n\n  Synthetic second goal line\n\n  Synthetic third goal line!",
+        expected: "Hygiene Goal\n  - Hygiene goal: Synthetic first goal line\n\n    Synthetic second goal line\n\n    Synthetic third goal line!",
       },
     ])("keeps a multiline goal within its bullet with $description", ({ goal, expected }) => {
       const form = createForm();
@@ -313,7 +339,7 @@ Next Hygiene Visit: Synthetic hygiene follow-up.`);
       form.nextVisit = "Synthetic follow-up";
 
       expect(buildSummary(form, { output })).toBe(
-        `${expected}\n\nNext Hygiene Visit: Synthetic follow-up.`,
+        `${expected}\n\nHygiene Follow-up\n  Next Hygiene Visit: Synthetic follow-up.`,
       );
       expect(buildSummary(form, { output: "recare" })).toBe("");
     });
@@ -349,12 +375,13 @@ Current periodontal condition: GINGIVAL INFLAMMATION - PATIENT WITH HISTORY OF P
 
       form.periodontalClassification.gingivalHealth.context = "";
       form.periodontalClassification.gingivalHealth.periodontium = "";
-      expect(buildSummary(form, { output })).toBe(`Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
-Stage override: Synthetic stage reason
-Synthetic continuation.
-Grade override: Synthetic grade reason.
-Periodontal status: Periodontal disease remission/control.
-Perio status comment: Synthetic status comment.`);
+      expect(buildSummary(form, { output })).toBe(`Periodontal Diagnosis
+  Periodontal diagnosis: LOCALIZED PERIODONTITIS, Stage II, Grade B.
+  Stage override: Synthetic stage reason
+  Synthetic continuation.
+  Grade override: Synthetic grade reason.
+  Periodontal status: Periodontal disease remission/control.
+  Perio status comment: Synthetic status comment.`);
       expect(buildSummary(form, { output: "recare" })).toBe("");
     });
 
@@ -365,9 +392,10 @@ Perio status comment: Synthetic status comment.`);
       form.diseaseProcessReviewed = true;
       form.hygieneGoal = goal;
       form.nextVisit = "Synthetic follow-up";
-      const instruction = "Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY";
-      const education = "OH Aids Reviewed/Recommended: Synthetic interdental aid\nREVIEWED DISEASE PROCESS WITH PATIENT TODAY";
-      const followUp = "Next Hygiene Visit: Synthetic follow-up.";
+      const instruction = `Home Care Instruction
+  Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY`;
+      const education = "Oral Hygiene Education\n  OH Aids Reviewed/Recommended: Synthetic interdental aid\n  REVIEWED DISEASE PROCESS WITH PATIENT TODAY";
+      const followUp = "Hygiene Follow-up\n  Next Hygiene Visit: Synthetic follow-up.";
       expect(buildSummary(form, { output })).toBe(`${instruction}\n\n${education}\n\n${followUp}`);
 
       form.homeCareInstructionReviewed = false;
@@ -390,8 +418,8 @@ Perio status comment: Synthetic status comment.`);
         toothAreas: ["Q2", "Q3"],
       }];
       form.localAnesthesiaNoContraindication = true;
-      const treatment = "Treatment completed today: Synthetic scaling — Q2, Q3";
-      const anesthesia = "Local anesthetic administered: No C/I to LA";
+      const treatment = "Treatment Completed\n  Treatment completed today: Synthetic scaling — Q2, Q3";
+      const anesthesia = "Local Anesthesia\n  Local anesthetic administered: No C/I to LA";
       expect(buildSummary(form, { output })).toBe(`${treatment}\n\n${anesthesia}`);
       expect(buildSummary(form, { output: "recare" })).toBe("");
 
