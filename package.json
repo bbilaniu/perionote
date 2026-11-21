@@ -32,7 +32,7 @@
     "beta:sync": "git fetch origin && git switch beta && git merge --ff-only origin/main && git push origin beta"
   },
   "dependencies": {
-    "next": "16.4.3",
+    "next": "16.4.6",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
@@ -44,7 +44,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "eslint": "^10.15.0",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "postcss": "^8.5.32",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
