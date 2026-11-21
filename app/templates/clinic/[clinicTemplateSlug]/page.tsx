@@ -3,6 +3,7 @@ import Link from "next/link";
 import { FullPageLink } from "@/components/FullPageLink";
 import { notFound } from "next/navigation";
 import CopyTemplateButton from "@/components/clinic-templates/CopyTemplateButton";
+import { ReturnToTopLink } from "@/components/templates/shared/ReturnToTopLink";
 import { getClinicConversionBySourceSlug } from "@/components/clinic-templates/conversionRegistry";
 import {
   clinicTemplateRegistry,
@@ -50,7 +51,7 @@ export default async function ClinicTemplatePage({
           href="/templates/clinic"
           className="text-sm font-medium text-chart-accent hover:underline dark:text-sky-300"
         >
-          ← Clinical Templates
+          ← Clinical Forms
         </Link>
         <p className="mt-5 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {getClinicCategoryTitle(template.category)}
@@ -78,14 +79,15 @@ export default async function ClinicTemplatePage({
         </div>
       </header>
 
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="border-b border-slate-200 px-5 py-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
           ClearDent source name: {template.sourceTitle}
         </div>
-        <pre className="overflow-x-auto whitespace-pre-wrap break-words p-5 font-sans text-sm leading-6 text-slate-800 dark:text-slate-200">
+        <pre className="overflow-x-auto whitespace-pre-wrap wrap-break-word p-5 font-sans text-sm leading-6 text-slate-800 dark:text-slate-200">
           {template.content}
         </pre>
       </div>
+      <ReturnToTopLink />
     </article>
   );
 }

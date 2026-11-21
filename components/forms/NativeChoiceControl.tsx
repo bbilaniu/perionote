@@ -25,7 +25,7 @@ export function NativeChoiceControl({
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
       } ${
         checked
-          ? "border-sky-700 bg-sky-50 text-sky-950 shadow-sm dark:border-sky-400 dark:bg-sky-950/60 dark:text-sky-100"
+          ? "border-sky-700 bg-sky-50 text-sky-950 shadow-xs dark:border-sky-400 dark:bg-sky-950/60 dark:text-sky-100"
           : "border-slate-300 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
       } ${className}`}
     >

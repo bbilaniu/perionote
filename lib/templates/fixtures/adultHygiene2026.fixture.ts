@@ -1,6 +1,9 @@
+import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { AdultHygiene2026Form } from "@/lib/templates/adultHygiene2026";
+import { createEmptyCambra123SixAdultAssessment } from "@/lib/templates/cambra123";
 
 export const adultHygiene2026Fixture: AdultHygiene2026Form = {
+  ...createEmptyOralHygieneMethods(),
   patientId: "TEST-AH-1001",
   noteLastRecallDate: "2026-01-15",
   dentist: "Dr. Example",
@@ -13,6 +16,14 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   consentLegalGuardian: false,
   consentDetails: "",
   medicalHistoryReview: "Synthetic history reviewed with no changes.",
+  vitalsReadings: [
+    {
+      systolic: "118",
+      diastolic: "76",
+      heartRate: "72",
+      time: "09:15",
+    },
+  ],
   premedicationStatus: "not-required",
   premedicationDetails: "",
   patientChiefConcern: [
@@ -162,13 +173,23 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
       overrideReason: "",
     },
   },
-  cariesRiskLevel: "Moderate",
-  cariesRiskFactors: [
-    "High frequency of sugar intake",
-    "Insufficient exposure to fluoride",
-    "History of caries in the last 36 months",
-  ],
-  cariesRiskNotes: "Synthetic diet and home-care factors reviewed.",
+  cariesRiskLevel: "",
+  cariesRiskFactors: [],
+  cariesRiskNotes: "",
+  cambra123Assessment: {
+    ...createEmptyCambra123SixAdultAssessment(),
+    completionStatus: "complete",
+    yesItemIds: [
+      "protective.f-toothpaste-twice-daily",
+      "protective.f-varnish-six-months",
+      "protective.normal-salivary-function",
+      "risk.frequent-snacking",
+      "risk.heavy-plaque",
+      "disease.new-enamel-lesions",
+    ],
+    finalRiskLevel: "High",
+    notes: "Synthetic diet and home-care factors reviewed.",
+  },
   oralHygieneCompliance: "Good",
   oralHygieneComplianceComment: "",
   homeCareInstructionReviewed: true,

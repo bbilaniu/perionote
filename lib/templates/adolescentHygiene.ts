@@ -1,3 +1,17 @@
+import {
+  createEmptyOralHygieneMethods,
+  type OralHygieneMethods,
+} from "@/lib/templates/oralHygieneMethods";
+import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygiene2021";
+import {
+  createEmptyLocalAnesthesiaValue,
+  type LocalAnesthesiaEntry,
+} from "@/lib/templates/localAnesthesia";
+import {
+  createEmptyPeriodontalClassification,
+  type PeriodontalClassification,
+} from "@/lib/templates/periodontalClassification";
+
 export type AdolescentDocumentationStatus = "not-documented" | "no" | "yes";
 
 export type AdolescentPremedicationStatus =
@@ -12,7 +26,7 @@ export type AdolescentRetainerStatus =
   | "removable"
   | "fixed-and-removable";
 
-export interface AdolescentHygieneForm {
+export interface AdolescentHygieneForm extends OralHygieneMethods {
   patientId: string;
   dentist: string;
   rdh: string;
@@ -50,6 +64,11 @@ export interface AdolescentHygieneForm {
   polishStatus: AdolescentDocumentationStatus;
   polishDetails: string;
   treatmentCompleted: AdultHygieneTreatmentCompletedEntry[];
+  localAnesthesiaNoContraindication: boolean;
+  localAnesthesiaEntries: LocalAnesthesiaEntry[];
+  localAnesthesiaNoAdverseReactions: boolean;
+  localAnesthesiaAdequateAchieved: boolean;
+  localAnesthesiaNotes: string;
   fluorideStatus: AdolescentDocumentationStatus;
   fluorideDetails: string;
   informationRelayedStatus: AdolescentDocumentationStatus;
@@ -64,7 +83,9 @@ export interface AdolescentHygieneForm {
 }
 
 export function createEmptyAdolescentHygieneForm(): AdolescentHygieneForm {
+  const localAnesthesia = createEmptyLocalAnesthesiaValue();
   return {
+    ...createEmptyOralHygieneMethods(),
     patientId: "",
     dentist: "",
     rdh: "",
@@ -102,6 +123,7 @@ export function createEmptyAdolescentHygieneForm(): AdolescentHygieneForm {
     polishStatus: "not-documented",
     polishDetails: "",
     treatmentCompleted: [],
+    ...localAnesthesia,
     fluorideStatus: "not-documented",
     fluorideDetails: "",
     informationRelayedStatus: "not-documented",
@@ -124,8 +146,3 @@ export function hasRequiredAdolescentHygieneFields(
     [form.dentist, form.rdh, form.rda].some((value) => Boolean(value.trim()))
   );
 }
-import type { AdultHygieneTreatmentCompletedEntry } from "@/lib/templates/adultHygiene2021";
-import {
-  createEmptyPeriodontalClassification,
-  type PeriodontalClassification,
-} from "@/lib/templates/periodontalClassification";

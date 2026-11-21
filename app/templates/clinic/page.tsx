@@ -25,6 +25,9 @@ export default function ClinicTemplatesPage() {
               slug: template.slug,
               title: template.title,
               description: template.description,
+              ...(template.versionStatus
+                ? { versionStatus: template.versionStatus }
+                : {}),
               ...(conversion
                 ? { interactiveLifecycle: conversion.lifecycle }
                 : {}),
@@ -45,7 +48,7 @@ export default function ClinicTemplatesPage() {
           ← All template libraries
         </Link>
         <h1 className="mt-4 text-2xl font-semibold tracking-tight">
-          Clinical Templates
+          Clinical Forms
         </h1>
         <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
           Browse the clinic&apos;s current ClearDent source notes and open

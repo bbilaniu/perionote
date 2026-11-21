@@ -1,7 +1,17 @@
 "use client";
+import { indentNoteText } from "@/lib/templates/summary/formatNoteSection";
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { createEmptyOralHygieneMethods, formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import React, { useEffect, useId, useMemo, useState } from "react";
+import { cetacaineLiquidProductLabel, formatLocalAnesthesiaTotal } from "@/lib/templates/localAnesthesia";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
-import { getCurrentTimeString, getTodayDateString } from "@/lib/templates/date";
+import { TemplateSectionNavigation } from "@/components/templates/shared/TemplateSectionNavigation";
+import { Time24Input } from "@/components/forms/Time24Input";
+import {
+  formatTime24Value,
+  getCurrentTimeString,
+  getTodayDateString,
+} from "@/lib/templates/date";
 import {
   extraoralLateralityToSides,
   extraoralLymphNodeLocationOptions,
@@ -60,7 +70,10 @@ function SectionCard({
   contentClassName,
 }) {
   return (
-    <Card id={id} className={cx("rounded-3xl", className)}>
+    <Card
+      id={id}
+      className={cx("scroll-mt-32 rounded-3xl 2xl:scroll-mt-6", className)}
+    >
       <CardHeader className="space-y-0">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-xl">{title}</CardTitle>
@@ -120,7 +133,7 @@ function Checkbox({ className, checked, onCheckedChange, ...props }) {
     <input
       type="checkbox"
       className={cx(
-        "h-4 w-4 rounded border border-slate-300 dark:border-slate-600 accent-slate-900 dark:accent-slate-400",
+        "h-4 w-4 rounded-sm border border-slate-300 dark:border-slate-600 accent-slate-900 dark:accent-slate-400",
         className,
       )}
       checked={Boolean(checked)}
@@ -134,7 +147,7 @@ function Input({ className, ...props }) {
   return (
     <input
       className={cx(
-        "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
+        "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
         className,
       )}
       {...props}
@@ -154,11 +167,20 @@ function Label({ className, ...props }) {
   );
 }
 
+// Give vertical spacing a block box while preserving the inline label line height.
+function StackedLabel(props) {
+  return (
+    <div>
+      <Label {...props} />
+    </div>
+  );
+}
+
 function Textarea({ className, ...props }) {
   return (
     <textarea
       className={cx(
-        "flex min-h-[80px] w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
+        "flex min-h-[80px] w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
         className,
       )}
       {...props}
@@ -260,7 +282,7 @@ function Select({ value, onValueChange, children }) {
   return (
     <select
       className={cx(
-        "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
+        "flex h-10 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm text-slate-900 dark:text-white focus:outline-hidden focus:ring-2 focus:ring-slate-300 dark:focus:ring-slate-600",
         triggerClassName,
       )}
       value={normalizedValue}
@@ -419,6 +441,7 @@ const LOCAL_ANESTHETIC_INJECTION_PRODUCT_OPTIONS = [
 const LOCAL_ANESTHETIC_TOPICAL_PRODUCT_OPTIONS = [
   "Benzocaine 20% paste",
   "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+  cetacaineLiquidProductLabel,
   "Dyclonine 1% solution",
 ];
 const LOCAL_ANESTHETIC_DEFAULT_AMOUNTS_BY_PRODUCT = {
@@ -542,6 +565,7 @@ function prettyLabel(key) {
 
 export function buildInitialForm(fixture) {
   const form = {
+    ...createEmptyOralHygieneMethods(),
     date: getTodayDateString(),
     providerName: "",
     patientConcerns: "",
@@ -848,7 +872,7 @@ export function buildSummaryText(form, selectedFindings) {
     String(value ?? "")
       .trim()
       .replace(/[\s\n]+/g, " ");
-  const indentLine = (value) => `   ${value}`;
+  const indentLine = indentNoteText;
   const cleanSentence = (value) => clean(value).replace(/[.]+$/g, "");
   const capitalizeSentence = (value) =>
     value ? value.charAt(0).toUpperCase() + value.slice(1) : "";
@@ -859,19 +883,6 @@ export function buildSummaryText(form, selectedFindings) {
     return normalized ? `${capitalizeSentence(normalized)}.` : "";
   };
   const joinComma = (items) => items.filter(Boolean).join(", ");
-  const formatClockTime = (value) => {
-    const normalized = clean(value);
-    const match = normalized.match(/^(\d{1,2}):(\d{2})$/);
-
-    if (!match) return normalized;
-
-    let hours = Number(match[1]);
-    const minutes = match[2];
-    const period = hours >= 12 ? "PM" : "AM";
-    hours %= 12;
-    if (hours === 0) hours = 12;
-    return `${hours}:${minutes} ${period}`;
-  };
   const parseNumeric = (value) => {
     const normalized = clean(value);
     if (!normalized) return null;
@@ -889,7 +900,7 @@ export function buildSummaryText(form, selectedFindings) {
     const systolic = parseNumeric(reading.systolic);
     const diastolic = parseNumeric(reading.diastolic);
     const heartRate = parseNumeric(reading.heartRate);
-    const time = clean(reading.time);
+    const time = formatTime24Value(reading.time);
     const segments = [];
 
     if (systolic != null && diastolic != null) {
@@ -903,7 +914,7 @@ export function buildSummaryText(form, selectedFindings) {
     if (!segments.length) return "";
 
     const vitals = segments.join(", ");
-    return time ? `${vitals} (at ${formatClockTime(time)})` : vitals;
+    return time ? `${vitals} (at ${time})` : vitals;
   };
   const formatAverageVitalsLine = (readings) => {
     const systolicValues = [];
@@ -1466,17 +1477,17 @@ export function buildSummaryText(form, selectedFindings) {
       if (route === "Topical" && !applicationType) return;
 
       const amount = Number(amountMlRaw);
-      const time = clean(entry.timeAdministered);
+      const time = formatTime24Value(entry.timeAdministered);
       if (route === "Injection") {
         detailLines.push(
           `${injectionType} ${quadrant}: ${product} ${amountMlRaw} ml${
-            time ? ` (at ${formatClockTime(time)})` : ""
+            time ? ` (at ${time})` : ""
           }`,
         );
       } else if (route === "Topical") {
         detailLines.push(
           `${applicationType} ${quadrant}: ${product} ${amountMlRaw} ml${
-            time ? ` (at ${formatClockTime(time)})` : ""
+            time ? ` (at ${time})` : ""
           }`,
         );
       }
@@ -1487,17 +1498,19 @@ export function buildSummaryText(form, selectedFindings) {
     });
 
     totals.forEach((amount, product) => {
-      detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+      detailLines.push(`Total: ${product} ${formatLocalAnesthesiaTotal(amount)} ml`);
     });
 
-    if (form.localAnesthesiaNoAdverseReactions) {
-      detailLines.push("No adverse reactions noted");
-    }
-    if (form.localAnesthesiaAdequateAchieved) {
-      detailLines.push("Adequate anesthesia achieved");
-    }
-    if (clean(form.localAnesthesiaNotes)) {
-      detailLines.push(cleanSentence(form.localAnesthesiaNotes));
+    if (form.localAnesthesiaEntries.length > 0) {
+      if (form.localAnesthesiaNoAdverseReactions) {
+        detailLines.push("No adverse reactions noted");
+      }
+      if (form.localAnesthesiaAdequateAchieved) {
+        detailLines.push("Adequate anesthesia achieved");
+      }
+      if (clean(form.localAnesthesiaNotes)) {
+        detailLines.push(cleanSentence(form.localAnesthesiaNotes));
+      }
     }
 
     if (!heading && !detailLines.length) return "";
@@ -1580,6 +1593,7 @@ export function buildSummaryText(form, selectedFindings) {
     formatDepositLine("Extrinsic Stain", form.extrinsicStain),
     formatPeriodontalDiagnosis(),
     formatCariesRisk(),
+    ...formatOralHygieneMethods(form),
     formatOhe(),
     formatRecommendations(),
   ].filter(Boolean);
@@ -1918,7 +1932,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
   return (
     <div
       className={cx(
-        "space-y-4 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
+        "space-y-4 rounded-2xl border bg-white p-4 shadow-xs transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
         checked
           ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
           : "border-slate-200 dark:border-slate-700",
@@ -1946,12 +1960,12 @@ function FindingRow({ sectionKey, option, value, onChange }) {
             id={`${sectionKey}-${option}`}
           />
           <div className="space-y-1">
-            <Label
+            <StackedLabel
               htmlFor={`${sectionKey}-${option}`}
               className="cursor-pointer text-lg font-semibold leading-tight"
             >
               {option}
-            </Label>
+            </StackedLabel>
             {!checked ? (
               <p className="text-xs text-muted-foreground">Select to expand</p>
             ) : null}
@@ -1963,7 +1977,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
       {checked ? (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label>Extent</Label>
+            <StackedLabel>Extent</StackedLabel>
             <Select
               value={value.extent}
               onValueChange={(next) => update({ extent: next })}
@@ -1979,7 +1993,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
           </div>
 
           <div className="space-y-2">
-            <Label>Tooth # / teeth</Label>
+            <StackedLabel>Tooth # / teeth</StackedLabel>
             <Input
               className="rounded-xl"
               placeholder="e.g. #5, #6-8 or 11, 12"
@@ -2007,7 +2021,7 @@ function FindingRow({ sectionKey, option, value, onChange }) {
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <Label>Notes</Label>
+            <StackedLabel>Notes</StackedLabel>
             <Textarea
               className="min-h-[90px] rounded-xl"
               placeholder="Optional detail for this finding"
@@ -2024,10 +2038,10 @@ function FindingRow({ sectionKey, option, value, onChange }) {
 function SectionTextarea({ id, label, placeholder, value, onChange }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
+      <StackedLabel htmlFor={id}>{label}</StackedLabel>
       <Textarea
         id={id}
-        className="min-h-[110px] rounded-2xl"
+        className="rounded-2xl"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -2043,6 +2057,7 @@ const VERY_SHORT_DEFAULT_OPEN_SECTIONS = {
   deposits: true,
   periodontalStatus: true,
   cariesRisk: false,
+  oralHygiene: true,
   ohe: false,
   recommendations: false,
   treatmentDoneToday: true,
@@ -2052,17 +2067,30 @@ const VERY_SHORT_DEFAULT_OPEN_SECTIONS = {
   additionalClinicalDocumentation: false,
 };
 
-const VERY_SHORT_JUMP_SECTIONS = [
-  ["historyAndExam", "History and Exam"],
-  ["gingivalDescription", "Gingival Description"],
-  ["treatmentDoneToday", "Treatment Done Today"],
-  ["localAnesthesia", "Local Anesthesia"],
-  ["nextAppointment", "Next Appointment"],
-];
-
 function getSectionId(sectionKey) {
   return `template-section-${sectionKey}`;
 }
+
+const importedTemplateSections = [
+  ["historyAndExam", "History and Exam"],
+  ["eoeIoe", "EOE / IOE"],
+  ["gingivalDescription", "Gingival Description"],
+  ["deposits", "Calculus and Biofilm Deposits"],
+  ["periodontalStatus", "Periodontal Status"],
+  ["cariesRisk", "Caries Risk"],
+  ["oralHygiene", "Oral Hygiene"],
+  ["ohe", "Oral Health Education (OHE)"],
+  ["recommendations", "Recommendations"],
+  ["treatmentDoneToday", "Treatment Done Today"],
+  ["nextAppointment", "Next Appointment"],
+  ["localAnesthesia", "Local Anesthesia"],
+  ["disposition", "Continuity of Care"],
+  ["additionalClinicalDocumentation", "Additional Clinical Documentation"],
+].map(([sectionKey, label]) => ({
+  id: getSectionId(sectionKey),
+  label,
+  sectionKey,
+}));
 
 function DepositsCard({
   title,
@@ -2086,7 +2114,7 @@ function DepositsCard({
   return (
     <div
       className={cx(
-        "space-y-4 rounded-2xl border bg-white p-4 shadow-sm transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
+        "space-y-4 rounded-2xl border bg-white p-4 shadow-xs transition-colors hover:border-slate-300 dark:bg-slate-800 dark:hover:border-slate-600",
         value.enabled
           ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
           : "border-slate-200 dark:border-slate-700",
@@ -2114,14 +2142,14 @@ function DepositsCard({
             id={`deposit-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
           />
           <div className="space-y-1">
-            <Label
+            <StackedLabel
               htmlFor={`deposit-${title
                 .toLowerCase()
                 .replace(/[^a-z0-9]+/g, "-")}`}
               className="cursor-pointer text-lg font-semibold leading-tight"
             >
               {title}
-            </Label>
+            </StackedLabel>
             {!value.enabled ? (
               <p className="text-xs text-muted-foreground">Select to expand</p>
             ) : null}
@@ -2134,7 +2162,7 @@ function DepositsCard({
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Amount</Label>
+              <StackedLabel>Amount</StackedLabel>
               <Select
                 value={value.amount}
                 onValueChange={(amount) => update({ amount })}
@@ -2153,7 +2181,7 @@ function DepositsCard({
             </div>
             {showExtent ? (
               <div className="space-y-2">
-                <Label>Extent</Label>
+                <StackedLabel>Extent</StackedLabel>
                 <Select
                   value={value.extent}
                   onValueChange={(extent) => update({ extent })}
@@ -2197,9 +2225,9 @@ function DepositsCard({
           ) : null}
 
           <div className="space-y-2">
-            <Label>Details</Label>
+            <StackedLabel>Details</StackedLabel>
             <Textarea
-              className="min-h-[100px] rounded-2xl"
+              className="rounded-2xl"
               placeholder={placeholder}
               value={value.details}
               onChange={(e) => update({ details: e.target.value })}
@@ -2405,15 +2433,16 @@ export function GingivalDescriptionWebformImportedTemplate({
     );
   };
 
-  const jumpToSection = (sectionKey) => {
-    const target = document.getElementById(getSectionId(sectionKey));
-    if (!target) return;
-
+  const revealSection = (sectionId) => {
+    if (!isVeryShort) return;
+    const sectionKey = importedTemplateSections.find(
+      (section) => section.id === sectionId,
+    )?.sectionKey;
+    if (!sectionKey) return;
     setOpenSections((current) => ({
       ...current,
       [sectionKey]: true,
     }));
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const treatmentHasHandInstrumentation = form.treatmentDoneToday.includes(
@@ -2494,7 +2523,7 @@ export function GingivalDescriptionWebformImportedTemplate({
           {selectedFindings.map((item, index) => (
             <div
               key={`${item.section}-${item.finding}-${index}`}
-              className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+              className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-700 dark:bg-slate-800"
             >
               <div className="flex items-center justify-between gap-2">
                 <Badge variant="outline" className="rounded-xl">
@@ -2526,7 +2555,7 @@ export function GingivalDescriptionWebformImportedTemplate({
           {depositTagItems.map((item, index) => (
             <div
               key={`${item.section}-${item.label}-${index}`}
-              className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+              className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-700 dark:bg-slate-800"
             >
               <div className="flex items-center justify-between gap-2">
                 <Badge variant="outline" className="rounded-xl">
@@ -2570,7 +2599,7 @@ export function GingivalDescriptionWebformImportedTemplate({
 
   const plainTextSummaryContent = (
     <div className="space-y-2">
-      <Label>Plain-text output</Label>
+      <StackedLabel>Plain-text output</StackedLabel>
       <Textarea
         readOnly
         className={cx(
@@ -2655,14 +2684,20 @@ export function GingivalDescriptionWebformImportedTemplate({
         <div className="min-w-0 space-y-6">
           <Card className="rounded-3xl shadow-lg">
             <CardHeader>
-              <CardTitle className="text-2xl md:text-3xl">{title}</CardTitle>
+              <CardTitle className="text-2xl md:text-3xl/9">{title}</CardTitle>
               <p className="text-sm leading-6 text-slate-600 dark:text-slate-400">
                 {description}
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent>
+              <div className="w-full min-w-0 max-w-full lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-6">
+                <TemplateSectionNavigation
+                  sections={importedTemplateSections}
+                  onNavigate={revealSection}
+                />
+                <div className="mt-6 min-w-0 max-w-full space-y-6 lg:mt-0">
               {isVeryShort ? (
-                <div className="space-y-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
+                <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-900/60">
                   <div className="flex flex-wrap gap-3">
                     <Button
                       type="button"
@@ -2681,27 +2716,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                       Collapse all sections
                     </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Quick jump</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {VERY_SHORT_JUMP_SECTIONS.map(([sectionKey, label]) => (
-                        <Button
-                          key={sectionKey}
-                          type="button"
-                          variant="outline"
-                          className="rounded-2xl px-3 py-1.5 text-xs"
-                          onClick={() => jumpToSection(sectionKey)}
-                        >
-                          {label}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
                 </div>
               ) : null}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="exam-date">Date</Label>
+                  <StackedLabel htmlFor="exam-date">Date</StackedLabel>
                   <Input
                     id="exam-date"
                     type="date"
@@ -2716,7 +2735,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="provider-name">Provider Name</Label>
+                  <StackedLabel htmlFor="provider-name">Provider Name</StackedLabel>
                   <Input
                     id="provider-name"
                     className="rounded-xl"
@@ -2747,7 +2766,7 @@ export function GingivalDescriptionWebformImportedTemplate({
               >
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="patient-concerns">Patient concerns</Label>
+                    <StackedLabel htmlFor="patient-concerns">Patient concerns</StackedLabel>
                     <div className="flex items-center gap-3">
                       <Checkbox
                         id="patient-presents-for-hygiene-no-other-concerns"
@@ -2766,7 +2785,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                     </div>
                     <Textarea
                       id="patient-concerns"
-                      className="min-h-[110px] rounded-2xl"
+                      className="rounded-2xl"
                       placeholder="Document the chief complaint or concerns in the patient’s own words."
                       value={form.patientConcerns}
                       onChange={(e) =>
@@ -2778,7 +2797,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="medical-history">Medical history</Label>
+                    <StackedLabel htmlFor="medical-history">Medical history</StackedLabel>
                     <div className="flex items-center gap-3">
                       <Checkbox
                         id="medical-history-no-change"
@@ -2796,7 +2815,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                     </div>
                     <Textarea
                       id="medical-history"
-                      className="min-h-[110px] rounded-2xl"
+                      className="rounded-2xl"
                       placeholder="Review and update medications, allergies, surgeries, or conditions."
                       value={form.medicalHistory}
                       onChange={(e) =>
@@ -2833,9 +2852,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                         </div>
                         <div className="grid gap-3 md:grid-cols-4">
                           <div className="space-y-2">
-                            <Label htmlFor={`vitals-systolic-${readingIndex}`}>
+                            <StackedLabel htmlFor={`vitals-systolic-${readingIndex}`}>
                               Systolic
-                            </Label>
+                            </StackedLabel>
                             <Input
                               id={`vitals-systolic-${readingIndex}`}
                               type="number"
@@ -2850,9 +2869,9 @@ export function GingivalDescriptionWebformImportedTemplate({
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`vitals-diastolic-${readingIndex}`}>
+                            <StackedLabel htmlFor={`vitals-diastolic-${readingIndex}`}>
                               Diastolic
-                            </Label>
+                            </StackedLabel>
                             <Input
                               id={`vitals-diastolic-${readingIndex}`}
                               type="number"
@@ -2867,11 +2886,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label
+                            <StackedLabel
                               htmlFor={`vitals-heart-rate-${readingIndex}`}
                             >
                               Heart Rate
-                            </Label>
+                            </StackedLabel>
                             <Input
                               id={`vitals-heart-rate-${readingIndex}`}
                               type="number"
@@ -2886,16 +2905,16 @@ export function GingivalDescriptionWebformImportedTemplate({
                             />
                           </div>
                           <div className="space-y-2">
-                            <Label htmlFor={`vitals-time-${readingIndex}`}>
-                              Time
-                            </Label>
-                            <Input
+                            <StackedLabel htmlFor={`vitals-time-${readingIndex}`}>
+                              Time (HH:mm)
+                            </StackedLabel>
+                            <Time24Input
                               id={`vitals-time-${readingIndex}`}
-                              type="time"
+                              className="flex h-10 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-slate-600"
                               value={reading.time}
-                              onChange={(e) =>
+                              onChange={(time) =>
                                 updateVitalsReading(readingIndex, {
-                                  time: e.target.value,
+                                  time,
                                 })
                               }
                             />
@@ -2976,7 +2995,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                   </div>
 
                   <div className="space-y-2">
-                    <Label>EOE findings</Label>
+                    <StackedLabel>EOE findings</StackedLabel>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
@@ -2988,7 +3007,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                             ? "default"
                             : "outline"
                         }
-                        className="w-full justify-start rounded-2xl"
+                        className="w-full rounded-2xl"
                         onClick={() =>
                           setForm((current) => ({
                             ...current,
@@ -3051,7 +3070,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         variant={
                           form.asymptomaticLymphNodes ? "default" : "outline"
                         }
-                        className="w-full justify-start rounded-2xl"
+                        className="w-full rounded-2xl"
                         onClick={() =>
                           setForm((current) => ({
                             ...current,
@@ -3171,7 +3190,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         variant={
                           form.palatineTorusAtMidline ? "default" : "outline"
                         }
-                        className="w-full justify-start rounded-2xl"
+                        className="w-full rounded-2xl"
                         onClick={() =>
                           setForm((current) => ({
                             ...current,
@@ -3188,7 +3207,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                       {form.palatineTorusAtMidline ? (
                         <div className="space-y-2">
-                          <Label>Prominence</Label>
+                          <StackedLabel>Prominence</StackedLabel>
                           <Select
                             value={form.palatineTorusProminence}
                             onValueChange={(palatineTorusProminence) =>
@@ -3219,7 +3238,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         variant={
                           form.bilateralMandibularTori ? "default" : "outline"
                         }
-                        className="w-full justify-start rounded-2xl"
+                        className="w-full rounded-2xl"
                         onClick={() =>
                           setForm((current) => ({
                             ...current,
@@ -3236,7 +3255,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                       {form.bilateralMandibularTori ? (
                         <div className="space-y-2">
-                          <Label>Prominence</Label>
+                          <StackedLabel>Prominence</StackedLabel>
                           <Select
                             value={form.bilateralMandibularToriProminence}
                             onValueChange={(
@@ -3395,7 +3414,7 @@ export function GingivalDescriptionWebformImportedTemplate({
               >
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Activity status</Label>
+                    <StackedLabel>Activity status</StackedLabel>
                     <Select
                       value={form.periodontalStatusActivity}
                       onValueChange={(periodontalStatusActivity) =>
@@ -3419,7 +3438,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Disease type</Label>
+                    <StackedLabel>Disease type</StackedLabel>
                     <Select
                       value={form.periodontalStatusDiseaseType}
                       onValueChange={(periodontalStatusDiseaseType) =>
@@ -3453,7 +3472,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                   {form.periodontalStatusDiseaseType === "Periodontitis" ? (
                     <>
                       <div className="space-y-2">
-                        <Label>Stage</Label>
+                        <StackedLabel>Stage</StackedLabel>
                         <Select
                           value={form.periodontalStatusSeverityStage}
                           onValueChange={(periodontalStatusSeverityStage) =>
@@ -3479,7 +3498,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label>Grade</Label>
+                        <StackedLabel>Grade</StackedLabel>
                         <Select
                           value={form.periodontalStatusGrade}
                           onValueChange={(periodontalStatusGrade) =>
@@ -3529,7 +3548,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                 contentClassName="grid gap-4 md:grid-cols-2"
               >
                 <div className="space-y-2">
-                  <Label>Caries risk level</Label>
+                  <StackedLabel>Caries risk level</StackedLabel>
                   <Select
                     value={form.cariesRiskLevel}
                     onValueChange={(cariesRiskLevel) =>
@@ -3567,6 +3586,18 @@ export function GingivalDescriptionWebformImportedTemplate({
                   onChange={(cariesRiskNotes) =>
                     setForm((current) => ({ ...current, cariesRiskNotes }))
                   }
+                />
+              </SectionCard>
+
+              <SectionCard
+                id={getSectionId("oralHygiene")}
+                title="Oral Hygiene"
+                open={!isVeryShort || openSections.oralHygiene}
+                onToggle={isVeryShort ? () => toggleSection("oralHygiene") : undefined}
+              >
+                <OralHygieneMethodsControl
+                  value={form}
+                  onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))}
                 />
               </SectionCard>
 
@@ -3872,13 +3903,24 @@ export function GingivalDescriptionWebformImportedTemplate({
                             variant="outline"
                             className="rounded-2xl px-3 py-1.5 text-xs"
                             onClick={() =>
-                              setForm((current) => ({
-                                ...current,
-                                localAnesthesiaEntries:
+                              setForm((current) => {
+                                const localAnesthesiaEntries =
                                   current.localAnesthesiaEntries.filter(
                                     (_, entryIndex) => entryIndex !== index,
-                                  ),
-                              }))
+                                  );
+                                return {
+                                  ...current,
+                                  localAnesthesiaEntries,
+                                  ...(localAnesthesiaEntries.length === 0
+                                    ? {
+                                        localAnesthesiaNoAdverseReactions:
+                                          false,
+                                        localAnesthesiaAdequateAchieved: false,
+                                        localAnesthesiaNotes: "",
+                                      }
+                                    : {}),
+                                };
+                              })
                             }
                           >
                             Remove
@@ -3887,7 +3929,7 @@ export function GingivalDescriptionWebformImportedTemplate({
 
                         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-12">
                           <div className="space-y-2 lg:col-span-3">
-                            <Label>Route</Label>
+                            <StackedLabel>Route</StackedLabel>
                             <Select
                               value={entry.route}
                               onValueChange={(route) => {
@@ -3929,11 +3971,11 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
 
                           <div className="space-y-2 lg:col-span-5">
-                            <Label>
+                            <StackedLabel>
                               {entry.route === "Topical"
                                 ? "Application type"
                                 : "Injection type"}
-                            </Label>
+                            </StackedLabel>
                             <Select
                               value={
                                 entry.route === "Topical"
@@ -3973,7 +4015,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
 
                           <div className="space-y-2 md:col-span-2 lg:col-span-4">
-                            <Label>Quadrant</Label>
+                            <StackedLabel>Quadrant</StackedLabel>
                             <div className="flex flex-wrap gap-2">
                               {QUADRANT_OPTIONS.map((option) => {
                                 const isActive = entry.quadrant === option;
@@ -4000,7 +4042,7 @@ export function GingivalDescriptionWebformImportedTemplate({
 
                         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_7rem_19rem]">
                           <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                            <Label>Anesthetic product</Label>
+                            <StackedLabel>Anesthetic product</StackedLabel>
                             <Select
                               value={entry.anestheticProduct}
                               onValueChange={(anestheticProduct) => {
@@ -4010,7 +4052,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                                   ] ?? "";
                                 updateLocalAnesthesiaEntry(index, {
                                   anestheticProduct,
-                                  amountMl: entry.amountMl || defaultAmount,
+                                  amountMl: defaultAmount ? entry.amountMl || defaultAmount : "",
                                 });
                               }}
                             >
@@ -4031,7 +4073,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
 
                           <div className="space-y-2">
-                            <Label>Amount (ml)</Label>
+                            <StackedLabel>Amount (ml)</StackedLabel>
                             <Input
                               className="w-full max-w-[7rem]"
                               value={entry.amountMl}
@@ -4044,18 +4086,17 @@ export function GingivalDescriptionWebformImportedTemplate({
                           </div>
 
                           <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                            <Label htmlFor={`local-anesthesia-time-${index}`}>
-                              Time administered
-                            </Label>
+                            <StackedLabel htmlFor={`local-anesthesia-time-${index}`}>
+                              Time administered (HH:mm)
+                            </StackedLabel>
                             <div className="flex flex-nowrap items-center gap-2">
-                              <Input
+                              <Time24Input
                                 id={`local-anesthesia-time-${index}`}
-                                type="time"
-                                className="min-w-0 max-w-[9rem] flex-1"
+                                className="flex h-10 min-w-0 max-w-[9rem] flex-1 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-slate-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:placeholder:text-slate-500 dark:focus:ring-slate-600"
                                 value={entry.timeAdministered}
-                                onChange={(e) =>
+                                onChange={(timeAdministered) =>
                                   updateLocalAnesthesiaEntry(index, {
-                                    timeAdministered: e.target.value,
+                                    timeAdministered,
                                   })
                                 }
                               />
@@ -4121,14 +4162,15 @@ export function GingivalDescriptionWebformImportedTemplate({
                       </Button>
                     </div>
 
-                    <div
-                      className={cx(
-                        "space-y-4 rounded-2xl border p-4 transition-colors",
-                        shouldHighlightLocalAnesthesiaAssessment
-                          ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
-                          : "border-slate-200 dark:border-slate-700",
-                      )}
-                    >
+                    {hasLocalAnesthesiaActivity ? (
+                      <div
+                        className={cx(
+                          "space-y-4 rounded-2xl border p-4 transition-colors",
+                          shouldHighlightLocalAnesthesiaAssessment
+                            ? "border-slate-300 bg-slate-50 ring-2 ring-slate-200 dark:border-sky-400 dark:bg-sky-950/25 dark:ring-sky-900/70"
+                            : "border-slate-200 dark:border-slate-700",
+                        )}
+                      >
                       <div className="space-y-1">
                         <div className="text-sm font-medium text-slate-900 dark:text-slate-100">
                           Post-anesthetic assessment
@@ -4177,7 +4219,8 @@ export function GingivalDescriptionWebformImportedTemplate({
                           }))
                         }
                       />
-                    </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
               </SectionCard>
@@ -4191,7 +4234,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                 }
                 contentClassName="space-y-2"
               >
-                <Label>Hygiene follow-up interval</Label>
+                <StackedLabel>Hygiene follow-up interval</StackedLabel>
                 <div className="space-y-4">
                   {Array.isArray(form.disposition)
                     ? form.disposition.map((entry) => {
@@ -4223,7 +4266,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                             </div>
                             <div className="grid gap-3 md:grid-cols-2 md:pl-8">
                               <div className="space-y-2">
-                                <Label htmlFor={intervalId}>Interval</Label>
+                                <StackedLabel htmlFor={intervalId}>Interval</StackedLabel>
                                 <Input
                                   id={intervalId}
                                   className="rounded-xl"
@@ -4237,7 +4280,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label>Unit</Label>
+                                <StackedLabel>Unit</StackedLabel>
                                 <Select
                                   value={entry.unit}
                                   onValueChange={(unit) =>
@@ -4292,6 +4335,8 @@ export function GingivalDescriptionWebformImportedTemplate({
               </SectionCard>
 
               {!isVeryShort ? actionButtons : null}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

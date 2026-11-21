@@ -187,6 +187,8 @@ export function ClinicalLocationMultiCombobox({
             : "Search or add a location"
       }
       showSelectedChips={false}
+      emptyLabel={label === "Tooth/area" ? "None selected" : undefined}
+      truncateTrigger={label === "Tooth/area"}
     />
   );
 }

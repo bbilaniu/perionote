@@ -1,3 +1,5 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   AdolescentDocumentationStatus,
   AdolescentHygieneForm,
@@ -12,6 +14,8 @@ import {
   formatPeriodontalAssessmentFindings,
   formatPeriodontalClassification,
 } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
+import { formatLocalTime24 } from "@/lib/templates/date";
+import { formatLocalAnesthesiaSummary } from "@/lib/templates/localAnesthesia";
 
 type BuildAdolescentHygieneSummaryOptions = {
   startedAt?: Date;
@@ -93,12 +97,7 @@ export function formatAdolescentHygieneNoteHeader(date: Date): string {
     "November",
     "December",
   ];
-  const hour24 = date.getHours();
-  const hour12 = hour24 % 12 || 12;
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-  const meridiem = hour24 >= 12 ? "PM" : "AM";
-  return `----- ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${hour12}:${minutes}:${seconds} ${meridiem} -----`;
+  return `----- ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()} ${formatLocalTime24(date)} -----`;
 }
 
 export function buildAdolescentHygieneSummary(
@@ -235,6 +234,7 @@ export function buildAdolescentHygieneSummary(
           : "Scaling: Yes.",
     yesNoLine("Polish", form.polishStatus, form.polishDetails),
     formatAdultHygieneTreatmentCompleted(form.treatmentCompleted),
+    formatLocalAnesthesiaSummary(form),
     yesNoLine("Fluoride", form.fluorideStatus, form.fluorideDetails),
     yesNoLine(
       "Relayed info to parent or legal guardian",
@@ -257,16 +257,17 @@ export function buildAdolescentHygieneSummary(
 
   return [
     group(header),
-    group(historyAndSterilization),
-    group(findings),
+    formatNoteSection("Consent, Medical History and Sterilization", historyAndSterilization),
+    formatNoteSection("Hygiene Findings", findings),
     group(periodontalAssessmentFindings),
     group(patientSpecificStageEvidence),
     group(patientSpecificGradeEvidence),
-    group(periodontalDiagnosis),
-    group(ohi),
-    group(appliances),
-    group(treatment),
-    group(commentsAndScheduling),
+    formatNoteSection("Periodontal Diagnosis", periodontalDiagnosis),
+    formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form)),
+    formatNoteSection("Oral Hygiene and Education", ohi),
+    formatNoteSection("Appliances and Relevant History", appliances),
+    formatNoteSection("Treatment", treatment),
+    formatNoteSection("Comments and Follow-up", commentsAndScheduling),
   ]
     .filter(Boolean)
     .join("\n\n");

@@ -1,5 +1,7 @@
 "use client";
 
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useMemo,
@@ -19,9 +21,16 @@ import {
   AdultHygieneCalculusControl,
   AdultHygienePlaqueControl,
   PeriodontalClassificationControl,
-  TreatmentCompletedList,
 } from "@/components/templates/native/AdultHygiene2021Template";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import {
+  interactiveTemplateUnloadWarning,
+  InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
+import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
+import { TreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import type {
   AdolescentDocumentationStatus,
@@ -36,10 +45,17 @@ import {
   brushingFrequencyChoices,
   flossingFrequencyChoices,
   homeCareOheTopicChoices,
-  standardTreatmentCompletedPreset,
-  type AdultHygieneTreatmentCompletedEntry,
 } from "@/lib/templates/adultHygiene2021";
+import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
+import {
+  createStandardTreatmentEntriesFromCatalogue,
+  treatmentCompletedEntryIdentity,
+} from "@/lib/templates/adultHygieneTreatment";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
 import {
   copyPeriodontalClassification,
   normalizePeriodontalClassification,
@@ -48,15 +64,13 @@ import {
   buildAdolescentHygieneSummary,
   formatAdolescentHygieneLocalTimestamp,
 } from "@/lib/templates/summary/buildAdolescentHygieneSummary";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
-const buttonClass =
-  "inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60";
-const adolescentDiscardWarning =
-  "Clear all entered Adolescent Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const adolescentDraftExemplar = createEmptyAdolescentHygieneForm();
 const emptyAdolescentDraft = JSON.stringify(adolescentDraftExemplar);
 const adolescentDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   "periodontalClassification.stageBasis": { criterionId: "" },
   "periodontalClassification.gradeBasis": { criterionId: "" },
   "periodontalClassification.gingivalHealth.reducedPeriodontiumBases": "",
@@ -65,7 +79,26 @@ const adolescentDraftArrayItemShapes = {
   ohiTechniques: "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
   "treatmentCompleted[].toothAreas": "",
+  localAnesthesiaEntries: {
+    id: "",
+    route: "injection",
+    administrationType: "",
+    toothAreas: [],
+    product: "",
+    amountMl: "",
+    durationSeconds: "",
+    timeAdministered: "",
+  },
+  "localAnesthesiaEntries[].toothAreas": "",
 } as const;
+
+function buildAdolescentOheTreatmentRecap(
+  form: AdolescentHygieneForm,
+): string {
+  return [...form.ohiTechniques, form.oheNotes.trim()]
+    .filter(Boolean)
+    .join("; ");
+}
 
 const documentationStatusOptions: ReadonlyArray<{
   value: AdolescentDocumentationStatus;
@@ -86,6 +119,18 @@ const retainerOptions: ReadonlyArray<{
   { value: "removable", label: "Removable" },
   { value: "fixed-and-removable", label: "Fixed and removable" },
 ];
+
+const adolescentHygieneSections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Hygiene Findings",
+  "Periodontal and Gingival Assessment",
+  "Oral Hygiene Instruction",
+  "Appliances and Orthodontic History",
+  "Treatment and Communication",
+  "Comments and Scheduling",
+]);
 
 function isEmptyAdolescentDraft(form: AdolescentHygieneForm): boolean {
   return (
@@ -119,7 +164,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -230,7 +278,7 @@ function CheckboxField({
     >
       <input
         id={id}
-        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-700 focus:ring-sky-500"
+        className="mt-0.5 h-4 w-4 rounded-sm border-slate-300 text-sky-700 focus:ring-sky-500"
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
@@ -303,22 +351,21 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function AdolescentHygieneTemplate({
   fixture,
-}: {
-  fixture: AdolescentHygieneForm;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<AdolescentHygieneForm>) {
   const [form, setForm] = useState<AdolescentHygieneForm>(() =>
     createEmptyAdolescentHygieneForm(),
   );
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const rdhRef = useRef<HTMLInputElement>(null);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const treatmentEntrySequence = useRef(0);
-  const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
+  const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
+    useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
     templateId: "adolescent-hygiene",
@@ -350,42 +397,32 @@ export function AdolescentHygieneTemplate({
     };
   }
 
-  useEffect(() => {
-    setStartedAt((current) => current ?? new Date());
-  }, []);
-
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh:
+          current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda:
+          current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh:
-        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda:
-        current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adolescentDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -466,52 +503,37 @@ export function AdolescentHygieneTemplate({
     setCopyMessage("Synthetic demo data loaded.");
   }
 
-  function resetForm() {
-    if (!window.confirm(adolescentDiscardWarning)) return;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
+    }
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
+    return true;
   }
 
-  function createTreatmentEntry(
-    source?: Omit<AdultHygieneTreatmentCompletedEntry, "id">,
-  ): AdultHygieneTreatmentCompletedEntry {
+  function nextTreatmentEntryId(): string {
     treatmentEntrySequence.current += 1;
-    return {
-      id: `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`,
-      treatmentType: source?.treatmentType ?? "",
-      toothAreas: [...(source?.toothAreas ?? [])],
-    };
+    return `adolescent-treatment-${Date.now()}-${treatmentEntrySequence.current}`;
   }
 
   function applyStandardTreatment() {
     const existing = new Set(
-      form.treatmentCompleted.map(
-        (entry) =>
-          `${entry.treatmentType.trim().toLocaleLowerCase("en-CA")}|${entry.toothAreas
-            .join("|")
-            .toLocaleLowerCase("en-CA")}`,
-      ),
+      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
     );
-    const additions = standardTreatmentCompletedPreset.flatMap((entry) => {
-      const key = `${entry.treatmentType
-        .trim()
-        .toLocaleLowerCase("en-CA")}|${entry.toothAreas
-        .join("|")
-        .toLocaleLowerCase("en-CA")}`;
-      return existing.has(key)
-        ? []
-        : [
-            createTreatmentEntry({
-              treatmentType: entry.treatmentType,
-              toothAreas: [...entry.toothAreas],
-            }),
-          ];
-    });
+    const additions = createStandardTreatmentEntriesFromCatalogue(
+      getItems("hygiene-treatment.completed"),
+      nextTreatmentEntryId,
+      buildAdolescentOheTreatmentRecap(form),
+    ).filter(
+      (entry) => !existing.has(treatmentCompletedEntryIdentity(entry)),
+    );
     if (additions.length) {
       updateField("treatmentCompleted", [
         ...form.treatmentCompleted,
@@ -521,37 +543,38 @@ export function AdolescentHygieneTemplate({
   }
 
   return (
-    <div className="space-y-6">
-      <form
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
-        autoComplete="off"
-        onSubmit={(event) => {
+    <InteractiveTemplateWorkspace
+      presentation={presentation}
+      sections={adolescentHygieneSections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
           event.preventDefault();
           void copyNote();
-        }}
-      >
-        <div className="space-y-6">
-          <header className="rounded-2xl border border-violet-300 bg-violet-50 p-5 dark:border-violet-800 dark:bg-violet-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-violet-800 dark:text-violet-300">
-              Draft interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              12–17 Years Old Hygiene Template
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured adolescent hygiene note.
-              This draft preserves the ClearDent workflow and includes optional
-              Dentist and treatment-completed fields from the August 6 request.
-            </p>
-          </header>
-
-          <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-          />
+      }}
+      onLoadDemo={loadDemo}
+      onReset={resetForm}
+      draftRecovery={{
+        templateId: "adolescent-hygiene",
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="adolescent-hygiene-summary"
+          accessibleLabel="Generated adolescent hygiene note"
+          value={summary}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          headerAction={headerAction}
+        />
+      )}
+    >
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-2">
@@ -770,24 +793,30 @@ export function AdolescentHygieneTemplate({
           </Section>
 
           <Section title="Oral Hygiene Instruction">
-            <div className="grid gap-4 md:grid-cols-2">
-              <StaticSuggestionCombobox
-                id="adolescent-flossing-frequency"
-                label="Flossing frequency"
-                value={form.flossingFrequency}
-                suggestions={flossingFrequencyChoices}
-                onChange={(value) => updateField("flossingFrequency", value)}
-                placeholder="Select or enter a flossing frequency"
-              />
-              <StaticSuggestionCombobox
-                id="adolescent-brushing-frequency"
-                label="Brushing frequency"
-                value={form.brushingFrequency}
-                suggestions={brushingFrequencyChoices}
-                onChange={(value) => updateField("brushingFrequency", value)}
-                placeholder="Select or enter a brushing frequency"
-              />
-            </div>
+            <OralHygieneMethodsControl
+              value={form}
+              onChange={updateField}
+              brushingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adolescent-brushing-frequency"
+                  label="Brushing frequency"
+                  value={form.brushingFrequency}
+                  suggestions={brushingFrequencyChoices}
+                  onChange={(value) => updateField("brushingFrequency", value)}
+                  placeholder="Select or enter a brushing frequency"
+                />
+              }
+              flossingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adolescent-flossing-frequency"
+                  label="Flossing frequency"
+                  value={form.flossingFrequency}
+                  suggestions={flossingFrequencyChoices}
+                  onChange={(value) => updateField("flossingFrequency", value)}
+                  placeholder="Select or enter a flossing frequency"
+                />
+              }
+            />
             <FixedChoiceMultiCombobox
               id="adolescent-ohi-techniques"
               label="OHI techniques reviewed"
@@ -869,30 +898,55 @@ export function AdolescentHygieneTemplate({
                   updateField("scalingUnits", value)
                 }
               />
-              <YesNoWithDetails
-                id="adolescent-polish"
-                label="Polish"
-                status={form.polishStatus}
-                details={form.polishDetails}
-                detailsLabel="Polish details"
-                onStatusChange={(value) => updateField("polishStatus", value)}
-                onDetailsChange={(value) =>
-                  updateField("polishDetails", value)
-                }
-              />
-              <YesNoWithDetails
-                id="adolescent-fluoride"
-                label="Fluoride"
-                status={form.fluorideStatus}
-                details={form.fluorideDetails}
-                detailsLabel="Fluoride details"
-                onStatusChange={(value) =>
-                  updateField("fluorideStatus", value)
-                }
-                onDetailsChange={(value) =>
-                  updateField("fluorideDetails", value)
-                }
-              />
+              <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <FixedChoiceListbox
+                  id="adolescent-polish"
+                  label="Polish"
+                  value={form.polishStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => updateField("polishStatus", value)}
+                />
+                {form.polishStatus === "yes" ? (
+                  <CatalogueCombobox
+                    id="adolescent-polish-product"
+                    label="Polish product"
+                    catalogueKey="hygiene-treatment.polishing-products"
+                    value={form.polishDetails}
+                    onChange={(value) => updateField("polishDetails", value)}
+                    showAllSuggestionsWhenSelected
+                  />
+                ) : null}
+              </div>
+              <div className="space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <FixedChoiceListbox
+                  id="adolescent-fluoride"
+                  label="Fluoride"
+                  value={form.fluorideStatus}
+                  options={documentationStatusOptions}
+                  onChange={(value) => updateField("fluorideStatus", value)}
+                />
+                {form.fluorideStatus === "yes" ? (
+                  <CatalogueCombobox
+                    id="adolescent-fluoride-product"
+                    label="Fluoride product"
+                    catalogueKey="hygiene-treatment.desensitizer"
+                    value={form.fluorideDetails}
+                    rememberMetadata={{
+                      kind: "desensitizing-remineralizing-product",
+                      productType: "fluoride-varnish",
+                    }}
+                    suggestionFilter={(item) => {
+                      const metadata = item.metadata;
+                      return (
+                        isDesensitizingRemineralizingProductMetadata(metadata) &&
+                        metadata.productType === "fluoride-varnish"
+                      );
+                    }}
+                    onChange={(value) => updateField("fluorideDetails", value)}
+                    showAllSuggestionsWhenSelected
+                  />
+                ) : null}
+              </div>
               <YesNoWithDetails
                 id="adolescent-information-relayed"
                 label="Relayed info to parent or legal guardian"
@@ -909,14 +963,24 @@ export function AdolescentHygieneTemplate({
             </div>
             <TreatmentCompletedList
               entries={form.treatmentCompleted}
+              oheRecap={buildAdolescentOheTreatmentRecap(form)}
               onApplyStandard={applyStandardTreatment}
-              onAdd={() =>
-                updateField("treatmentCompleted", [
-                  ...form.treatmentCompleted,
-                  createTreatmentEntry(),
-                ])
-              }
               onChange={(value) => updateField("treatmentCompleted", value)}
+            />
+            <LocalAnesthesiaControl
+              value={{
+                localAnesthesiaNoContraindication:
+                  form.localAnesthesiaNoContraindication,
+                localAnesthesiaEntries: form.localAnesthesiaEntries,
+                localAnesthesiaNoAdverseReactions:
+                  form.localAnesthesiaNoAdverseReactions,
+                localAnesthesiaAdequateAchieved:
+                  form.localAnesthesiaAdequateAchieved,
+                localAnesthesiaNotes: form.localAnesthesiaNotes,
+              }}
+              onChange={(localAnesthesia) =>
+                setForm((current) => ({ ...current, ...localAnesthesia }))
+              }
             />
             <TextareaField
               id="adolescent-next-visit-goal"
@@ -974,57 +1038,6 @@ export function AdolescentHygieneTemplate({
               </div>
             </div>
           </Section>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated Note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The visible preview is copied unchanged.
-            </p>
-            <label className="sr-only" htmlFor="adolescent-hygiene-summary">
-              Generated adolescent hygiene note
-            </label>
-            <textarea
-              id="adolescent-hygiene-summary"
-              className={`${inputClass} min-h-[34rem] resize-y font-mono leading-6`}
-              readOnly
-              value={summary}
-              placeholder="Complete fields to build the note."
-            />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-                disabled={!startedAt}
-              >
-                Copy note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={loadDemo}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+    </InteractiveTemplateWorkspace>
   );
 }

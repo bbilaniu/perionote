@@ -1,11 +1,14 @@
 "use client";
 
+import { RapidDisclosure } from "@/components/forms/RapidChoiceControls";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
 import { ClinicalLocationMultiCombobox } from "@/components/forms/ClinicalLocationMultiCombobox";
 import { formControlClass } from "@/components/forms/controlStyles";
 import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
+import { Time24Input } from "@/components/forms/Time24Input";
 import { isLocalAnestheticCatalogueMetadata } from "@/lib/catalogues/catalogue";
+import { getCurrentTimeString } from "@/lib/templates/date";
 import {
   localAnesthesiaInjectionTypes,
   localAnesthesiaTopicalApplicationTypes,
@@ -16,8 +19,12 @@ import {
 
 const dyclonineCatalogueItemId =
   "seed.hygiene-treatment.anesthetic.dyclonine-rinse";
+const benzocaineCatalogueItemId =
+  "seed.hygiene-treatment.anesthetic.benzocaine-20";
 const buttonClass =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const timeActionButtonClass =
+  "inline-flex h-10 shrink-0 items-center justify-center rounded-xl border border-slate-300 px-3 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 const inputClass = formControlClass();
 const routeOptions: ReadonlyArray<{
   value: LocalAnesthesiaRoute;
@@ -29,10 +36,7 @@ const routeOptions: ReadonlyArray<{
 ];
 
 function currentTime(): string {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(
-    now.getMinutes(),
-  ).padStart(2, "0")}`;
+  return getCurrentTimeString();
 }
 
 function newEntry(route: LocalAnesthesiaRoute): LocalAnesthesiaEntry {
@@ -55,7 +59,9 @@ function newEntry(route: LocalAnesthesiaRoute): LocalAnesthesiaEntry {
 export function LocalAnesthesiaControl({
   value,
   onChange,
+  rapid = false,
 }: {
+  rapid?: boolean;
   value: LocalAnesthesiaValue;
   onChange: (value: LocalAnesthesiaValue) => void;
 }) {
@@ -66,8 +72,14 @@ export function LocalAnesthesiaControl({
   const dyclonine = products.find(
     (item) => item.id === dyclonineCatalogueItemId,
   );
+  const benzocaine = products.find(
+    (item) => item.id === benzocaineCatalogueItemId,
+  );
   const hasDyclonineRinse = value.localAnesthesiaEntries.some(
     (entry) => entry.catalogueItemId === dyclonineCatalogueItemId,
+  );
+  const hasBenzocaineTopical = value.localAnesthesiaEntries.some(
+    (entry) => entry.catalogueItemId === benzocaineCatalogueItemId,
   );
   const assessmentIncomplete =
     value.localAnesthesiaEntries.length > 0 &&
@@ -117,7 +129,39 @@ export function LocalAnesthesiaControl({
     });
   }
 
-  return (
+  function applyBenzocaineTopical() {
+    if (!benzocaine || hasBenzocaineTopical) return;
+    const metadata = isLocalAnestheticCatalogueMetadata(benzocaine.metadata)
+      ? benzocaine.metadata
+      : undefined;
+    onChange({
+      ...value,
+      localAnesthesiaEntries: [
+        ...value.localAnesthesiaEntries,
+        {
+          ...newEntry("topical"),
+          administrationType: "Mucosal application",
+          toothAreas: ["before injection"],
+          product: benzocaine.label,
+          catalogueItemId: benzocaine.id,
+          amountMl: String(metadata?.defaultAmountMl ?? 0.5),
+        },
+      ],
+    });
+  }
+
+  const dyclonineAction = (
+    <button
+      type="button"
+      className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
+      disabled={!dyclonine || hasDyclonineRinse}
+      onClick={applyDyclonineRinse}
+    >
+      {hasDyclonineRinse ? "Dyclonine rinse applied" : "Apply Dyclonine rinse"}
+    </button>
+  );
+
+  const anesthesiaDetails = (
     <fieldset
       className="space-y-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700"
       aria-label="Local anesthesia"
@@ -134,26 +178,41 @@ export function LocalAnesthesiaControl({
         >
           No C/I to LA
         </NativeChoiceControl>
-        <button
-          type="button"
-          className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
-          disabled={!dyclonine || hasDyclonineRinse}
-          onClick={applyDyclonineRinse}
-        >
-          {hasDyclonineRinse
-            ? "Dyclonine rinse applied"
-            : "Apply Dyclonine rinse"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={`${buttonClass} border-sky-700 text-sky-800 dark:border-sky-400 dark:text-sky-200`}
+            disabled={!benzocaine || hasBenzocaineTopical}
+            onClick={applyBenzocaineTopical}
+          >
+            {hasBenzocaineTopical
+              ? "Benzocaine topical applied"
+              : "Apply Benzocaine topical"}
+          </button>
+          {!rapid ? dyclonineAction : null}
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <button type="button" className={buttonClass} onClick={() => addEntry("injection")}>
+        <button
+          type="button"
+          className={buttonClass}
+          onClick={() => addEntry("injection")}
+        >
           Add injection entry
         </button>
-        <button type="button" className={buttonClass} onClick={() => addEntry("topical")}>
+        <button
+          type="button"
+          className={buttonClass}
+          onClick={() => addEntry("topical")}
+        >
           Add topical entry
         </button>
-        <button type="button" className={buttonClass} onClick={() => addEntry("rinse")}>
+        <button
+          type="button"
+          className={buttonClass}
+          onClick={() => addEntry("rinse")}
+        >
           Add rinse entry
         </button>
       </div>
@@ -162,7 +221,9 @@ export function LocalAnesthesiaControl({
         <ol className="space-y-3" aria-label="Local anesthesia entries">
           {value.localAnesthesiaEntries.map((entry, index) => {
             const routeProducts = products.filter(
-              (item) => item.metadata?.kind === "local-anesthetic" && item.metadata.route === entry.route,
+              (item) =>
+                item.metadata?.kind === "local-anesthetic" &&
+                item.metadata.route === entry.route,
             );
             const typeOptions =
               entry.route === "injection"
@@ -180,22 +241,30 @@ export function LocalAnesthesiaControl({
                   <button
                     type="button"
                     className={`${buttonClass} border-red-300 text-red-800 hover:bg-red-50 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950`}
-                    onClick={() =>
+                    onClick={() => {
+                      const localAnesthesiaEntries =
+                        value.localAnesthesiaEntries.filter(
+                          (candidate) => candidate.id !== entry.id,
+                        );
                       onChange({
                         ...value,
-                        localAnesthesiaEntries:
-                          value.localAnesthesiaEntries.filter(
-                            (candidate) => candidate.id !== entry.id,
-                          ),
-                      })
-                    }
+                        localAnesthesiaEntries,
+                        ...(localAnesthesiaEntries.length === 0
+                          ? {
+                              localAnesthesiaNoAdverseReactions: false,
+                              localAnesthesiaAdequateAchieved: false,
+                              localAnesthesiaNotes: "",
+                            }
+                          : {}),
+                      });
+                    }}
                   >
                     Remove
                   </button>
                 </div>
 
-                <div className="grid gap-4 text-sm md:grid-cols-2 lg:grid-cols-12">
-                  <div className="lg:col-span-3">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+                  <div className="text-sm lg:col-span-3">
                     <FixedChoiceListbox
                       id={`local-anesthesia-route-${entry.id}`}
                       label="Route"
@@ -205,8 +274,7 @@ export function LocalAnesthesiaControl({
                         updateEntry(entry.id, {
                           route,
                           administrationType: "",
-                          toothAreas:
-                            route === "rinse" ? ["full mouth"] : [],
+                          toothAreas: route === "rinse" ? ["full mouth"] : [],
                           product: "",
                           catalogueItemId: undefined,
                           amountMl: route === "injection" ? "1.8" : "",
@@ -217,7 +285,7 @@ export function LocalAnesthesiaControl({
                   </div>
 
                   {entry.route !== "rinse" ? (
-                    <div className="lg:col-span-3">
+                    <div className="text-sm lg:col-span-3">
                       <FixedChoiceListbox
                         id={`local-anesthesia-administration-type-${entry.id}`}
                         label={
@@ -258,7 +326,7 @@ export function LocalAnesthesiaControl({
                     </label>
                   )}
 
-                  <div className="lg:col-span-3">
+                  <div className="text-sm md:col-span-2 lg:col-span-3">
                     <ClinicalLocationMultiCombobox
                       id={`local-anesthesia-${entry.id}-tooth-area`}
                       label="Tooth/area"
@@ -270,7 +338,7 @@ export function LocalAnesthesiaControl({
                     />
                   </div>
 
-                  <div className="md:col-span-2 lg:col-span-3">
+                  <div className="text-sm md:col-span-1 lg:col-span-3">
                     <FixedChoiceListbox
                       id={`local-anesthesia-product-${entry.id}`}
                       label="Anesthetic product"
@@ -295,7 +363,7 @@ export function LocalAnesthesiaControl({
                           product: item?.label ?? "",
                           catalogueItemId: item?.id,
                           amountMl: metadata
-                            ? String(metadata.defaultAmountMl)
+                            ? String(metadata.defaultAmountMl ?? "")
                             : entry.amountMl,
                           durationSeconds: metadata?.defaultDurationSeconds
                             ? String(metadata.defaultDurationSeconds)
@@ -305,12 +373,12 @@ export function LocalAnesthesiaControl({
                     />
                   </div>
 
-                  <label className="text-sm font-medium lg:col-span-3">
+                  <label className="text-sm font-medium sm:col-span-1 md:col-span-1 lg:col-span-3">
                     Amount (mL)
                     <input
                       type="number"
                       min="0"
-                      step="0.1"
+                      step={entry.route === "topical" ? "0.01" : "0.1"}
                       className={`mt-1 ${inputClass}`}
                       value={entry.amountMl}
                       onChange={(event) =>
@@ -324,36 +392,35 @@ export function LocalAnesthesiaControl({
                       Time administered
                     </label>
                     <div className="mt-1 flex flex-wrap gap-2">
-                      <input
+                      <Time24Input
                         id={`local-anesthesia-time-${entry.id}`}
-                        type="time"
                         className={`${inputClass} min-w-36 flex-1`}
                         value={entry.timeAdministered}
-                        onChange={(event) =>
+                        onChange={(timeAdministered) =>
                           updateEntry(entry.id, {
-                            timeAdministered: event.target.value,
+                            timeAdministered,
                           })
                         }
                       />
                       <button
                         type="button"
-                        className={buttonClass}
+                        className={timeActionButtonClass}
                         onClick={() =>
                           updateEntry(entry.id, {
                             timeAdministered: currentTime(),
                           })
                         }
                       >
-                        Now
+                        Set to now
                       </button>
                       <button
                         type="button"
-                        className={buttonClass}
+                        className={timeActionButtonClass}
                         onClick={() =>
                           updateEntry(entry.id, { timeAdministered: "" })
                         }
                       >
-                        Clear
+                        Clear time
                       </button>
                     </div>
                   </div>
@@ -364,51 +431,73 @@ export function LocalAnesthesiaControl({
         </ol>
       ) : null}
 
-      <div
-        className={`space-y-3 rounded-xl border p-4 ${
-          assessmentIncomplete
-            ? "border-amber-400 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30"
-            : "border-slate-200 dark:border-slate-700"
-        }`}
-      >
-        <h4 className="font-semibold">Post-anesthetic assessment</h4>
-        {assessmentIncomplete ? (
-          <p className="text-sm text-amber-900 dark:text-amber-200" role="alert">
-            Confirm No C/I to LA and complete the post-anesthetic assessment
-            before finishing the note.
-          </p>
-        ) : null}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <NativeChoiceControl
-            type="checkbox"
-            checked={value.localAnesthesiaNoAdverseReactions}
-            onChange={(localAnesthesiaNoAdverseReactions) =>
-              onChange({ ...value, localAnesthesiaNoAdverseReactions })
-            }
-          >
-            No adverse reactions noted
-          </NativeChoiceControl>
-          <NativeChoiceControl
-            type="checkbox"
-            checked={value.localAnesthesiaAdequateAchieved}
-            onChange={(localAnesthesiaAdequateAchieved) =>
-              onChange({ ...value, localAnesthesiaAdequateAchieved })
-            }
-          >
-            Adequate anesthesia achieved
-          </NativeChoiceControl>
+      {value.localAnesthesiaEntries.length > 0 ? (
+        <div
+          className={`space-y-3 rounded-xl border p-4 ${
+            assessmentIncomplete
+              ? "border-amber-400 bg-amber-50 dark:border-amber-700 dark:bg-amber-950/30"
+              : "border-slate-200 dark:border-slate-700"
+          }`}
+        >
+          <h4 className="font-semibold">Post-anesthetic assessment</h4>
+          {assessmentIncomplete ? (
+            <p
+              className="text-sm text-amber-900 dark:text-amber-200"
+              role="alert"
+            >
+              Confirm No C/I to LA and complete the post-anesthetic assessment
+              before finishing the note.
+            </p>
+          ) : null}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <NativeChoiceControl
+              type="checkbox"
+              checked={value.localAnesthesiaNoAdverseReactions}
+              onChange={(localAnesthesiaNoAdverseReactions) =>
+                onChange({ ...value, localAnesthesiaNoAdverseReactions })
+              }
+            >
+              No adverse reactions noted
+            </NativeChoiceControl>
+            <NativeChoiceControl
+              type="checkbox"
+              checked={value.localAnesthesiaAdequateAchieved}
+              onChange={(localAnesthesiaAdequateAchieved) =>
+                onChange({ ...value, localAnesthesiaAdequateAchieved })
+              }
+            >
+              Adequate anesthesia achieved
+            </NativeChoiceControl>
+          </div>
+          <label className="block text-sm font-medium">
+            Anesthesia notes
+            <textarea
+              className={`mt-1 min-h-24 ${inputClass}`}
+              value={value.localAnesthesiaNotes}
+              onChange={(event) =>
+                onChange({ ...value, localAnesthesiaNotes: event.target.value })
+              }
+            />
+          </label>
         </div>
-        <label className="block text-sm font-medium">
-          Anesthesia notes
-          <textarea
-            className={`mt-1 min-h-24 ${inputClass}`}
-            value={value.localAnesthesiaNotes}
-            onChange={(event) =>
-              onChange({ ...value, localAnesthesiaNotes: event.target.value })
-            }
-          />
-        </label>
-      </div>
+      ) : null}
     </fieldset>
+  );
+
+  return rapid ? (
+    <div className="space-y-2">
+      {dyclonineAction}
+      <RapidDisclosure
+        label="Local anesthesia"
+        documented={Boolean(
+          value.localAnesthesiaEntries.length ||
+            value.localAnesthesiaNotes.trim(),
+        )}
+      >
+        {anesthesiaDetails}
+      </RapidDisclosure>
+    </div>
+  ) : (
+    anesthesiaDetails
   );
 }

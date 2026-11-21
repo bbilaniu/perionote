@@ -75,22 +75,72 @@ TMJ: WNL.
   - TMJ loading test: Mild discomfort on loading.`);
   });
 
+  it("lists repeatable vitals readings and averages valid measurements", () => {
+    const summary = buildAdultHygiene2026Summary({
+      ...createEmptyAdultHygiene2026Form(),
+      vitalsReadings: [
+        {
+          systolic: "142",
+          diastolic: "88",
+          heartRate: "78",
+          time: "09:05",
+        },
+        {
+          systolic: "136",
+          diastolic: "84",
+          heartRate: "74",
+          time: "",
+        },
+      ],
+    });
+
+    expect(summary).toContain(
+      "Vitals reading 1: BP: 142/88 mmHg, HR: 78 bpm (at 09:05)",
+    );
+    expect(summary).toContain(
+      "Vitals reading 2: BP: 136/84 mmHg, HR: 74 bpm",
+    );
+    expect(summary).toContain("Average BP: 139/86 mmHg, HR: 76 bpm");
+
+    const oneValidReading = buildAdultHygiene2026Summary({
+      ...createEmptyAdultHygiene2026Form(),
+      vitalsReadings: [
+        {
+          systolic: "118",
+          diastolic: "76",
+          heartRate: "72",
+          time: "",
+        },
+        {
+          systolic: "not-a-number",
+          diastolic: "",
+          heartRate: "",
+          time: "",
+        },
+      ],
+    });
+    expect(oneValidReading).not.toContain("Average BP:");
+  });
+
   it("shows Periodontal diagnosis while a Health or Gingivitis classification is pending", () => {
     for (const diagnosis of ["health", "gingivitis"] as const) {
       const form = createEmptyAdultHygiene2026Form();
       form.periodontalClassification.diagnosis = diagnosis;
 
       expect(buildAdultHygiene2026Summary(form)).toBe(
-        "Periodontal diagnosis:",
+        `Periodontal Diagnosis
+  Periodontal diagnosis:`,
       );
     }
 
     const classified = createEmptyAdultHygiene2026Form();
     classified.periodontalClassification.diagnosis = "gingivitis";
+    classified.periodontalClassification.extent = "generalized";
     classified.periodontalClassification.gingivalHealth.context =
       "gingivitis-intact";
     expect(buildAdultHygiene2026Summary(classified)).toBe(
-      "Periodontal diagnosis: GINGIVITIS - INTACT PERIODONTIUM",
+      `Periodontal Diagnosis
+  Periodontal diagnosis: GENERALIZED GINGIVITIS - INTACT PERIODONTIUM`,
     );
 
     const periodontitis = createEmptyAdultHygiene2026Form();
@@ -99,7 +149,8 @@ TMJ: WNL.
     periodontitis.periodontalClassification.stage = "III";
     periodontitis.periodontalClassification.grade = "B";
     expect(buildAdultHygiene2026Summary(periodontitis)).toBe(
-      "Periodontal diagnosis: MOLAR/INCISOR PATTERN PERIODONTITIS, Stage III, Grade B.",
+      `Periodontal Diagnosis
+  Periodontal diagnosis: MOLAR/INCISOR PATTERN PERIODONTITIS, Stage III, Grade B.`,
     );
   });
 
@@ -114,7 +165,7 @@ TMJ: WNL.
 
     const summary = buildAdultHygiene2026Summary(form);
     expect(summary).not.toContain("Periodontal status:");
-    expect(summary).not.toContain("Periodontal status comment:");
+    expect(summary).not.toContain("Perio status comment:");
   });
 
   it("composes complete, hygiene, and recare notes from one encounter", () => {
@@ -184,9 +235,11 @@ TMJ: WNL.
       "IOE:",
       "Teeth:",
       "Oral habits:",
+      "Occlusion:",
+      "Appliances and Relevant History",
       "CPAP:",
       "Plaque:",
-      "Moderate caries risk",
+      "Caries risk category:",
       "Oral hygiene compliance:",
       "Dental Treatment Options Discussed:",
       "Hygiene Treatment Options Discussed:",
@@ -236,10 +289,11 @@ TMJ: WNL.
       listAdditionalOcclusalFindings: true,
     };
 
-    expect(buildAdultHygiene2026Summary(form)).toContain(
-      `Additional occlusal findings:
-  - Spacing (location: Anterior).
-  - Crowding.`,
+    expect(buildAdultHygiene2026Summary(form)).toBe(
+      `Occlusion:
+  Additional occlusal findings:
+    - Spacing (location: Anterior).
+    - Crowding.`,
     );
   });
 
@@ -274,6 +328,7 @@ TMJ: WNL.
       ...createEmptyAdultHygiene2026Form(),
     } as Record<string, unknown>;
     for (const field of [
+      "vitalsReadings",
       "radiographs",
       "intraoralPhotosStatus",
       "intraoralPhotosDetails",
@@ -296,6 +351,7 @@ TMJ: WNL.
       "recareAdditionalComments",
       "dentalNextVisit",
       "dentalDateBooked",
+      "cambra123Assessment",
     ]) {
       delete legacyDraft[field];
     }
@@ -313,6 +369,15 @@ TMJ: WNL.
     legacyPeriodontalClassification.gingivalHealth = legacyGingivalHealth;
     legacyDraft.periodontalClassification = legacyPeriodontalClassification;
     expect(isAdultHygieneDraftForm(legacyDraft)).toBe(true);
+    expect(
+      isAdultHygieneDraftForm({
+        ...createEmptyAdultHygiene2026Form(),
+        cambra123Assessment: {
+          ...createEmptyAdultHygiene2026Form().cambra123Assessment,
+          yesItemIds: [42],
+        },
+      }),
+    ).toBe(false);
     expect(
       isAdultHygieneDraftForm({
         ...createEmptyAdultHygiene2026Form(),
@@ -389,10 +454,10 @@ TMJ: WNL.
       ],
     };
     const expected = `Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
-OH Aids Reviewed/Recommended: Interdental brush
-REVIEWED DISEASE PROCESS WITH PATIENT TODAY
-Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
-OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
+  OH Aids Reviewed/Recommended: Interdental brush
+  REVIEWED DISEASE PROCESS WITH PATIENT TODAY
+  Patient's diagnoses and risk factors were explained to them. OHE on etiology of periodontitis and caries; and their risk factors. Demonstration of bass brushing, c-shape flossing technique. Reviewed benefits of Prevident 5000 or Opti-Rinse 0.05%.
+  OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
 
     expect(
       buildAdultHygiene2021Summary({
@@ -405,7 +470,37 @@ OHE: Bass brushing; Sulcabrush and interdental brush technique.`;
         ...createEmptyAdultHygiene2026Form(),
         ...legacyOhe,
       }),
-    ).toContain(expected);
+    ).toContain(expected.replace("\n  OH Aids", "\n\nOral Hygiene Education\n  OH Aids"));
+  });
+
+  it("charts a completed CAMBRA123 assessment and supersedes legacy risk text", () => {
+    const form = createEmptyAdultHygiene2026Form();
+    form.cariesRiskLevel = "Moderate";
+    form.cariesRiskFactors = ["Legacy factor that must not be mixed in"];
+    form.cariesRiskNotes = "Legacy notes";
+    form.cambra123Assessment = {
+      ...form.cambra123Assessment,
+      completionStatus: "complete",
+      yesItemIds: [
+        "protective.f-toothpaste-twice-daily",
+        "risk.frequent-snacking",
+        "risk.reduced-salivary-function",
+        "disease.new-dentin-cavities",
+      ],
+      finalRiskLevel: "Extreme",
+      notes: "Dry-mouth management reviewed",
+    };
+
+    const summary = buildAdultHygiene2026Summary(form);
+    expect(summary).toBe(`Caries Risk
+  Caries risk category: Extreme.
+    CAMBRA123 2021, ages 6–adult, score: 6 (Column 1: -1; Column 2: +4; Column 3: +3).
+    Protective factors — Yes: Fluoride toothpaste twice daily or more.
+    Biological/environmental risk factors — Yes: Frequent snacking (more than 3 times daily); Reduced salivary function (measured low flow rate).
+    Disease indicators — Yes: New cavities or lesions into dentin (radiographically).
+    CAMBRA123 notes: Dry-mouth management reviewed.`);
+    expect(summary).not.toContain("Legacy factor");
+    expect(summary).not.toContain("Legacy notes");
   });
 
   it("uses independent model, fixture, summary, component, and draft identities", () => {

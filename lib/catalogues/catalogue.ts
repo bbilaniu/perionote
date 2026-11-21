@@ -2,7 +2,7 @@ import { isTemplateAvailableForBuild } from "@/lib/templates/lifecycle";
 import { patientChiefConcernSeedValues } from "@/lib/templates/patientChiefConcern";
 import { cariesRiskFactorSeedValues } from "@/lib/templates/cariesRisk";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
-import type { LocalAnesthesiaRoute } from "@/lib/templates/localAnesthesia";
+import { cetacaineLiquidProductLabel, type LocalAnesthesiaRoute } from "@/lib/templates/localAnesthesia";
 
 export const CATALOGUE_STORAGE_KEY = "hygienenote.catalogues.v1";
 export const CATALOGUE_EXPORT_FORMAT = "hygienenote-catalogue";
@@ -15,6 +15,7 @@ export const CATALOGUE_KEYS = [
   "visit-team.rda",
   "visit-team.rdh",
   "patient.chief-concerns",
+  "clinical-exam.terminal-plane",
   "clinical-exam.molar-occlusion",
   "clinical-exam.skeletal-occlusion",
   "clinical-exam.additional-occlusal-findings",
@@ -104,7 +105,7 @@ export type PolishingProductCatalogueMetadata = {
 export type LocalAnestheticCatalogueMetadata = {
   kind: "local-anesthetic";
   route: LocalAnesthesiaRoute;
-  defaultAmountMl: number;
+  defaultAmountMl?: number;
   defaultDurationSeconds?: number;
 };
 
@@ -213,6 +214,12 @@ const occlusionSeeds = (prefix: "molar" | "skeletal"): CatalogueSeed[] => [
   { id: `seed.${prefix}.cl-i`, label: "Cl I" },
   { id: `seed.${prefix}.cl-ii`, label: "Cl II" },
   { id: `seed.${prefix}.cl-iii`, label: "Cl III" },
+];
+
+const terminalPlaneSeeds: CatalogueSeed[] = [
+  { id: "seed.terminal-plane.flush", label: "Flush terminal plane" },
+  { id: "seed.terminal-plane.mesial-step", label: "Mesial step" },
+  { id: "seed.terminal-plane.distal-step", label: "Distal step" },
 ];
 
 const additionalOcclusalFindingSeeds: CatalogueSeed[] = [
@@ -364,27 +371,19 @@ const treatmentCompletedSeeds: CatalogueSeed[] = [
       defaultToothAreas: ["full mouth"],
     },
   ),
-  completedCareSeed(
-    "sdf-application",
-    "SDF application",
-    {
-      category: "product-application",
-      procedure: "product-application",
-      productType: "silver-diamine-fluoride",
-      defaultProduct: "Advantage Arrest® Silver Diamine Fluoride 38%",
-    },
-  ),
-  completedCareSeed(
-    "desensitizer-application",
-    "Desensitizer application",
-    {
-      category: "product-application",
-      procedure: "product-application",
-      productType: "desensitizer",
-      defaultProduct:
-        "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
-    },
-  ),
+  completedCareSeed("sdf-application", "SDF application", {
+    category: "product-application",
+    procedure: "product-application",
+    productType: "silver-diamine-fluoride",
+    defaultProduct: "Advantage Arrest® Silver Diamine Fluoride 38%",
+  }),
+  completedCareSeed("desensitizer-application", "Desensitizer application", {
+    category: "product-application",
+    procedure: "product-application",
+    productType: "desensitizer",
+    defaultProduct:
+      "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+  }),
   completedCareSeed(
     "resin-sealant",
     "Sealant application, resin-based material",
@@ -406,6 +405,7 @@ const polishingProductSeeds: CatalogueSeed[] = [
   "Mint",
   "Raspberry",
   "Vanilla Mint",
+  "Grape",
 ].map((flavour) => ({
   id: `seed.hygiene-treatment.polishing-products.${flavour
     .toLocaleLowerCase("en-CA")
@@ -422,6 +422,7 @@ const polishingProductSeeds: CatalogueSeed[] = [
 const dentalTreatmentSeeds = catalogueSeeds("dental-treatment.items", [
   ["filling", "Filling (Direct Restoration)"],
   ["root-canals", "Root Canals (Endodontic Therapy)"],
+  ["extraction", "Extraction (Tooth Ablation)"],
   ["crown", "Crown (Indirect Restoration)"],
   ["bridge", "Bridge (Indirect Restoration)"],
   ["denture", "Denture (Removable Prosthesis)"],
@@ -522,6 +523,15 @@ const anestheticSeeds: CatalogueSeed[] = [
     },
   },
   {
+    id: "seed.hygiene-treatment.anesthetic.cetacaine-liquid",
+    label: cetacaineLiquidProductLabel,
+    metadata: {
+      kind: "local-anesthetic",
+      route: "topical",
+      // Record the amount used; the 24 g bottle is not a treatment dose.
+    },
+  },
+  {
     id: "seed.hygiene-treatment.anesthetic.dyclonine-rinse",
     label: "Dyclonine 1% rinse",
     metadata: {
@@ -591,6 +601,14 @@ export const CATALOGUE_DEFINITIONS: CatalogueDefinition[] = [
     title: "Patient chief concerns",
     fieldLabels: ["Patient chief concern", "Patient's chief concern"],
     seeds: patientChiefConcernSeeds,
+    lifecycle: "pilot",
+  },
+  {
+    key: "clinical-exam.terminal-plane",
+    section: "Clinical Exam",
+    title: "Terminal plane",
+    fieldLabels: ["Terminal plane"],
+    seeds: terminalPlaneSeeds,
     lifecycle: "pilot",
   },
   {
@@ -827,9 +845,7 @@ const legacySeedAliases = new Map<string, string>([
     "seed.scheduling.dentist-next-visit.9-mrc",
   ],
 ]);
-const retiredSeedIds = new Set([
-  "seed.hygiene-treatment.desensitizer.none",
-]);
+const retiredSeedIds = new Set(["seed.hygiene-treatment.desensitizer.none"]);
 
 export class CatalogueValidationError extends Error {
   constructor(message: string) {
@@ -1025,13 +1041,11 @@ function parseCatalogueItemMetadata(
     if (
       productType !== undefined &&
       (typeof productType !== "string" ||
-        !(DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]).includes(
-          productType,
-        ))
+        !(
+          DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]
+        ).includes(productType))
     ) {
-      throw new CatalogueValidationError(
-        "Invalid completed-care productType.",
-      );
+      throw new CatalogueValidationError("Invalid completed-care productType.");
     }
     return {
       kind: "completed-care",
@@ -1043,8 +1057,7 @@ function parseCatalogueItemMetadata(
       ...(productType === undefined
         ? {}
         : {
-            productType:
-              productType as DesensitizingRemineralizingProductType,
+            productType: productType as DesensitizingRemineralizingProductType,
           }),
     };
   }
@@ -1065,11 +1078,6 @@ function parseCatalogueItemMetadata(
       value,
       "defaultAmountMl",
     );
-    if (!defaultAmountMl) {
-      throw new CatalogueValidationError(
-        "Local-anesthetic defaultAmountMl is required.",
-      );
-    }
     const defaultDurationSeconds = readOptionalPositiveNumber(
       value,
       "defaultDurationSeconds",
@@ -1077,7 +1085,7 @@ function parseCatalogueItemMetadata(
     return {
       kind: "local-anesthetic",
       route,
-      defaultAmountMl,
+      ...(defaultAmountMl === undefined ? {} : { defaultAmountMl }),
       ...(defaultDurationSeconds === undefined
         ? {}
         : { defaultDurationSeconds }),
@@ -1087,9 +1095,9 @@ function parseCatalogueItemMetadata(
     const productType = value.productType;
     if (
       typeof productType !== "string" ||
-      !(DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]).includes(
-        productType,
-      )
+      !(
+        DESENSITIZING_REMINERALIZING_PRODUCT_TYPES as readonly string[]
+      ).includes(productType)
     ) {
       throw new CatalogueValidationError(
         "Invalid desensitizing/remineralizing product type.",

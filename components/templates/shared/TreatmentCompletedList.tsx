@@ -22,6 +22,7 @@ import {
 import {
   createTreatmentEntryFromCatalogueItem,
   formatAdultHygieneTreatmentEntry,
+  npExamTreatmentPreset,
   treatmentCompletedEntryIdentity,
   type AdultHygieneTreatmentCompletedEntry,
   type HygieneInstrumentationMethod,
@@ -37,6 +38,15 @@ const rowButtonClass =
 const removeButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const inputClass = `mt-1 ${formControlClass()}`;
+
+// Called only by the actions that add completed care.
+function nextEntryId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(16).slice(2)
+  }`;
+}
 
 function QuantityStepper({
   id,
@@ -148,18 +158,22 @@ export function TreatmentCompletedList({
   entries,
   oheRecap = "",
   onApplyStandard,
+  standardActionLabel = "Apply standard treatment",
   onApplyRecare,
   radiographsHref,
   onChange,
   showHeading = true,
+  rapid = false,
 }: {
   entries: AdultHygieneTreatmentCompletedEntry[];
   oheRecap?: string;
   onApplyStandard: () => void;
+  standardActionLabel?: string;
   onApplyRecare?: () => void;
   radiographsHref?: string;
   onChange: (entries: AdultHygieneTreatmentCompletedEntry[]) => void;
   showHeading?: boolean;
+  rapid?: boolean;
 }) {
   const { findEquivalent, getItems, rememberValue, storageStatus } =
     useCatalogues();
@@ -170,14 +184,6 @@ export function TreatmentCompletedList({
   const [rememberCustomCare, setRememberCustomCare] = useState(false);
   const [addCareMessage, setAddCareMessage] = useState("");
   const catalogueItems = getItems("hygiene-treatment.completed");
-
-  function nextEntryId(prefix: string): string {
-    return `${prefix}-${Date.now()}-${
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : Math.random().toString(16).slice(2)
-    }`;
-  }
 
   function addCatalogueCare(item: CatalogueItem) {
     const added = createTreatmentEntryFromCatalogueItem(
@@ -264,6 +270,29 @@ export function TreatmentCompletedList({
     });
   }
 
+  function applyNpExam() {
+    if (
+      entries.some(
+        (entry) => treatmentCompletedEntryIdentity(entry) === "procedure:np-exam",
+      )
+    ) {
+      return;
+    }
+    const entry: AdultHygieneTreatmentCompletedEntry = {
+      ...npExamTreatmentPreset,
+      id: nextEntryId("np-exam"),
+      toothAreas: [...npExamTreatmentPreset.toothAreas],
+    };
+    const radiographCount = entries.filter(
+      (candidate) => candidate.procedureSource === "radiographs",
+    ).length;
+    onChange([
+      ...entries.slice(0, radiographCount),
+      entry,
+      ...entries.slice(radiographCount),
+    ]);
+  }
+
   function moveEntry(index: number, direction: "earlier" | "later") {
     const targetIndex = direction === "earlier" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= entries.length) return;
@@ -320,16 +349,25 @@ export function TreatmentCompletedList({
           className={`${buttonClass} bg-sky-700 text-white hover:bg-sky-800`}
           onClick={onApplyStandard}
         >
-          Apply standard treatment
+          {standardActionLabel}
         </button>
         {onApplyRecare ? (
-          <button
-            type="button"
-            className={`${buttonClass} border border-sky-700 text-sky-800 hover:bg-sky-50 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950`}
-            onClick={onApplyRecare}
-          >
-            Apply recare exam
-          </button>
+          <>
+            <button
+              type="button"
+              className={`${buttonClass} border border-sky-700 text-sky-800 hover:bg-sky-50 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950`}
+              onClick={onApplyRecare}
+            >
+              Recare exam
+            </button>
+            <button
+              type="button"
+              className={`${buttonClass} border border-sky-700 text-sky-800 hover:bg-sky-50 dark:border-sky-400 dark:text-sky-200 dark:hover:bg-sky-950`}
+              onClick={applyNpExam}
+            >
+              NP exam
+            </button>
+          </>
         ) : null}
         <button
           type="button"
@@ -338,9 +376,22 @@ export function TreatmentCompletedList({
           aria-controls="adult-hygiene-add-completed-care"
           onClick={() => setShowAddCare((current) => !current)}
         >
-          {showAddCare ? "Close completed care catalogue" : "Add completed care"}
+          {showAddCare ? "Close completed care catalogue" : "All treatment options..."}
         </button>
       </div>
+
+      {rapid ? <fieldset className="space-y-2">
+        <legend className="text-sm font-semibold">Common completed care</legend>
+        <div className="flex flex-wrap gap-2">
+          {catalogueItems.filter((item) => isCompletedCareCatalogueMetadata(item.metadata) &&
+            ["scaling", "polish", "ohe", "product-application", "fmp"].includes(item.metadata.procedure)).slice(0, 8).map((item) => {
+            const preview = createTreatmentEntryFromCatalogueItem(item, "preview", oheRecap);
+            const added = preview && entries.some((entry) => treatmentCompletedEntryIdentity(entry) === treatmentCompletedEntryIdentity(preview));
+            return <button key={item.id} type="button" className={`${rowButtonClass} min-h-11`} disabled={Boolean(added)}
+              onClick={() => addCatalogueCare(item)}>{item.label}{added ? " added" : ""}</button>;
+          })}
+        </div>
+      </fieldset> : null}
 
       {showAddCare ? (
         <div
@@ -507,13 +558,15 @@ export function TreatmentCompletedList({
                               ? "Radiographs"
                               : entry.procedureKind === "recare-exam"
                                 ? "Dentist Recare Exam"
-                                : entry.procedureKind === "product-application"
-                                  ? entry.treatmentType
-                                  : entry.careCategory
-                                    ? COMPLETED_CARE_CATEGORY_LABELS[
-                                        entry.careCategory
-                                      ]
-                                    : "Other completed care"}
+                                : entry.procedureKind === "np-exam"
+                                  ? "Dentist NP Exam"
+                                  : entry.procedureKind === "product-application"
+                                    ? entry.treatmentType
+                                    : entry.careCategory
+                                      ? COMPLETED_CARE_CATEGORY_LABELS[
+                                          entry.careCategory
+                                        ]
+                                      : "Other completed care"}
                     </h4>
                     {entry.procedureSource ? (
                       <span className="mt-1 inline-flex rounded-full bg-slate-200 px-2 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
@@ -521,15 +574,17 @@ export function TreatmentCompletedList({
                           ? "Linked from Radiographs taken today"
                           : entry.procedureSource === "recare-exam"
                             ? "Recare action"
-                            : entry.procedureSource === "ohe"
-                              ? "Linked to education provided"
-                              : "Standard treatment"}
+                            : entry.procedureSource === "np-exam"
+                              ? "NP exam action"
+                              : entry.procedureSource === "ohe"
+                                ? "Linked to education provided"
+                                : "Standard treatment"}
                       </span>
                     ) : null}
                   </div>
                   {linkedRadiograph ? (
                     <a
-                      href="#adult-hygiene-radiographs"
+                      href={radiographsHref ?? "#adult-hygiene-radiographs"}
                       className="text-sm font-semibold text-sky-700 hover:underline dark:text-sky-300"
                     >
                       Edit radiographs
@@ -716,7 +771,7 @@ export function TreatmentCompletedList({
                       </button>
                     )}
                   </div>
-                ) : linkedRadiograph || entry.procedureKind === "recare-exam" ? null : (
+                ) : linkedRadiograph || entry.procedureKind === "recare-exam" || entry.procedureKind === "np-exam" ? null : (
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     <CatalogueCombobox
                       id={`adult-hygiene-treatment-completed-${entry.id}-type`}

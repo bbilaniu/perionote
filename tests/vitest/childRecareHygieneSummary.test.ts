@@ -1,0 +1,248 @@
+import { describe, expect, it } from "vitest";
+import {
+  createEmptyChildRecareHygieneForm,
+  hasRequiredChildRecareHygieneFields,
+  withChildRadiographsTaken,
+} from "@/lib/templates/childRecareHygiene";
+import { childRecareHygieneFixture } from "@/lib/templates/fixtures/childRecareHygiene.fixture";
+import { buildChildRecareHygieneSummary } from "@/lib/templates/summary/buildChildRecareHygieneSummary";
+import { isValidChildRecareHygieneForm } from "@/components/templates/native/ChildRecareHygieneTemplate";
+
+describe("buildChildRecareHygieneSummary", () => {
+  it("synchronizes taken radiographs while preserving unrelated completed care", () => {
+    const manualCare = {
+      id: "manual-care",
+      treatmentType: "Synthetic completed care",
+      toothAreas: [],
+    };
+    const initial = { ...createEmptyChildRecareHygieneForm(), treatmentCompleted: [manualCare] };
+    const selected = withChildRadiographsTaken(initial, ["2 BW", "3 PA", "PAN", "1 OCC"]);
+    expect(selected.treatmentCompleted).toHaveLength(5);
+    expect(withChildRadiographsTaken(selected, selected.radiographsTaken)).toEqual(selected);
+    const combined = buildChildRecareHygieneSummary(selected);
+    expect(combined).toContain("Radiographs: 2 BW; 3 PA; PAN; 1 OCC.");
+    expect(combined).toContain("Treatment completed today: 2 BW; 3 PA; PAN; 1 OCC; Synthetic completed care");
+    const dentist = buildChildRecareHygieneSummary(selected, { output: "dentist" });
+    expect(dentist).toContain("Radiographs: 2 BW; 3 PA; PAN; 1 OCC.");
+    expect(dentist).not.toContain("Treatment completed today:");
+    const hygienist = buildChildRecareHygieneSummary(selected, { output: "hygienist" });
+    expect(hygienist).toContain("Treatment completed today: 2 BW; 3 PA; PAN; 1 OCC; Synthetic completed care");
+
+    const edited = withChildRadiographsTaken(selected, ["1 BW"]);
+    expect(buildChildRecareHygieneSummary(edited)).toContain("Treatment completed today: 1 BW; Synthetic completed care");
+    expect(edited.treatmentCompleted).toHaveLength(2);
+    expect(withChildRadiographsTaken(edited, []).treatmentCompleted).toEqual([manualCare]);
+    expect(initial.radiographsTaken).toEqual([]);
+  });
+
+  it("preserves legacy radiograph text without marking it as completed treatment", () => {
+    const legacy = { ...createEmptyChildRecareHygieneForm() } as Record<string, unknown>;
+    delete legacy.radiographsTaken;
+    legacy.radiographs = "Prior bitewings reviewed; none taken today";
+    expect(isValidChildRecareHygieneForm(legacy)).toBe(true);
+    const restored = withChildRadiographsTaken({ ...createEmptyChildRecareHygieneForm(), ...legacy }, []);
+    expect(buildChildRecareHygieneSummary(restored)).toContain("Radiographs: Prior bitewings reviewed; none taken today.");
+    expect(restored.treatmentCompleted).toEqual([]);
+    expect(buildChildRecareHygieneSummary(restored, { output: "hygienist" })).not.toContain("Radiographs:");
+    expect(isValidChildRecareHygieneForm({ ...restored, radiographsTaken: [2] })).toBe(false);
+    expect(isValidChildRecareHygieneForm({ ...restored, radiographsTaken: "2 BW" })).toBe(false);
+  });
+
+  it("does not infer unanswered clinical findings", () => {
+    const summary = buildChildRecareHygieneSummary(
+      createEmptyChildRecareHygieneForm(),
+    );
+
+    expect(summary).toBe(
+      "Patient presents for a pediatric recall exam and cleaning.",
+    );
+    expect(summary).not.toContain("WNL");
+    expect(summary).not.toContain("No.");
+  });
+
+  it("requires a patient ID and at least one provider", () => {
+    expect(hasRequiredChildRecareHygieneFields(childRecareHygieneFixture)).toBe(
+      true,
+    );
+    expect(
+      hasRequiredChildRecareHygieneFields({
+        ...childRecareHygieneFixture,
+        patientId: "",
+      }),
+    ).toBe(false);
+    expect(
+      hasRequiredChildRecareHygieneFields({
+        ...childRecareHygieneFixture,
+        dentist: "",
+        rda: "",
+        rdh: "",
+      }),
+    ).toBe(false);
+  });
+
+  it("accepts drafts created before structured consent and PPE", () => {
+    const legacyDraft = { ...createEmptyChildRecareHygieneForm() } as Record<
+      string,
+      unknown
+    >;
+    delete legacyDraft.consentPatient;
+    delete legacyDraft.consentParent;
+    delete legacyDraft.consentLegalGuardian;
+    delete legacyDraft.consentDetails;
+    delete legacyDraft.ppeStatementApplies;
+    delete legacyDraft.occlusionAssessment;
+    delete legacyDraft.terminalPlane;
+    delete legacyDraft.cambra123Instrument;
+    delete legacyDraft.cambra123ZeroToSixAssessment;
+    delete legacyDraft.cambra123SixAdultAssessment;
+    legacyDraft.consentBy = "Grandparent";
+    legacyDraft.molarOcclusion = "Class I bilateral";
+
+    expect(isValidChildRecareHygieneForm(legacyDraft)).toBe(true);
+    expect(
+      buildChildRecareHygieneSummary({
+        ...createEmptyChildRecareHygieneForm(),
+        ...legacyDraft,
+      } as ReturnType<typeof createEmptyChildRecareHygieneForm>),
+    ).toContain(
+      "Informed verbal consent for treatment today given by: Grandparent.",
+    );
+  });
+
+  it("builds combined, dentist, and hygienist notes from one encounter", () => {
+    const combined = buildChildRecareHygieneSummary(
+      childRecareHygieneFixture,
+    );
+    const dentist = buildChildRecareHygieneSummary(childRecareHygieneFixture, {
+      output: "dentist",
+    });
+    const hygienist = buildChildRecareHygieneSummary(
+      childRecareHygieneFixture,
+      { output: "hygienist" },
+    );
+
+    expect(combined).toContain("DENTAL EXAM");
+    expect(combined).toContain("HYGIENE");
+    expect(combined).toContain("Overjet: 2 mm.");
+    expect(combined).toContain("Terminal plane: Flush terminal plane.");
+    expect(combined).not.toContain("Molar classification:");
+    expect(combined).toContain(
+      "Medical history reviewed: Reviewed; no changes reported.",
+    );
+    expect(combined).toContain(
+      "Informed verbal consent for treatment today given by: Parent.",
+    );
+    expect(combined).toContain(
+      "-ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES",
+    );
+    expect(combined).toContain("Scaling: Yes — 0.5 units.");
+    expect(combined).toContain(
+      "Polish: Yes — Enamel Pro® Prophy Paste with Fluoride (Strawberry).",
+    );
+    expect(combined).toContain(
+      "Fluoride: Yes — Oral Science Inc. FluoriMax 2.5% NaF Varnish.",
+    );
+    expect(dentist).toContain("Recall interval: 6-month recall.");
+    expect(dentist).not.toContain("HYGIENE");
+    expect(dentist).not.toContain("Hygiene interval:");
+    expect(hygienist).toContain("Hygiene interval: 6-month scale.");
+    expect(hygienist).not.toContain("DENTAL EXAM");
+    expect(hygienist).not.toContain("Recall interval:");
+  });
+
+  it("includes the 24-hour note start in generated output", () => {
+    const summary = buildChildRecareHygieneSummary(
+      createEmptyChildRecareHygieneForm(),
+      { startedAt: new Date(2026, 7, 12, 18, 21) },
+    );
+
+    expect(summary).toContain("----- August 12, 2026 18:21 -----");
+  });
+
+  it("includes only the selected pediatric CAMBRA instrument in every output", () => {
+    const form = createEmptyChildRecareHygieneForm();
+    form.cambra123Instrument = "0-6";
+    form.cambra123ZeroToSixAssessment = {
+      ...form.cambra123ZeroToSixAssessment,
+      completionStatus: "complete",
+      yesItemIds: ["risk.household-recent-decay"],
+      finalRiskLevel: "High",
+      notes: "Active pediatric assessment",
+    };
+    form.cambra123SixAdultAssessment = {
+      ...form.cambra123SixAdultAssessment,
+      completionStatus: "complete",
+      yesItemIds: ["risk.frequent-snacking"],
+      finalRiskLevel: "Extreme",
+      notes: "INACTIVE ASSESSMENT",
+    };
+
+    for (const output of ["combined", "dentist", "hygienist"] as const) {
+      const summary = buildChildRecareHygieneSummary(form, { output });
+      expect(summary).toContain("CARIES RISK ASSESSMENT");
+      expect(summary).toContain("CAMBRA123 2021, ages 0–6");
+      expect(summary).toContain(
+        "Final clinician caries-risk category: High.",
+      );
+      expect(summary).not.toContain("ages 6–adult");
+      expect(summary).not.toContain("INACTIVE ASSESSMENT");
+    }
+  });
+
+  it("uses molar classification only when that assessment is selected", () => {
+    const form = {
+      ...createEmptyChildRecareHygieneForm(),
+      occlusionAssessment: "molar-classification" as const,
+      terminalPlane: "Flush terminal plane",
+      molarOcclusion: "Cl I",
+    };
+
+    const summary = buildChildRecareHygieneSummary(form);
+    expect(summary).toContain("Molar classification: Cl I.");
+    expect(summary).not.toContain("Terminal plane:");
+  });
+
+  it("includes structured completed care and Dyclonine rinse in hygiene output", () => {
+    const form = {
+      ...createEmptyChildRecareHygieneForm(),
+      treatmentCompleted: [
+        {
+          id: "fluoride",
+          treatmentType: "Fluoride varnish application",
+          toothAreas: ["full mouth"],
+          procedureKind: "product-application" as const,
+          productApplicationType: "fluoride-varnish" as const,
+          product: "VOCO GmbH Profluoride® Varnish (5% NaF)",
+        },
+      ],
+      localAnesthesiaEntries: [
+        {
+          id: "dyclonine",
+          route: "rinse" as const,
+          administrationType: "",
+          toothAreas: ["full mouth"],
+          product: "Dyclonine 1% rinse",
+          amountMl: "5",
+          durationSeconds: "60",
+          timeAdministered: "",
+        },
+      ],
+    };
+
+    const hygienist = buildChildRecareHygieneSummary(form, {
+      output: "hygienist",
+    });
+    const dentist = buildChildRecareHygieneSummary(form, {
+      output: "dentist",
+    });
+
+    expect(hygienist).toContain(
+      "Treatment completed today: VOCO GmbH Profluoride® Varnish (5% NaF) application — full mouth",
+    );
+    expect(hygienist).toContain(
+      "Rinse — full mouth: Dyclonine 1% rinse 5 ml; duration: 60 seconds",
+    );
+    expect(dentist).not.toContain("Treatment completed today:");
+    expect(dentist).not.toContain("Dyclonine");
+  });
+});

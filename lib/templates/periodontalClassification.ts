@@ -1359,6 +1359,12 @@ export function formatHealthGingivitisBlock(
     healthGingivitisContextChoices,
     assessment.context,
   );
+  const gingivitisExtent =
+    classification.diagnosis === "gingivitis" &&
+    (classification.extent === "localized" ||
+      classification.extent === "generalized")
+      ? classification.extent.toLocaleUpperCase("en-CA")
+      : "";
   const overrideReason = assessment.overrideReason.trim();
   const reducedPeriodontiumBases = isReducedNonPeriodontitisContext(
     assessment.context,
@@ -1377,7 +1383,7 @@ export function formatHealthGingivitisBlock(
       ? "Current periodontal condition"
       : "Periodontal diagnosis";
   return [
-    `${label}: ${contextLabel}`,
+    `${label}: ${gingivitisExtent ? `${gingivitisExtent} ` : ""}${contextLabel}`,
     reducedPeriodontiumBases.length
       ? `Basis for reduced periodontium: ${reducedPeriodontiumBases.join(
           "; ",

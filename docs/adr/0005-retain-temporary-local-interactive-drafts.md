@@ -43,6 +43,17 @@ content and generated clinical text are not rendered in the listing. Opening a
 draft assigns its random identifier to the current tab before navigating to the
 matching interactive form; the identifier is not placed in the URL. The page
 also provides an explicit **Delete** action for each draft.
+
+Drafts record the owning tab's random marker. Opening or restoring a draft
+owned by another tab creates an independent copy with a new draft ID before
+the form becomes writable under that ID. The source remains unchanged, even
+if its original tab is closed. Reloads and restores within the owning tab keep
+the existing ID. Older drafts without ownership metadata are also copied on
+first restore; this avoids adopting a storage key that an older open tab may
+still write. Ownership is optional additive metadata in the version-one
+envelope, so existing saved forms remain recoverable. Copy failure leaves the
+source untouched and reports a local-storage error.
+
 Deletion controls are centralized on this page. A visually separate danger
 section can delete every HygieneNote recovery draft in the browser profile,
 but only after a warning that the action is permanent and that forms open in

@@ -59,6 +59,8 @@ export function FixedChoiceMultiCombobox({
   customHelpText = "",
   showSelectedChips = true,
   allowCustomValues = true,
+  emptyLabel,
+  truncateTrigger = false,
 }: {
   id: string;
   label: string;
@@ -70,6 +72,8 @@ export function FixedChoiceMultiCombobox({
   customHelpText?: string;
   showSelectedChips?: boolean;
   allowCustomValues?: boolean;
+  emptyLabel?: string;
+  truncateTrigger?: boolean;
 }) {
   const generatedId = useId();
   const menuId = `${id}-${generatedId}-menu`;
@@ -137,7 +141,7 @@ export function FixedChoiceMultiCombobox({
 
   const triggerText = selectedValues.length
     ? selectedValues.join(", ")
-    : `Select ${label}`;
+    : emptyLabel ?? `Select ${label}`;
 
   function openMenu() {
     setOpen(true);
@@ -266,7 +270,15 @@ export function FixedChoiceMultiCombobox({
             }
           }}
         >
-          <span className="block whitespace-normal pr-1">{triggerText}</span>
+          <span
+            className={
+              truncateTrigger
+                ? "block truncate pr-1"
+                : "block whitespace-normal pr-1"
+            }
+          >
+            {triggerText}
+          </span>
           <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
             <DropdownChevron open={open} />
           </span>
@@ -440,7 +452,7 @@ export function FixedChoiceMultiCombobox({
             <div className="flex justify-end border-t border-slate-200 p-2 dark:border-slate-800">
               <button
                 type="button"
-                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:bg-sky-950"
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-sky-700 hover:bg-sky-50 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:bg-sky-950"
                 onClick={() => closeMenu({ restoreFocus: true })}
               >
                 Done
@@ -463,7 +475,7 @@ export function FixedChoiceMultiCombobox({
               <span>{value}</span>
               <button
                 type="button"
-                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-sm hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 dark:hover:bg-emerald-900"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full text-sm hover:bg-emerald-200 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-600 dark:hover:bg-emerald-900"
                 aria-label={`Remove ${value} from ${label}`}
                 onClick={() => removeValue(value)}
               >

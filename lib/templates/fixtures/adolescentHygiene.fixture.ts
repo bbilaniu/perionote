@@ -1,6 +1,8 @@
+import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { AdolescentHygieneForm } from "@/lib/templates/adolescentHygiene";
 
 export const adolescentHygieneFixture: AdolescentHygieneForm = {
+  ...createEmptyOralHygieneMethods(),
   patientId: "TEST-ADOLESCENT-001",
   dentist: "Dr. Example",
   rdh: "Example RDH",
@@ -95,6 +97,11 @@ export const adolescentHygieneFixture: AdolescentHygieneForm = {
       toothAreas: ["full mouth"],
     },
   ],
+  localAnesthesiaNoContraindication: false,
+  localAnesthesiaEntries: [],
+  localAnesthesiaNoAdverseReactions: false,
+  localAnesthesiaAdequateAchieved: false,
+  localAnesthesiaNotes: "",
   fluorideStatus: "yes",
   fluorideDetails: "Synthetic fluoride varnish application — full mouth",
   informationRelayedStatus: "yes",

@@ -1,5 +1,8 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useMemo,
@@ -8,6 +11,9 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { AdultHygieneRapidEntry } from "@/components/templates/native/AdultHygieneRapidEntry";
+import { RapidChoice, RapidDisclosure, rapidActionClass } from "@/components/forms/RapidChoiceControls";
+import { rapidEntrySections, updateRapidField } from "@/lib/templates/rapidEntry";
 import { CatalogueCombobox } from "@/components/catalogues/CatalogueCombobox";
 import { CatalogueMultiCombobox } from "@/components/catalogues/CatalogueMultiCombobox";
 import { useCatalogues } from "@/components/catalogues/CatalogueProvider";
@@ -25,11 +31,22 @@ import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { Time24Input } from "@/components/forms/Time24Input";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import { BloodPressureLocationControl } from "@/components/templates/shared/BloodPressureLocationControl";
+import {
+  interactiveTemplateUnloadWarning,
+  InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
+import { Cambra123SixAdultControl } from "@/components/templates/shared/Cambra123SixAdultControl";
+import { CollapsibleFieldset } from "@/components/templates/shared/CollapsibleFieldset";
 import { LocalAnesthesiaControl } from "@/components/templates/shared/LocalAnesthesiaControl";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
+import { useRapidEntryMode } from "@/components/templates/shared/useRapidEntryMode";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   ExamFinding,
@@ -45,7 +62,6 @@ import {
   type AdultHygieneTreatmentCompletedEntry,
   type AdultHygiene2026Output,
   type AdultHygiene2026Form,
-  type CariesRiskLevel,
   brushingFrequencyChoices,
   createEmptyAdultHygiene2026Form,
   diseaseAndRiskOheTopicChoices,
@@ -59,11 +75,17 @@ import {
   standardOheStatement,
 } from "@/lib/templates/adultHygiene2026";
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
-import { suggestAdultCariesRisk } from "@/lib/templates/cariesRisk";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
+import { copyCambra123SixAdultAssessment } from "@/lib/templates/cambra123";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  mergeStandardTreatmentEntries,
   migrateLegacyDesensitizerToTreatmentCompleted,
   recareExamTreatmentPreset,
   syncDerivedOheTreatmentDetails,
@@ -79,6 +101,12 @@ import type {
 import { createRecareNormalStructuredIntraoralFindings } from "@/lib/templates/recareIntraoralCatalog";
 import { buildAdultHygiene2026Summary } from "@/lib/templates/summary/buildAdultHygiene2026Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import {
+  createNextVitalsReading,
+  getCurrentVitalsTime,
+  hasVitalsMeasurement,
+  type VitalsReading,
+} from "@/lib/templates/vitalsReadings";
 import {
   applyGingivitisObservationPreset,
   copyGingivalDescriptionAssessment,
@@ -137,18 +165,13 @@ const treatmentRowButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
 const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
+const vitalsActionButtonClass =
+  "inline-flex h-10 self-end items-center justify-center rounded-xl border border-slate-300 px-3 text-xs font-semibold transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:hover:bg-slate-800";
+const vitalsRemoveButtonClass =
+  "inline-flex h-10 items-center justify-center rounded-xl border border-red-300 px-3 text-xs font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 const evidenceSectionClass =
   "space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700";
 const evidenceSectionHeadingClass = "mb-2 text-center text-sm font-semibold";
-const cariesRiskLevelOptions: Array<{
-  value: CariesRiskLevel;
-  label: string;
-}> = [
-  { value: "", label: "None selected" },
-  { value: "Low", label: "Low" },
-  { value: "Moderate", label: "Moderate" },
-  { value: "High", label: "High" },
-];
 const gingivalCandidateFieldTargetIds: Record<
   GingivalHealthCandidateMissingFieldId,
   string
@@ -191,13 +214,35 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning =
-  "Clear all entered 2026 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
+export type Hygiene2026Variant = "adult" | "adolescent";
+
+const outputChoicesByVariant = {
+  adult: [
+    ["complete", "Complete"],
+    ["hygiene", "Hygiene"],
+    ["recare", "Recare"],
+  ],
+  adolescent: [
+    ["complete", "Combined"],
+    ["recare", "Dentist"],
+    ["hygiene", "Hygienist"],
+  ],
+} as const satisfies Record<
+  Hygiene2026Variant,
+  readonly (readonly [AdultHygiene2026Output, string])[]
+>;
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2026Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   patientChiefConcern: "",
   radiographs: "",
+  vitalsReadings: {
+    systolic: "",
+    diastolic: "",
+    heartRate: "",
+    time: "",
+  },
   structuredExtraoralFindings: {
     optionId: "",
     laterality: "",
@@ -231,6 +276,7 @@ const adultHygieneDraftArrayItemShapes = {
   "periodontalClassification.gradeBasis": { criterionId: "" },
   "periodontalClassification.gingivalHealth.reducedPeriodontiumBases": "",
   cariesRiskFactors: "",
+  "cambra123Assessment.yesItemIds": "",
   ohiAidsReviewed: "",
   oheTopicsReviewed: "",
   treatmentCompleted: { id: "", treatmentType: "", toothAreas: [] },
@@ -260,6 +306,7 @@ function isEmptyAdultHygieneDraft(form: AdultHygiene2026Form): boolean {
       rda: "",
       class5IndicatorStatus: "not-documented",
       ppeStatementApplies: false,
+      vitalsReadings: form.vitalsReadings.filter(hasVitalsMeasurement),
     }) === emptyAdultHygieneDraft
   );
 }
@@ -289,7 +336,11 @@ export function isAdultHygieneDraftForm(
     },
     adultHygieneDraftExemplar,
     adultHygieneDraftArrayItemShapes,
-  );
+  ) && (candidate.vitalsReadings === undefined ||
+    (candidate.vitalsReadings as VitalsReading[]).every((reading) =>
+      (reading.arm === undefined || ["", "right", "left"].includes(reading.arm)) &&
+      (reading.site === undefined || ["", "upper-arm", "wrist"].includes(reading.site)),
+    ));
 }
 const gingivalDescriptionStatusOptions: Array<{
   value: GingivalDescriptionStatus;
@@ -672,17 +723,62 @@ const documentationStatusOptions: Array<{
   { value: "yes", label: "Yes" },
 ];
 
+const adultHygiene2026Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records",
+  "Patient Concerns and Hygiene Findings",
+  "EOE",
+  "IOE",
+  "Occlusion and Habits",
+  "Teeth and Odontogram",
+  "Appliances and Relevant History",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment plan",
+  "Treatment completed today",
+  "Intervals and Follow-up",
+]);
+
+const adolescentHygiene2026Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Patient Concerns and Hygiene Findings",
+  "EOE",
+  "IOE",
+  "Occlusion and Habits",
+  "Teeth and Odontogram",
+  "Appliances and Relevant History",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment plan",
+  "Treatment completed today",
+  "Communication with Parent or Legal Guardian",
+  "Intervals and Follow-up",
+]);
+
 function Section({
   title,
   description,
   children,
+  flat = false,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
+  flat?: boolean;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className={flat
+        ? "space-y-4"
+        : "scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"}
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -716,8 +812,8 @@ function TextField({
   required?: boolean;
   error?: string;
   inputRef?: RefObject<HTMLInputElement | null>;
-  type?: "text" | "date";
-  inputMode?: "decimal";
+  type?: "text" | "date" | "number" | "time";
+  inputMode?: "decimal" | "numeric";
   readOnly?: boolean;
   placeholder?: string;
 }) {
@@ -736,6 +832,16 @@ function TextField({
           onChange={onChange}
           inputRef={inputRef}
           readOnly={readOnly}
+          ariaInvalid={Boolean(error)}
+          ariaDescribedBy={error ? errorId : undefined}
+        />
+      ) : type === "time" ? (
+        <Time24Input
+          id={id}
+          className={inputClass}
+          value={value}
+          onChange={onChange}
+          inputRef={inputRef}
           ariaInvalid={Boolean(error)}
           ariaDescribedBy={error ? errorId : undefined}
         />
@@ -1004,55 +1110,6 @@ function CheckboxField({
   );
 }
 
-function ObservationDisclosure({
-  id,
-  label,
-  summary,
-  open,
-  onToggle,
-  children,
-}: {
-  id: string;
-  label: string;
-  summary: string;
-  open: boolean;
-  onToggle: () => void;
-  children: ReactNode;
-}) {
-  const contentId = `${id}-content`;
-  return (
-    <fieldset
-      className="border-t border-slate-200 pt-3 dark:border-slate-700"
-      aria-label={label}
-    >
-      <button
-        id={id}
-        type="button"
-        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-        aria-expanded={open}
-        aria-controls={contentId}
-        onClick={onToggle}
-      >
-        <span className="min-w-0">{label}</span>
-        <span className="flex shrink-0 items-center gap-3">
-          <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-            {summary}
-          </span>
-          <DropdownChevron open={open} />
-        </span>
-        <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-          {summary}
-        </span>
-      </button>
-      {open ? (
-        <div id={contentId} className="space-y-4 pt-3">
-          {children}
-        </div>
-      ) : null}
-    </fieldset>
-  );
-}
-
 function measurementFor(
   evidence: readonly PeriodontalCriterionEvidence[],
   criterionId: string,
@@ -1073,7 +1130,9 @@ function documentedObservationSummary(count: number) {
 export function PeriodontalClassificationControl({
   value,
   onChange,
+  rapid = false,
 }: {
+  rapid?: boolean;
   value: PeriodontalClassification;
   onChange: (value: PeriodontalClassification) => void;
 }) {
@@ -1110,6 +1169,7 @@ export function PeriodontalClassificationControl({
   ];
   const isHealthGingivitisDiagnosis =
     value.diagnosis === "health" || value.diagnosis === "gingivitis";
+  const isGingivitisDiagnosis = value.diagnosis === "gingivitis";
   const hasAssessedDiagnosis = Boolean(value.diagnosis);
   const isPeriodontitisDiagnosis = value.diagnosis === "periodontitis";
   const isTreatedPeriodontitisContext =
@@ -1141,6 +1201,16 @@ export function PeriodontalClassificationControl({
   )
     ? value.status
     : "";
+  const extentOptions = isGingivitisDiagnosis
+    ? periodontalExtentChoices.filter(
+        (choice) => choice.value !== "molar-incisor",
+      )
+    : periodontalExtentChoices;
+  const extentLabel = isGingivitisDiagnosis
+    ? "Extent of gingivitis"
+    : isPeriodontitisDiagnosis
+      ? "Periodontitis extent/distribution"
+      : "Extent/distribution";
   const hasHorizontalBoneLoss = value.stageBasis.some(
     (evidence) => evidence.criterionId === "stage.horizontal-bone-loss",
   );
@@ -1218,31 +1288,20 @@ export function PeriodontalClassificationControl({
   const gradeObservationSummary = documentedObservationSummary(
     gradeObservationCount,
   );
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    hasStructuredObservations,
-  );
-  const [stageEvidenceOpen, setStageEvidenceOpen] = useState(
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      hasStructuredObservations,
+    );
+  const [stageEvidenceOpen, setStageEvidenceOpen] = useAutoExpandDisclosure(
     hasStageSectionObservations,
   );
-  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
-    gradeObservationCount > 0,
+  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useAutoExpandDisclosure(
+    gradeObservationCount,
   );
   const [pendingMissingField, setPendingMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
   const [highlightedMissingField, setHighlightedMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
-
-  useEffect(() => {
-    if (hasStructuredObservations) setStructuredObservationsOpen(true);
-  }, [hasStructuredObservations]);
-
-  useEffect(() => {
-    if (hasStageSectionObservations) setStageEvidenceOpen(true);
-  }, [hasStageSectionObservations]);
-
-  useEffect(() => {
-    if (gradeObservationCount > 0) setGradeEvidenceOpen(true);
-  }, [gradeObservationCount]);
 
   useEffect(() => {
     if (!pendingMissingField || !structuredObservationsOpen) return;
@@ -1522,41 +1581,73 @@ export function PeriodontalClassificationControl({
     update({ diabetes });
   }
 
-  return (
+  const ClassificationChoice = rapid ? RapidChoice : FixedChoiceListbox;
+  const classificationLayoutClass = rapid
+    ? "grid gap-3"
+    : "grid gap-3 md:grid-cols-2";
+  const diagnosisControls = (
+    <section
+      className="space-y-3"
+      aria-labelledby="periodontal-diagnosis-heading"
+    >
+      <h3 id="periodontal-diagnosis-heading" className="font-semibold">
+        Diagnosis and distribution
+      </h3>
+      <div className={classificationLayoutClass}>
+        <ClassificationChoice
+          id="adult-hygiene-periodontal-diagnosis"
+          label="Periodontal diagnosis category"
+          value={value.diagnosis}
+          options={periodontalDiagnosisChoices}
+          onChange={(diagnosis) =>
+            update({
+              diagnosis,
+              ...(diagnosis === "gingivitis" &&
+              value.extent === "molar-incisor"
+                ? { extent: "" }
+                : {}),
+              gingivalHealth: {
+                ...value.gingivalHealth,
+                context: "",
+                reducedPeriodontiumBases: [],
+                reducedPeriodontiumBasisDetails: "",
+                overrideReason: "",
+              },
+              ...(diagnosis !== "periodontitis"
+                ? {
+                    stage: "",
+                    grade: "",
+                    status: "",
+                    statusComment: "",
+                  }
+                : {}),
+            })
+          }
+        />
+        <ClassificationChoice
+          id="adult-hygiene-periodontal-extent"
+          label={extentLabel}
+          value={value.extent}
+          options={extentOptions}
+          onChange={(extent) => update({ extent })}
+        />
+      </div>
+    </section>
+  );
+  const classificationDetails = (
     <div className="space-y-5">
-      <fieldset
-        className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
-        aria-label="Structured periodontal observations"
+      <CollapsibleFieldset
+        id="adult-hygiene-structured-periodontal-observations"
+        label="Structured periodontal observations"
+        summary={structuredObservationSummary}
+        open={structuredObservationsOpen}
+        onToggle={() => setStructuredObservationsOpen((open) => !open)}
       >
-        <button
-          id="adult-hygiene-structured-periodontal-observations"
-          type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-          aria-expanded={structuredObservationsOpen}
-          aria-controls="adult-hygiene-structured-periodontal-observations-content"
-          onClick={() => setStructuredObservationsOpen((open) => !open)}
-        >
-          <span className="min-w-0">Structured periodontal observations</span>
-          <span className="flex shrink-0 items-center gap-3">
-            <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-              {structuredObservationSummary}
-            </span>
-            <DropdownChevron open={structuredObservationsOpen} />
-          </span>
-          <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-            {structuredObservationSummary}
-          </span>
-        </button>
-        {structuredObservationsOpen ? (
-          <div
-            id="adult-hygiene-structured-periodontal-observations-content"
-            className="space-y-4 pt-2"
-          >
             <fieldset className="space-y-4 border-t border-slate-200 pt-4 dark:border-slate-700">
               <legend className="font-semibold">
                 Periodontal assessment findings
               </legend>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className={classificationLayoutClass}>
                 <GingivalCandidateFieldTarget
                   id="bop-percentage"
                   activeId={highlightedMissingField}
@@ -1609,7 +1700,7 @@ export function PeriodontalClassificationControl({
                   id="attachment-loss"
                   activeId={highlightedMissingField}
                 >
-                  <FixedChoiceListbox
+                  <ClassificationChoice
                     id="adult-hygiene-attachment-loss"
                     label="Probing attachment loss"
                     value={value.gingivalHealth.attachmentLoss}
@@ -1623,7 +1714,7 @@ export function PeriodontalClassificationControl({
                   id="radiographic-bone-loss"
                   activeId={highlightedMissingField}
                 >
-                  <FixedChoiceListbox
+                  <ClassificationChoice
                     id="adult-hygiene-radiographic-bone-loss"
                     label="Radiographic bone loss (RBL)"
                     value={value.gingivalHealth.radiographicBoneLoss}
@@ -1637,7 +1728,7 @@ export function PeriodontalClassificationControl({
                   id="ppd-4-or-greater-with-bop"
                   activeId={highlightedMissingField}
                 >
-                  <FixedChoiceListbox
+                  <ClassificationChoice
                     id="adult-hygiene-ppd4-bop"
                     label="Sites with PPD ≥4 mm and BOP"
                     value={value.gingivalHealth.ppd4OrGreaterWithBop}
@@ -1651,7 +1742,7 @@ export function PeriodontalClassificationControl({
                   id="progressive-destruction"
                   activeId={highlightedMissingField}
                 >
-                  <FixedChoiceListbox
+                  <ClassificationChoice
                     id="adult-hygiene-progressive-destruction"
                     label="Evidence of progressive periodontal destruction"
                     value={value.gingivalHealth.progressiveDestruction}
@@ -1665,7 +1756,7 @@ export function PeriodontalClassificationControl({
                   id="periodontal-support"
                   activeId={highlightedMissingField}
                 >
-                  <FixedChoiceListbox
+                  <ClassificationChoice
                     id="adult-hygiene-periodontium"
                     label="Periodontal support (if known)"
                     value={value.gingivalHealth.periodontium}
@@ -1676,17 +1767,18 @@ export function PeriodontalClassificationControl({
               </div>
             </fieldset>
 
-            <ObservationDisclosure
+            <CollapsibleFieldset
               id="adult-hygiene-patient-specific-stage-evidence"
               label="Patient-specific stage evidence"
               summary={stageObservationSummary}
               open={stageEvidenceOpen}
               onToggle={() => setStageEvidenceOpen((open) => !open)}
+              appearance="nested"
             >
               {stageEvidenceGroups.map(({ value: group, label }) => (
                 <div key={group} className={evidenceSectionClass}>
                   <h3 className={evidenceSectionHeadingClass}>{label}</h3>
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className={classificationLayoutClass}>
                     {group === "complexity" ? (
                       <>
                         <label className="block text-sm font-medium">
@@ -1705,7 +1797,7 @@ export function PeriodontalClassificationControl({
                             }
                           />
                         </label>
-                        <FixedChoiceListbox
+                        <ClassificationChoice
                           id="adult-hygiene-stage-ppd4-bop"
                           label="Sites with PPD ≥4 mm and BOP (shared)"
                           value={value.gingivalHealth.ppd4OrGreaterWithBop}
@@ -1714,7 +1806,7 @@ export function PeriodontalClassificationControl({
                             updateGingivalHealth({ ppd4OrGreaterWithBop })
                           }
                         />
-                        <FixedChoiceListbox
+                        <ClassificationChoice
                           id="adult-hygiene-stage-bone-loss-pattern"
                           label="Bone-loss pattern"
                           value={selectedBoneLossPattern}
@@ -1742,7 +1834,7 @@ export function PeriodontalClassificationControl({
                             />
                           </label>
                         ) : null}
-                        <FixedChoiceListbox
+                        <ClassificationChoice
                           id="adult-hygiene-stage-furcation-involvement"
                           label="Highest furcation involvement"
                           value={selectedFurcationInvolvement}
@@ -1754,7 +1846,7 @@ export function PeriodontalClassificationControl({
                             )
                           }
                         />
-                        <FixedChoiceListbox
+                        <ClassificationChoice
                           id="adult-hygiene-stage-ridge-defect"
                           label="Worst ridge defect"
                           value={selectedRidgeDefect}
@@ -1830,7 +1922,7 @@ export function PeriodontalClassificationControl({
                           </label>
                         ) : criterion.id ===
                           "stage.rbl-middle-third-or-beyond" ? (
-                          <FixedChoiceListbox
+                          <ClassificationChoice
                             key={criterion.id}
                             id={`adult-hygiene-${criterion.id.replaceAll(
                               ".",
@@ -1875,20 +1967,21 @@ export function PeriodontalClassificationControl({
                   </div>
                 </div>
               ))}
-            </ObservationDisclosure>
+            </CollapsibleFieldset>
 
-            <ObservationDisclosure
+            <CollapsibleFieldset
               id="adult-hygiene-patient-specific-grade-evidence"
               label="Patient-specific grade evidence"
               summary={gradeObservationSummary}
               open={gradeEvidenceOpen}
               onToggle={() => setGradeEvidenceOpen((open) => !open)}
+              appearance="nested"
             >
               <div className={evidenceSectionClass}>
                 <h3 className={evidenceSectionHeadingClass}>
                   Progression evidence
                 </h3>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   {periodontalGradeCriterionCatalogue
                     .filter((criterion) => criterion.input === "measurement")
                     .map((criterion) => (
@@ -1920,7 +2013,7 @@ export function PeriodontalClassificationControl({
                         />
                       </label>
                     ))}
-                  <FixedChoiceListbox
+                  <ClassificationChoice
                     id="adult-hygiene-grade-phenotype"
                     label="Destruction relative to biofilm"
                     value={selectedGradePhenotype}
@@ -1932,9 +2025,9 @@ export function PeriodontalClassificationControl({
 
               <div className={evidenceSectionClass}>
                 <h3 className={evidenceSectionHeadingClass}>Grade modifiers</h3>
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className={classificationLayoutClass}>
                   <div>
-                    <FixedChoiceListbox
+                    <ClassificationChoice
                       id="adult-hygiene-smoking-modifier"
                       label="Smoking and tobacco/nicotine exposure"
                       value={value.smoking.status}
@@ -1995,7 +2088,7 @@ export function PeriodontalClassificationControl({
                     ) : null}
                   </div>
                   <div>
-                    <FixedChoiceListbox
+                    <ClassificationChoice
                       id="adult-hygiene-diabetes-modifier"
                       label="Diabetes modifier"
                       value={value.diabetes.status}
@@ -2049,62 +2142,18 @@ export function PeriodontalClassificationControl({
                   </div>
                 </div>
               </div>
-            </ObservationDisclosure>
+            </CollapsibleFieldset>
             <button
               type="button"
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
               onClick={() => setStructuredObservationsOpen(false)}
             >
               Collapse observations
               <DropdownChevron open />
             </button>
-          </div>
-        ) : null}
-      </fieldset>
+      </CollapsibleFieldset>
 
-      <section
-        className="space-y-3"
-        aria-labelledby="periodontal-diagnosis-heading"
-      >
-        <h3 id="periodontal-diagnosis-heading" className="font-semibold">
-          Diagnosis and distribution
-        </h3>
-        <div className="grid gap-3 md:grid-cols-2">
-          <FixedChoiceListbox
-            id="adult-hygiene-periodontal-diagnosis"
-            label="Periodontal diagnosis category"
-            value={value.diagnosis}
-            options={periodontalDiagnosisChoices}
-            onChange={(diagnosis) =>
-              update({
-                diagnosis,
-                gingivalHealth: {
-                  ...value.gingivalHealth,
-                  context: "",
-                  reducedPeriodontiumBases: [],
-                  reducedPeriodontiumBasisDetails: "",
-                  overrideReason: "",
-                },
-                ...(diagnosis !== "periodontitis"
-                  ? {
-                      stage: "",
-                      grade: "",
-                      status: "",
-                      statusComment: "",
-                    }
-                  : {}),
-              })
-            }
-          />
-          <FixedChoiceListbox
-            id="adult-hygiene-periodontal-extent"
-            label="Extent/distribution"
-            value={value.extent}
-            options={periodontalExtentChoices}
-            onChange={(extent) => update({ extent })}
-          />
-        </div>
-      </section>
+      {!rapid ? diagnosisControls : null}
 
       {!hasAssessedDiagnosis ? (
         <section
@@ -2154,7 +2203,7 @@ export function PeriodontalClassificationControl({
                     <li key={field.id}>
                       <button
                         type="button"
-                        className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                        className="rounded-xs font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
                         onClick={() => navigateToMissingField(field.id)}
                       >
                         {field.label}
@@ -2241,8 +2290,8 @@ export function PeriodontalClassificationControl({
               </div>
 
               <div className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-2">
-                  <FixedChoiceListbox
+                <div className={classificationLayoutClass}>
+                  <ClassificationChoice
                     id="adult-hygiene-periodontitis-stage"
                     label="Periodontitis stage"
                     value={value.stage}
@@ -2267,8 +2316,8 @@ export function PeriodontalClassificationControl({
                     />
                   ) : null}
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <FixedChoiceListbox
+                <div className={classificationLayoutClass}>
+                  <ClassificationChoice
                     id="adult-hygiene-periodontitis-grade"
                     label="Periodontitis grade"
                     value={value.grade}
@@ -2336,7 +2385,7 @@ export function PeriodontalClassificationControl({
                           <li key={field.id}>
                             <button
                               type="button"
-                              className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                              className="rounded-xs font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
                               onClick={() => navigateToMissingField(field.id)}
                             >
                               {field.label}
@@ -2366,8 +2415,8 @@ export function PeriodontalClassificationControl({
                   ) : null}
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-2">
-                  <FixedChoiceListbox
+                <div className={classificationLayoutClass}>
+                  <ClassificationChoice
                     id="adult-hygiene-health-gingivitis-context"
                     label={gingivalContextLabel}
                     value={value.gingivalHealth.context}
@@ -2431,8 +2480,8 @@ export function PeriodontalClassificationControl({
               ) : null}
 
               {isPeriodontitisDiagnosis ? (
-                <div className="grid gap-3 md:grid-cols-2">
-                  <FixedChoiceListbox
+                <div className={classificationLayoutClass}>
+                  <ClassificationChoice
                     id="adult-hygiene-periodontal-status"
                     label="Current periodontal status"
                     value={displayedPeriodontalStatus}
@@ -2457,12 +2506,23 @@ export function PeriodontalClassificationControl({
       ) : null}
     </div>
   );
+
+  return rapid ? (
+    <div className="space-y-4">
+      {diagnosisControls}
+      {classificationDetails}
+    </div>
+  ) : (
+    classificationDetails
+  );
 }
 
 function GingivalDescriptionControl({
   value,
   onChange,
+  rapid = false,
 }: {
+  rapid?: boolean;
   value: GingivalDescriptionAssessment | undefined;
   onChange: (value: GingivalDescriptionAssessment) => void;
 }) {
@@ -2485,15 +2545,10 @@ function GingivalDescriptionControl({
     : assessment.status === "wnl"
     ? "WNL"
     : "Not assessed";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function updateFinding(
     optionId: string,
@@ -2612,6 +2667,119 @@ function GingivalDescriptionControl({
     onChange(createEmptyGingivalDescriptionAssessment());
   }
 
+  if (rapid) {
+    const commonIds = new Set([
+      "gingiva.color.coral_pink",
+      "gingiva.color.red_erythematous",
+      "gingiva.color.marginal_redness",
+      "gingiva.contour.knife_edged_margins",
+      "gingiva.contour.rolled_margins",
+      "gingiva.contour.bulbous_margins",
+      "gingiva.consistency.firm",
+      "gingiva.consistency.spongy",
+      "gingiva.consistency.edematous",
+      "gingiva.surface.stippled_attached",
+      "gingiva.surface.smooth_attached",
+    ]);
+    return (
+      <div className="space-y-4">
+        <RapidChoice
+          label="Gingival Description"
+          value={assessment.status}
+          options={gingivalDescriptionStatusOptions}
+          onChange={changeStatus}
+        />
+        {assessment.status === "wnl" ? (
+          <p className="text-sm">
+            Reviewed normal gingival observations applied. Expand details to
+            review the individual findings.
+          </p>
+        ) : null}
+        {assessment.status === "findings" ? (
+          <div className="grid gap-4">
+            {gingivalDescriptionCatalog.dimensions.flatMap((dimension) => {
+              const groups: readonly GingivalChoiceGroupDefinition[] =
+                gingivalChoiceGroupDefinitions[
+                  dimension.id as keyof typeof gingivalChoiceGroupDefinitions
+                ] ?? [];
+              return groups
+                .filter((group) =>
+                  group.optionIds.some((id) => commonIds.has(id)),
+                )
+                .map((group) => {
+                  const documentedOptions = dimension.options.filter(
+                    (option) =>
+                      group.optionIds.includes(option.id) &&
+                      selected.has(option.id),
+                  );
+                  const choices = dimension.options.filter(
+                    (option) =>
+                      group.optionIds.includes(option.id) &&
+                      (commonIds.has(option.id) || selected.has(option.id)),
+                  );
+                  const multipleDocumented = documentedOptions.length > 1;
+                  return (
+                    <RapidChoice
+                      key={`${dimension.id}-${group.label}`}
+                      label={dimension.label}
+                      value={
+                        multipleDocumented
+                          ? "retained-detailed-selections"
+                          : documentedOptions[0]?.id ?? ""
+                      }
+                      options={[
+                        ...choices.map((option) => ({
+                          value: option.id,
+                          label: option.label,
+                        })),
+                        ...(multipleDocumented
+                          ? [
+                              {
+                                value: "retained-detailed-selections",
+                                label: `Documented: ${documentedOptions
+                                  .map((option) => option.label)
+                                  .join("; ")}`,
+                              },
+                            ]
+                          : []),
+                        { value: "", label: "Not documented" },
+                      ]}
+                      onChange={(optionId) => {
+                        if (optionId === "retained-detailed-selections") return;
+                        updateDimensionFindings(
+                          dimension,
+                          dimension.options
+                            .filter(
+                              (option) =>
+                                (!group.optionIds.includes(option.id) &&
+                                  selected.has(option.id)) ||
+                                option.id === optionId,
+                            )
+                            .map((option) => option.label),
+                        );
+                      }}
+                    />
+                  );
+                });
+            })}
+          </div>
+        ) : null}
+        {hasObservations ? (
+          <button
+            type="button"
+            className={rapidActionClass}
+            onClick={clearAssessment}
+          >
+            Clear gingival description
+          </button>
+        ) : null}
+        <RapidDisclosure label="More gingival findings, locations and measurements">
+          <GingivalDescriptionControl value={value} onChange={onChange} />
+        </RapidDisclosure>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
@@ -2638,34 +2806,13 @@ function GingivalDescriptionControl({
           />
         ) : null}
       </div>
-      <fieldset
-        className="rounded-xl border border-slate-200 p-4 dark:border-slate-700"
-        aria-label="Structured gingival observations"
+      <CollapsibleFieldset
+        id="adult-hygiene-structured-gingival-observations"
+        label="Structured gingival observations"
+        summary={structuredObservationSummary}
+        open={structuredObservationsOpen}
+        onToggle={() => setStructuredObservationsOpen((open) => !open)}
       >
-        <button
-          id="adult-hygiene-structured-gingival-observations"
-          type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
-          aria-expanded={structuredObservationsOpen}
-          aria-controls="adult-hygiene-structured-gingival-observations-content"
-          onClick={() => setStructuredObservationsOpen((open) => !open)}
-        >
-          <span className="min-w-0">Structured gingival observations</span>
-          <span className="flex shrink-0 items-center gap-3">
-            <span className="hidden text-xs font-medium text-slate-500 dark:text-slate-400 sm:inline">
-              {structuredObservationSummary}
-            </span>
-            <DropdownChevron open={structuredObservationsOpen} />
-          </span>
-          <span className="col-span-2 mt-1 text-xs font-medium text-slate-500 dark:text-slate-400 sm:hidden">
-            {structuredObservationSummary}
-          </span>
-        </button>
-        {structuredObservationsOpen ? (
-          <div
-            id="adult-hygiene-structured-gingival-observations-content"
-            className="space-y-4 pt-2"
-          >
             <p className="text-sm text-slate-600 dark:text-slate-400">
               Apply the reviewed normal observations or document individual
               findings.
@@ -2815,15 +2962,13 @@ function GingivalDescriptionControl({
             })}
             <button
               type="button"
-              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+              className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
               onClick={() => setStructuredObservationsOpen(false)}
             >
               Collapse observations
               <DropdownChevron open />
             </button>
-          </div>
-        ) : null}
-      </fieldset>
+      </CollapsibleFieldset>
     </>
   );
 }
@@ -2984,16 +3129,29 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function AdultHygiene2026Template({
   fixture,
-}: {
-  fixture: AdultHygiene2026Form;
-  summary: string;
+  presentation,
+  variant = "adult",
+}: InteractiveTemplateProps<AdultHygiene2026Form> & {
+  variant?: Hygiene2026Variant;
 }) {
+  const isAdolescent = variant === "adolescent";
+  const templateSections = isAdolescent
+    ? adolescentHygiene2026Sections
+    : adultHygiene2026Sections;
+  const templateId = isAdolescent
+    ? "adolescent-hygiene-2026"
+    : "adult-hygiene-2026";
+  const outputChoices = outputChoicesByVariant[variant];
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
     class5IndicatorStatus: "yes",
     ppeStatementApplies: true,
   }));
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [entryMode, changeEntryMode] = useRapidEntryMode(
+    `hygienenote.${templateId}.entry-mode.v1`,
+  );
+  const rapid = entryMode === "rapid";
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
@@ -3002,12 +3160,12 @@ export function AdultHygiene2026Template({
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const { providerDefaultsStorageStatus, getProviderDefault, getItems } =
     useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
-    templateId: "adult-hygiene-2026",
+    templateId,
     form,
     startedAt,
     isEmpty: isEmptyAdultHygieneDraft,
@@ -3017,6 +3175,7 @@ export function AdultHygiene2026Template({
       setForm({
         ...emptyForm,
         ...draft.form,
+        vitalsReadings: draft.form.vitalsReadings ?? [],
         periodontalClassification: normalizePeriodontalClassification(
           draft.form.periodontalClassification,
         ),
@@ -3028,6 +3187,9 @@ export function AdultHygiene2026Template({
         gingivalDescription: copyGingivalDescriptionAssessment(
           draft.form.gingivalDescription,
         ),
+        cambra123Assessment: copyCambra123SixAdultAssessment(
+          draft.form.cambra123Assessment ?? emptyForm.cambra123Assessment,
+        ),
       });
       setStartedAt(new Date(draft.startedAt));
       setPatientIdError("");
@@ -3035,6 +3197,20 @@ export function AdultHygiene2026Template({
       setCopyMessage("");
     },
   });
+
+  function openDetailedEntry() {
+    changeEntryMode("detailed");
+    requestAnimationFrame(() =>
+      document.getElementById("adult-hygiene-entry-mode")?.scrollIntoView({ block: "start" }),
+    );
+  }
+
+  function updateRapidEntryField<K extends keyof AdultHygiene2026Form>(key: K, value: AdultHygiene2026Form[K]) {
+    setForm((current) => updateRapidField(current, key, value));
+    setCopyMessage("");
+    if (key === "patientId" && String(value).trim()) setPatientIdError("");
+    if (["dentist", "rdh", "rda"].includes(key) && String(value).trim()) setProviderError("");
+  }
 
   function createNewFormWithProviderDefaults(): AdultHygiene2026Form {
     return {
@@ -3047,57 +3223,37 @@ export function AdultHygiene2026Template({
     };
   }
 
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
+  }
 
-  useEffect(() => setStartedAt((current) => current ?? new Date()), []);
-
-  useEffect(() => {
-    if (
-      !form.mieleCodes.trim() ||
-      (form.class5IndicatorStatus === "yes" && form.ppeStatementApplies)
-    ) {
-      return;
-    }
-    setForm((current) =>
-      !current.mieleCodes.trim() ||
-      (current.class5IndicatorStatus === "yes" && current.ppeStatementApplies)
-        ? current
-        : {
-            ...current,
-            class5IndicatorStatus: "yes",
-            ppeStatementApplies: true,
-          },
-    );
-  }, [form.class5IndicatorStatus, form.mieleCodes, form.ppeStatementApplies]);
+  if (
+    form.mieleCodes.trim() &&
+    (form.class5IndicatorStatus !== "yes" || !form.ppeStatementApplies)
+  ) {
+    setForm({ ...form, class5IndicatorStatus: "yes", ppeStatementApplies: true });
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adultHygieneDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -3121,7 +3277,8 @@ export function AdultHygiene2026Template({
     [form, startedAt],
   );
   const summary = summaries[outputMode];
-  const cariesRiskSuggestion = suggestAdultCariesRisk(form.cariesRiskFactors);
+  const selectedOutputLabel =
+    outputChoices.find(([value]) => value === outputMode)?.[1] ?? "Note";
   const occlusalSplintState = resolveOcclusalSplintState(form);
 
   function updateField<TKey extends keyof AdultHygiene2026Form>(
@@ -3139,6 +3296,34 @@ export function AdultHygiene2026Template({
     ) {
       setProviderError("");
     }
+  }
+
+  function updateVitalsReading(
+    readingIndex: number,
+    patch: Partial<VitalsReading>,
+  ) {
+    updateField(
+      "vitalsReadings",
+      form.vitalsReadings.map((reading, currentIndex) =>
+        currentIndex === readingIndex ? { ...reading, ...patch } : reading,
+      ),
+    );
+  }
+
+  function addVitalsReading() {
+    updateField("vitalsReadings", [
+      ...form.vitalsReadings,
+      createNextVitalsReading(form.vitalsReadings),
+    ]);
+  }
+
+  function removeVitalsReading(readingIndex: number) {
+    updateField(
+      "vitalsReadings",
+      form.vitalsReadings.filter(
+        (_reading, currentIndex) => currentIndex !== readingIndex,
+      ),
+    );
   }
 
   async function copyNote(mode: AdultHygiene2026Output = outputMode) {
@@ -3167,11 +3352,7 @@ export function AdultHygiene2026Template({
     }
     const copied = await writeClipboard(summaries[mode]);
     const outputLabel =
-      mode === "complete"
-        ? "Complete"
-        : mode === "hygiene"
-        ? "Hygiene"
-        : "Recare";
+      outputChoices.find(([value]) => value === mode)?.[1] ?? "Note";
     setCopyMessage(
       copied
         ? draftSaveResult === "failed"
@@ -3264,6 +3445,9 @@ export function AdultHygiene2026Template({
       calculusAreas: [...(fixture.calculusAreas ?? [])],
       bleedingAreas: [...(fixture.bleedingAreas ?? [])],
       cariesRiskFactors: [...fixture.cariesRiskFactors],
+      cambra123Assessment: copyCambra123SixAdultAssessment(
+        fixture.cambra123Assessment,
+      ),
       ohiAidsReviewed: [...fixture.ohiAidsReviewed],
       oheTopicsReviewed: [...fixture.oheTopicsReviewed],
       treatmentCompleted: fixture.treatmentCompleted.map((entry) => ({
@@ -3506,16 +3690,20 @@ export function AdultHygiene2026Template({
     }
   }
 
-  function resetForm() {
-    if (!window.confirm(adultHygieneDiscardWarning)) return;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
+    }
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
     setOutputMode("complete");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
+    return true;
   }
 
   function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {
@@ -3528,23 +3716,21 @@ export function AdultHygiene2026Template({
   }
 
   function applyStandardTreatment() {
-    const existingKeys = new Set(
-      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
-    );
     const oheRecap = buildOheTreatmentRecap(form);
     const additions = createStandardTreatmentEntriesFromCatalogue(
       getItems("hygiene-treatment.completed"),
       () => createTreatmentCompletedEntry().id,
       oheRecap,
-    ).filter(
-      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+      form.fmpDone,
     );
-    if (additions.length) {
-      updateField("treatmentCompleted", [
-        ...form.treatmentCompleted,
-        ...additions,
-      ]);
-    }
+    updateField(
+      "treatmentCompleted",
+      mergeStandardTreatmentEntries(
+        form.treatmentCompleted,
+        additions,
+        form.fmpDone,
+      ),
+    );
   }
 
   function applyRecareExam() {
@@ -3571,116 +3757,151 @@ export function AdultHygiene2026Template({
     ]);
   }
 
-  return (
-    <div className="space-y-6">
-      <form
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
-        autoComplete="off"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void copyNote();
+  const photoControls = (
+      <div className="grid gap-3 sm:grid-cols-2">
+        <FixedChoiceListbox
+          id="adult-hygiene-intraoral-photos-status"
+          label="Intraoral photos"
+          value={form.intraoralPhotosStatus}
+          options={documentationStatusOptions}
+          onChange={(value) => updateField("intraoralPhotosStatus", value)}
+        />
+        <TextField
+          id="adult-hygiene-intraoral-photos-details"
+          label="Intraoral photos details"
+          value={form.intraoralPhotosDetails}
+          onChange={(value) => updateField("intraoralPhotosDetails", value)}
+          placeholder="Optional details"
+        />
+      </div>
+  );
+
+  const recordsControls = (
+    <>
+      <RadiographsTakenControl
+        rapid={rapid}
+        values={form.radiographs}
+        onChange={(radiographs) => {
+          setForm((current) => ({
+            ...current,
+            radiographs,
+            treatmentCompleted: syncRadiographTreatmentEntries(
+              current.treatmentCompleted,
+              radiographs,
+            ),
+          }));
+          setCopyMessage("");
         }}
-      >
-        <div className="space-y-6">
-          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Pilot interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              2026 Adult Hygiene
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete one encounter and copy a Complete, Hygiene, or Recare
-              note. Encounter values are kept in a temporary local recovery
-              draft. Deliberately remembered catalogue suggestions also stay
-              only in this browser profile.
-            </p>
-          </header>
+      />
+      {rapid ? <RapidDisclosure label="Intraoral photos" documented={form.intraoralPhotosStatus !== "not-documented" || Boolean(form.intraoralPhotosDetails)}>{photoControls}</RapidDisclosure> : photoControls}
+    </>
+  );
 
-          <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-          />
-
-          <Section title="Patient and Visit Context">
-            <div className="grid gap-4 md:grid-cols-3">
-              <TextField
-                id="adult-hygiene-patient-id"
-                label="Patient ID"
-                value={form.patientId}
-                onChange={(value) => updateField("patientId", value)}
-                required
-                error={patientIdError}
-                inputRef={patientIdRef}
-              />
-              <TextField
-                id="adult-hygiene-note-started"
-                label="Note started"
-                value={
-                  startedAt ? formatRecareExamLocalTimestamp(startedAt) : ""
-                }
-                onChange={() => undefined}
-                readOnly
-              />
-              <TextField
-                id="adult-hygiene-last-recall-date"
-                label="Last recare date"
-                value={form.noteLastRecallDate}
-                onChange={(value) => updateField("noteLastRecallDate", value)}
-                type="date"
-              />
-            </div>
-          </Section>
-
-          <Section
-            title="Visit Team"
-            description="At least one provider field is required before copying."
+  const vitalsControls = (
+    <fieldset
+      className={rapid
+        ? "space-y-3"
+        : "space-y-3 rounded-2xl border border-slate-200 p-4 dark:border-slate-700"}
+    >
+      <legend className="px-1 font-semibold">Vitals Readings</legend>
+      <div className="space-y-3">
+        {form.vitalsReadings.map((reading, readingIndex) => (
+          <div
+            key={`adult-hygiene-vitals-${readingIndex}`}
+            className={rapid
+              ? "space-y-2 border-b border-slate-200 pb-3 dark:border-slate-700"
+              : "space-y-2 rounded-2xl border border-slate-200 p-3 dark:border-slate-700"}
           >
-            <fieldset
-              aria-invalid={Boolean(providerError)}
-              aria-describedby={
-                providerError ? "adult-hygiene-provider-error" : undefined
-              }
-            >
-              <legend className="sr-only">Visit team providers</legend>
-              <div className="grid gap-4 md:grid-cols-3">
-                <CatalogueCombobox
-                  id="adult-hygiene-dentist"
-                  label="Dentist"
-                  catalogueKey="visit-team.dentist"
-                  value={form.dentist}
-                  onChange={(value) => updateField("dentist", value)}
-                  inputRef={dentistRef}
-                />
-                <CatalogueCombobox
-                  id="adult-hygiene-rdh"
-                  label="RDH"
-                  catalogueKey="visit-team.rdh"
-                  value={form.rdh}
-                  onChange={(value) => updateField("rdh", value)}
-                />
-                <CatalogueCombobox
-                  id="adult-hygiene-rda"
-                  label="RDA"
-                  catalogueKey="visit-team.rda"
-                  value={form.rda}
-                  onChange={(value) => updateField("rda", value)}
-                />
-              </div>
-              {providerError ? (
-                <p
-                  id="adult-hygiene-provider-error"
-                  className="mt-2 text-sm text-red-700 dark:text-red-300"
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-medium">
+                Vitals Entry {readingIndex + 1}
+              </p>
+              <button
+                type="button"
+                className={vitalsRemoveButtonClass}
+                onClick={() => removeVitalsReading(readingIndex)}
+              >
+                Remove
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <TextField
+                id={`adult-hygiene-vitals-systolic-${readingIndex}`}
+                label="Systolic"
+                type="number"
+                inputMode="numeric"
+                placeholder="e.g. 118"
+                value={reading.systolic}
+                onChange={(value) =>
+                  updateVitalsReading(readingIndex, { systolic: value })
+                }
+              />
+              <TextField
+                id={`adult-hygiene-vitals-diastolic-${readingIndex}`}
+                label="Diastolic"
+                type="number"
+                inputMode="numeric"
+                placeholder="e.g. 76"
+                value={reading.diastolic}
+                onChange={(value) =>
+                  updateVitalsReading(readingIndex, { diastolic: value })
+                }
+              />
+              <TextField
+                id={`adult-hygiene-vitals-heart-rate-${readingIndex}`}
+                label="Heart Rate"
+                type="number"
+                inputMode="numeric"
+                placeholder="e.g. 72"
+                value={reading.heartRate}
+                onChange={(value) =>
+                  updateVitalsReading(readingIndex, { heartRate: value })
+                }
+              />
+              <div className="flex min-w-0 items-end gap-1">
+                <div className="min-w-0 flex-1">
+                  <TextField
+                    id={`adult-hygiene-vitals-time-${readingIndex}`}
+                    label="Time"
+                    type="time"
+                    value={reading.time}
+                    onChange={(value) =>
+                      updateVitalsReading(readingIndex, { time: value })
+                    }
+                  />
+                </div>
+                <button
+                  type="button"
+                  aria-label="Set to now"
+                  className={`${vitalsActionButtonClass} shrink-0`}
+                  onClick={() =>
+                    updateVitalsReading(readingIndex, {
+                      time: getCurrentVitalsTime(),
+                    })
+                  }
                 >
-                  {providerError}
-                </p>
-              ) : null}
-            </fieldset>
-          </Section>
+                  Now
+                </button>
+              </div>
+            </div>
+            <BloodPressureLocationControl
+              reading={reading}
+              onChange={(patch) => updateVitalsReading(readingIndex, patch)}
+            />
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        className={vitalsActionButtonClass}
+        onClick={addVitalsReading}
+      >
+        Add reading
+      </button>
+    </fieldset>
+  );
 
+  const visitDetails = (
           <Section title="Consent, Medical History, and Sterilization">
             <div className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2">
@@ -3704,12 +3925,12 @@ export function AdultHygiene2026Template({
                   }
                 />
               </div>
-              <TextField
+              {!rapid ? <TextField
                 id="adult-hygiene-miele-codes"
                 label="Sterilization codes"
                 value={form.mieleCodes}
                 onChange={(value) => updateField("mieleCodes", value)}
-              />
+              /> : null}
             </div>
 
             <fieldset className="space-y-3">
@@ -3787,120 +4008,12 @@ export function AdultHygiene2026Template({
                 ) : null}
               </div>
             </div>
-          </Section>
 
-          <Section title="Records">
-            <RadiographsTakenControl
-              values={form.radiographs}
-              onChange={(radiographs) => {
-                setForm((current) => ({
-                  ...current,
-                  radiographs,
-                  treatmentCompleted: syncRadiographTreatmentEntries(
-                    current.treatmentCompleted,
-                    radiographs,
-                  ),
-                }));
-                setCopyMessage("");
-              }}
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-intraoral-photos-status"
-                label="Intraoral photos"
-                value={form.intraoralPhotosStatus}
-                options={documentationStatusOptions}
-                onChange={(value) =>
-                  updateField("intraoralPhotosStatus", value)
-                }
-              />
-              <TextField
-                id="adult-hygiene-intraoral-photos-details"
-                label="Intraoral photos details"
-                value={form.intraoralPhotosDetails}
-                onChange={(value) =>
-                  updateField("intraoralPhotosDetails", value)
-                }
-                placeholder="Optional details"
-              />
-            </div>
+            {!rapid ? vitalsControls : null}
           </Section>
+  );
 
-          <Section title="Patient Concerns and Hygiene Findings">
-            <CatalogueMultiCombobox
-              id="adult-hygiene-chief-concern"
-              label="Patient chief concern"
-              catalogueKey="patient.chief-concerns"
-              values={form.patientChiefConcern}
-              onChange={(values) =>
-                updateField(
-                  "patientChiefConcern",
-                  applyPatientChiefConcernSelectionRules(
-                    form.patientChiefConcern,
-                    values,
-                  ),
-                )
-              }
-              roomySelectionActions
-            />
-            <CheckboxField
-              id="adult-hygiene-chief-concern-list-format"
-              label="List each concern on a separate line in the note"
-              checked={form.listChiefConcerns}
-              onChange={(value) => updateField("listChiefConcerns", value)}
-            />
-            <TextareaField
-              id="adult-hygiene-area-of-concern"
-              label="Hygiene area of concern"
-              value={form.hygieneAreaOfConcern}
-              onChange={(value) => updateField("hygieneAreaOfConcern", value)}
-            />
-            <AdultHygienePlaqueControl
-              id="adult-hygiene-plaque"
-              choice={form.plaqueChoice}
-              areas={form.plaqueAreas}
-              comment={form.plaqueComment}
-              onChoiceChange={(value) => updateField("plaqueChoice", value)}
-              onAreasChange={(value) => updateField("plaqueAreas", value)}
-              onCommentChange={(value) => updateField("plaqueComment", value)}
-            />
-            <FacetedChoiceWithComment
-              id="adult-hygiene-stain"
-              label="Stain"
-              choice={form.stainChoice}
-              areas={form.stainAreas}
-              comment={form.stainComment}
-              facetChoices={stainFacetChoices}
-              facetGroups={stainFacetGroups}
-              onChoiceChange={(value) => updateField("stainChoice", value)}
-              onAreasChange={(value) => updateField("stainAreas", value)}
-              onCommentChange={(value) => updateField("stainComment", value)}
-              standaloneValue="None"
-            />
-            <AdultHygieneCalculusControl
-              id="adult-hygiene-calculus"
-              choice={form.calculusChoice}
-              areas={form.calculusAreas}
-              comment={form.calculusComment}
-              onChoiceChange={(value) => updateField("calculusChoice", value)}
-              onAreasChange={(value) => updateField("calculusAreas", value)}
-              onCommentChange={(value) => updateField("calculusComment", value)}
-            />
-            <FacetedChoiceWithComment
-              id="adult-hygiene-bleeding"
-              label="Bleeding"
-              choice={form.bleedingChoice}
-              areas={form.bleedingAreas}
-              comment={form.bleedingComment}
-              facetChoices={bleedingFacetChoices}
-              facetGroups={bleedingFacetGroups}
-              onChoiceChange={(value) => updateField("bleedingChoice", value)}
-              onAreasChange={(value) => updateField("bleedingAreas", value)}
-              onCommentChange={(value) => updateField("bleedingComment", value)}
-              standaloneValue="None"
-            />
-          </Section>
-
+  const extraoralControls = (
           <Section title="EOE">
             <ExamFinding
               id="adult-hygiene-extraoral"
@@ -3999,7 +4112,9 @@ export function AdultHygiene2026Template({
               />
             </StructuredExtraoralObservations>
           </Section>
+  );
 
+  const intraoralControls = (
           <Section title="IOE">
             <ExamFinding
               id="adult-hygiene-intraoral"
@@ -4029,6 +4144,347 @@ export function AdultHygiene2026Template({
               }}
             />
           </Section>
+  );
+
+  const cariesControls = (
+          <Section title="Caries Risk Assessment" flat={rapid}>
+            <Cambra123SixAdultControl
+              rapid={rapid}
+              value={form.cambra123Assessment}
+              legacy={{
+                level: form.cariesRiskLevel,
+                factors: form.cariesRiskFactors,
+                notes: form.cariesRiskNotes,
+              }}
+              onChange={(value) => updateField("cambra123Assessment", value)}
+            />
+          </Section>
+  );
+
+  const anesthesiaControls = (
+            <LocalAnesthesiaControl
+              rapid={rapid}
+              value={{
+                localAnesthesiaNoContraindication:
+                  form.localAnesthesiaNoContraindication,
+                localAnesthesiaEntries: form.localAnesthesiaEntries,
+                localAnesthesiaNoAdverseReactions:
+                  form.localAnesthesiaNoAdverseReactions,
+                localAnesthesiaAdequateAchieved:
+                  form.localAnesthesiaAdequateAchieved,
+                localAnesthesiaNotes: form.localAnesthesiaNotes,
+              }}
+              onChange={(localAnesthesia) =>
+                setForm((current) => ({ ...current, ...localAnesthesia }))
+              }
+            />
+  );
+
+  const treatmentControls = (
+          <Section title="Treatment completed today">
+            <StructuredTreatmentCompletedList
+              rapid={rapid}
+              entries={form.treatmentCompleted}
+              oheRecap={buildOheTreatmentRecap(form)}
+              onApplyStandard={applyStandardTreatment}
+              onApplyRecare={applyRecareExam}
+              radiographsHref="#adult-hygiene-radiographs"
+              onChange={(value) => updateField("treatmentCompleted", value)}
+              showHeading={false}
+            />
+            {anesthesiaControls}
+          </Section>
+  );
+
+  const educationControls = (
+            <OheEducationControl
+              value={form}
+              standardStatement={standardOheStatement}
+              standardGoal={standardHygieneGoal}
+              topicChoices={oheTopicChoices}
+              topicChoiceGroups={oheTopicChoiceGroups}
+              onChange={(key, value) => {
+                setForm((current) => {
+                  const next = { ...current, [key]: value };
+                  return {
+                    ...next,
+                    treatmentCompleted: syncDerivedOheTreatmentDetails(
+                      next.treatmentCompleted,
+                      buildOheTreatmentRecap(next),
+                    ),
+                  };
+                });
+                setCopyMessage("");
+              }}
+            />
+  );
+
+  const guardianCommunicationControls = isAdolescent ? (
+    <Section title="Communication with Parent or Legal Guardian" flat={rapid}>
+      <div className="grid gap-4 md:grid-cols-2">
+        <FixedChoiceListbox
+          id="adolescent-hygiene-2026-guardian-communication"
+          label="Information relayed"
+          value={form.guardianCommunicationStatus ?? "not-documented"}
+          options={documentationStatusOptions}
+          onChange={(value) => updateField("guardianCommunicationStatus", value)}
+        />
+        {form.guardianCommunicationStatus === "yes" ? (
+          <TextField
+            id="adolescent-hygiene-2026-guardian-communication-details"
+            label="Communication details"
+            value={form.guardianCommunicationDetails ?? ""}
+            onChange={(value) => updateField("guardianCommunicationDetails", value)}
+          />
+        ) : null}
+      </div>
+    </Section>
+  ) : null;
+
+  return (
+    <InteractiveTemplateWorkspace
+      compactNavigation={rapid}
+      footerAction={rapid ? (
+        <button type="button" className={rapidActionClass} onClick={openDetailedEntry}>
+          Open Detailed for additional findings and follow-up
+        </button>
+      ) : undefined}
+      presentation={presentation}
+      sections={rapid ? rapidEntrySections : templateSections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
+          event.preventDefault();
+          void copyNote();
+      }}
+      onLoadDemo={loadDemo}
+      onReset={resetForm}
+      draftRecovery={{
+        templateId,
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="adult-hygiene-summary"
+          accessibleLabel={`Generated 2026 ${selectedOutputLabel.toLowerCase()} note`}
+          value={summary}
+          copyLabel={`Copy ${selectedOutputLabel.toLowerCase()} note`}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          headerAction={headerAction}
+          controls={
+            <fieldset className="mt-4 space-y-2">
+              <legend className="text-sm font-semibold">Note output</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {outputChoices.map(([value, label]) => (
+                  <NativeChoiceControl
+                    key={value}
+                    type="radio"
+                    name={`${templateId}-note-output`}
+                    checked={outputMode === value}
+                    className="px-2"
+                    onChange={() => {
+                      setOutputMode(value);
+                      setCopyMessage("");
+                    }}
+                  >
+                    {label}
+                  </NativeChoiceControl>
+                ))}
+              </div>
+            </fieldset>
+          }
+        />
+      )}
+    >
+
+      <div className="space-y-2" id="adult-hygiene-entry-mode">
+        <RapidChoice label="Entry mode" value={entryMode} options={[
+          { value: "rapid", label: "Rapid Entry" }, { value: "detailed", label: "Detailed" },
+        ]} onChange={changeEntryMode} />
+        <p className="text-sm text-slate-600 dark:text-slate-400">Use direct choices for routine visits. Both modes share this note and local draft.</p>
+      </div>
+      {rapid ? <AdultHygieneRapidEntry form={form} onChange={updateRapidEntryField}
+        patientIdRef={patientIdRef} dentistRef={dentistRef} patientIdError={patientIdError} providerError={providerError}
+        visitDetails={visitDetails} vitalsControls={vitalsControls} extraoralControls={extraoralControls} intraoralControls={intraoralControls}
+        recordsControls={recordsControls} educationControls={educationControls} treatmentControls={treatmentControls} cariesControls={cariesControls}
+        guardianCommunicationControls={guardianCommunicationControls}
+        examinationOutputDescription={isAdolescent
+          ? "EOE and IOE are included in Combined and Dentist notes."
+          : "EOE and IOE are included in Complete and Recare notes."}
+        gingivalControls={<GingivalDescriptionControl rapid value={form.gingivalDescription} onChange={(value) => updateField("gingivalDescription", value)} />}
+        periodontalControls={<PeriodontalClassificationControl rapid value={form.periodontalClassification} onChange={(value) => updateField("periodontalClassification", value)} />}
+        onExtraoralStatusChange={changeExtraoralStatus} onIntraoralStatusChange={changeIntraoralStatus}
+        onDetailed={openDetailedEntry}
+      /> : <>
+
+          <Section title="Patient and Visit Context">
+            <div className="grid gap-4 md:grid-cols-3">
+              <TextField
+                id="adult-hygiene-patient-id"
+                label="Patient ID"
+                value={form.patientId}
+                onChange={(value) => updateField("patientId", value)}
+                required
+                error={patientIdError}
+                inputRef={patientIdRef}
+              />
+              <TextField
+                id="adult-hygiene-note-started"
+                label="Note started"
+                value={
+                  startedAt ? formatRecareExamLocalTimestamp(startedAt) : ""
+                }
+                onChange={() => undefined}
+                readOnly
+              />
+              <TextField
+                id="adult-hygiene-last-recall-date"
+                label="Last recare date"
+                value={form.noteLastRecallDate}
+                onChange={(value) => updateField("noteLastRecallDate", value)}
+                type="date"
+              />
+            </div>
+          </Section>
+
+          <Section
+            title="Visit Team"
+            description="At least one provider field is required before copying."
+          >
+            <fieldset
+              aria-invalid={Boolean(providerError)}
+              aria-describedby={
+                providerError ? "adult-hygiene-provider-error" : undefined
+              }
+            >
+              <legend className="sr-only">Visit team providers</legend>
+              <div className="grid gap-4 md:grid-cols-3">
+                <CatalogueCombobox
+                  id="adult-hygiene-dentist"
+                  label="Dentist"
+                  catalogueKey="visit-team.dentist"
+                  value={form.dentist}
+                  onChange={(value) => updateField("dentist", value)}
+                  inputRef={dentistRef}
+                />
+                <CatalogueCombobox
+                  id="adult-hygiene-rdh"
+                  label="RDH"
+                  catalogueKey="visit-team.rdh"
+                  value={form.rdh}
+                  onChange={(value) => updateField("rdh", value)}
+                />
+                <CatalogueCombobox
+                  id="adult-hygiene-rda"
+                  label="RDA"
+                  catalogueKey="visit-team.rda"
+                  value={form.rda}
+                  onChange={(value) => updateField("rda", value)}
+                />
+              </div>
+              {providerError ? (
+                <p
+                  id="adult-hygiene-provider-error"
+                  className="mt-2 text-sm text-red-700 dark:text-red-300"
+                >
+                  {providerError}
+                </p>
+              ) : null}
+            </fieldset>
+          </Section>
+
+          {visitDetails}
+
+          {!isAdolescent ? (
+            <Section title="Records">{recordsControls}</Section>
+          ) : null}
+
+          <Section title="Patient Concerns and Hygiene Findings">
+            <CatalogueMultiCombobox
+              id="adult-hygiene-chief-concern"
+              label="Patient chief concern"
+              catalogueKey="patient.chief-concerns"
+              values={form.patientChiefConcern}
+              onChange={(values) =>
+                updateField(
+                  "patientChiefConcern",
+                  applyPatientChiefConcernSelectionRules(
+                    form.patientChiefConcern,
+                    values,
+                  ),
+                )
+              }
+              roomySelectionActions
+            />
+            <CheckboxField
+              id="adult-hygiene-chief-concern-list-format"
+              label="List each concern on a separate line in the note"
+              checked={form.listChiefConcerns}
+              onChange={(value) => updateField("listChiefConcerns", value)}
+            />
+            {isAdolescent ? recordsControls : null}
+            <TextareaField
+              id="adult-hygiene-area-of-concern"
+              label="Hygiene area of concern"
+              value={form.hygieneAreaOfConcern}
+              onChange={(value) => updateField("hygieneAreaOfConcern", value)}
+            />
+            <AdultHygienePlaqueControl
+              id="adult-hygiene-plaque"
+              choice={form.plaqueChoice}
+              areas={form.plaqueAreas}
+              comment={form.plaqueComment}
+              onChoiceChange={(value) => updateField("plaqueChoice", value)}
+              onAreasChange={(value) => updateField("plaqueAreas", value)}
+              onCommentChange={(value) => updateField("plaqueComment", value)}
+            />
+            <FacetedChoiceWithComment
+              id="adult-hygiene-stain"
+              label="Stain"
+              choice={form.stainChoice}
+              areas={form.stainAreas}
+              comment={form.stainComment}
+              facetChoices={stainFacetChoices}
+              facetGroups={stainFacetGroups}
+              onChoiceChange={(value) => updateField("stainChoice", value)}
+              onAreasChange={(value) => updateField("stainAreas", value)}
+              onCommentChange={(value) => updateField("stainComment", value)}
+              standaloneValue="None"
+            />
+            <AdultHygieneCalculusControl
+              id="adult-hygiene-calculus"
+              choice={form.calculusChoice}
+              areas={form.calculusAreas}
+              comment={form.calculusComment}
+              onChoiceChange={(value) => updateField("calculusChoice", value)}
+              onAreasChange={(value) => updateField("calculusAreas", value)}
+              onCommentChange={(value) => updateField("calculusComment", value)}
+            />
+            <FacetedChoiceWithComment
+              id="adult-hygiene-bleeding"
+              label="Bleeding"
+              choice={form.bleedingChoice}
+              areas={form.bleedingAreas}
+              comment={form.bleedingComment}
+              facetChoices={bleedingFacetChoices}
+              facetGroups={bleedingFacetGroups}
+              onChoiceChange={(value) => updateField("bleedingChoice", value)}
+              onAreasChange={(value) => updateField("bleedingAreas", value)}
+              onCommentChange={(value) => updateField("bleedingComment", value)}
+              standaloneValue="None"
+            />
+          </Section>
+
+          {extraoralControls}
+
+          {intraoralControls}
 
           <Section title="Occlusion and Habits">
             <TextField
@@ -4385,77 +4841,7 @@ export function AdultHygiene2026Template({
             />
           </Section>
 
-          <Section title="Caries Risk Assessment">
-            <div className="grid gap-4 md:grid-cols-2">
-              <FixedChoiceListbox
-                id="adult-hygiene-caries-risk-level"
-                label="Caries risk level"
-                value={form.cariesRiskLevel}
-                options={cariesRiskLevelOptions}
-                onChange={(value) => updateField("cariesRiskLevel", value)}
-              />
-              <div className="md:col-span-2">
-                <CatalogueMultiCombobox
-                  id="adult-hygiene-caries-risk-factors"
-                  label="Caries risk factors"
-                  catalogueKey="clinical-exam.caries-risk-factors"
-                  values={form.cariesRiskFactors}
-                  onChange={(value) => updateField("cariesRiskFactors", value)}
-                  roomySelectionActions
-                />
-              </div>
-              <div className="border-l-4 border-sky-600 pl-4 md:col-span-2">
-                <h3 className="font-semibold">Suggested caries risk level</h3>
-                <p className="mt-1 text-sm">
-                  {cariesRiskSuggestion.level || "Not available"}
-                </p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                  Based only on the risk factors documented above. The selected
-                  risk level is not changed automatically.
-                </p>
-                {cariesRiskSuggestion.reasons.length ? (
-                  <details className="mt-2 text-sm text-slate-700 dark:text-slate-300">
-                    <summary className="cursor-pointer font-medium text-sky-700 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100">
-                      Why this was suggested
-                    </summary>
-                    <ul className="mt-2 list-disc space-y-1 pl-5">
-                      {cariesRiskSuggestion.reasons.map((reason) => (
-                        <li key={reason}>{reason}</li>
-                      ))}
-                    </ul>
-                  </details>
-                ) : null}
-                {cariesRiskSuggestion.warnings.length ? (
-                  <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-300">
-                    {cariesRiskSuggestion.warnings.map((warning) => (
-                      <li key={warning}>{warning}</li>
-                    ))}
-                  </ul>
-                ) : null}
-                {cariesRiskSuggestion.level &&
-                form.cariesRiskLevel !== cariesRiskSuggestion.level ? (
-                  <button
-                    type="button"
-                    className={`${buttonClass} mt-3 bg-sky-700 text-white hover:bg-sky-800`}
-                    onClick={() =>
-                      updateField("cariesRiskLevel", cariesRiskSuggestion.level)
-                    }
-                  >
-                    Apply caries risk suggestion
-                  </button>
-                ) : null}
-              </div>
-              <div className="md:col-span-2">
-                <TextareaField
-                  id="adult-hygiene-caries-risk-notes"
-                  label="Caries risk notes"
-                  placeholder="Document rationale for the caries risk selection."
-                  value={form.cariesRiskNotes}
-                  onChange={(value) => updateField("cariesRiskNotes", value)}
-                />
-              </div>
-            </div>
-          </Section>
+          {cariesControls}
 
           <Section title="Oral Hygiene and Education">
             <div className="grid gap-3 md:grid-cols-2">
@@ -4478,44 +4864,31 @@ export function AdultHygiene2026Template({
                 placeholder="Optional comment"
               />
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <StaticSuggestionCombobox
-                id="adult-hygiene-flossing"
-                label="Flossing frequency"
-                value={form.flossingFrequency}
-                suggestions={flossingFrequencyChoices}
-                onChange={(value) => updateField("flossingFrequency", value)}
-                placeholder="Select or enter a flossing frequency"
-              />
-              <StaticSuggestionCombobox
-                id="adult-hygiene-brushing"
-                label="Brushing frequency"
-                value={form.brushingFrequency}
-                suggestions={brushingFrequencyChoices}
-                onChange={(value) => updateField("brushingFrequency", value)}
-                placeholder="Select or enter a brushing frequency"
-              />
-            </div>
-            <OheEducationControl
+            <OralHygieneMethodsControl
               value={form}
-              standardStatement={standardOheStatement}
-              standardGoal={standardHygieneGoal}
-              topicChoices={oheTopicChoices}
-              topicChoiceGroups={oheTopicChoiceGroups}
-              onChange={(key, value) => {
-                setForm((current) => {
-                  const next = { ...current, [key]: value };
-                  return {
-                    ...next,
-                    treatmentCompleted: syncDerivedOheTreatmentDetails(
-                      next.treatmentCompleted,
-                      buildOheTreatmentRecap(next),
-                    ),
-                  };
-                });
-                setCopyMessage("");
-              }}
+              onChange={updateField}
+              brushingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adult-hygiene-brushing"
+                  label="Brushing frequency"
+                  value={form.brushingFrequency}
+                  suggestions={brushingFrequencyChoices}
+                  onChange={(value) => updateField("brushingFrequency", value)}
+                  placeholder="Select or enter a brushing frequency"
+                />
+              }
+              flossingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adult-hygiene-flossing"
+                  label="Flossing frequency"
+                  value={form.flossingFrequency}
+                  suggestions={flossingFrequencyChoices}
+                  onChange={(value) => updateField("flossingFrequency", value)}
+                  placeholder="Select or enter a flossing frequency"
+                />
+              }
             />
+            {educationControls}
           </Section>
 
           <Section title="Treatment plan">
@@ -4600,32 +4973,9 @@ export function AdultHygiene2026Template({
             </div>
           </Section>
 
-          <Section title="Treatment completed today">
-            <StructuredTreatmentCompletedList
-              entries={form.treatmentCompleted}
-              oheRecap={buildOheTreatmentRecap(form)}
-              onApplyStandard={applyStandardTreatment}
-              onApplyRecare={applyRecareExam}
-              radiographsHref="#adult-hygiene-radiographs"
-              onChange={(value) => updateField("treatmentCompleted", value)}
-              showHeading={false}
-            />
-            <LocalAnesthesiaControl
-              value={{
-                localAnesthesiaNoContraindication:
-                  form.localAnesthesiaNoContraindication,
-                localAnesthesiaEntries: form.localAnesthesiaEntries,
-                localAnesthesiaNoAdverseReactions:
-                  form.localAnesthesiaNoAdverseReactions,
-                localAnesthesiaAdequateAchieved:
-                  form.localAnesthesiaAdequateAchieved,
-                localAnesthesiaNotes: form.localAnesthesiaNotes,
-              }}
-              onChange={(localAnesthesia) =>
-                setForm((current) => ({ ...current, ...localAnesthesia }))
-              }
-            />
-          </Section>
+          {treatmentControls}
+
+          {guardianCommunicationControls}
 
           <Section title="Intervals and Follow-up">
             <div className="grid gap-3 md:grid-cols-2">
@@ -4697,83 +5047,7 @@ export function AdultHygiene2026Template({
               />
             </div>
           </Section>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated Note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The visible preview is copied unchanged.
-            </p>
-            <fieldset className="mt-4 space-y-2">
-              <legend className="text-sm font-semibold">Note output</legend>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    ["complete", "Complete"],
-                    ["hygiene", "Hygiene"],
-                    ["recare", "Recare"],
-                  ] as const
-                ).map(([value, label]) => (
-                  <NativeChoiceControl
-                    key={value}
-                    type="radio"
-                    name="adult-hygiene-note-output"
-                    checked={outputMode === value}
-                    className="px-2"
-                    onChange={() => {
-                      setOutputMode(value);
-                      setCopyMessage("");
-                    }}
-                  >
-                    {label}
-                  </NativeChoiceControl>
-                ))}
-              </div>
-            </fieldset>
-            <label className="sr-only" htmlFor="adult-hygiene-summary">
-              Generated 2026 {outputMode} note
-            </label>
-            <textarea
-              id="adult-hygiene-summary"
-              className={`${inputClass} min-h-[34rem] resize-y font-mono leading-6`}
-              readOnly
-              value={summary}
-              placeholder="Complete fields to build the note."
-            />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-                disabled={!startedAt}
-              >
-                Copy {outputMode} note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={loadDemo}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+      </>}
+    </InteractiveTemplateWorkspace>
   );
 }

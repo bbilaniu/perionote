@@ -6,6 +6,10 @@ import {
   interactiveDraftTabStorageKey,
 } from "@/lib/templates/localDrafts";
 import { createEmptyRecareExamForm } from "@/lib/templates/recareExam";
+import {
+  clearCurrentForm,
+  openFormActionDialog,
+} from "./helpers/interactiveTemplate";
 
 const recareExamUrl = "/templates/clinic/recare-exam/interactive";
 
@@ -968,7 +972,7 @@ test("Recare Exam applies reviewed normal intraoral observations with compact ou
   await expect(freeText).toHaveValue("");
   await expect(normalFlow).toBeVisible();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: pink; moist; no lesions; no swelling\.\n  - Tongue: pink; moist; symmetrical; no lesions\.\n  - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n  - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n  - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n  - Saliva: clear; normal flow\./
+    /Intraoral:\n    - Buccal mucosa: pink; moist; no lesions; no swelling\.\n    - Tongue: pink; moist; symmetrical; no lesions\.\n    - Floor of mouth: pink; smooth; no swelling; no discoloration\.\n    - Palate \(hard\/soft\): pink; intact; no lesions; no abnormal growths\.\n    - Oropharynx: uvula midline; no redness; no swelling; no exudate\.\n    - Saliva: clear; normal flow\./
   );
 
   const reducedFlow = intraoralObservationCard(
@@ -1099,7 +1103,7 @@ test("Recare Exam IOE quick findings apply the corresponding structured presets"
   ).toHaveValue("Midline");
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured; scalloped lateral borders\.\n  - Floor of mouth: mandibular tori \(location: Bilateral\)\.\n  - Palate \(hard\/soft\): torus palatinus \(location: Midline\)\./,
+    /Intraoral:\n    - Buccal mucosa: linea alba \(location: Bilateral\)\.\n    - Tongue: coated; fissured; scalloped lateral borders\.\n    - Floor of mouth: mandibular tori \(location: Bilateral\)\.\n    - Palate \(hard\/soft\): torus palatinus \(location: Midline\)\./,
   );
 });
 
@@ -1182,7 +1186,7 @@ test("Recare Exam preserves intraoral findings when destructive actions are canc
   await expect(freeText).toHaveCount(0);
   await expect(normalFlow).toHaveCount(0);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral: WNL\.\nOverbite: 4 mm\.\n\nCPAP: No\.$/,
+    /Intraoral: WNL\.\n  Overbite: 4 mm\.\n\nAppliances and Relevant History\n  CPAP: No\.$/,
   );
 });
 
@@ -1278,7 +1282,7 @@ test("Recare Exam exposes only supported structured annotations", async ({
   await expect(normalFlowCard).toHaveCount(0);
 
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Intraoral:\n  - Buccal mucosa: ulcer \(location: Right posterior; measurement: 4 mm; notes: Synthetic note\); linea alba \(location: Bilateral\)\.\n  - Tongue: coated; fissured\.$/,
+    /Intraoral:\n    - Buccal mucosa: ulcer \(location: Right posterior; measurement: 4 mm; notes: Synthetic note\); linea alba \(location: Bilateral\)\.\n    - Tongue: coated; fissured\.$/,
   );
   await expect(page.locator("#recare-summary")).not.toHaveValue(
     /abnormal|patholog/i,
@@ -1289,6 +1293,9 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
   page,
 }) => {
   await page.goto(recareExamUrl);
+  await expect(page.locator("#recare-note-started")).toHaveValue(
+    /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+  );
 
   const additionalFindings = page.getByRole("combobox", {
     name: "Additional occlusal findings",
@@ -1379,7 +1386,7 @@ test("Recare Exam supports starter, custom, ordered, located, and remembered add
     })
     .check();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Additional occlusal findings:\n  - Synthetic edge-to-edge relationship\.\n  - Crossbite \(location: Posterior, Left, tooth 16\)\./,
+    /Additional occlusal findings:\n    - Synthetic edge-to-edge relationship\.\n    - Crossbite \(location: Posterior, Left, tooth 16\)\./,
   );
 
   await additionalFindings.fill("Synthetic functional shift");
@@ -1423,6 +1430,11 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
     .click();
 
   await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  const demoDialog = page.getByRole("dialog", {
+    name: "Replace current form with synthetic demo?",
+  });
+  await expect(demoDialog).toBeVisible();
+  await demoDialog.getByRole("button", { name: "Replace form" }).click();
 
   const intraoralStatus = page.getByRole("button", {
     name: "Intraoral",
@@ -1452,19 +1464,14 @@ test("Recare Exam demo and reset handle all Slice 2 interaction state without ch
   await expect(page.getByLabel("Posterior", { exact: true })).toBeChecked();
   await expect(page.getByLabel("Left", { exact: true })).toBeChecked();
 
-  page.once("dialog", async (dialog) => {
-    await dialog.dismiss();
-  });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  const formDialog = await openFormActionDialog(page);
+  await formDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(intraoralStatus).toContainText("Findings");
   await expect(
     page.getByLabel("Overbite (mm)", { exact: true }),
   ).toHaveValue("3");
 
-  page.once("dialog", async (dialog) => {
-    await dialog.accept();
-  });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await clearCurrentForm(page);
 
   await expect(intraoralStatus).toContainText("Not assessed");
   await expect(
@@ -1521,13 +1528,13 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await firstOptionType.focus();
   await expect(
     page.getByRole("option", {
-      name: "Crown (Indirect Restoration) Starter",
+      name: "Extraction (Tooth Ablation) Starter",
       exact: true,
     }),
   ).toBeVisible();
   await page
     .getByRole("option", {
-      name: "Crown (Indirect Restoration) Starter",
+      name: "Extraction (Tooth Ablation) Starter",
       exact: true,
     })
     .click();
@@ -1658,7 +1665,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await expect(addPlanItem).toHaveClass(/py-2/);
   await expect(addPlanItem).toHaveClass(/text-sm/);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  1\. Crown \(Indirect Restoration\)\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Crown \(Indirect Restoration\)\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15/,
+    /Treatment Options:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Fillings — tooth 36\n  3\. Fillings — teeth 14, 15/,
   );
   const listTreatmentOptions = page.getByLabel(
     "List each treatment option on a separate line in the note",
@@ -1671,7 +1678,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   await listTreatmentOptions.uncheck();
   await listTreatmentPlan.uncheck();
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options: Crown \(Indirect Restoration\); Fillings — tooth 36; Fillings — teeth 14, 15\n\nTreatment Plan: Crown \(Indirect Restoration\); Fillings — tooth 36; Fillings — teeth 14, 15/,
+    /Treatment Options: Extraction \(Tooth Ablation\); Fillings — tooth 36; Fillings — teeth 14, 15\n\nTreatment Plan: Extraction \(Tooth Ablation\); Fillings — tooth 36; Fillings — teeth 14, 15/,
   );
   await listTreatmentOptions.check();
   await listTreatmentPlan.check();
@@ -1700,7 +1707,7 @@ test("Recare Exam treatment rows allow duplicate types, note-only areas, inline 
   ).toHaveValue("Composite fillings");
   await expect(planRows).toHaveCount(2);
   await expect(page.locator("#recare-summary")).toHaveValue(
-    /Treatment Options:\n  1\. Crown \(Indirect Restoration\)\n  2\. Composite fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Crown \(Indirect Restoration\)\n  2\. Fillings — teeth 14, 15/,
+    /Treatment Options:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Composite fillings — tooth 36\n  3\. Fillings — teeth 14, 15\n\nTreatment Plan:\n  1\. Extraction \(Tooth Ablation\)\n  2\. Fillings — teeth 14, 15/,
   );
 
   await addOption.click();

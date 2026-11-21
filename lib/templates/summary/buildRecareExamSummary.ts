@@ -1,3 +1,5 @@
+import { formatNoteSection } from "@/lib/templates/summary/formatNoteSection";
+import { formatOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type {
   DocumentationStatus,
   ExamStatus,
@@ -17,6 +19,7 @@ import {
   recareExtraoralOptionById,
   recareExtraoralOptions,
 } from "@/lib/templates/extraoralObservationsCatalog";
+import { formatLocalTime24 } from "@/lib/templates/date";
 
 type BuildRecareExamSummaryOptions = {
   startedAt?: Date;
@@ -443,13 +446,7 @@ export function formatNoteHeaderLocalTimestamp(date: Date): string {
   const month = months[date.getMonth()];
   const day = date.getDate();
   const year = date.getFullYear();
-  const hours24 = date.getHours();
-  const hours = hours24 % 12 || 12;
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-  const meridiem = hours24 < 12 ? "AM" : "PM";
-
-  return `----- ${month} ${day}, ${year} ${hours}:${minutes}:${seconds} ${meridiem} -----`;
+  return `----- ${month} ${day}, ${year} ${formatLocalTime24(date)} -----`;
 }
 
 export function buildRecareExamSummary(
@@ -636,14 +633,15 @@ export function buildRecareExamSummary(
 
   const groups = [
     patientAndTeam,
-    consentHistoryAndSterilization,
-    records,
+    [formatNoteSection("Consent, Medical History and Sterilization", consentHistoryAndSterilization)],
+    [formatNoteSection("Records", records)],
     chiefConcernSection,
     extraoralSection,
     tmjSection,
-    intraoralAndOcclusion,
-    appliancesAndHistory,
-    patientRequests,
+    [formatNoteSection("Oral Hygiene Methods", formatOralHygieneMethods(form))],
+    [formatNoteSection("Intraoral Examination and Occlusion", intraoralAndOcclusion)],
+    [formatNoteSection("Appliances and Relevant History", appliancesAndHistory)],
+    [formatNoteSection("Patient Requests and Comments", patientRequests)],
     odontogram,
     treatmentBlock(
       "Treatment Options",
@@ -655,7 +653,7 @@ export function buildRecareExamSummary(
       form.treatmentPlan,
       form.listTreatmentPlan
     ),
-    nextVisit,
+    [formatNoteSection("Follow-up", nextVisit)],
   ]
     .map((group) => group.filter(Boolean))
     .filter((group) => group.length > 0)

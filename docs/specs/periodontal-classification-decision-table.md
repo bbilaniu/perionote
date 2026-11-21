@@ -13,7 +13,7 @@ applies a suggestion or explicitly selects them.
 - [Tonetti, Greenwell, and Kornman 2018 framework](https://aap.onlinelibrary.wiley.com/doi/10.1002/JPER.18-0006)
 - [Papapanou and colleagues 2018 periodontitis case-definition consensus](https://doi.org/10.1111/jcpe.12946)
 - [Chapple, Mealey, and colleagues 2018 health and gingivitis consensus](https://aap.onlinelibrary.wiley.com/doi/full/10.1002/JPER.17-0719)
-- [Reviewed ClearDent periodontal redesign](../requests/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)
+- [Reviewed ClearDent periodontal redesign](../requests/archive/ClearDent%20Custom%20Fields%20and%20Periodontal%20Redesign.md)
 
 The checked-in implementation is in
 `lib/templates/periodontalClassification.ts`. Criterion IDs and typed
@@ -103,8 +103,9 @@ they were patient findings.
 Extent/distribution is currently clinician-selected and is not calculated. The
 encounter state does not contain the percentage of periodontitis-involved teeth
 or the distribution evidence needed to distinguish localized, generalized, and
-molar/incisor-pattern disease safely. The selected extent is charted only with a
-periodontitis diagnosis.
+molar/incisor-pattern disease safely. A clinician-selected localized or
+generalized extent is charted with a confirmed gingivitis or periodontitis
+diagnosis; molar/incisor pattern is charted only with periodontitis.
 
 Periodontitis extent must not be inferred from BOP percentage. Gingivitis extent
 and periodontitis extent use different findings and denominators. Automated

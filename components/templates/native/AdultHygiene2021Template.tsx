@@ -1,5 +1,8 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useMemo,
@@ -24,9 +27,15 @@ import { FixedChoiceListbox } from "@/components/forms/FixedChoiceListbox";
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { StaticSuggestionCombobox } from "@/components/forms/StaticSuggestionCombobox";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import {
+  interactiveTemplateUnloadWarning,
+  InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { OheEducationControl } from "@/components/templates/shared/OheEducationControl";
 import { TreatmentCompletedList as StructuredTreatmentCompletedList } from "@/components/templates/shared/TreatmentCompletedList";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import { isDesensitizingRemineralizingProductMetadata } from "@/lib/catalogues/catalogue";
 import {
@@ -47,10 +56,14 @@ import {
 import { applyPatientChiefConcernSelectionRules } from "@/lib/templates/patientChiefConcern";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
 import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
+import {
   buildOheTreatmentRecap,
   createStandardTreatmentEntriesFromCatalogue,
+  mergeStandardTreatmentEntries,
   syncDerivedOheTreatmentDetails,
-  treatmentCompletedEntryIdentity,
 } from "@/lib/templates/adultHygieneTreatment";
 import type {
   DocumentationStatus,
@@ -59,6 +72,7 @@ import type {
 } from "@/lib/templates/recareExam";
 import { buildAdultHygiene2021Summary } from "@/lib/templates/summary/buildAdultHygiene2021Summary";
 import { formatRecareExamLocalTimestamp } from "@/lib/templates/summary/buildRecareExamSummary";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 import {
   applyGingivitisObservationPreset,
   copyGingivalDescriptionAssessment,
@@ -170,11 +184,10 @@ const stageEvidenceGroups = [
   { value: "severity", label: "Severity evidence" },
   { value: "complexity", label: "Complexity evidence" },
 ] as const;
-const adultHygieneDiscardWarning =
-  "Clear all entered 2021 Adult Hygiene values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2021Form();
 const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
 const adultHygieneDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   patientChiefConcern: "",
   plaqueAreas: "",
   stainAreas: "",
@@ -620,6 +633,19 @@ const documentationStatusOptions: Array<{
   { value: "yes", label: "Yes" },
 ];
 
+const adultHygiene2021Sections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Patient Concerns and Hygiene Findings",
+  "Periodontal Assessment",
+  "Caries Risk Assessment",
+  "Oral Hygiene and Education",
+  "Treatment",
+  "Appliances and Relevant History",
+  "Intervals and Next Visit",
+]);
+
 function Section({
   title,
   description,
@@ -630,7 +656,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -973,7 +1002,7 @@ function ObservationDisclosure({
       <button
         id={id}
         type="button"
-        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
         aria-expanded={open}
         aria-controls={contentId}
         onClick={onToggle}
@@ -1054,6 +1083,7 @@ export function PeriodontalClassificationControl({
   ];
   const isHealthGingivitisDiagnosis =
     value.diagnosis === "health" || value.diagnosis === "gingivitis";
+  const isGingivitisDiagnosis = value.diagnosis === "gingivitis";
   const hasAssessedDiagnosis = Boolean(value.diagnosis);
   const isPeriodontitisDiagnosis = value.diagnosis === "periodontitis";
   const isTreatedPeriodontitisContext =
@@ -1085,6 +1115,16 @@ export function PeriodontalClassificationControl({
   )
     ? value.status
     : "";
+  const extentOptions = isGingivitisDiagnosis
+    ? periodontalExtentChoices.filter(
+        (choice) => choice.value !== "molar-incisor",
+      )
+    : periodontalExtentChoices;
+  const extentLabel = isGingivitisDiagnosis
+    ? "Extent of gingivitis"
+    : isPeriodontitisDiagnosis
+      ? "Periodontitis extent/distribution"
+      : "Extent/distribution";
   const hasHorizontalBoneLoss = value.stageBasis.some(
     (evidence) => evidence.criterionId === "stage.horizontal-bone-loss",
   );
@@ -1162,31 +1202,20 @@ export function PeriodontalClassificationControl({
   const gradeObservationSummary = documentedObservationSummary(
     gradeObservationCount,
   );
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    hasStructuredObservations,
-  );
-  const [stageEvidenceOpen, setStageEvidenceOpen] = useState(
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      hasStructuredObservations,
+    );
+  const [stageEvidenceOpen, setStageEvidenceOpen] = useAutoExpandDisclosure(
     hasStageSectionObservations,
   );
-  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useState(
-    gradeObservationCount > 0,
+  const [gradeEvidenceOpen, setGradeEvidenceOpen] = useAutoExpandDisclosure(
+    gradeObservationCount,
   );
   const [pendingMissingField, setPendingMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
   const [highlightedMissingField, setHighlightedMissingField] =
     useState<GingivalHealthCandidateMissingFieldId>();
-
-  useEffect(() => {
-    if (hasStructuredObservations) setStructuredObservationsOpen(true);
-  }, [hasStructuredObservations]);
-
-  useEffect(() => {
-    if (hasStageSectionObservations) setStageEvidenceOpen(true);
-  }, [hasStageSectionObservations]);
-
-  useEffect(() => {
-    if (gradeObservationCount > 0) setGradeEvidenceOpen(true);
-  }, [gradeObservationCount]);
 
   useEffect(() => {
     if (!pendingMissingField || !structuredObservationsOpen) return;
@@ -1475,7 +1504,7 @@ export function PeriodontalClassificationControl({
         <button
           id="adult-hygiene-structured-periodontal-observations"
           type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
           aria-expanded={structuredObservationsOpen}
           aria-controls="adult-hygiene-structured-periodontal-observations-content"
           onClick={() => setStructuredObservationsOpen((open) => !open)}
@@ -2014,6 +2043,10 @@ export function PeriodontalClassificationControl({
             onChange={(diagnosis) =>
               update({
                 diagnosis,
+                ...(diagnosis === "gingivitis" &&
+                value.extent === "molar-incisor"
+                  ? { extent: "" }
+                  : {}),
                 gingivalHealth: {
                   ...value.gingivalHealth,
                   context: "",
@@ -2034,9 +2067,9 @@ export function PeriodontalClassificationControl({
           />
           <FixedChoiceListbox
             id="adult-hygiene-periodontal-extent"
-            label="Extent/distribution"
+            label={extentLabel}
             value={value.extent}
-            options={periodontalExtentChoices}
+            options={extentOptions}
             onChange={(extent) => update({ extent })}
           />
         </div>
@@ -2208,7 +2241,7 @@ export function PeriodontalClassificationControl({
                             <li key={field.id}>
                               <button
                                 type="button"
-                                className="rounded-sm font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
+                                className="rounded-xs font-medium text-sky-700 underline decoration-sky-400 underline-offset-2 hover:text-sky-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:text-sky-300 dark:hover:text-sky-100"
                                 onClick={() =>
                                   navigateToMissingField(field.id)
                                 }
@@ -2360,15 +2393,10 @@ function GingivalDescriptionControl({
     : assessment.status === "wnl"
     ? "WNL"
     : "Not assessed";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function updateFinding(
     optionId: string,
@@ -2520,7 +2548,7 @@ function GingivalDescriptionControl({
         <button
           id="adult-hygiene-structured-gingival-observations"
           type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
           aria-expanded={structuredObservationsOpen}
           aria-controls="adult-hygiene-structured-gingival-observations-content"
           onClick={() => setStructuredObservationsOpen((open) => !open)}
@@ -2851,23 +2879,21 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function AdultHygiene2021Template({
   fixture,
-}: {
-  fixture: AdultHygiene2021Form;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<AdultHygiene2021Form>) {
   const [form, setForm] = useState<AdultHygiene2021Form>(() => ({
     ...createEmptyAdultHygiene2021Form(),
     class5IndicatorStatus: "yes",
     ppeStatementApplies: true,
   }));
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
   const treatmentEntrySequence = useRef(0);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const {
     providerDefaultsStorageStatus,
     getProviderDefault,
@@ -2911,64 +2937,39 @@ export function AdultHygiene2021Template({
     };
   }
 
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh:
+          current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda:
+          current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh:
-        current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda:
-        current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
+  }
 
-  useEffect(() => setStartedAt((current) => current ?? new Date()), []);
-
-  useEffect(() => {
-    if (
-      !form.mieleCodes.trim() ||
-      (form.class5IndicatorStatus === "yes" && form.ppeStatementApplies)
-    ) {
-      return;
-    }
-    setForm((current) =>
-      !current.mieleCodes.trim() ||
-      (current.class5IndicatorStatus === "yes" &&
-        current.ppeStatementApplies)
-        ? current
-        : {
-            ...current,
-            class5IndicatorStatus: "yes",
-            ppeStatementApplies: true,
-          },
-    );
-  }, [
-    form.class5IndicatorStatus,
-    form.mieleCodes,
-    form.ppeStatementApplies,
-  ]);
+  if (
+    form.mieleCodes.trim() &&
+    (form.class5IndicatorStatus !== "yes" || !form.ppeStatementApplies)
+  ) {
+    setForm({ ...form, class5IndicatorStatus: "yes", ppeStatementApplies: true });
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = adultHygieneDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
     window.addEventListener("beforeunload", warnBeforeUnload);
     return () => window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -3102,15 +3103,19 @@ export function AdultHygiene2021Template({
     setCopyMessage("Synthetic demo data loaded.");
   }
 
-  function resetForm() {
-    if (!window.confirm(adultHygieneDiscardWarning)) return;
-    localDraft.beginNewDraft();
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
+    }
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
+    return true;
   }
 
   function createTreatmentCompletedEntry(): AdultHygieneTreatmentCompletedEntry {
@@ -3123,58 +3128,56 @@ export function AdultHygiene2021Template({
   }
 
   function applyStandardTreatment() {
-    const existingKeys = new Set(
-      form.treatmentCompleted.map(treatmentCompletedEntryIdentity),
-    );
     const oheRecap = buildOheTreatmentRecap(form);
     const additions = createStandardTreatmentEntriesFromCatalogue(
       getItems("hygiene-treatment.completed"),
       () => createTreatmentCompletedEntry().id,
       oheRecap,
-    ).filter(
-      (entry) => !existingKeys.has(treatmentCompletedEntryIdentity(entry)),
+      form.fmpDone,
     );
-    if (additions.length) {
-      updateField("treatmentCompleted", [
-        ...form.treatmentCompleted,
-        ...additions,
-      ]);
-    }
+    updateField(
+      "treatmentCompleted",
+      mergeStandardTreatmentEntries(
+        form.treatmentCompleted,
+        additions,
+        form.fmpDone,
+      ),
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <form
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
-        autoComplete="off"
-        onSubmit={(event) => {
+    <InteractiveTemplateWorkspace
+      presentation={presentation}
+      sections={adultHygiene2021Sections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
           event.preventDefault();
           void copyNote();
-        }}
-      >
-        <div className="space-y-6">
-          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Pilot interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              2021 Adult Hygiene
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured Adult Hygiene note.
-              Encounter values are kept in a temporary local recovery draft.
-              Deliberately remembered catalogue suggestions also stay only in
-              this browser profile.
-            </p>
-          </header>
-
-          <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-          />
+      }}
+      onLoadDemo={loadDemo}
+      onReset={resetForm}
+      draftRecovery={{
+        templateId: "adult-hygiene-2021",
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="adult-hygiene-summary"
+          accessibleLabel="Generated 2021 Adult Hygiene note"
+          value={summary}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          headerAction={headerAction}
+        />
+      )}
+    >
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -3540,24 +3543,30 @@ export function AdultHygiene2021Template({
                 placeholder="Optional comment"
               />
             </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <StaticSuggestionCombobox
-                id="adult-hygiene-flossing"
-                label="Flossing frequency"
-                value={form.flossingFrequency}
-                suggestions={flossingFrequencyChoices}
-                onChange={(value) => updateField("flossingFrequency", value)}
-                placeholder="Select or enter a flossing frequency"
-              />
-              <StaticSuggestionCombobox
-                id="adult-hygiene-brushing"
-                label="Brushing frequency"
-                value={form.brushingFrequency}
-                suggestions={brushingFrequencyChoices}
-                onChange={(value) => updateField("brushingFrequency", value)}
-                placeholder="Select or enter a brushing frequency"
-              />
-            </div>
+            <OralHygieneMethodsControl
+              value={form}
+              onChange={updateField}
+              brushingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adult-hygiene-brushing"
+                  label="Brushing frequency"
+                  value={form.brushingFrequency}
+                  suggestions={brushingFrequencyChoices}
+                  onChange={(value) => updateField("brushingFrequency", value)}
+                  placeholder="Select or enter a brushing frequency"
+                />
+              }
+              flossingFrequencyControl={
+                <StaticSuggestionCombobox
+                  id="adult-hygiene-flossing"
+                  label="Flossing frequency"
+                  value={form.flossingFrequency}
+                  suggestions={flossingFrequencyChoices}
+                  onChange={(value) => updateField("flossingFrequency", value)}
+                  placeholder="Select or enter a flossing frequency"
+                />
+              }
+            />
             <OheEducationControl
               value={form}
               standardStatement={standardOheStatement}
@@ -3747,57 +3756,6 @@ export function AdultHygiene2021Template({
               />
             </div>
           </Section>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated Note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The visible preview is copied unchanged.
-            </p>
-            <label className="sr-only" htmlFor="adult-hygiene-summary">
-              Generated 2021 Adult Hygiene note
-            </label>
-            <textarea
-              id="adult-hygiene-summary"
-              className={`${inputClass} min-h-[34rem] resize-y font-mono leading-6`}
-              readOnly
-              value={summary}
-              placeholder="Complete fields to build the note."
-            />
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-                disabled={!startedAt}
-              >
-                Copy note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={loadDemo}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+    </InteractiveTemplateWorkspace>
   );
 }

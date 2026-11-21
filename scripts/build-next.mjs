@@ -2,18 +2,21 @@ import { spawn } from "node:child_process";
 import {
   cpSync,
   existsSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   rmSync,
   symlinkSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(scriptDirectory, "..");
-const buildRoot = mkdtempSync(path.join(tmpdir(), "perionote-next-build-"));
+// Keep the isolated sources and linked dependencies inside one Turbopack root.
+const buildDirectory = path.join(projectRoot, ".next-build");
+mkdirSync(buildDirectory, { recursive: true });
+const buildRoot = mkdtempSync(path.join(buildDirectory, "build-"));
 const projectOutput = path.join(projectRoot, "out");
 const buildOutput = path.join(buildRoot, "out");
 const excludedEntries = new Set([
@@ -31,22 +34,30 @@ const excludedEntries = new Set([
   "test-results",
 ]);
 
-for (const entry of readdirSync(projectRoot, { withFileTypes: true })) {
-  if (excludedEntries.has(entry.name)) {
-    continue;
+try {
+  for (const entry of readdirSync(projectRoot, { withFileTypes: true })) {
+    if (excludedEntries.has(entry.name)) {
+      continue;
+    }
+    cpSync(path.join(projectRoot, entry.name), path.join(buildRoot, entry.name), {
+      recursive: true,
+    });
   }
-  cpSync(path.join(projectRoot, entry.name), path.join(buildRoot, entry.name), {
-    recursive: true,
-  });
+
+  symlinkSync(
+    path.join(projectRoot, "node_modules"),
+    path.join(buildRoot, "node_modules"),
+    process.platform === "win32" ? "junction" : "dir",
+  );
+} catch (error) {
+  cleanBuildRoot();
+  throw error;
 }
 
-symlinkSync(
-  path.join(projectRoot, "node_modules"),
-  path.join(buildRoot, "node_modules"),
-  process.platform === "win32" ? "junction" : "dir",
-);
-
-const childEnvironment = { ...process.env };
+const childEnvironment = {
+  ...process.env,
+  PERIONOTE_NEXT_ROOT_DIR: projectRoot,
+};
 delete childEnvironment.PERIONOTE_NEXT_DIST_DIR;
 
 const nextBinary = path.join(
@@ -57,7 +68,7 @@ const nextBinary = path.join(
   "bin",
   "next",
 );
-const child = spawn(process.execPath, [nextBinary, "build"], {
+const child = spawn(process.execPath, [nextBinary, "build", ...process.argv.slice(2)], {
   cwd: buildRoot,
   env: childEnvironment,
   stdio: "inherit",

@@ -19,6 +19,7 @@ three notes without duplicating shared clinical facts:
 | Content | Complete | Hygiene | Recare |
 | --- | --- | --- | --- |
 | Patient/team, consent and history | Yes | Yes | Yes |
+| Sterilization and checked PPE statement | Yes | Yes | Yes |
 | Records, EOE/IOE, teeth, odontogram and occlusion | Yes | No | Yes |
 | Hygiene and periodontal assessment | Yes | Yes | No |
 | Caries risk | Yes | Yes | Yes |
@@ -33,6 +34,59 @@ The complete note follows encounter context, records and concern, Recare
 clinical examination, appliances/history, hygiene and periodontal assessment,
 risk, education, coordinated recommendations, treatment completed, then
 separate Recare/dental and hygiene follow-up.
+
+### Generated-note grouping (2026-10-07)
+
+The 2026 Adult and Adolescent templates share these output rules in all three
+note modes wherever the corresponding content is included:
+
+- The checked PPE statement follows sterilization codes, without a leading
+  hyphen. It also appears in Recare/Dentist output and remains documentable
+  when no sterilization codes are entered. It is omitted when unchecked.
+- Documented premedication follows medical history immediately. A single blank
+  line separates consent/medical history/premedication from the first documented
+  vital reading. Readings and their average stay together. Empty vitals add no
+  spacing.
+- Oral habits form a separate paragraph before `Occlusion:`. Documented
+  occlusal findings appear below that heading with two-space indentation;
+  listed additional findings retain their nested bullets at four spaces.
+- `Appliances and Relevant History` groups applicable devices and history,
+  patient-requested improvements, and additional comments/notes into up to
+  three paragraphs. Detail lines have two-space indentation, with one blank
+  line between nonempty paragraphs. Empty headings and paragraphs are omitted.
+  Existing inclusion rules still apply: Hygiene/Hygienist includes the splint,
+  orthodontic history, retainers, and additional notes; Recare/Dentist includes
+  CPAP, removable dentures, improvement requests, and recare comments but omits
+  hygiene additional notes. Complete/Combined includes all applicable content.
+- Beneath `Current periodontal condition:`, periodontal diagnosis, status,
+  `Perio status comment:`, and applicable health/gingivitis, stage, and grade
+  override explanations use two-space indentation, including continuation
+  lines. Without a current-condition heading, diagnosis details remain flush
+  left. Existing classification and status inclusion rules are unchanged.
+- CAMBRA begins with `Caries risk category: {clinician selection}.` (or
+  `Not documented.` when no category is selected). The next line is
+  `  CAMBRA123 2021, ages 6–adult, score: …`, followed by protective factors,
+  biological/environmental risk factors, disease indicators, and optional
+  notes. Every detail line has two leading spaces.
+- An untouched CAMBRA assessment is omitted. A started or otherwise filled
+  assessment whose status is not complete says
+  `  CAMBRA123 2021, ages 6–adult: Incomplete.` instead of publishing a score.
+  Documented factors, clinician selection, and notes remain visible. An
+  explicitly completed assessment with no Yes factors still reports its
+  zero score and `None` factor groups; no category is inferred.
+- Oral hygiene compliance and its optional comment precede current flossing
+  and brushing habits in one paragraph. Home-care instruction and the remaining
+  education each form separate paragraphs. A documented goal follows in its own
+  paragraph as `- Hygiene goal: …`; an empty or whitespace-only goal adds
+  neither a bullet nor extra blank lines.
+- Treatment completed and local anesthesia form separate paragraphs. Omitting
+  either adds no leading, trailing, or extra blank lines.
+- Nonempty paragraphs have one blank line between them, with no trailing
+  spaces or extra gaps from omitted content. Recare and hygiene follow-up
+  remain separate paragraphs.
+
+These are generated-output changes; stored clinical selections, the entry
+forms, note header logic, and older template versions retain their existing behavior.
 
 ## Terminology and compatibility
 
@@ -95,7 +149,7 @@ available. Changing these values maintains source-linked entries at the start
 of Treatment completed today; linked entries can only be removed by changing
 the Records source.
 
-An explicit **Apply recare exam** action adds one idempotent **Dentist Recare
+An explicit **Recare exam** action adds one idempotent **Dentist Recare
 Exam** entry after linked radiographs. It records the completed service but does
 not infer normal EOE/IOE findings. The Recare-only output continues to omit the
 Treatment completed today block; Complete and Hygiene outputs include it.

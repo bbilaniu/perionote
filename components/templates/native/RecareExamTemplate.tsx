@@ -1,5 +1,8 @@
 "use client";
 
+import { useAutoExpandDisclosure } from "@/components/templates/shared/useAutoExpandDisclosure";
+import { OralHygieneMethodsControl } from "@/components/templates/shared/OralHygieneMethodsControl";
+import { oralHygieneMethodsDraftArrayItemShapes } from "@/lib/templates/oralHygieneMethods";
 import {
   useEffect,
   useId,
@@ -48,8 +51,14 @@ import {
 import { IsoDateInput } from "@/components/forms/IsoDateInput";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
 import { TooltipActionButton } from "@/components/forms/TooltipActionButton";
-import { LocalDraftRecovery } from "@/components/templates/shared/LocalDraftRecovery";
+import { GeneratedNotePanel } from "@/components/templates/shared/GeneratedNotePanel";
+import {
+  interactiveTemplateUnloadWarning,
+  InteractiveTemplateWorkspace,
+  type InteractiveTemplateResetMode,
+} from "@/components/templates/shared/InteractiveTemplateWorkspace";
 import { RadiographsTakenControl } from "@/components/templates/shared/RadiographsTakenControl";
+import { useNoteStartedAt } from "@/components/templates/shared/useNoteStartedAt";
 import { useLocalInteractiveDraft } from "@/components/templates/shared/useLocalInteractiveDraft";
 import {
   createRecareNormalStructuredIntraoralFindings,
@@ -69,6 +78,11 @@ import {
   recareExtraoralOptions,
 } from "@/lib/templates/extraoralObservationsCatalog";
 import { matchesDraftShape } from "@/lib/templates/localDrafts";
+import {
+  createTemplateSectionNavigation,
+  getTemplateSectionId,
+} from "@/lib/templates/sectionNavigation";
+import type { InteractiveTemplateProps } from "@/lib/templates/types";
 
 const inputClass = `mt-1 ${formControlClass()}`;
 
@@ -79,11 +93,10 @@ const treatmentRowButtonClass =
 const treatmentRowRemoveButtonClass =
   "inline-flex items-center justify-center rounded-xl border border-red-300 px-3 py-2 text-sm font-semibold text-red-800 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-200 dark:hover:bg-red-950";
 
-const recareNoteDiscardWarning =
-  "Clear all entered Recare Exam values and start a new note? The current local draft will remain available on Saved drafts for up to seven days.";
 const recareDraftExemplar = createEmptyRecareExamForm();
 const emptyRecareDraft = JSON.stringify(recareDraftExemplar);
 const recareDraftArrayItemShapes = {
+  ...oralHygieneMethodsDraftArrayItemShapes,
   radiographs: "",
   chiefConcern: "",
   structuredExtraoralFindings: {
@@ -135,6 +148,19 @@ const examStatusOptions: Array<{ value: ExamStatus; label: string }> = [
   { value: "findings", label: "Findings" },
 ];
 
+const recareExamSections = createTemplateSectionNavigation([
+  "Patient and Visit Context",
+  "Visit Team",
+  "Consent, Medical History, and Sterilization",
+  "Records and Chief Concern",
+  "Clinical Exam",
+  "Oral Hygiene",
+  "Occlusion & Habits",
+  "Appliances and Relevant History",
+  "Odontogram",
+  "Treatment and Next Visit",
+]);
+
 function Section({
   title,
   description,
@@ -145,7 +171,10 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <section
+      id={getTemplateSectionId(title)}
+      className="scroll-mt-32 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 lg:scroll-mt-6"
+    >
       <header>
         <h2 className="text-lg font-semibold">{title}</h2>
         {description ? (
@@ -301,6 +330,15 @@ function CheckboxField({
   );
 }
 
+// Allocate a new identity only when an action adds or replaces a finding.
+function createToothFinding(optionId: string): RecareToothFinding {
+  return {
+    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    optionId,
+    toothAreas: [],
+  };
+}
+
 type TeethAssessmentForm = Pick<
   RecareExamForm,
   "teethStatus" | "toothFindings" | "additionalToothFindings"
@@ -330,21 +368,11 @@ export function TeethAssessment({
         } documented`
       : "Not assessed";
   const shouldAutoExpandStructuredObservations = status === "findings";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
-
-  const createFinding = (optionId: string): RecareToothFinding => ({
-    id: `${optionId}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    optionId,
-    toothAreas: [],
-  });
   function setStatus(next: ExamStatus) {
     if (next === "wnl") {
       if (
@@ -356,7 +384,7 @@ export function TeethAssessment({
         return;
       onChange({
         teethStatus: "wnl",
-        toothFindings: recareToothWnlOptionIds.map(createFinding),
+        toothFindings: recareToothWnlOptionIds.map(createToothFinding),
         additionalToothFindings: "",
       });
     } else if (next === "not-assessed") {
@@ -384,7 +412,7 @@ export function TeethAssessment({
       return;
     onChange({
       teethStatus: "findings",
-      toothFindings: recareToothWnlOptionIds.map(createFinding),
+      toothFindings: recareToothWnlOptionIds.map(createToothFinding),
       additionalToothFindings: "",
     });
   }
@@ -411,7 +439,7 @@ export function TeethAssessment({
       teethStatus: "findings",
       toothFindings: [
         ...findings.filter((item) => !conflicts.has(item.optionId)),
-        createFinding(optionId),
+        createToothFinding(optionId),
       ],
     });
   }
@@ -439,7 +467,7 @@ export function TeethAssessment({
         <button
           id={`${idPrefix}-structured-dental-observations`}
           type="button"
-          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+          className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
           aria-expanded={structuredObservationsOpen}
           aria-controls={`${idPrefix}-structured-dental-observations-content`}
           onClick={() => setStructuredObservationsOpen((open) => !open)}
@@ -656,7 +684,7 @@ export function TeethAssessment({
               />
               <button
                 type="button"
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
                 onClick={() => setStructuredObservationsOpen(false)}
               >
                 Collapse observations
@@ -1358,16 +1386,12 @@ export function StructuredExtraoralObservations({
     ? `${additionalAssessedCount} of ${additionalStatuses.length} additional exams assessed`
     : "Not assessed";
   const shouldAutoExpand = status === "findings" || documentedFindingCount > 0;
-  const [open, setOpen] = useState(shouldAutoExpand);
+  const [open, setOpen] = useAutoExpandDisclosure(shouldAutoExpand);
   const otherExtraoralOptions = recareExtraoralOptions.filter(
     (option) =>
       option.id !== "eoe.tmj_clicking" &&
       option.id !== "eoe.palpable_lymph_nodes",
   );
-
-  useEffect(() => {
-    if (shouldAutoExpand) setOpen(true);
-  }, [shouldAutoExpand]);
 
   function patch(optionId: string, changes: Partial<RecareExtraoralFinding>) {
     onChange(
@@ -1403,7 +1427,7 @@ export function StructuredExtraoralObservations({
       <button
         id={`${idPrefix}-structured-extraoral-observations`}
         type="button"
-        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
         aria-expanded={open}
         aria-controls={`${idPrefix}-structured-extraoral-observations-content`}
         onClick={() => setOpen((current) => !current)}
@@ -1538,7 +1562,7 @@ export function StructuredExtraoralObservations({
           ) : null}
           <button
             type="button"
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
             onClick={() => setOpen(false)}
           >
             Collapse observations
@@ -1575,15 +1599,10 @@ export function StructuredIntraoralFindings({
     ? "WNL"
     : "Not assessed";
   const shouldAutoExpandStructuredObservations = status === "findings";
-  const [structuredObservationsOpen, setStructuredObservationsOpen] = useState(
-    shouldAutoExpandStructuredObservations,
-  );
-
-  useEffect(() => {
-    if (shouldAutoExpandStructuredObservations) {
-      setStructuredObservationsOpen(true);
-    }
-  }, [shouldAutoExpandStructuredObservations]);
+  const [structuredObservationsOpen, setStructuredObservationsOpen] =
+    useAutoExpandDisclosure(
+      shouldAutoExpandStructuredObservations,
+    );
 
   function patch(optionId: string, changes: Partial<RecareIntraoralFinding>) {
     onChange(
@@ -1677,7 +1696,7 @@ export function StructuredIntraoralFindings({
       <button
         id={`${idPrefix}-structured-intraoral-observations`}
         type="button"
-        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
+        className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-1.5 text-left font-semibold hover:bg-slate-100 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:hover:bg-slate-800"
         aria-expanded={structuredObservationsOpen}
         aria-controls={`${idPrefix}-structured-intraoral-observations-content`}
         onClick={() => setStructuredObservationsOpen((open) => !open)}
@@ -1858,7 +1877,7 @@ export function StructuredIntraoralFindings({
           })}
           <button
             type="button"
-            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border-t border-slate-200 pt-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-slate-100"
             onClick={() => setStructuredObservationsOpen(false)}
           >
             Collapse observations
@@ -1958,21 +1977,19 @@ async function writeClipboard(value: string): Promise<boolean> {
 
 export function RecareExamTemplate({
   fixture,
-}: {
-  fixture: RecareExamForm;
-  summary: string;
-}) {
+  presentation,
+}: InteractiveTemplateProps<RecareExamForm>) {
   const [form, setForm] = useState<RecareExamForm>(() =>
     createEmptyRecareExamForm(),
   );
-  const [startedAt, setStartedAt] = useState<Date | null>(null);
+  const [startedAt, setStartedAt] = useNoteStartedAt();
   const [patientIdError, setPatientIdError] = useState("");
   const [providerError, setProviderError] = useState("");
   const [copyMessage, setCopyMessage] = useState("");
   const treatmentEntrySequence = useRef(0);
   const patientIdRef = useRef<HTMLInputElement>(null);
   const dentistRef = useRef<HTMLInputElement>(null);
-  const providerDefaultsAppliedRef = useRef(false);
+  const [providerDefaultsApplied, setProviderDefaultsApplied] = useState(false);
   const { providerDefaultsStorageStatus, getProviderDefault } = useCatalogues();
 
   const localDraft = useLocalInteractiveDraft({
@@ -1999,40 +2016,30 @@ export function RecareExamTemplate({
     };
   }
 
-  useEffect(() => {
-    if (
-      !localDraft.hydrated ||
-      providerDefaultsStorageStatus !== "ready" ||
-      providerDefaultsAppliedRef.current
-    ) {
-      return;
+  // Apply browser defaults once, after draft restoration has been resolved.
+  if (
+    localDraft.hydrated &&
+    providerDefaultsStorageStatus === "ready" &&
+    !providerDefaultsApplied
+  ) {
+    setProviderDefaultsApplied(true);
+    if (!localDraft.restoredAt) {
+      setForm((current) => ({
+        ...current,
+        dentist:
+          current.dentist ||
+          getProviderDefault("visit-team.dentist")?.label ||
+          "",
+        rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
+        rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
+      }));
     }
-    providerDefaultsAppliedRef.current = true;
-    if (localDraft.restoredAt) return;
-    setForm((current) => ({
-      ...current,
-      dentist:
-        current.dentist ||
-        getProviderDefault("visit-team.dentist")?.label ||
-        "",
-      rdh: current.rdh || getProviderDefault("visit-team.rdh")?.label || "",
-      rda: current.rda || getProviderDefault("visit-team.rda")?.label || "",
-    }));
-  }, [
-    getProviderDefault,
-    localDraft.hydrated,
-    localDraft.restoredAt,
-    providerDefaultsStorageStatus,
-  ]);
-
-  useEffect(() => {
-    setStartedAt((current) => current ?? new Date());
-  }, []);
+  }
 
   useEffect(() => {
     function warnBeforeUnload(event: BeforeUnloadEvent) {
       event.preventDefault();
-      event.returnValue = recareNoteDiscardWarning;
+      event.returnValue = interactiveTemplateUnloadWarning;
     }
 
     window.addEventListener("beforeunload", warnBeforeUnload);
@@ -2299,18 +2306,19 @@ export function RecareExamTemplate({
     updateField("additionalOcclusalFindings", next);
   }
 
-  function resetForm() {
-    if (!window.confirm(recareNoteDiscardWarning)) {
-      return;
+  function resetForm(mode: InteractiveTemplateResetMode): boolean {
+    if (mode === "new") {
+      if (localDraft.beginNewDraft() === "failed") return false;
+    } else {
+      if (localDraft.discardAndBeginNewDraft() === "failed") return false;
     }
-
-    localDraft.beginNewDraft();
     setForm(createNewFormWithProviderDefaults());
     setStartedAt(new Date());
     setPatientIdError("");
     setProviderError("");
     setCopyMessage("");
-    patientIdRef.current?.focus();
+    window.requestAnimationFrame(() => patientIdRef.current?.focus());
+    return true;
   }
 
   function createTreatmentEntry(
@@ -2326,36 +2334,38 @@ export function RecareExamTemplate({
   }
 
   return (
-    <div className="space-y-6">
-      <form
-        className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,0.8fr)]"
-        autoComplete="off"
-        onSubmit={(event) => {
+    <InteractiveTemplateWorkspace
+      presentation={presentation}
+      sections={recareExamSections}
+      formRevision={JSON.stringify(form)}
+      onSubmit={(event) => {
           event.preventDefault();
           void copyNote();
-        }}
-      >
-        <div className="space-y-6">
-          <header className="rounded-2xl border border-amber-300 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/30">
-            <p className="text-xs font-semibold uppercase tracking-wide text-amber-800 dark:text-amber-300">
-              Pilot interactive conversion
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-              Recare Exam
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm text-slate-700 dark:text-slate-300">
-              Complete the form and copy a structured Recare Exam note. Entered
-              values are kept in a temporary local recovery draft.
-            </p>
-          </header>
-
-          <LocalDraftRecovery
-            drafts={localDraft.recoverableDrafts}
-            lastSavedAt={localDraft.lastSavedAt}
-            restoredAt={localDraft.restoredAt}
-            storageError={localDraft.storageError}
-            onRestore={localDraft.restoreDraft}
-          />
+      }}
+      onLoadDemo={loadDemo}
+      onReset={resetForm}
+      draftRecovery={{
+        templateId: "recare-exam",
+        templateName: presentation.title,
+        currentDraftId: localDraft.currentDraftId,
+        drafts: localDraft.recoverableDrafts,
+        lastSavedAt: localDraft.lastSavedAt,
+        restoredAt: localDraft.restoredAt,
+        storageError: localDraft.storageError,
+        onRestore: localDraft.restoreDraft,
+        onSaveCurrent: localDraft.saveNow,
+      }}
+      generatedNote={(headerAction) => (
+        <GeneratedNotePanel
+          textareaId="recare-summary"
+          accessibleLabel="Generated Recare Exam note"
+          value={summary}
+          copyDisabled={!startedAt}
+          statusMessage={copyMessage}
+          headerAction={headerAction}
+        />
+      )}
+    >
 
           <Section title="Patient and Visit Context">
             <div className="grid gap-4 md:grid-cols-3">
@@ -2688,6 +2698,10 @@ export function RecareExamTemplate({
                 if (values.length) updateField("intraoralStatus", "findings");
               }}
             />
+          </Section>
+
+          <Section title="Oral Hygiene">
+            <OralHygieneMethodsControl value={form} onChange={updateField} />
           </Section>
 
           <Section title="Occlusion & Habits">
@@ -3055,59 +3069,6 @@ export function RecareExamTemplate({
               />
             </div>
           </Section>
-        </div>
-
-        <aside className="space-y-4 xl:sticky xl:top-6">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-lg font-semibold">Generated Note</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              The visible preview is copied unchanged.
-            </p>
-            <label className="sr-only" htmlFor="recare-summary">
-              Generated Recare Exam note
-            </label>
-            <textarea
-              id="recare-summary"
-              className={`${inputClass} min-h-[34rem] resize-y font-mono leading-6`}
-              readOnly
-              value={summary}
-              placeholder="Complete fields to build the note."
-            />
-
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button
-                type="submit"
-                className={`${buttonClass} bg-slate-900 text-white hover:bg-slate-700 dark:bg-sky-700 dark:hover:bg-sky-600`}
-                disabled={!startedAt}
-              >
-                Copy note
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={loadDemo}
-              >
-                Load synthetic demo
-              </button>
-              <button
-                type="button"
-                className={`${buttonClass} border border-slate-300 bg-white hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800`}
-                onClick={resetForm}
-              >
-                Reset form
-              </button>
-            </div>
-
-            <p
-              className="mt-3 min-h-5 text-sm text-slate-700 dark:text-slate-300"
-              role="status"
-              aria-live="polite"
-            >
-              {copyMessage}
-            </p>
-          </section>
-        </aside>
-      </form>
-    </div>
+    </InteractiveTemplateWorkspace>
   );
 }

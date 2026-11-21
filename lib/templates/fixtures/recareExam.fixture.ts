@@ -1,6 +1,8 @@
+import { createEmptyOralHygieneMethods } from "@/lib/templates/oralHygieneMethods";
 import type { RecareExamForm } from "@/lib/templates/recareExam";
 
 export const recareExamFixture: RecareExamForm = {
+  ...createEmptyOralHygieneMethods(),
   patientId: "TEST-1001",
   dentist: "Dr. Example",
   rda: "",

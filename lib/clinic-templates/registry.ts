@@ -53,6 +53,7 @@ type ClinicTemplateDefinition = {
   title: string;
   sourceTitle: string;
   category: ClinicTemplateCategory;
+  versionStatus?: "current" | "previous";
   description: string;
   content: string;
 };
@@ -63,6 +64,7 @@ export const clinicTemplateRegistry: readonly ClinicTemplateDefinition[] = [
     title: "Child Recare Exam & Hygiene Notes",
     sourceTitle: "Child Recare Exam & Hygiene Notes",
     category: "child-adolescent-hygiene",
+    versionStatus: "current",
     description: "Combined pediatric recall exam and hygiene note.",
     content: `Dentist: [SELECT/INSERT: Dentists]
 Assistant: [SELECT/INSERT: RDA]
@@ -107,6 +109,9 @@ Caries Detected : YES/NO
 
 • Intraoral Images- YES/NO
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 • OHI Reviewed
 Flossing Technique:
 Brushing Technique:
@@ -134,6 +139,7 @@ BOOKED: [AUTO: Next Appointment Date]`,
     title: "12–17 Years Old Hygiene Template",
     sourceTitle: "12-17YRS Old Hygiene Template",
     category: "child-adolescent-hygiene",
+    versionStatus: "previous",
     description: "Hygiene note for adolescent patients aged 12–17.",
     content: `RDH: [SELECT/INSERT: Hygienist]
 RDA: [SELECT/INSERT: RDA]
@@ -152,6 +158,9 @@ Miele Sterilization Codes Scanned:
 • Calculus- NO/YES  (If yes where- )
 
 • Intraoral Images- YES/NO
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 • OHI Reviewed
 Flossing Technique:
@@ -180,10 +189,57 @@ Next Visit: [SELECT/INSERT: NEXT VISIT]
 Date Booked: `,
   },
   {
+    slug: "adolescent-hygiene-2026",
+    title: "2026 Adolescent Hygiene",
+    sourceTitle: "2026 Adolescent Hygiene + Recare",
+    category: "child-adolescent-hygiene",
+    versionStatus: "current",
+    description:
+      "Unified adolescent encounter for Combined, Dentist, and Hygienist documentation.",
+    content: `ONE ENCOUNTER — THREE NOTE OUTPUTS
+Combined: complete adolescent dental exam and hygiene record
+Dentist: dental exam/recare record
+Hygienist: hygiene assessment and treatment record
+
+PATIENT AND VISIT
+Last recare date
+Dentist / RDH / RDA
+Class 5 indicators and sterilization codes
+Consent by patient, parent, and/or legal guardian
+Medical history, vitals, and premedication
+
+RECORDS AND DENTAL EXAM
+Chief concern
+Radiographs and intraoral photos
+EOE / IOE
+Teeth and odontogram
+Occlusion and oral habits
+Appliances, orthodontic and retainer history
+Caries risk assessment
+Dental and combined treatment plans
+
+HYGIENE
+Hygiene area of concern
+Plaque, stain, calculus, and bleeding
+Periodontal and gingival assessment
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
+Oral hygiene education and goals
+Treatment completed and local anesthesia
+Information relayed to parent or legal guardian
+
+FOLLOW-UP
+Recommended recare and hygiene intervals
+Next dentist and hygiene visits
+Dates booked`,
+  },
+  {
     slug: "adult-hygiene-2021",
     title: "2021 Adult Hygiene",
     sourceTitle: "2021 Adult Hygiene NEW",
     category: "adult-hygiene",
+    versionStatus: "previous",
     description: "Comprehensive adult hygiene assessment and treatment note.",
     content: `Last Recare Date: [AUTO: Last Recall Date]
 
@@ -217,6 +273,9 @@ Health/Gingivitis: [SELECT/INSERT: HEALTH]
 
 Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
 Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -258,6 +317,7 @@ Date Booked: `,
     title: "2026 Adult Hygiene",
     sourceTitle: "2026 Adult Hygiene",
     category: "adult-hygiene",
+    versionStatus: "current",
     description:
       "Unified adult encounter for Complete, Hygiene, and Recare documentation.",
     content: `Last Recare Date: [AUTO: Last Recall Date]
@@ -308,6 +368,9 @@ Health/Gingivitis: [SELECT/INSERT: HEALTH]
 Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
 Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
 OH Aids Reviewed/Recommended: [SELECT/INSERT: OHI AIDS REVIEWED/RECOMMENDED]
@@ -353,6 +416,7 @@ Hygiene Date Booked: `,
     title: "Local Anesthetic",
     sourceTitle: "Local Anesthetic",
     category: "local-anesthesia-addendum",
+    versionStatus: "previous",
     description: "Short local anesthetic treatment addendum.",
     content: `Topical gel placed prior to injection
 Anaesthetic used: [SELECT/INSERT: Anaesthetic]
@@ -365,6 +429,7 @@ Patient tolerated well. No adverse reactions`,
     title: "Split Adult Hygiene — Part 1",
     sourceTitle: "Split Adult Hygiene Part 1",
     category: "adult-hygiene",
+    versionStatus: "previous",
     description: "First part of the split adult hygiene workflow.",
     content: `Last Recall Date: [AUTO: Last Recall Date]
 
@@ -393,6 +458,9 @@ Do they wear Retainers? Fixed or removable?
 
 EOE/IOE:
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 Gingival Assessment:`,
   },
   {
@@ -400,6 +468,7 @@ Gingival Assessment:`,
     title: "Split Adult Hygiene — Part 2",
     sourceTitle: "Split Adult Hygiene Part 2",
     category: "adult-hygiene",
+    versionStatus: "previous",
     description: "Second part of the split adult hygiene workflow.",
     content: `Hygiene Area of Concern:
 
@@ -416,6 +485,9 @@ Health/Gingivitis: [SELECT/INSERT: HEALTH]
 
 Periodontitis Stage:            [SELECT/INSERT: PERIODONTITIS: STAGING]
 Periodontitis Grade: [SELECT/INSERT: PERIODONTITIS: GRADING]
+
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
 
 Oral hygiene compliance: [SELECT/INSERT: OHI COMPLIANCE]
 Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -504,6 +576,9 @@ Have they had orthodontics?
 Do they wear Retainers? Fixed or removable?
 Do they have Partial Dentures
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 is there anything they would like to improve with their smile/teeth?
 
 Additional Comments-
@@ -523,6 +598,7 @@ Date Booked: `,
     title: "Periodontal Recare",
     sourceTitle: "Periodontal Recare",
     category: "periodontal-maintenance",
+    versionStatus: "previous",
     description: "Periodontal maintenance assessment and recall note.",
     content: `DENTIST: [SELECT/INSERT: Dentists]
 RDA: [SELECT/INSERT: RDA]
@@ -549,6 +625,9 @@ Plaque (none)(light)(moderate)(heavy) in 03, 04, 05, 06, 07, 08
 Stain (none)(light)(moderate)(heavy) in 03, 04, 05, 06, 07, 08
 Calculus (none)(light)(moderate)(heavy) in 03, 04, 05, 06, 07, 08
 
+Type of toothbrush used (select all): [Electric] [Manual]
+Type of flossing used (select all): [String floss] [Water flosser] [Interdental picks]
+
 Oral Hygiene (Excellent)(V.Good)(Good)(fair)(poor)
 Compliance (Excellent)(V.Good)(Good)(fair)(poor)
 
@@ -567,6 +646,7 @@ Next Appointment: (6month)(3month) Hygiene
     title: "Emergency Exam",
     sourceTitle: "Emergency Exam",
     category: "emergency-limited-exam",
+    versionStatus: "previous",
     description: "Limited emergency exam, diagnosis, and treatment plan note.",
     content: `DENTIST: [SELECT/INSERT: Dentists]
 RDA/RDH: [SELECT/INSERT: RDA] [SELECT/INSERT: Hygienist]
@@ -617,6 +697,7 @@ Date Booked:`,
     title: "TMJ Exam / Consult or Referral",
     sourceTitle: "TMJ Exam / Consult or Referral",
     category: "tmj-tmd-assessment",
+    versionStatus: "previous",
     description: "TMJ/TMD clinical assessment, diagnosis, and management note.",
     content: `DENTIST: [SELECT/INSERT: Dentists]
 RDA: [SELECT/INSERT: RDA]

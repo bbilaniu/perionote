@@ -4,12 +4,14 @@ import Link from "next/link";
 import { type MouseEvent, type ReactNode, useState } from "react";
 import { FullPageLink } from "@/components/FullPageLink";
 import { NativeChoiceControl } from "@/components/forms/NativeChoiceControl";
+import { lifecyclePresentation } from "@/lib/templates/lifecyclePresentation";
 import type { TemplateLifecycleStatus } from "@/lib/templates/types";
 
 export type ClinicTemplateCatalogueItem = {
   slug: string;
   title: string;
   description: string;
+  versionStatus?: "current" | "previous";
   interactiveLifecycle?: TemplateLifecycleStatus;
 };
 
@@ -27,9 +29,10 @@ export type ClinicTemplateCatalogueGroup = {
 
 type DefaultCardDestination = "interactive" | "original";
 type TemplateVisibility = "all" | "interactive";
+type TemplateVersionVisibility = "current" | "all";
 
 const titleLinkClass =
-  "rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
+  "rounded-xs outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950";
 
 export function ClinicTemplateCatalogue({
   groups,
@@ -40,18 +43,21 @@ export function ClinicTemplateCatalogue({
     useState<DefaultCardDestination>("interactive");
   const [templateVisibility, setTemplateVisibility] =
     useState<TemplateVisibility>("all");
+  const [templateVersionVisibility, setTemplateVersionVisibility] =
+    useState<TemplateVersionVisibility>("current");
   const visibleGroups = groups
     .map((group) => ({
       ...group,
       categories: group.categories
         .map((category) => ({
           ...category,
-          templates:
-            templateVisibility === "interactive"
-              ? category.templates.filter(
-                  (template) => template.interactiveLifecycle,
-                )
-              : category.templates,
+          templates: category.templates.filter(
+            (template) =>
+              (templateVersionVisibility === "all" ||
+                template.versionStatus !== "previous") &&
+              (templateVisibility === "all" ||
+                template.interactiveLifecycle),
+          ),
         }))
         .filter(
           (category) =>
@@ -65,7 +71,7 @@ export function ClinicTemplateCatalogue({
   return (
     <>
       <section
-        className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end lg:justify-between dark:border-slate-800 dark:bg-slate-900"
+        className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-xs lg:flex-row lg:items-end lg:justify-between dark:border-slate-800 dark:bg-slate-900"
         aria-labelledby="clinic-template-preferences-heading"
       >
         <div>
@@ -79,7 +85,7 @@ export function ClinicTemplateCatalogue({
             Choose what opens from a card and which templates appear below.
           </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Show templates
@@ -131,6 +137,27 @@ export function ClinicTemplateCatalogue({
                   </SegmentButton>
                 );
               })}
+            </div>
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Template versions
+            </p>
+            <div
+              role="radiogroup"
+              aria-label="Template versions"
+              className="grid grid-cols-2 rounded-lg border border-slate-300 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-950"
+            >
+              {(["current", "all"] as const).map((visibility) => (
+                <SegmentButton
+                  key={visibility}
+                  name="clinic-template-version-visibility"
+                  selected={templateVersionVisibility === visibility}
+                  onClick={() => setTemplateVersionVisibility(visibility)}
+                >
+                  {visibility === "current" ? "Current" : "All"}
+                </SegmentButton>
+              ))}
             </div>
           </div>
         </div>
@@ -270,7 +297,7 @@ function ClinicTemplateCard({
 
   return (
     <article
-      className="group relative cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
+      className="group relative cursor-pointer rounded-xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-sky-400 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-sky-700"
       onClick={openDefaultFromCard}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -293,17 +320,28 @@ function ClinicTemplateCard({
             </Link>
           )}
         </h4>
-        {template.interactiveLifecycle ? (
-          <span
-            className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${
-              template.interactiveLifecycle === "draft"
-                ? "bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-200"
-                : "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-            }`}
-          >
-            Interactive · {template.interactiveLifecycle}
-          </span>
-        ) : null}
+        <div className="flex flex-wrap justify-end gap-2">
+          {template.versionStatus ? (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${
+                template.versionStatus === "current"
+                  ? "bg-emerald-100 text-emerald-900 dark:bg-emerald-950/70 dark:text-emerald-200"
+                  : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+              }`}
+              data-template-version-status={template.versionStatus}
+            >
+              {template.versionStatus}
+            </span>
+          ) : null}
+          {template.interactiveLifecycle ? (
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide ${lifecyclePresentation[template.interactiveLifecycle].badgeClassName}`}
+              data-template-lifecycle-badge={template.interactiveLifecycle}
+            >
+              Interactive · {template.interactiveLifecycle}
+            </span>
+          ) : null}
+        </div>
       </div>
       <p className="mt-2 text-sm text-slate-700 dark:text-slate-300">
         {template.description}

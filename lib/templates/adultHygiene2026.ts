@@ -1,3 +1,7 @@
+import {
+  createEmptyOralHygieneMethods,
+  type OralHygieneMethods,
+} from "@/lib/templates/oralHygieneMethods";
 import type {
   DocumentationStatus,
   ExamStatus,
@@ -22,6 +26,11 @@ import {
   createEmptyLocalAnesthesiaValue,
   type LocalAnesthesiaEntry,
 } from "@/lib/templates/localAnesthesia";
+import type { VitalsReading } from "@/lib/templates/vitalsReadings";
+import {
+  createEmptyCambra123SixAdultAssessment,
+  type Cambra123SixAdultAssessment,
+} from "@/lib/templates/cambra123";
 
 export {
   standardTreatmentCompletedPreset,
@@ -203,7 +212,7 @@ export const standardOheStatement =
 export const standardHygieneGoal =
   "Pt will start flossing at least 1-2 times a week, implement bass brushing by the next hygiene appointment.";
 
-export interface AdultHygiene2026Form {
+export interface AdultHygiene2026Form extends OralHygieneMethods {
   patientId: string;
   noteLastRecallDate: string;
   dentist: string;
@@ -216,6 +225,7 @@ export interface AdultHygiene2026Form {
   consentLegalGuardian: boolean;
   consentDetails: string;
   medicalHistoryReview: string;
+  vitalsReadings: VitalsReading[];
   premedicationStatus: PremedicationStatus;
   premedicationDetails: string;
   patientChiefConcern: string[];
@@ -274,6 +284,7 @@ export interface AdultHygiene2026Form {
   cariesRiskLevel: CariesRiskLevel;
   cariesRiskFactors: string[];
   cariesRiskNotes: string;
+  cambra123Assessment: Cambra123SixAdultAssessment;
   oralHygieneCompliance: string;
   oralHygieneComplianceComment: string;
   homeCareInstructionReviewed: boolean;
@@ -310,6 +321,8 @@ export interface AdultHygiene2026Form {
   improvementRequest: string;
   recareAdditionalComments: string;
   additionalNotes: string;
+  guardianCommunicationStatus?: DocumentationStatus;
+  guardianCommunicationDetails?: string;
   ppeStatementApplies: boolean;
   recallInterval: string;
   recallIntervalComments: string;
@@ -323,6 +336,7 @@ export interface AdultHygiene2026Form {
 
 export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
   return {
+    ...createEmptyOralHygieneMethods(),
     patientId: "",
     noteLastRecallDate: "",
     dentist: "",
@@ -335,6 +349,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     consentLegalGuardian: false,
     consentDetails: "",
     medicalHistoryReview: "",
+    vitalsReadings: [],
     premedicationStatus: "not-documented",
     premedicationDetails: "",
     patientChiefConcern: [],
@@ -393,6 +408,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     cariesRiskLevel: "",
     cariesRiskFactors: [],
     cariesRiskNotes: "",
+    cambra123Assessment: createEmptyCambra123SixAdultAssessment(),
     oralHygieneCompliance: "",
     oralHygieneComplianceComment: "",
     homeCareInstructionReviewed: false,
@@ -425,6 +441,8 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     improvementRequest: "",
     recareAdditionalComments: "",
     additionalNotes: "",
+    guardianCommunicationStatus: "not-documented",
+    guardianCommunicationDetails: "",
     ppeStatementApplies: false,
     recallInterval: "",
     recallIntervalComments: "",

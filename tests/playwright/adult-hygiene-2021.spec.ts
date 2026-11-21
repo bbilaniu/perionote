@@ -1,4 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  clearCurrentForm,
+  openFormActionDialog,
+  openGeneratedNote,
+  saveDraftAndStartNew,
+} from "./helpers/interactiveTemplate";
+import { INTERACTIVE_DRAFT_STORAGE_PREFIX } from "@/lib/templates/localDrafts";
 
 const adultHygieneUrl = "/templates/clinic/adult-hygiene-2021/interactive";
 
@@ -11,14 +18,18 @@ async function reloadDiscardingForm(page: Page) {
   await reloadPromise;
 }
 
-test("Adult Hygiene pilot pill matches the amber pilot notice", async ({
-  page,
-}) => {
+test("clinic lifecycle badges expose their registry lifecycle", async ({ page }) => {
   await page.goto("/templates/clinic");
-  const pilotPills = page.getByText("Interactive · pilot", { exact: true });
-  await expect(pilotPills).toHaveCount(3);
-  await expect(pilotPills.first()).toHaveClass(/bg-amber-100/);
-  await expect(pilotPills.first()).toHaveClass(/text-amber-900/);
+  const lifecycleBadges = page.locator("[data-template-lifecycle-badge]");
+  const badgeCount = await lifecycleBadges.count();
+  expect(badgeCount).toBeGreaterThan(0);
+
+  for (let index = 0; index < badgeCount; index += 1) {
+    const badge = lifecycleBadges.nth(index);
+    const lifecycle = await badge.getAttribute("data-template-lifecycle-badge");
+    expect(["draft", "pilot", "ready"]).toContain(lifecycle);
+    await expect(badge).toHaveText(`Interactive · ${lifecycle}`);
+  }
 });
 
 test("interactive Generated Note cards match the form card background", async ({
@@ -29,6 +40,7 @@ test("interactive Generated Note cards match the form card background", async ({
     "/templates/clinic/recare-exam/interactive",
   ]) {
     await page.goto(url);
+    await openGeneratedNote(page);
     const generatedNoteCard = page
       .getByRole("heading", { name: "Generated Note", exact: true })
       .locator("xpath=ancestor::section[1]");
@@ -37,7 +49,36 @@ test("interactive Generated Note cards match the form card background", async ({
   }
 });
 
-test("interactive banners share the first row with Generated Note on wide screens", async ({
+test("interactive workspace emphasizes copying over utility actions", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(adultHygieneUrl);
+
+  const copyNote = page.getByRole("button", { name: "Copy note" });
+  const loadDemo = page.getByRole("button", { name: "Load synthetic demo" });
+  const newOrClear = page.getByRole("button", { name: "New / clear form" });
+
+  await expect(copyNote).toHaveClass(/bg-sky-700/);
+  await expect(copyNote).toHaveClass(/min-h-11/);
+  await expect(newOrClear).toHaveClass(/border-slate-300/);
+  await expect(loadDemo).toHaveClass(/border-transparent/);
+  await expect(loadDemo).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+
+  const [copyBox, loadDemoBox, newOrClearBox] = await Promise.all([
+    copyNote.boundingBox(),
+    loadDemo.boundingBox(),
+    newOrClear.boundingBox(),
+  ]);
+  expect(copyBox).not.toBeNull();
+  expect(loadDemoBox).not.toBeNull();
+  expect(newOrClearBox).not.toBeNull();
+  expect(copyBox!.height).toBeGreaterThanOrEqual(44);
+  expect(loadDemoBox!.height).toBe(copyBox!.height);
+  expect(newOrClearBox!.height).toBe(copyBox!.height);
+});
+
+test("interactive forms keep navigation on the right with a persistent note preview", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -47,23 +88,297 @@ test("interactive banners share the first row with Generated Note on wide screen
     "/templates/clinic/recare-exam/interactive",
   ]) {
     await page.goto(url);
-
-    const banner = page
-      .getByText("Pilot interactive conversion", { exact: true })
-      .locator("xpath=ancestor::header[1]");
-    const generatedNoteCard = page
-      .getByRole("heading", { name: "Generated Note", exact: true })
+    const navigation = page.getByRole("navigation", {
+      name: "Form sections",
+    });
+    const firstSection = page
+      .getByRole("heading", { name: "Patient and Visit Context", exact: true })
       .locator("xpath=ancestor::section[1]");
-    const [bannerBox, generatedNoteBox] = await Promise.all([
-      banner.boundingBox(),
-      generatedNoteCard.boundingBox(),
+    const [navigationBox, firstSectionBox] = await Promise.all([
+      navigation.boundingBox(),
+      firstSection.boundingBox(),
     ]);
 
-    expect(bannerBox).not.toBeNull();
-    expect(generatedNoteBox).not.toBeNull();
-    expect(generatedNoteBox!.y).toBeCloseTo(bannerBox!.y, 0);
-    expect(bannerBox!.x + bannerBox!.width).toBeLessThan(generatedNoteBox!.x);
+    expect(navigationBox).not.toBeNull();
+    expect(firstSectionBox).not.toBeNull();
+    expect(firstSectionBox!.x + firstSectionBox!.width).toBeLessThan(
+      navigationBox!.x,
+    );
+
+    const drawer = page.getByRole("complementary", {
+      name: "Generated note preview",
+    });
+    await expect(drawer).toBeVisible();
+    const reviewNote = navigation.locator("[data-review-note-trigger]");
+    await expect(reviewNote).toBeHidden();
+    const workspaceHeader = page
+      .locator("h1")
+      .locator("xpath=ancestor::header[1]");
+    const [resizedSectionBox, workspaceHeaderBox, drawerBox] =
+      await Promise.all([
+        firstSection.boundingBox(),
+        workspaceHeader.boundingBox(),
+        drawer.boundingBox(),
+      ]);
+    expect(resizedSectionBox).not.toBeNull();
+    expect(workspaceHeaderBox).not.toBeNull();
+    expect(drawerBox).not.toBeNull();
+    expect(resizedSectionBox!.x + resizedSectionBox!.width).toBeLessThan(
+      navigationBox!.x,
+    );
+    expect(navigationBox!.x + navigationBox!.width).toBeLessThan(
+      drawerBox!.x,
+    );
+    expect(workspaceHeaderBox!.x + workspaceHeaderBox!.width).toBeLessThan(
+      drawerBox!.x,
+    );
   }
+});
+
+test("the desktop utility rail opens the note drawer below the docked breakpoint", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 800 });
+  await page.goto(adultHygieneUrl);
+
+  const navigation = page.getByRole("navigation", { name: "Form sections" });
+  const firstSection = page
+    .getByRole("heading", { name: "Patient and Visit Context", exact: true })
+    .locator("xpath=ancestor::section[1]");
+  const [navigationBox, firstSectionBox] = await Promise.all([
+    navigation.boundingBox(),
+    firstSection.boundingBox(),
+  ]);
+  expect(navigationBox).not.toBeNull();
+  expect(firstSectionBox).not.toBeNull();
+  expect(firstSectionBox!.x + firstSectionBox!.width).toBeLessThan(
+    navigationBox!.x,
+  );
+
+  const drawer = page.getByRole("complementary", {
+    name: "Generated note preview",
+  });
+  await expect(drawer).not.toBeVisible();
+  const reviewNote = navigation.getByRole("button", { name: "Review note" });
+  await reviewNote.click();
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toHaveCSS("position", "fixed");
+  await page.keyboard.press("Escape");
+  await expect(drawer).not.toBeVisible();
+  await expect(reviewNote).toBeFocused();
+});
+
+test("desktop users can drag workspace backgrounds to scroll", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1100, height: 600 });
+  await page.goto(adultHygieneUrl);
+
+  const form = page.locator("form");
+  await page.evaluate(() => window.scrollTo(0, 600));
+  const initialScrollY = await page.evaluate(() => window.scrollY);
+
+  await form.dispatchEvent("pointerdown", {
+    pointerId: 1,
+    pointerType: "mouse",
+    button: 0,
+    clientY: 300,
+  });
+  await form.dispatchEvent("pointermove", {
+    pointerId: 1,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+  await form.dispatchEvent("pointerup", {
+    pointerId: 1,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThanOrEqual(initialScrollY + 120);
+
+  const scrollBeforeInputDrag = await page.evaluate(() => window.scrollY);
+  const input = page.locator("input").first();
+  await input.dispatchEvent("pointerdown", {
+    pointerId: 2,
+    pointerType: "mouse",
+    button: 0,
+    clientY: 300,
+  });
+  await input.dispatchEvent("pointermove", {
+    pointerId: 2,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+  await input.dispatchEvent("pointerup", {
+    pointerId: 2,
+    pointerType: "mouse",
+    clientY: 180,
+  });
+  expect(await page.evaluate(() => window.scrollY)).toBe(
+    scrollBeforeInputDrag,
+  );
+});
+
+test("loading demo data warns before replacing a modified form", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const patientId = page.locator("#adult-hygiene-patient-id");
+  const loadDemo = page.getByRole("button", { name: "Load synthetic demo" });
+  const formActions = page.getByRole("button", {
+    name: "New / clear form",
+  });
+  await expect(formActions).toBeVisible();
+
+  await patientId.fill("KEEP-MY-CHANGES");
+
+  await loadDemo.click();
+  const demoDialog = page.getByRole("dialog", {
+    name: "Replace current form with synthetic demo?",
+  });
+  await expect(demoDialog).toBeVisible();
+  await expect(demoDialog).toContainText(
+    "This replaces the entries in the current form.",
+  );
+  await demoDialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(patientId).toHaveValue("KEEP-MY-CHANGES");
+  await expect(loadDemo).toBeFocused();
+
+  await loadDemo.click();
+  await demoDialog.getByRole("button", { name: "Replace form" }).click();
+  await expect(patientId).toHaveValue("TEST-AH-1001");
+
+  await patientId.fill("RESET-THIS-CHANGE");
+  let formDialog = await openFormActionDialog(page);
+  await expect(formDialog).toContainText(
+    "Keep this work as a local draft before opening a blank form",
+  );
+  await page.keyboard.press("Escape");
+  await expect(formDialog).toBeHidden();
+  await expect(patientId).toHaveValue("RESET-THIS-CHANGE");
+  await expect(formActions).toBeFocused();
+
+  formDialog = await openFormActionDialog(page);
+  await formDialog
+    .getByRole("button", { name: "Save draft & start new" })
+    .click();
+  await expect(patientId).toHaveValue("");
+  await expect(patientId).toBeFocused();
+
+  // A successful reset establishes the new clean baseline, so this is immediate.
+  await loadDemo.click();
+  await expect(patientId).toHaveValue("TEST-AH-1001");
+});
+
+test("a failed local draft save does not clear the current form", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const patientId = page.locator("#adult-hygiene-patient-id");
+  await patientId.fill("KEEP-UNSAVED-WORK");
+  await page.evaluate(() => {
+    Storage.prototype.setItem = () => {
+      throw new DOMException("Storage unavailable", "QuotaExceededError");
+    };
+  });
+
+  const formDialog = await openFormActionDialog(page);
+  await formDialog
+    .getByRole("button", { name: "Save draft & start new" })
+    .click();
+
+  await expect(formDialog).toBeVisible();
+  await expect(formDialog.getByRole("alert")).toContainText(
+    "The current form could not be saved, so it was not cleared.",
+  );
+  await expect(patientId).toHaveValue("KEEP-UNSAVED-WORK");
+});
+
+test("a failed local draft discard does not clear the current form", async ({
+  page,
+}) => {
+  await page.goto(adultHygieneUrl);
+  const patientId = page.locator("#adult-hygiene-patient-id");
+  await patientId.fill("KEEP-SAVED-WORK");
+  await openGeneratedNote(page);
+  await page.getByRole("button", { name: "Copy note" }).click();
+  await page.evaluate(() => {
+    Storage.prototype.removeItem = () => {
+      throw new DOMException("Storage unavailable", "QuotaExceededError");
+    };
+  });
+
+  const formDialog = await openFormActionDialog(page);
+  await formDialog
+    .getByRole("button", { name: "Clear current form" })
+    .click();
+
+  await expect(formDialog).toBeVisible();
+  await expect(formDialog.getByRole("alert")).toContainText(
+    "The current draft could not be discarded, so the form was not cleared.",
+  );
+  await expect(patientId).toHaveValue("KEEP-SAVED-WORK");
+  expect(
+    await page.evaluate(
+      (prefix) =>
+        Object.keys(window.localStorage).filter((key) => key.startsWith(prefix))
+          .length,
+      INTERACTIVE_DRAFT_STORAGE_PREFIX,
+    ),
+  ).toBe(1);
+});
+
+test("mobile section navigation stays compact and opens as a side sheet", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(adultHygieneUrl);
+
+  const sectionButton = page.getByRole("button", {
+    name: /Open form sections\. Current section:/,
+  });
+  await expect(sectionButton).toContainText("1 of 10");
+  await sectionButton.click();
+
+  const sectionDialog = page.getByRole("dialog", { name: "On this form" });
+  await expect(sectionDialog).toBeVisible();
+  await sectionDialog.getByRole("link", { name: "Visit Team" }).click();
+  await expect(sectionDialog).not.toBeVisible();
+  await expect(page).toHaveURL(/#template-section-visit-team$/);
+  await expect(sectionButton).toContainText("2 of 10");
+});
+
+test("generated note opens as a full-width mobile drawer and closes with Escape", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(adultHygieneUrl);
+
+  await page.evaluate(() => window.scrollTo(0, 1200));
+
+  const reviewNote = page.getByRole("button", { name: "Review note" });
+  await expect(reviewNote).toBeVisible();
+  await reviewNote.click();
+  const drawer = page.getByRole("complementary", {
+    name: "Generated note preview",
+  });
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toHaveCSS("position", "fixed");
+  await expect(drawer.getByText("Note preview", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    drawer.getByRole("heading", { name: "Generated Note", exact: true }),
+  ).toBeVisible();
+  await expect(
+    drawer.getByRole("button", { name: "Close", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(drawer).not.toBeVisible();
+  await expect(reviewNote).toBeFocused();
 });
 
 test("date and time fields stay inside cards on narrow screens", async ({
@@ -149,9 +464,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
       name: "Original 2021 Adult Hygiene template",
     })
   ).toHaveAttribute("href", "/templates/clinic/adult-hygiene-2021/");
-  await expect(
-    page.getByText("Pilot interactive conversion", { exact: true })
-  ).toBeVisible();
+  await expect(page.locator("header[data-template-lifecycle]")).toBeVisible();
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 09:10"
   );
@@ -195,6 +508,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   ).toBeVisible();
 
   await page.evaluate(() => navigator.clipboard.writeText("sentinel"));
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Enter a Patient ID.")).toBeVisible();
   await expect(
@@ -203,6 +517,7 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
   await expect(page.locator("#adult-hygiene-patient-id")).toBeFocused();
 
   await page.locator("#adult-hygiene-patient-id").fill("TEST-AH-3003");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.locator("#adult-hygiene-dentist")).toBeFocused();
   await expect(
@@ -310,13 +625,14 @@ test("Adult Hygiene enforces copy requirements and supports independent consent 
     /OH Aids Reviewed\/Recommended: Synthetic interdental aid/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /OHE: Caries theory and risk factors\.\nOHE notes: Demonstrated brushing modifications\./
+    /OHE: Caries theory and risk factors\.\n  OHE notes: Demonstrated brushing modifications\./
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Patient is currently: Uses floss picks most evenings; Brushes after each meal\./
   );
 
   const preview = await page.locator("#adult-hygiene-summary").inputValue();
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -350,7 +666,7 @@ test("Adult Hygiene demo output survives reload and reset preserves its draft", 
     page.getByRole("button", { name: "Caries risk level", exact: true })
   ).toHaveAttribute("data-value", "Moderate");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Periodontal status comment: Synthetic periodontal status comment\.\n\nCaries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months\. Synthetic diet and home-care factors reviewed\.\n\nOral hygiene compliance: Good\./
+    /Periodontal status comment: Synthetic periodontal status comment\.\n\nCaries Risk\n  Caries risk: Moderate caries risk due to high frequency of sugar intake, insufficient exposure to fluoride and history of active decay in the last 36 months\. Synthetic diet and home-care factors reviewed\.\n\nOral Hygiene and Education\n  Oral hygiene compliance: Good\./
   );
 
   await reloadDiscardingForm(page);
@@ -363,13 +679,7 @@ test("Adult Hygiene demo output survives reload and reset preserves its draft", 
   await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 
   await page.clock.setSystemTime(new Date(2026, 6, 25, 10, 25));
-  page.once("dialog", async (dialog) => {
-    expect(dialog.message()).toContain(
-      "Clear all entered 2021 Adult Hygiene values and start a new note?"
-    );
-    await dialog.accept();
-  });
-  await page.getByRole("button", { name: "Reset form" }).click();
+  await saveDraftAndStartNew(page);
   await expect(page.locator("#adult-hygiene-patient-id")).toHaveValue("");
   await expect(page.locator("#adult-hygiene-note-started")).toHaveValue(
     "2026-07-25 10:25"
@@ -421,6 +731,19 @@ test("Adult Hygiene expands populated structured observations", async ({
   await expect(structuredGingivalObservations).toContainText(
     "2 observations documented"
   );
+
+  // A populated section can stay manually collapsed through unrelated edits.
+  await structuredPeriodontalObservations.click();
+  await structuredGingivalObservations.click();
+  await page.locator("#adult-hygiene-patient-id").fill("Synthetic disclosure check");
+  await expect(structuredPeriodontalObservations).toHaveAttribute("aria-expanded", "false");
+  await expect(structuredGingivalObservations).toHaveAttribute("aria-expanded", "false");
+
+  // Clearing and repopulating the form starts a new auto-expansion transition.
+  await clearCurrentForm(page);
+  await page.getByRole("button", { name: "Load synthetic demo" }).click();
+  await expect(structuredPeriodontalObservations).toHaveAttribute("aria-expanded", "true");
+  await expect(structuredGingivalObservations).toHaveAttribute("aria-expanded", "true");
 });
 
 test("Adult Hygiene keeps WNL gingival observations collapsed", async ({
@@ -923,7 +1246,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Periodontal diagnosis: (?:HEALTH|GINGIVITIS) - /
+    /Periodontal diagnosis:/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Periodontal assessment findings:\n  - Periodontal support: Intact periodontal support\.\n  - Bleeding on probing \(BOP\): 6%\.\n  - Maximum PPD: 3 mm\.\n  - Probing attachment loss: Absent\.\n  - Radiographic bone loss \(RBL\): Absent\./
@@ -967,8 +1290,8 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await expect(
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toBeVisible();
-  await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Periodontal diagnosis: (?:HEALTH|GINGIVITIS) - /
+  await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
+    /^  Periodontal diagnosis:$/m
   );
 
   await page
@@ -1248,7 +1571,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     page.getByLabel("Treated-periodontitis context", { exact: true })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Periodontal diagnosis: (?:HEALTH|GINGIVITIS) - /
+    /Health\/Gingivitis:/
   );
 });
 
@@ -1638,7 +1961,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   }
 
   await page
-    .getByRole("button", { name: "Add completed care", exact: true })
+    .getByRole("button", { name: "All treatment options...", exact: true })
     .click();
   await page
     .getByRole("button", {
@@ -1651,16 +1974,16 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   });
   const completedRow = completedValues.locator(":scope > li").first();
   await expect(
+    completedRow.getByRole("combobox", { name: "SDF product", exact: true }),
+  ).toHaveValue("Advantage Arrest® Silver Diamine Fluoride 38%");
+  await expect(
     completedRow.getByRole("heading", {
       name: "SDF application",
       exact: true,
     }),
   ).toBeVisible();
-  await expect(
-    completedRow.getByRole("combobox", { name: "SDF product", exact: true })
-  ).toHaveValue("Advantage Arrest® Silver Diamine Fluoride 38%");
 
-  await completedRow.getByText("Select Tooth/area", { exact: true }).click();
+  await completedRow.getByText("None selected", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {
     name: "Standard Tooth/area choices",
     exact: true,
@@ -2030,6 +2353,7 @@ test("Adult Hygiene copies a manual grade selection without requiring an overrid
   const gradeOverrideReason = page.getByLabel("Grade override reason");
   await expect(gradeOverrideReason).toBeVisible();
 
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2040,6 +2364,7 @@ test("Adult Hygiene copies a manual grade selection without requiring an overrid
   ).resolves.not.toMatch(/Grade override:/);
 
   await gradeOverrideReason.fill("Clinician-selected Grade C");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2071,6 +2396,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   );
   await expect(overrideReason).toBeVisible();
 
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(
@@ -2083,6 +2409,7 @@ test("Adult Hygiene copies a manual Health/Gingivitis selection without requirin
   ).resolves.not.toContain("Health/Gingivitis override:");
 
   await overrideReason.fill("Clinician-selected health classification");
+  await openGeneratedNote(page);
   await page.getByRole("button", { name: "Copy note" }).click();
   await expect(page.getByText("Note copied.", { exact: true })).toBeVisible();
   await expect(

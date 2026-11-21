@@ -1,12 +1,10 @@
 name: Version
 
 on:
-  push:
-    branches: [main]
+  workflow_call:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: version
@@ -15,25 +13,108 @@ concurrency:
 jobs:
   changesets:
     name: Create version pull request
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+      pull-requests: write
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24
-          cache: npm
+          node-version-file: package.json
+          package-manager-cache: false
 
       - name: Install dependencies
         run: npm ci
 
       - name: Create or update version pull request
-        uses: changesets/action@v1
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          version: npm run version
-          title: Version Packages
-          commit: Version Packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          version-script: npm run version
+          pr-title: Version Packages
+          commit-message: Version Packages
+          github-token: ${{ github.token }}
+          # The release-tag job owns tagging after the version PR is merged.
+          create-github-releases: false
+          push-git-tags: false
+
+  release-tag:
+    name: Tag versioned release
+    needs: changesets
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+    steps:
+      - name: Checkout released commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git bot identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create and push release tag if version changed
+        id: tag
+        run: bash scripts/tag-release.sh
+
+  archive-release:
+    name: Create archive branch from release tag
+    needs: release-tag
+    if: needs.release-tag.outputs.tag != '' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout released commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: package.json
+          package-manager-cache: false
+
+      - name: Create and verify archive branch
+        run: bash scripts/archive-release.sh
+
+  sync-beta:
+    name: Fast-forward beta after main update
+    needs: release-tag
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Fast-forward beta to main
+        run: bash scripts/sync-beta.sh

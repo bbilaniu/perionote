@@ -1,7 +1,25 @@
 export const interactiveDraftTemplates = {
+  "child-recare-exam-hygiene-notes": {
+    label: "Child Recare Exam & Hygiene Notes",
+    href: "/templates/clinic/child-recare-exam-hygiene-notes/interactive",
+    professionalFields: [
+      { role: "Dentist", field: "dentist" },
+      { role: "RDH", field: "rdh" },
+      { role: "RDA", field: "rda" },
+    ],
+  },
   "adolescent-hygiene": {
     label: "12–17 Years Old Hygiene Template",
     href: "/templates/clinic/adolescent-hygiene/interactive",
+    professionalFields: [
+      { role: "Dentist", field: "dentist" },
+      { role: "RDH", field: "rdh" },
+      { role: "RDA", field: "rda" },
+    ],
+  },
+  "adolescent-hygiene-2026": {
+    label: "2026 Adolescent Hygiene",
+    href: "/templates/clinic/adolescent-hygiene-2026/interactive",
     professionalFields: [
       { role: "Dentist", field: "dentist" },
       { role: "RDH", field: "rdh" },

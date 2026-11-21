@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: beta
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /
+    target-branch: beta
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      next:
+        patterns: [next, eslint-config-next]
+      tailwind:
+        patterns: [tailwindcss, "@tailwindcss/*"]
+      react:
+        patterns: [react, react-dom, "@types/react", "@types/react-dom"]
+    ignore:
+      # TypeScript 7.0 lacks the compiler API needed by ESLint; reassess with 7.1.
+      - dependency-name: "typescript"
+        versions: [">=7.0.0 <7.1.0"]
+      # ignore-until: 2026-10-28
+      - dependency-name: "@types/node"
+        versions: ["^25.0.0", "^26.0.0", "^27.0.0"]

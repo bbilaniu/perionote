@@ -80,18 +80,26 @@ export function EditableCombobox<
   const [activeIndex, setActiveIndex] = useState(-1);
   const [selectionMessage, setSelectionMessage] = useState("");
 
-  useEffect(() => {
-    setActiveIndex((index) =>
-      index >= suggestions.length ? suggestions.length - 1 : index,
-    );
-  }, [suggestions.length]);
+  // Keep keyboard selection within the rendered list when suggestions shrink.
+  if (activeIndex >= suggestions.length) {
+    setActiveIndex(suggestions.length - 1);
+  }
 
-  useEffect(() => {
+  const [previousCloseSignal, setPreviousCloseSignal] = useState(closeSignal);
+  if (closeSignal !== previousCloseSignal) {
+    setPreviousCloseSignal(closeSignal);
     if (closeSignal !== undefined) {
       setOpen(false);
       setActiveIndex(-1);
     }
-  }, [closeSignal]);
+  }
+
+  useEffect(() => {
+    // Focus can reach the server-rendered input before onFocus is attached.
+    if (!disabled && document.activeElement === internalInputRef.current) {
+      setOpen(true);
+    }
+  }, [disabled]);
 
   const describedBy = [
     helpText ? helpId : null,
@@ -276,7 +284,7 @@ export function EditableCombobox<
                   {suggestionAction && actionLabel ? (
                     <button
                       type="button"
-                      className="m-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+                      className="m-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-200 hover:text-slate-800 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-100"
                       aria-label={actionLabel}
                       title={actionLabel}
                       disabled={suggestionAction.disabled}

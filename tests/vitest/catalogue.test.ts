@@ -101,6 +101,11 @@ describe("local catalogues", () => {
     ]);
 
     expect(
+      listCatalogueItems(emptyState, "clinical-exam.terminal-plane").map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Flush terminal plane", "Mesial step", "Distal step"]);
+    expect(
       listCatalogueItems(emptyState, "clinical-exam.molar-occlusion").map(
         (item) => item.label,
       ),
@@ -228,6 +233,7 @@ describe("local catalogues", () => {
       "Enamel Pro® Prophy Paste with Fluoride (Mint)",
       "Enamel Pro® Prophy Paste with Fluoride (Raspberry)",
       "Enamel Pro® Prophy Paste with Fluoride (Vanilla Mint)",
+      "Enamel Pro® Prophy Paste with Fluoride (Grape)",
     ]);
     expect(
       listCatalogueItems(
@@ -247,6 +253,7 @@ describe("local catalogues", () => {
     ).toEqual([
       "Filling (Direct Restoration)",
       "Root Canals (Endodontic Therapy)",
+      "Extraction (Tooth Ablation)",
       "Crown (Indirect Restoration)",
       "Bridge (Indirect Restoration)",
       "Denture (Removable Prosthesis)",
@@ -266,6 +273,7 @@ describe("local catalogues", () => {
       "Mepivacaine 3% without epinephrine",
       "Benzocaine 20% paste",
       "ORAQIX® (lidocaine and prilocaine periodontal gel) 2.5%/2.5%",
+      "Cetacaine® liquid (benzocaine 14%, butamben 2%, tetracaine HCl 2%)",
       "Dyclonine 1% rinse",
     ]);
     expect(
@@ -705,6 +713,39 @@ describe("local catalogues", () => {
     expect(parsedJson).not.toHaveProperty("form");
     expect(parsedJson).not.toHaveProperty("theme");
     expect(parsed.catalogueState).toEqual(state);
+  });
+
+  it("keeps topical anesthetic amounts optional through catalogue export and import", () => {
+    const cetacaine = listCatalogueItems(
+      createEmptyCatalogueState(),
+      "hygiene-treatment.anesthetic",
+    ).find((item) => item.id === "seed.hygiene-treatment.anesthetic.cetacaine-liquid");
+    expect(cetacaine?.metadata).toEqual({ kind: "local-anesthetic", route: "topical" });
+
+    for (const defaultAmountMl of [undefined, 0.05]) {
+      const metadata = {
+        kind: "local-anesthetic" as const,
+        route: "topical" as const,
+        ...(defaultAmountMl === undefined ? {} : { defaultAmountMl }),
+      };
+      const state = rememberCatalogueValue(
+        createEmptyCatalogueState(),
+        "hygiene-treatment.anesthetic",
+        "Synthetic topical product",
+        { id: "synthetic-topical", metadata },
+      ).state;
+      expect(parseCatalogueExport(serializeCatalogueExport(state))
+        .catalogueState.userItems[0].metadata).toEqual(metadata);
+    }
+
+    for (const defaultAmountMl of [0, -1, Infinity, NaN]) {
+      expect(() => rememberCatalogueValue(
+        createEmptyCatalogueState(),
+        "hygiene-treatment.anesthetic",
+        "Synthetic invalid product",
+        { id: "invalid-topical", metadata: { kind: "local-anesthetic", route: "topical", defaultAmountMl } },
+      )).toThrow("Invalid defaultAmountMl value.");
+    }
   });
 
   it("round-trips typed metadata while accepting legacy items without it", () => {

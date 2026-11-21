@@ -1,4 +1,18 @@
+import { formatTime24Value } from "@/lib/templates/date";
+
 export type LocalAnesthesiaRoute = "injection" | "topical" | "rinse";
+
+export const cetacaineLiquidProductLabel =
+  "Cetacaine® liquid (benzocaine 14%, butamben 2%, tetracaine HCl 2%)";
+
+// Keep small topical amounts visible while retaining the existing 5.0 mL style.
+export function formatLocalAnesthesiaTotal(amount: number): string {
+  return amount.toLocaleString("en-CA", {
+    useGrouping: false,
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 10,
+  });
+}
 
 export interface LocalAnesthesiaEntry {
   id: string;
@@ -83,29 +97,25 @@ function trimmed(value: string): string {
   return value.trim();
 }
 
-function formatClockTime(value: string): string {
-  const match = value.match(/^(\d{2}):(\d{2})$/);
-  if (!match) return value;
-  const hour = Number(match[1]);
-  const minute = match[2];
-  if (hour > 23) return value;
-  return `${hour % 12 || 12}:${minute} ${hour < 12 ? "AM" : "PM"}`;
-}
-
 export function formatLocalAnesthesiaSummary(
   value: LocalAnesthesiaValue,
 ): string {
   const detailLines: string[] = [];
   const totals = new Map<string, number>();
 
-  for (const entry of value.localAnesthesiaEntries) {
+  // Normalized HH:mm values sort chronologically. Untimed entries stay in
+  // entry order after timed entries; sorting a copy preserves the form state.
+  const entries = value.localAnesthesiaEntries
+    .map((entry) => ({ entry, time: formatTime24Value(entry.timeAdministered) }))
+    .sort((a, b) => (a.time || "99:99").localeCompare(b.time || "99:99"));
+
+  for (const { entry, time } of entries) {
     const product = trimmed(entry.product);
     const amount = trimmed(entry.amountMl);
     const toothAreas = entry.toothAreas.map(trimmed).filter(Boolean);
     const area = toothAreas.join(", ");
     if (!product || !amount) continue;
-    const time = trimmed(entry.timeAdministered);
-    const administeredAt = time ? ` (at ${formatClockTime(time)})` : "";
+    const administeredAt = time ? ` (at ${time})` : "";
     if (entry.route === "rinse") {
       const duration = trimmed(entry.durationSeconds);
       detailLines.push(
@@ -127,16 +137,18 @@ export function formatLocalAnesthesiaSummary(
   }
 
   totals.forEach((amount, product) => {
-    detailLines.push(`Total: ${product} ${amount.toFixed(1)} ml`);
+    detailLines.push(`Total: ${product} ${formatLocalAnesthesiaTotal(amount)} ml`);
   });
-  if (value.localAnesthesiaNoAdverseReactions) {
-    detailLines.push("No adverse reactions noted");
-  }
-  if (value.localAnesthesiaAdequateAchieved) {
-    detailLines.push("Adequate anesthesia achieved");
-  }
-  if (trimmed(value.localAnesthesiaNotes)) {
-    detailLines.push(trimmed(value.localAnesthesiaNotes));
+  if (value.localAnesthesiaEntries.length > 0) {
+    if (value.localAnesthesiaNoAdverseReactions) {
+      detailLines.push("No adverse reactions noted");
+    }
+    if (value.localAnesthesiaAdequateAchieved) {
+      detailLines.push("Adequate anesthesia achieved");
+    }
+    if (trimmed(value.localAnesthesiaNotes)) {
+      detailLines.push(trimmed(value.localAnesthesiaNotes));
+    }
   }
 
   if (!value.localAnesthesiaNoContraindication && !detailLines.length) {

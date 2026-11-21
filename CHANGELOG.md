@@ -1,5 +1,184 @@
 # hygienenote
 
+## 1.2.5
+
+### Patch Changes
+
+- 6d553c2: Use consistent two-space indentation and section headings in generated clinical notes, preserving indentation when copied. Keep short templates compact with two-space supporting details.
+
+## 1.2.4
+
+### Patch Changes
+
+- c954721: Add blank lines between child recare note sections, before the final caries-risk category and completed treatment, and between follow-up comments while keeping scheduling details together.
+
+## 1.2.3
+
+### Patch Changes
+
+- 13e5c8d: Order structured local-anesthesia administrations chronologically and list totals by each product's first administration, keeping all entries and totals within the local-anesthesia section.
+
+## 1.2.2
+
+### Patch Changes
+
+- a1ac9ae: Refine Adult and Adolescent 2026 note formatting: indent periodontal details and override explanations beneath the current condition, shorten the status comment label, separate home-care instructions and anesthesia into paragraphs, and bullet documented hygiene goals with indented multiline continuations without adding gaps for empty sections. Preserve note header behavior.
+
+## 1.2.1
+
+### Patch Changes
+
+- 2cab399: Group 2026 Adult and Adolescent occlusal findings under an indented Occlusion section, separate oral habits, and organize Appliances and Relevant History into indented paragraphs for devices/history, improvement requests, and comments. Omit empty sections and retain each note output's existing content rules.
+- f7e3d4a: Improve generated 2026 Adult and Adolescent notes: place checked PPE with sterilization in every output, keep premedication immediately after medical history with a blank line before vitals, lead CAMBRA with the clinician's risk category and indented details, and group current habits, education, and goals into separate paragraphs. Mark unfinished CAMBRA assessments incomplete without a score and omit untouched assessments.
+
+## 1.2.0
+
+### Minor Changes
+
+- 69f6c6e: Add optional arm and BP site selections to vitals readings, with artery tooltips and location details in generated notes. New readings reuse the latest completed BP reading's location within the encounter.
+
+## 1.1.1
+
+### Patch Changes
+
+- c182f87: Add Cetacaine liquid to topical anesthetic choices, with clinician-entered amounts and support for small fractional volumes in anesthetic totals.
+- 7714a56: Add shared radiograph type and image-count controls to the child recare template and synchronize selected X-rays with Treatment completed today. Preserve older saved radiograph text without inferring completed procedures.
+
+## 1.1.0
+
+### Minor Changes
+
+- 582fbc3: Add Rapid Entry and Detailed modes to 2026 Adolescent Hygiene, sharing encounter data and guardian communication while remembering the template's entry mode independently.
+
+### Patch Changes
+
+- 1bb7599: Add an NP exam button beside Recare exam in the existing clinical templates. The action records a Dentist NP Exam in completed care and generated notes without adding duplicates on repeated clicks.
+- 582fbc3: Changed wording to clarify availability of additional options. Exposed the comment field for Cambra123 in fast entry mode.
+- 1bb7599: Skip FMP when applying standard treatment if FMP done is marked No or not completed in the adult 2021 and adult/adolescent 2026 clinical templates.
+
+## 1.0.4
+
+### Patch Changes
+
+- f8dc09c: Keep edits in separate tabs independent when opening saved drafts. Drafts saved
+  in another tab, and older drafts without tab ownership information, now open as
+  independent copies so autosaving or clearing one tab cannot overwrite the
+  other tab's saved form.
+
+## 1.0.3
+
+### Patch Changes
+
+- 1e58b1c: Migrate the interface to Tailwind CSS 4 while preserving existing colors, control styling, and class-based dark mode. Supported browsers are Safari 16.4+, Chrome/Edge 111+, and Firefox 128+.
+
+## 1.0.2
+
+### Patch Changes
+
+- 8b9f606: Keep draft autosave callbacks synchronized with committed form state and preserve dialog focus restoration without reading refs during render.
+- 86a71ec: Synchronize automatic expansion of assessment disclosures before rendering their contents, while preserving manual collapse and reopening when new assessment data arrives.
+- 681cd4b: Keep saved-draft lists synchronized with browser storage through subscriptions, including saves and deletions in the same tab or another tab. Read cached metadata snapshots during rendering and prune expired or invalid records outside rendering.
+- 64d34b2: Initialize note timestamps and saved entry preferences without effect-driven state updates. Apply provider defaults once after draft recovery, and keep sterilization fields consistent before rendering.
+- a096187: Keep editable-combobox keyboard selection and close requests synchronized before rendering, and separate action-only finding and completed-care ID factories from component rendering.
+- 5cac212: Hydrate the theme selector from browser storage without an effect-driven state reset, keep explicit themes stable when storage is blocked, and synchronize catalogue editing fields before rendering changed items.
+- b104f98: Load and update local catalogues and provider defaults through storage subscriptions. Preserve validation and recovery behavior, and refresh both settings when another tab clears local storage.
+- 7242d6c: Manage draft initialization, recovery, autosave, and navigation checkpoints through a subscribed browser session. Keep restored form data attached to its selected draft during subscription cleanup.
+
+## 1.0.1
+
+### Patch Changes
+
+- dc5744e: Open combobox suggestions when the input received focus before the page finished initializing.
+- aae8862: Upgrade Next.js and React to current patched releases, with Turbopack for development and static production builds.
+
+## 1.0.0
+
+### Major Changes
+
+- 6aa6e04: Add Rapid Entry to 2026 Adult Hygiene with direct clinical selections, shared Detailed state and drafts, and the existing Complete, Hygiene and Recare outputs. Expose periodontal diagnosis and distribution before any findings are entered, classification controls for the selected diagnosis with expandable measurements, sterilization codes, vitals readings, caries-risk category radios, and the Dyclonine rinse action directly. Arrange brushing and flossing in separate full-width rows and use a flat Caries Risk Assessment section in Rapid Entry. Include conditional detail controls, keyboard support, and a chairside usability checklist.
+
+### Minor Changes
+
+- 6aa6e04: Add multiselect toothbrush and flossing type questions to every interactive form and hygiene/recare source template. Preserve selections in clinical drafts, support older drafts, and include patient-reported methods in every note projection without changing education or treatment selections.
+
+### Patch Changes
+
+- 4e2f4cd: Add a keyboard-accessible Return to top link at the bottom of every template and make the compact Review note buttons blue.
+- a354138: Place Rapid Entry's Open Detailed action alongside Return to top in the bottom navigation row, with responsive wrapping on narrow screens.
+- e9b2a9e: Keep the active Rapid Entry section visible in the horizontal navigation strip when scrolling down or back up through the form.
+- a354138: Use full-width rows for gingival and periodontal option groups in Rapid Entry, with override reasons and comments below their associated choices. Preserve expandable measurements and the Detailed-mode layout.
+- 741e28c: Create a protected archive branch from each published release tag so Cloudflare can build historical version previews.
+
+## 0.15.0
+
+### Minor Changes
+
+- e7a4702: Add an ultrawide workspace rail that keeps the current form, generated note, and browser-local drafts visible together. Draft lists now use compact actions, consistent current-state styling, independent scrolling, and an always-available saved-drafts link. Desktop workspace panels share a stable scrollbar treatment, and copying the generated note is presented as the primary action.
+
+  Replace native form and saved-draft warnings with accessible modal surfaces. Starting a new form can preserve the current local draft, while clearing a form explicitly discards its recovery copy.
+
+## 0.14.0
+
+### Minor Changes
+
+- 83b7262: Add responsive, active section navigation to every interactive template.
+- 3b3ee85: Give clinic interactive forms a shared responsive workspace with a compact
+  local-recovery strip, vertical desktop section navigation, a mobile section
+  sheet, an automatically docked generated-note column on wide screens, and a
+  generated-note drawer at narrower widths. Warn before synthetic demo data
+  replaces a form changed since page load or reset. Keep section navigation in a
+  sticky right-hand utility rail with persistent access to review the note, and
+  place the drawer close action directly in the Generated Note header. Present
+  clearing a form as a destructive action and explain that its previous local
+  draft remains recoverable for seven days. Keep Review Note pinned while only
+  the section-link list scrolls within the right-hand rail.
+
+## 0.13.1
+
+### Patch Changes
+
+- f72cfb4: Give the pediatric recare form a separate recare-exam action and keep the exam out of standard pediatric care.
+- ca44863: Added extractions to dentist treatment options
+
+## 0.13.0
+
+### Minor Changes
+
+- 9474d4d: Add the CAMBRA123 2021 ages 6–adult caries-risk assessment to the 2026 adult and adolescent hygiene forms. The structured assessment scores protective factors, biological and environmental risks, and disease indicators as responses change; provides transparent clinical guidance while preserving the clinician's final category; supports drafts and generated notes; and keeps the factor checklist collapsible with compact summaries that distinguish suggested from clinician-selected risk.
+- 8fc7b5c: Mark the 2026 adult and adolescent hygiene templates as current, hide their previous versions by default, and add Current and All catalogue controls that reveal previous templates without changing existing template routes or draft identifiers.
+
+### Patch Changes
+
+- 1dfdd00: Align the template-library and standalone-form card hover styles with the clinical-template catalogue by emphasizing the border, shadow, and title colour.
+
+## 0.12.0
+
+### Minor Changes
+
+- fb538f6: Add catalogue-backed product brands, structured treatment-completed-today choices, pediatric standard care, and local-anesthesia documentation to the 12–17 and pediatric hygiene forms, including one-click Dyclonine rinse and Benzocaine topical entries.
+
+## 0.11.1
+
+### Patch Changes
+
+- e829a78: Promote the pediatric recare template to pilot, default its occlusion documentation to Terminal plane with primary-dentition choices, preserve an explicit molar-classification option for permanent first molars, and use the shared skeletal-occlusion catalogue for skeletal classification.
+
+## 0.11.0
+
+### Minor Changes
+
+- ad4b991: Add a separate 2026 Adolescent Hygiene template that combines the dental exam and hygiene encounter while producing Combined, Dentist, or Hygienist notes. Preserve the original adolescent template and its draft identity unchanged.
+
+### Patch Changes
+
+- 4ce4a93: Repair the pediatric recare form layout, separate patient context from the visit team, restore correctly sized date and note-started controls, capture scaling units plus polishing and fluoride products, and align medical history, consent, and sterilization safeguards with the other 2026 templates.
+
+## 0.10.0
+
+### Minor Changes
+
+- b437937: Add repeatable vitals readings to the 2026 Adult Hygiene consent, medical history, and sterilization card, including add/remove and time controls, copied-note readings, and averages across valid measurements. Start vitals empty so the first entry receives its timestamp when it is added. Standardize clinical time inputs, copied-note timestamps, draft metadata, and catalogue import timestamps on a zero-padded 24-hour `HH:mm` format without seconds.
+
 ## 0.9.0
 
 ### Minor Changes
