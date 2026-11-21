@@ -169,10 +169,6 @@ function getSessionPath(repoRoot) {
   return path.join(repoRoot, PATCH_DIRNAME, SESSION_FILENAME);
 }
 
-function toRepoRelative(repoRoot, filePath) {
-  return path.relative(repoRoot, filePath).replace(/\\/g, "/");
-}
-
 function writeSession(repoRoot, session) {
   fs.mkdirSync(path.join(repoRoot, PATCH_DIRNAME), { recursive: true });
   fs.writeFileSync(getSessionPath(repoRoot), `${JSON.stringify(session, null, 2)}\n`);
