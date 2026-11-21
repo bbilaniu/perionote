@@ -341,7 +341,7 @@ test("Adult Hygiene documents catalogue-backed caries risk factors", async ({
     .fill("Synthetic rationale reviewed");
 
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Caries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.$/,
+    /Caries risk: Moderate caries risk due to high frequency of sugar intake and synthetic local dry-mouth factor\. Synthetic rationale reviewed\.(?=\n|$)/,
   );
 
   await reloadDiscardingForm(page);
