@@ -23,6 +23,9 @@ export interface LocalAnesthesiaValue {
 export const localAnesthesiaInjectionTypes = [
   "I/O",
   "M/I",
+  "S/I",
+  "ASA",
+  "MSA",
   "PSA",
   "IA/L",
   "Buccal NB",
