@@ -923,7 +923,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Health\/Gingivitis:/
+    /Periodontal diagnosis: (?:HEALTH|GINGIVITIS) - /
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Periodontal assessment findings:\n  - Periodontal support: Intact periodontal support\.\n  - Bleeding on probing \(BOP\): 6%\.\n  - Maximum PPD: 3 mm\.\n  - Probing attachment loss: Absent\.\n  - Radiographic bone loss \(RBL\): Absent\./
@@ -968,14 +968,14 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
     page.getByText("HEALTH - INTACT PERIODONTIUM", { exact: true })
   ).toBeVisible();
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Health\/Gingivitis:/
+    /Periodontal diagnosis: (?:HEALTH|GINGIVITIS) - /
   );
 
   await page
     .getByRole("button", { name: "Apply suggestion", exact: true })
     .click();
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM/
+    /Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM/
   );
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
     /- (NO PROBING ATTACHMENT LOSS|MAXIMUM PPD:|BOP:|NO RADIOGRAPHIC BONE LOSS)/
@@ -987,7 +987,7 @@ test("Adult Hygiene calculates and confirms ClearDent-style Health/Gingivitis ou
   await structuredPeriodontalObservations.click();
   await page.locator("#adult-hygiene-bop-percent").fill("12");
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
-    /Health\/Gingivitis: HEALTH - INTACT PERIODONTIUM/
+    /Periodontal diagnosis: HEALTH - INTACT PERIODONTIUM/
   );
   await expect(page.locator("#adult-hygiene-summary")).toHaveValue(
     /Periodontal assessment findings:[\s\S]*Bleeding on probing \(BOP\): 12%\./
@@ -1248,7 +1248,7 @@ test("Adult Hygiene shows treated-periodontitis context only with treated suppor
     page.getByLabel("Treated-periodontitis context", { exact: true })
   ).toHaveCount(0);
   await expect(page.locator("#adult-hygiene-summary")).not.toHaveValue(
-    /Health\/Gingivitis:/
+    /Periodontal diagnosis: (?:HEALTH|GINGIVITIS) - /
   );
 });
 
@@ -1620,7 +1620,10 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
     ["#adult-hygiene-fmp-done", "YES, ALL FINDINGS DISCUSSED WITH PATIENT"],
     ["#adult-hygiene-compliance", "Good"],
     ["#adult-hygiene-ohi-aids", "SULCABRUSH"],
-    ["#adult-hygiene-desensitizer", "PREVIDENT FL"],
+    [
+      "#adult-hygiene-desensitizer",
+      "Oral Science Inc. X-PUR® Crystal (Calcium Oxalate Crystals)",
+    ],
     ["#adult-hygiene-recall-interval", "6-month recall"],
     ["#adult-hygiene-hygiene-interval", "4-month scale"],
     ["#adult-hygiene-next-visit", "FOLLOW-UP HYGIENE"],
@@ -1639,7 +1642,7 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
     .click();
   await page
     .getByRole("button", {
-      name: "Advantage Arrest® Silver Diamine Fluoride 38% application",
+      name: "SDF application",
       exact: true,
     })
     .click();
@@ -1649,10 +1652,13 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   const completedRow = completedValues.locator(":scope > li").first();
   await expect(
     completedRow.getByRole("heading", {
-      name: "Product applications",
+      name: "SDF application",
       exact: true,
     }),
   ).toBeVisible();
+  await expect(
+    completedRow.getByRole("combobox", { name: "SDF product", exact: true })
+  ).toHaveValue("Advantage Arrest® Silver Diamine Fluoride 38%");
 
   await completedRow.getByText("Select Tooth/area", { exact: true }).click();
   const toothAreaOptions = completedRow.getByRole("group", {
@@ -1767,7 +1773,10 @@ test("Adult Hygiene catalogue values and encounter recovery draft persist indepe
   await anesthetic.focus();
   await expect(anesthetic).toHaveAttribute("aria-expanded", "true");
   await expect(
-    page.getByText("No catalogue suggestions saved yet.", { exact: true })
+    page.getByRole("option", {
+      name: "Articaine 4% with 1:200K epinephrine Starter",
+      exact: true,
+    })
   ).toBeVisible();
 
   await medicalHistory.fill("Synthetic reusable history phrase");
