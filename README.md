@@ -55,7 +55,7 @@ Firefox 128+. Older browsers are not supported. See the
 
 ## Development
 
-HygieneNote requires Node.js 24 and npm.
+HygieneNote requires Node.js 26 and npm.
 
 ```bash
 npm install
