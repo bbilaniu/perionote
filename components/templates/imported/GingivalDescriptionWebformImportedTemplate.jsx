@@ -22,6 +22,8 @@ import {
   extraoralTmjClickingStatusOptions,
 } from "@/lib/templates/extraoralObservationsCatalog";
 
+import { localAnesthesiaInjectionTypes } from "@/lib/templates/localAnesthesia";
+
 function cx(...parts) {
   return parts.filter(Boolean).join(" ");
 }
@@ -426,15 +428,6 @@ const TMJ_CLICKING_STATUS_OPTIONS = extraoralTmjClickingStatusOptions;
 const TMJ_CLICKING_OPEN_CLOSE_OPTIONS = extraoralTmjClickingPhaseOptions;
 const LYMPH_NODE_LOCATION_OPTIONS = extraoralLymphNodeLocationOptions;
 const LYMPH_NODE_SWELLING_OPTIONS = extraoralLymphNodeSwellingOptions;
-const LOCAL_ANESTHESIA_TYPE_OPTIONS = [
-  "I/O",
-  "M/I",
-  "PSA",
-  "IA/L",
-  "Buccal NB",
-  "GP",
-  "NP",
-];
 const LOCAL_ANESTHESIA_ROUTE_OPTIONS = ["Injection", "Topical"];
 const LOCAL_ANESTHESIA_APPLICATION_TYPE_OPTIONS = [
   "Mucosal application",
@@ -4011,7 +4004,7 @@ export function GingivalDescriptionWebformImportedTemplate({
                                 <SelectItem value="">None selected</SelectItem>
                                 {(entry.route === "Topical"
                                   ? LOCAL_ANESTHESIA_APPLICATION_TYPE_OPTIONS
-                                  : LOCAL_ANESTHESIA_TYPE_OPTIONS
+                                  : localAnesthesiaInjectionTypes
                                 ).map((option) => (
                                   <SelectItem key={option} value={option}>
                                     {option}

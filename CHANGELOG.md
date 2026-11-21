@@ -1,5 +1,11 @@
 # hygienenote
 
+## 1.2.5
+
+### Patch Changes
+
+- 6d553c2: Use consistent two-space indentation and section headings in generated clinical notes, preserving indentation when copied. Keep short templates compact with two-space supporting details.
+
 ## 1.2.4
 
 ### Patch Changes
