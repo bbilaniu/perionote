@@ -194,7 +194,7 @@ export function LocalAnesthesiaControl({
                   </button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-12">
+                <div className="grid gap-4 text-sm md:grid-cols-2 lg:grid-cols-12">
                   <div className="lg:col-span-3">
                     <FixedChoiceListbox
                       id={`local-anesthesia-route-${entry.id}`}
@@ -258,7 +258,7 @@ export function LocalAnesthesiaControl({
                     </label>
                   )}
 
-                  <div className="text-sm lg:col-span-3">
+                  <div className="lg:col-span-3">
                     <ClinicalLocationMultiCombobox
                       id={`local-anesthesia-${entry.id}-tooth-area`}
                       label="Tooth/area"
