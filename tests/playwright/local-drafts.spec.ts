@@ -138,6 +138,62 @@ test("2026 Adult Hygiene restores local anesthesia with a Tooth/area after reloa
   await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
 });
 
+for (const { template, width } of [
+  { template: "adult-hygiene-2026", width: 1600 },
+  { template: "adolescent-hygiene-2026", width: 390 },
+]) {
+  test(`${template} defaults HVE on for new notes and preserves existing drafts`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.clock.install();
+    await page.goto(`/templates/clinic/${template}/interactive`);
+
+    const hve = page.getByRole("checkbox", { name: "HVE used for all aerosol-producing procedures" });
+    const ppe = page.getByRole("checkbox", { name: "Standard PPE statement applies" });
+    const summary = page.locator("#adult-hygiene-summary");
+    const hveStatement = /HVE was used for all aerosol-producing procedures\./;
+    const draftPrefix = `${INTERACTIVE_DRAFT_STORAGE_PREFIX}${template}.`;
+
+    await expect(hve).toBeChecked();
+    await expect(ppe).toBeChecked();
+    await expect(summary).toHaveValue(hveStatement);
+    await page.locator("label").filter({ has: hve }).screenshot({
+      path: testInfo.outputPath("hve-checkbox.png"),
+    });
+    await page.clock.runFor(10_000);
+    expect(await page.evaluate((prefix) =>
+      Object.keys(localStorage).some((key) => key.startsWith(prefix)), draftPrefix,
+    )).toBe(false);
+
+    await hve.uncheck();
+    await page.getByRole("textbox", { name: "Sterilization codes" }).fill("SYNTH-HVE-001");
+    await expect(ppe).toBeChecked();
+    await expect(hve).not.toBeChecked();
+    await expect(summary).not.toHaveValue(hveStatement);
+    await page.clock.runFor(10_000);
+    await page.reload();
+    await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
+    await expect(hve).not.toBeChecked();
+
+    await page.addInitScript((prefix) => {
+      const key = Object.keys(localStorage).find((key) => key.startsWith(prefix));
+      if (!key) return;
+      const draft = JSON.parse(localStorage.getItem(key)!);
+      delete draft.form.hveStatementApplies;
+      localStorage.setItem(key, JSON.stringify(draft));
+    }, draftPrefix);
+    await page.reload();
+    await expect(page.getByText(/Restored the draft saved/)).toBeVisible();
+    await expect(ppe).toBeChecked();
+    await expect(hve).not.toBeChecked();
+    await expect(summary).not.toHaveValue(hveStatement);
+
+    await clearCurrentForm(page);
+    await expect(hve).toBeChecked();
+    await expect(ppe).toBeChecked();
+    await expect(summary).toHaveValue(hveStatement);
+  });
+}
+
 test("client-side navigation checkpoints edits before the draft hook unmounts", async ({
   page,
 }) => {
