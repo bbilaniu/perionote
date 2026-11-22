@@ -286,6 +286,7 @@ export const adultHygiene2026Fixture: AdultHygiene2026Form = {
   recareAdditionalComments: "Synthetic recare comment.",
   additionalNotes: "Synthetic demonstration data only.",
   ppeStatementApplies: true,
+  hveStatementApplies: true,
   recallInterval: "6-month recall",
   recallIntervalComments: "",
   hygieneInterval: "4-month scale",

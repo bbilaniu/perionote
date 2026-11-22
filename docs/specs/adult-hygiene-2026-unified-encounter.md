@@ -19,7 +19,7 @@ three notes without duplicating shared clinical facts:
 | Content | Complete | Hygiene | Recare |
 | --- | --- | --- | --- |
 | Patient/team, consent and history | Yes | Yes | Yes |
-| Sterilization and checked PPE statement | Yes | Yes | Yes |
+| Sterilization and checked PPE and HVE statements | Yes | Yes | Yes |
 | Records, EOE/IOE, teeth, odontogram and occlusion | Yes | No | Yes |
 | Hygiene and periodontal assessment | Yes | Yes | No |
 | Caries risk | Yes | Yes | Yes |
@@ -87,6 +87,17 @@ note modes wherever the corresponding content is included:
 
 These are generated-output changes; stored clinical selections, the entry
 forms, note header logic, and older template versions retain their existing behavior.
+
+### HVE and patient-reported habits
+
+In both 2026 templates, the HVE checkbox starts checked on new encounters, as
+PPE does. It is independently editable, including when sterilization codes are
+entered. When checked, `HVE was used for all aerosol-producing procedures.`
+appears after the PPE line in Sterilization and PPE in all three output modes.
+Drafts without an HVE value restore with the checkbox unchecked.
+
+Documented flossing and brushing frequencies follow `Patient reports the
+following current habits:` in outputs that include Oral Hygiene Habits.
 
 ## Terminology and compatibility
 

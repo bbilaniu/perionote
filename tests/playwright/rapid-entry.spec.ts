@@ -120,7 +120,9 @@ test("routine encounter uses direct choices and existing generated outputs", asy
   await expect(summary).toHaveValue(
     /Plaque: Generalized moderate interproximal/,
   );
-  await expect(summary).toHaveValue(/Brushing 2x\/day/);
+  await expect(summary).toHaveValue(
+    /Patient reports the following current habits: Flossing 1x\/day; Brushing 2x\/day\./,
+  );
   await expect(summary).toHaveValue(
     /Full mouth scaling with hand and Cavitron instrumentation \(3U Scale\)/,
   );

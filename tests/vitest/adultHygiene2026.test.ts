@@ -352,6 +352,7 @@ TMJ: WNL.
       "dentalNextVisit",
       "dentalDateBooked",
       "cambra123Assessment",
+      "hveStatementApplies",
     ]) {
       delete legacyDraft[field];
     }
@@ -369,6 +370,7 @@ TMJ: WNL.
     legacyPeriodontalClassification.gingivalHealth = legacyGingivalHealth;
     legacyDraft.periodontalClassification = legacyPeriodontalClassification;
     expect(isAdultHygieneDraftForm(legacyDraft)).toBe(true);
+    expect(isAdultHygieneDraftForm({ ...legacyDraft, hveStatementApplies: "yes" })).toBe(false);
     expect(
       isAdultHygieneDraftForm({
         ...createEmptyAdultHygiene2026Form(),

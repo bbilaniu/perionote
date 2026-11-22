@@ -84,7 +84,7 @@ describe("Rapid Entry shared encounter mappings", () => {
     );
     const complete = buildAdultHygiene2026Summary(form, { output: "complete" });
     expect(complete).toContain("Plaque: Generalized moderate interproximal");
-    expect(complete).toContain("Patient is currently: Brushing 2x/day.");
+    expect(complete).toContain("Patient reports the following current habits: Brushing 2x/day.");
     expect(complete).toContain(
       "OH Aids Reviewed/Recommended: SUPERFLOSS; INTERPROXIMAL BRUSH"
     );
