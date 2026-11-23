@@ -324,6 +324,7 @@ export interface AdultHygiene2026Form extends OralHygieneMethods {
   guardianCommunicationStatus?: DocumentationStatus;
   guardianCommunicationDetails?: string;
   ppeStatementApplies: boolean;
+  hveStatementApplies: boolean;
   recallInterval: string;
   recallIntervalComments: string;
   hygieneInterval: string;
@@ -444,6 +445,7 @@ export function createEmptyAdultHygiene2026Form(): AdultHygiene2026Form {
     guardianCommunicationStatus: "not-documented",
     guardianCommunicationDetails: "",
     ppeStatementApplies: false,
+    hveStatementApplies: false,
     recallInterval: "",
     recallIntervalComments: "",
     hygieneInterval: "",

@@ -687,6 +687,9 @@ export function buildAdultHygiene2026Summary(
     form.ppeStatementApplies
       ? "ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES"
       : "",
+    form.hveStatementApplies
+      ? "HVE was used for all aerosol-producing procedures."
+      : "",
   ];
 
   const history = [
@@ -882,7 +885,7 @@ export function buildAdultHygiene2026Summary(
       form.oralHygieneComplianceComment
     ),
     currentHabits.length
-      ? `Patient is currently: ${currentHabits.join("; ")}.`
+      ? `Patient reports the following current habits: ${currentHabits.join("; ")}.`
       : "",
   ];
   const homeCareInstruction = [

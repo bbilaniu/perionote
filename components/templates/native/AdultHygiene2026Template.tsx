@@ -231,8 +231,16 @@ const outputChoicesByVariant = {
   Hygiene2026Variant,
   readonly (readonly [AdultHygiene2026Output, string])[]
 >;
+const newEncounterInfectionControlDefaults = {
+  class5IndicatorStatus: "yes",
+  ppeStatementApplies: true,
+  hveStatementApplies: true,
+} as const;
 const adultHygieneDraftExemplar = createEmptyAdultHygiene2026Form();
-const emptyAdultHygieneDraft = JSON.stringify(adultHygieneDraftExemplar);
+const emptyAdultHygieneDraft = JSON.stringify({
+  ...adultHygieneDraftExemplar,
+  hveStatementApplies: newEncounterInfectionControlDefaults.hveStatementApplies,
+});
 const adultHygieneDraftArrayItemShapes = {
   ...oralHygieneMethodsDraftArrayItemShapes,
   patientChiefConcern: "",
@@ -3144,8 +3152,7 @@ export function AdultHygiene2026Template({
   const outputChoices = outputChoicesByVariant[variant];
   const [form, setForm] = useState<AdultHygiene2026Form>(() => ({
     ...createEmptyAdultHygiene2026Form(),
-    class5IndicatorStatus: "yes",
-    ppeStatementApplies: true,
+    ...newEncounterInfectionControlDefaults,
   }));
   const [entryMode, changeEntryMode] = useRapidEntryMode(
     `hygienenote.${templateId}.entry-mode.v1`,
@@ -3215,8 +3222,7 @@ export function AdultHygiene2026Template({
   function createNewFormWithProviderDefaults(): AdultHygiene2026Form {
     return {
       ...createEmptyAdultHygiene2026Form(),
-      class5IndicatorStatus: "yes",
-      ppeStatementApplies: true,
+      ...newEncounterInfectionControlDefaults,
       dentist: getProviderDefault("visit-team.dentist")?.label ?? "",
       rdh: getProviderDefault("visit-team.rdh")?.label ?? "",
       rda: getProviderDefault("visit-team.rda")?.label ?? "",
@@ -3923,6 +3929,12 @@ export function AdultHygiene2026Template({
                   onChange={(value) =>
                     updateField("ppeStatementApplies", value)
                   }
+                />
+                <CheckboxField
+                  id="adult-hygiene-hve"
+                  label="HVE used for all aerosol-producing procedures"
+                  checked={form.hveStatementApplies}
+                  onChange={(value) => updateField("hveStatementApplies", value)}
                 />
               </div>
               {!rapid ? <TextField

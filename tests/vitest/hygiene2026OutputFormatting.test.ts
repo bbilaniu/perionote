@@ -122,12 +122,13 @@ Appliances and Relevant History
   Additional Notes: Synthetic note.`);
   });
 
-  it("groups PPE, vitals, caries risk, habits, education, goals, and follow-up", () => {
+  it("groups PPE, HVE, vitals, caries risk, habits, education, goals, and follow-up", () => {
     const form = createForm();
     Object.assign(form, {
       class5IndicatorStatus: "yes",
       mieleCodes: "SYNTH-STERI-2026",
       ppeStatementApplies: true,
+      hveStatementApplies: true,
       consentPatient: true,
       medicalHistoryReview: "Synthetic history reviewed",
       vitalsReadings: [
@@ -157,6 +158,7 @@ Appliances and Relevant History
   Checked Cl 5 Indicators on all cassettes used for procedure as well as indicators on bagged instruments: Yes.
   Sterilization Codes Scanned: SYNTH-STERI-2026
   ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES
+  HVE was used for all aerosol-producing procedures.
 
 Consent and Medical History
   Informed verbal consent given by PATIENT for treatment today.
@@ -176,7 +178,7 @@ Caries Risk
 Oral Hygiene Habits
   Oral hygiene compliance: Fair.
   Oral hygiene compliance comment: Synthetic compliance context.
-  Patient is currently: Flossing 1x/day; Brushing 2x/day.
+  Patient reports the following current habits: Flossing 1x/day; Brushing 2x/day.
 
 Home Care Instruction
   Home care instruction: STRESSED THE IMPORTANCE OF HOMECARE- IDEALLY FLOSSING AT LEAST 1XDAY AND BRUSHING MINIMUM 2XDAY
@@ -197,19 +199,28 @@ Hygiene Follow-up
   });
 
   describe.each(["complete", "hygiene", "recare"] as const)("%s note", (output) => {
-    it("includes checked PPE once with sterilization, even without codes", () => {
+    it("includes checked PPE and HVE independently, even without codes", () => {
       const form = createForm();
       form.ppeStatementApplies = true;
       form.medicalHistoryReview = "Synthetic review";
-      const ppe = "Sterilization and PPE\n  ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES";
+      const heading = "Sterilization and PPE";
+      const ppe = "  ALL PROPER PPE WAS WORN DURING APPT AS PER AHS AND CRDHA GUIDELINES";
+      const hve = "  HVE was used for all aerosol-producing procedures.";
+      const history = "Consent and Medical History\n  Medical history reviewed: Synthetic review.";
 
       expect(buildSummary(form, { output })).toBe(
-        `${ppe}\n\nConsent and Medical History\n  Medical history reviewed: Synthetic review.`,
+        `${heading}\n${ppe}\n\n${history}`,
+      );
+      form.hveStatementApplies = true;
+      expect(buildSummary(form, { output })).toBe(
+        `${heading}\n${ppe}\n${hve}\n\n${history}`,
       );
       form.ppeStatementApplies = false;
       expect(buildSummary(form, { output })).toBe(
-        "Consent and Medical History\n  Medical history reviewed: Synthetic review.",
+        `${heading}\n${hve}\n\n${history}`,
       );
+      form.hveStatementApplies = false;
+      expect(buildSummary(form, { output })).toBe(history);
     });
 
     it("omits an untouched assessment and makes no empty-note assertions", () => {
@@ -310,7 +321,7 @@ Hygiene Follow-up
     form.hygieneGoal = "Synthetic goal";
     for (const output of ["complete", "hygiene"] as const) {
       expect(buildSummary(form, { output })).toBe(
-        "Oral Hygiene Habits\n  Patient is currently: Brushing 2x/day.\n\nHygiene Goal\n  - Hygiene goal: Synthetic goal.",
+        "Oral Hygiene Habits\n  Patient reports the following current habits: Brushing 2x/day.\n\nHygiene Goal\n  - Hygiene goal: Synthetic goal.",
       );
     }
     expect(buildSummary(form, { output: "recare" })).toBe("");
